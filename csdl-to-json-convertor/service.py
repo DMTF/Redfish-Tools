@@ -1771,6 +1771,9 @@ def main():
         else:
             url = form['url'].value
 
+    if not os.path.exists('./json'):
+        os.makedirs('./json')
+
     if len(url) > 0:
         return generate_json(url, directory)
 		                
