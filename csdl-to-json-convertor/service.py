@@ -1686,7 +1686,7 @@ class JsonSchemaGenerator:
         filename = name + ".json"
 
 #fix this for web use
-        filename="json" + "\\" + filename
+        filename=args.outdir + "\\" + filename
         file = open(filename, "wb")
         file.write(bytes(fileoutput, 'utf-8'))
         file.close()
@@ -1749,6 +1749,7 @@ def main():
     parser.add_argument('--directory', '-d', dest='directory', help='The directory of the CSDL files to convert')
     parser.add_argument('--url', '-u', dest='url', help='The url of the CSDL files to convert')
     parser.add_argument('--copyright', '-C', dest='copyright', default='Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright', help='The copyright notice to add to the JSON')
+    parser.add_argument('--outdir', '-O', dest='outdir', default='./json', help='The output directory for the JSON schema output')
     parser.add_argument('--verbose', '-v', action='count', default=0, dest='verbose', help='Increase the verbosity of the output')
 
     args = parser.parse_args() 
