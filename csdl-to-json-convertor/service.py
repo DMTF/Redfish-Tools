@@ -69,6 +69,7 @@ import xml.etree.ElementTree as ET
 import Utilities as UT
 import os
 import argparse
+import configparser
 
 # Enable the printing of error information
 #cgitb.enable()
@@ -1737,6 +1738,22 @@ class JsonSchemaGenerator:
 
         return result
 
+#################################################################
+# Name: set_config_args                                         #
+# Description:                                                  #
+#  If not set, override the command line arguments with config  #
+#  file.                                                        # 
+#################################################################
+def set_config_args(args, config):
+    options = config._sections['default']
+    if (args.directory == None) and 'directory' in options:
+        args.directory = config.get('default', 'directory')
+    if (args.url == None) and 'url' in options:
+        args.url = config.get('default', 'url')
+    if (args.copyright == None) and 'copyright' in options:
+        args.copyright = config.get('default', 'copyright')
+    if (args.outdir == None) and outdir in options:
+        args.outdir = config.get('default', 'outdir')
 
 #################################################################
 # Name: main                                                    #
@@ -1748,11 +1765,19 @@ def main():
     parser = argparse.ArgumentParser(description='Convert CSDL XML schema into Redfish style JSON schema')
     parser.add_argument('--directory', '-d', dest='directory', help='The directory of the CSDL files to convert')
     parser.add_argument('--url', '-u', dest='url', help='The url of the CSDL files to convert')
-    parser.add_argument('--copyright', '-C', dest='copyright', default='Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright', help='The copyright notice to add to the JSON')
+    parser.add_argument('--copyright', '-C', dest='copyright', help='The copyright notice to add to the JSON')
     parser.add_argument('--outdir', '-O', dest='outdir', default='./json', help='The output directory for the JSON schema output')
     parser.add_argument('--verbose', '-v', action='count', default=0, dest='verbose', help='Increase the verbosity of the output')
 
-    args = parser.parse_args() 
+    args = parser.parse_args()
+
+    if os.path.exists('.config.ini'):
+        config = configparser.ConfigParser()
+        config.readfp(open('.config.ini'))
+        set_config_args(args, config)
+
+    if args.copyright == None:
+        args.copyright = 'Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
 
     if args.verbose >= 1:
         pdb.set_trace()
