@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 
 """
+CSDL Validator version 0.1
+
 File : odata_validator.py
 
 Brief : This file contains the definitions and functionalities for OData
