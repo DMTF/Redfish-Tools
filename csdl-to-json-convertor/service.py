@@ -1685,7 +1685,7 @@ class JsonSchemaGenerator:
         filename = name + ".json"
 
 #fix this for web use
-        filename="json" + "\\" + filename
+        filename="json" + os.path.sep + filename
         file = open(filename, "wb")
         file.write(bytes(fileoutput, 'utf-8'))
         file.close()
