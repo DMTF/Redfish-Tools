@@ -65,6 +65,7 @@ http://www.dmtf.org/about/policies/disclosures.
 """
 
 import http.client
+import os
 
 class Utilities:
 
@@ -171,7 +172,7 @@ class Utilities:
                 filename=url
 
             if(len(directory) > 0 ):
-                filename = directory + "\\" + filename
+                filename = directory + os.path.sep + filename
 
             metafile = open(filename)
             decoded = metafile.read()
