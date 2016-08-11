@@ -369,6 +369,7 @@ class JsonSchemaGenerator:
     
         edmtojson = {
                         "Edm.String": "string",
+			"Edm.SByte": "number",
                         "Edm.Int16": "number",
                         "Edm.Int32": "number",
                         "Edm.Int64": "number",
@@ -1024,6 +1025,7 @@ class JsonSchemaGenerator:
         output = ""
         edmtojson = {
             "Edm.String": "string",
+	    "Edm.SByte": "number",
             "Edm.Int16": "number",
             "Edm.Int32": "number",
             "Edm.Int64": "number",
