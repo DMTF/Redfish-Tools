@@ -482,11 +482,13 @@ class JsonSchemaGenerator:
                 else:
                     if (term == "OData.Description"):
                         output += ",\n"
-                        output += UT.Utilities.indent(depth) + "\"description\": \"" + annotation.attrib["String"] + "\""
+                        tmpString = annotation.attrib["String"].replace("\"", "\\\"");
+                        output += UT.Utilities.indent(depth) + "\"description\": \"" + tmpString + "\""
 
                     elif (term == "OData.LongDescription"):
                         output += ",\n"
-                        output += UT.Utilities.indent(depth) + "\"longDescription\": \"" + annotation.attrib["String"] + "\""
+                        tmpString = annotation.attrib["String"].replace("\"", "\\\"");
+                        output += UT.Utilities.indent(depth) + "\"longDescription\": \"" + tmpString + "\""
 
                     elif (term == "OData.Permissions"):
                         if annotation.attrib["EnumMember"] == "OData.Permission/Read" or annotation.attrib["EnumMember"] == "OData.Permissions/Read":
