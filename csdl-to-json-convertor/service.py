@@ -376,6 +376,7 @@ class JsonSchemaGenerator:
                         "Edm.Boolean": "boolean",
                         "Edm.Decimal": "number",
                         "Edm.DateTimeOffset": "string",
+			"Edm.Duration": "string",
                         "Edm.Primitive": "primitive"
                     }
 
@@ -1032,6 +1033,7 @@ class JsonSchemaGenerator:
             "Edm.Boolean": "boolean",
             "Edm.Decimal": "number",
             "Edm.DateTimeOffset": "string",
+	    "Edm.Duration": "string",
             "Edm.Guid": "string",
         }
 
@@ -1045,6 +1047,9 @@ class JsonSchemaGenerator:
 
             if typename == "Edm.Guid":
                 output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\""
+
+            if typename == "Edm.Duration":
+                output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?\""
 
         elif typename == "Edm.PrimitiveType":
             output += self.write_primitive_type(depth, isnullable)
