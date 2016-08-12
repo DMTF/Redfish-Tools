@@ -371,12 +371,14 @@ class JsonSchemaGenerator:
     
         edmtojson = {
                         "Edm.String": "string",
+			"Edm.SByte": "number",
                         "Edm.Int16": "number",
                         "Edm.Int32": "number",
                         "Edm.Int64": "number",
                         "Edm.Boolean": "boolean",
                         "Edm.Decimal": "number",
                         "Edm.DateTimeOffset": "string",
+			"Edm.Duration": "string",
                         "Edm.Primitive": "primitive"
                     }
 
@@ -484,11 +486,13 @@ class JsonSchemaGenerator:
                 else:
                     if (term == "OData.Description"):
                         output += ",\n"
-                        output += UT.Utilities.indent(depth) + "\"description\": \"" + annotation.attrib["String"] + "\""
+                        tmpString = annotation.attrib["String"].replace("\"", "\\\"");
+                        output += UT.Utilities.indent(depth) + "\"description\": \"" + tmpString + "\""
 
                     elif (term == "OData.LongDescription"):
                         output += ",\n"
-                        output += UT.Utilities.indent(depth) + "\"longDescription\": \"" + annotation.attrib["String"] + "\""
+                        tmpString = annotation.attrib["String"].replace("\"", "\\\"");
+                        output += UT.Utilities.indent(depth) + "\"longDescription\": \"" + tmpString + "\""
 
                     elif (term == "OData.Permissions"):
                         if annotation.attrib["EnumMember"] == "OData.Permission/Read" or annotation.attrib["EnumMember"] == "OData.Permissions/Read":
@@ -1024,12 +1028,14 @@ class JsonSchemaGenerator:
         output = ""
         edmtojson = {
             "Edm.String": "string",
+	    "Edm.SByte": "number",
             "Edm.Int16": "number",
             "Edm.Int32": "number",
             "Edm.Int64": "number",
             "Edm.Boolean": "boolean",
             "Edm.Decimal": "number",
             "Edm.DateTimeOffset": "string",
+	    "Edm.Duration": "string",
             "Edm.Guid": "string",
         }
 
@@ -1043,6 +1049,9 @@ class JsonSchemaGenerator:
 
             if typename == "Edm.Guid":
                 output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\""
+
+            if typename == "Edm.Duration":
+                output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?\""
 
         elif typename == "Edm.PrimitiveType":
             output += self.write_primitive_type(depth, isnullable)
@@ -1686,8 +1695,8 @@ class JsonSchemaGenerator:
         screenoutput += fileoutput
         filename = name + ".json"
 
-#fix this for web use
-        filename=args.outdir + "\\" + filename
+        #fix this for web use
+        filename=args.outdir + os.path.sep + filename
         file = open(filename, "wb")
         file.write(bytes(fileoutput, 'utf-8'))
         file.close()
@@ -1800,6 +1809,9 @@ def main():
     if (args.directory == None) and (args.url == None):
         parser.print_help()
         exit(1)
+
+    if not os.path.exists(args.outdir):
+        os.makedirs(args.outdir)
 
     if args.url != None:
         return generate_json(args.url, args.directory, args)

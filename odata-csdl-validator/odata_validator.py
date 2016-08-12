@@ -5476,7 +5476,10 @@ class DynamicExpression(Element):
                     else:
                         self.type = self.parent.parent.type
                 else:
-                    self.type = self.parent.type
+                    if isinstance(self.parent, Annotation):
+                        self.target_term = self.parent.term
+                    else:
+                        self.type = self.parent.type
 
             self._get_annotations()
 
