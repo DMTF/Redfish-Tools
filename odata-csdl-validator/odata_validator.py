@@ -361,6 +361,17 @@ class PrimitiveType(Type):
 
         return self
 
+    def get_enum_type(self):
+        """Gets the enum type of this element.
+
+        Defined differently for each class, since this is a primitive type class return none
+
+        Returns:
+            None since there is no enum type in this base type chain
+        """
+
+        return None
+
     def is_comparable(self, other_type):
         """Checks whether this type is comparable to another type.
 
@@ -2137,6 +2148,7 @@ class Property(Element):
 
         if isinstance(type_element, PrimitiveType):
             base_prim_type = type_element.get_primitive_type()
+            enum_type = type_element.get_enum_type()
             base_prim_type.check_max_length_valid(self.raw_data.attrib)
             base_prim_type.check_precision_valid(self.raw_data.attrib)
             base_prim_type.check_scale_valid(self.raw_data.attrib)
@@ -2153,7 +2165,10 @@ class Property(Element):
             if self.precision != None:
                 base_prim_type.check_precision_value(self.precision)
             if self.default_value != None:
-                self.default_value = base_prim_type.convert(self.default_value)
+                if enum_type:
+                    self.default_value = enum_type.convert(self.default_value)
+                else:
+                    self.default_value = base_prim_type.convert(self.default_value)
 
         else:
             if (self.max_length != None or self.precision != None or self.scale != None or
@@ -3087,6 +3102,17 @@ class EnumType(Element, PrimitiveType):
         underlying_type = self.find_in_scope(self.underlying_type)
         return underlying_type.get_primitive_type()
 
+    def get_enum_type(self):
+        """Gets the enum type of this element.
+
+        Defined differently for each class, since this is an enum type return itself
+
+        Returns:
+            A class instance which is the enum type of the element
+        """
+
+        return self
+
     def check_scope(self):
         """Function for checking the scope of this element.
 
@@ -3313,6 +3339,19 @@ class TypeDefinition(Element, PrimitiveType):
 
         underlying_type = self.find_in_scope(self.underlying_type)
         return underlying_type.get_primitive_type()
+
+    def get_enum_type(self):
+        """Gets the enum type of this element if it exists.
+
+        Defined differently for each class, since this is not an enum type call
+        get_enum_type on its underlying type
+
+        Returns:
+            A class instance which is the enum type of the element or none
+        """
+
+        underlying_type = self.find_in_scope(self.underlying_type)
+        return underlying_type.get_enum_type()
 
     def validate_type(self, element):
         """Validates this TypeDefinition against an element where it is applied.
@@ -4686,6 +4725,7 @@ class Term(Element):
 
         if isinstance(type_element, PrimitiveType):
             prim_type = type_element.get_primitive_type()
+            enum_type = type_element.get_enum_type()
             prim_type.check_max_length_valid(self.raw_data.attrib)
             prim_type.check_precision_valid(self.raw_data.attrib)
             prim_type.check_scale_valid(self.raw_data.attrib)
@@ -4700,7 +4740,10 @@ class Term(Element):
                 prim_type.check_precision_value(self.precision)
 
             if self.default_value != None:
-                self.default_value = prim_type.convert(self.default_value)
+                if enum_type:
+                    self.default_value = enum_type.convert(self.default_value)
+                else:
+                    self.default_value = prim_type.convert(self.default_value)
         else:
             if (self.max_length != None) or (self.precision != None) or (
                     self.scale != None) or (self.srid != None):
