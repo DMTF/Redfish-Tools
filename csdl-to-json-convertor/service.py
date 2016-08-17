@@ -48,7 +48,7 @@ owners or claimants, nor for any incomplete or inaccurate identification or
 disclosure of such rights, owners or claimants. DMTF shall have no liability to
 any party, in any manner or circumstance, under any legal theory whatsoever, for
 failure to recognize, disclose, or identify any such third party patent rights,
-or for such party’s reliance on the software or incorporation thereof in its
+or for such party's reliance on the software or incorporation thereof in its
 product, protocols or testing procedures. DMTF shall have no liability to any
 party using such software, whether such use is foreseeable or not, nor to any
 patent owner or claimant, and shall have no liability or responsibility for
@@ -466,7 +466,8 @@ class JsonSchemaGenerator:
 
                     elif ((term == "Validation.Pattern") or (term == "Redfish.Pattern") ):
                         output += ",\n"
-                        output += UT.Utilities.indent(depth) + "\"pattern\": \"" + annotation.attrib["String"] + "\""
+                        tmpString = annotation.attrib["String"].replace("\\", "\\\\")
+                        output += UT.Utilities.indent(depth) + "\"pattern\": \"" + tmpString + "\""
 
                     elif (term == "Validation.Minimum"):
                         output += ",\n"
