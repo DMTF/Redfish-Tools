@@ -57,7 +57,7 @@ owners or claimants, nor for any incomplete or inaccurate identification or
 disclosure of such rights, owners or claimants. DMTF shall have no liability to
 any party, in any manner or circumstance, under any legal theory whatsoever, for
 failure to recognize, disclose, or identify any such third party patent rights,
-or for such party’s reliance on the software or incorporation thereof in its
+or for such party's reliance on the software or incorporation thereof in its
 product, protocols or testing procedures. DMTF shall have no liability to any
 party using such software, whether such use is foreseeable or not, nor to any
 patent owner or claimant, and shall have no liability or responsibility for
@@ -84,6 +84,7 @@ import argparse
 import urllib.request
 
 global_namespaces = {}
+local_directory = None
 
 CSDL_NAMES = ['Edmx', 'DataServices', 'Reference', 'Include', 'IncludeAnnotations', 'Schema',
               'Property', 'NavigationProperty', 'ReferentialConstraint', 'OnDelete', 'EntityType',
@@ -1343,10 +1344,23 @@ class MetaData(Element):
         self.uri = uri
         self.error_id = uri
         if self.uri.lower().startswith('http'):
-            req = urllib.request.Request(self.uri)
-            response = urllib.request.urlopen(req)
-            self.data = response.read()
-            self.raw_data = ET.fromstring(self.data)
+            # Get the file name at the end of the URI
+            filelocation = self.uri.rfind('/')
+            if (filelocation > 0):
+                filename = self.uri[filelocation + 1:]
+            else:
+                filename = self.uri
+
+            # Try to open the file from the local directory being processed
+            if (local_directory != None) and (os.path.isfile(local_directory + os.path.sep + filename)):
+                self.data = ET.parse(local_directory + os.path.sep + filename)
+                self.raw_data = self.data.getroot()
+            # If not available, go open via HTTP
+            else:
+                req = urllib.request.Request(self.uri)
+                response = urllib.request.urlopen(req)
+                self.data = response.read()
+                self.raw_data = ET.fromstring(self.data)
         else:
             self.data = ET.parse(self.uri)
             self.raw_data = self.data.getroot()
@@ -5854,8 +5868,10 @@ def main():
         MetaData(args.MetaData)
     elif os.path.isdir(args.MetaData):
         #Metadata points to a directory
+        global local_directory
+        local_directory = args.MetaData
         for f_name in os.listdir(args.MetaData):
-            MetaData(args.MetaData+f_name)
+            MetaData(args.MetaData + os.path.sep + f_name)
     else:
         #Metadata is unknown
         print("Can not locate metadata")
