@@ -68,6 +68,8 @@ import sys
 import xml.etree.ElementTree as ET
 import Utilities as UT
 import os
+import argparse
+import configparser
 
 # Enable the printing of error information
 #cgitb.enable()
@@ -1672,7 +1674,7 @@ class JsonSchemaGenerator:
     #  Consumes the results that were returned as final output and generates the corresponsing JSON files.   #
     ##########################################################################################################
     @staticmethod
-    def generate_json_files(name, results):
+    def generate_json_files(name, results, args):
         screenoutput = ''
         depth = 0
 
@@ -1688,14 +1690,14 @@ class JsonSchemaGenerator:
         fileoutput += results
         # Add Copyright
         fileoutput += ",\n"
-        fileoutput += UT.Utilities.indent(depth+1) + "\"copyright\": \"Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright\"\n"
+        fileoutput += UT.Utilities.indent(depth+1) + "\"copyright\": \"" + args.copyright + "\"\n"
         # End starting bracket
         fileoutput += UT.Utilities.indent(depth) + "}\n"
         screenoutput += fileoutput
         filename = name + ".json"
 
-#fix this for web use
-        filename="json" + os.path.sep + filename
+        #fix this for web use
+        filename=args.outdir + os.path.sep + filename
         file = open(filename, "wb")
         file.write(bytes(fileoutput, 'utf-8'))
         file.close()
@@ -1746,6 +1748,22 @@ class JsonSchemaGenerator:
 
         return result
 
+#################################################################
+# Name: set_config_args                                         #
+# Description:                                                  #
+#  If not set, override the command line arguments with config  #
+#  file.                                                        # 
+#################################################################
+def set_config_args(args, config):
+    options = config._sections['default']
+    if (args.directory == None) and 'directory' in options:
+        args.directory = config.get('default', 'directory')
+    if (args.url == None) and 'url' in options:
+        args.url = config.get('default', 'url')
+    if (args.copyright == None) and 'copyright' in options:
+        args.copyright = config.get('default', 'copyright')
+    if (args.outdir == None) and outdir in options:
+        args.outdir = config.get('default', 'outdir')
 
 #################################################################
 # Name: main                                                    #
@@ -1754,16 +1772,24 @@ class JsonSchemaGenerator:
 #################################################################
 def main():
 
-    directory=""
-    url=""
-    for arg in sys.argv:
-        keyvalue = arg.split("=")
-        if(keyvalue[0])=="directory":
-            directory=keyvalue[1]
-        if(keyvalue[0])=="url":
-            url=keyvalue[1]
+    parser = argparse.ArgumentParser(description='Convert CSDL XML schema into Redfish style JSON schema')
+    parser.add_argument('--directory', '-d', dest='directory', help='The directory of the CSDL files to convert')
+    parser.add_argument('--url', '-u', dest='url', help='The url of the CSDL files to convert')
+    parser.add_argument('--copyright', '-C', dest='copyright', help='The copyright notice to add to the JSON')
+    parser.add_argument('--outdir', '-O', dest='outdir', default='./json', help='The output directory for the JSON schema output')
+    parser.add_argument('--verbose', '-v', action='count', default=0, dest='verbose', help='Increase the verbosity of the output')
 
-    if enable_debugging == True:
+    args = parser.parse_args()
+
+    if os.path.exists('.config.ini'):
+        config = configparser.ConfigParser()
+        config.readfp(open('.config.ini'))
+        set_config_args(args, config)
+
+    if args.copyright == None:
+        args.copyright = 'Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
+
+    if args.verbose >= 1:
         pdb.set_trace()
 
     # read the arguments passed to the service
@@ -1771,28 +1797,32 @@ def main():
 
     if 'directory' in form:
         if enable_debugging == True:
-            directory=form['directory']
+            args.directory=form['directory']
         else:
-            directory=form['directory'].value
+            args.directory=form['directory'].value
 
     if 'url' in form:
         if enable_debugging == True:
-            url = form['url']
+            args.url = form['url']
         else:
-            url = form['url'].value
+            args.url = form['url'].value
 
-    if not os.path.exists('./json'):
-        os.makedirs('./json')
+    if (args.directory == None) and (args.url == None):
+        parser.print_help()
+        exit(1)
 
-    if len(url) > 0:
-        return generate_json(url, directory)
+    if not os.path.exists(args.outdir):
+        os.makedirs(args.outdir)
+
+    if args.url != None:
+        return generate_json(args.url, args.directory, args)
 		                
-    elif (directory != ""):
-         for file in os.listdir(directory):
+    elif (args.directory != None):
+         for file in os.listdir(args.directory):
              if ( file.endswith(".xml") ):
                print("generating JSON for: " + file)
                JsonSchemaGenerator.parsed = []
-               generate_json(file, directory)          
+               generate_json(file, args.directory, args)
 
     else:
          result = UT.Utilities.show_interactive_mode("Please specify URL as part of the input")
@@ -1804,7 +1834,7 @@ def main():
 # Description:                                                  #
 #  Generate JSON from inputs.                                   # 
 #################################################################
-def generate_json(url, directory):
+def generate_json(url, directory, args):
 
     # Parse the URL and extract input values from the URL
     url_inputs = JsonSchemaGenerator.parse_url(url)
@@ -1853,7 +1883,7 @@ def generate_json(url, directory):
             jsonresults = current_schema.generate_json_for_file(typetable, depth+1, "", filename, currentnamespace, prefixuri, False)
 
             # Generate the files with the results and then get the screen output
-            screenoutput = JsonSchemaGenerator.generate_json_files(currentnamespace, jsonresults)
+            screenoutput = JsonSchemaGenerator.generate_json_files(currentnamespace, jsonresults, args)
                 
     return screenoutput
 
