@@ -263,6 +263,23 @@ def check_type(data, type_name):
     else:
         raise SchemaError("Type name {} is invalid".format(type_name))
 
+def get_all_uses(target):
+    """Looks for all uses of an ElementTree.
+
+    Loops through all parsed namespaces and returns all elements that reference the target element
+    in any way.
+
+    Args:
+        target: Target element to look for.
+
+    Returns:
+        A list of elements referencing the target and how they reference it
+    """
+
+    uses = []
+    for metadata in global_namespaces.values():
+        uses += metadata.get_uses_iterate(target)
+    return uses
 
 #TODO: Flesh out these classes
 class Type(object):
@@ -361,6 +378,17 @@ class PrimitiveType(Type):
         """
 
         return self
+
+    def get_enum_type(self):
+        """Gets the enum type of this element.
+
+        Defined differently for each class, since this is a primitive type class return none
+
+        Returns:
+            None since there is no enum type in this base type chain
+        """
+
+        return None
 
     def is_comparable(self, other_type):
         """Checks whether this type is comparable to another type.
@@ -919,6 +947,72 @@ class Element(object):
 
         for element in self.expressions:
             self.children.append(element)
+
+    def get_uses_iterate(self, target):
+        """Iterator function for getting uses.
+
+        This function handles crawling through this element's children and calling the get uses
+        iterator before checking to see if the target is used by this element.
+
+        Args:
+            target: Element to search for usages.
+
+        Returns:
+            A list of elements referencing the target and how they reference it
+
+        Raises:
+            None
+        """
+
+        uses = []
+        for element in self.children:
+            uses += element.get_uses_iterate(target)
+
+        uses += self.get_uses(target)
+
+        return uses
+
+    def get_uses(self, target):
+        """Function for getting uses.
+
+        This function examines the current element to see if there are any references to the target
+        element.
+
+        Args:
+            target: Element to search for usages.
+
+        Returns:
+            A list of elements referencing the target and how they reference it
+
+        Raises:
+            None
+        """
+
+        uses = []
+
+        attrs = [ attr for attr in vars(self) if not callable(attr) and not attr.startswith("__") and attr not in ['parent','children']]
+
+        for attr in attrs:
+            value = getattr(self, attr)
+            try:
+                _, type_data = is_collection(value)
+                type_element = self.find_in_scope(type_data)
+            except:
+                type_element = None
+
+            if isinstance(value, list):
+                if target in value:
+                    uses.append((self, attr))
+            elif isinstance(value, dict):
+                if target in value.values():
+                    uses.append((self, attr))
+            else:
+                if value == target:
+                    uses.append((self,attr))
+
+            if type_element == target:
+                uses.append((self,attr))
+        return uses
 
     def check_scope_iterate(self):
         """Iterator function for checking the scope.
@@ -2138,10 +2232,17 @@ class Property(Element):
             if type_element.vocabulary_term:
                 if not isinstance(self.parent, ComplexType):
                     raise SchemaError( "Type {} only allowed on a property when it is of a complex "
-                        "type that is exclusively used as the type of a term".format
+                        "type that is exclusively used as the type of a term, not in complex type".format
+                            (type_element.error_id))
+                uses = get_all_uses( self.parent )
+                for element, attr in uses:
+                    if attr != "data_services" and not(attr == 'type' and isinstance(element, Term)):
+                        raise SchemaError( "Type {} only allowed on a property when it is of a "
+                            "complex type that is exclusively used as the type of a term, not "
+                            "exclusively used as type of a term".format
                             (type_element.error_id))
 
-            if not any( x in type_element.provides_type
+            elif not any( x in type_element.provides_type
                 for x in ['Edm.PrimitiveType', 'Edm.ComplexType', 'Edm.EnumType']):
                 raise SchemaError("Type must be PrimitiveType, ComplexType or EnumType in scope")
         else:
@@ -2151,6 +2252,7 @@ class Property(Element):
 
         if isinstance(type_element, PrimitiveType):
             base_prim_type = type_element.get_primitive_type()
+            enum_type = type_element.get_enum_type()
             base_prim_type.check_max_length_valid(self.raw_data.attrib)
             base_prim_type.check_precision_valid(self.raw_data.attrib)
             base_prim_type.check_scale_valid(self.raw_data.attrib)
@@ -2167,7 +2269,10 @@ class Property(Element):
             if self.precision != None:
                 base_prim_type.check_precision_value(self.precision)
             if self.default_value != None:
-                self.default_value = base_prim_type.convert(self.default_value)
+                if enum_type:
+                    self.default_value = enum_type.convert(self.default_value)
+                else:
+                    self.default_value = base_prim_type.convert(self.default_value)
 
         else:
             if (self.max_length != None or self.precision != None or self.scale != None or
@@ -3101,6 +3206,17 @@ class EnumType(Element, PrimitiveType):
         underlying_type = self.find_in_scope(self.underlying_type)
         return underlying_type.get_primitive_type()
 
+    def get_enum_type(self):
+        """Gets the enum type of this element.
+
+        Defined differently for each class, since this is an enum type return itself
+
+        Returns:
+            A class instance which is the enum type of the element
+        """
+
+        return self
+
     def check_scope(self):
         """Function for checking the scope of this element.
 
@@ -3327,6 +3443,19 @@ class TypeDefinition(Element, PrimitiveType):
 
         underlying_type = self.find_in_scope(self.underlying_type)
         return underlying_type.get_primitive_type()
+
+    def get_enum_type(self):
+        """Gets the enum type of this element if it exists.
+
+        Defined differently for each class, since this is not an enum type call
+        get_enum_type on its underlying type
+
+        Returns:
+            A class instance which is the enum type of the element or none
+        """
+
+        underlying_type = self.find_in_scope(self.underlying_type)
+        return underlying_type.get_enum_type()
 
     def validate_type(self, element):
         """Validates this TypeDefinition against an element where it is applied.
@@ -4700,6 +4829,7 @@ class Term(Element):
 
         if isinstance(type_element, PrimitiveType):
             prim_type = type_element.get_primitive_type()
+            enum_type = type_element.get_enum_type()
             prim_type.check_max_length_valid(self.raw_data.attrib)
             prim_type.check_precision_valid(self.raw_data.attrib)
             prim_type.check_scale_valid(self.raw_data.attrib)
@@ -4714,7 +4844,10 @@ class Term(Element):
                 prim_type.check_precision_value(self.precision)
 
             if self.default_value != None:
-                self.default_value = prim_type.convert(self.default_value)
+                if enum_type:
+                    self.default_value = enum_type.convert(self.default_value)
+                else:
+                    self.default_value = prim_type.convert(self.default_value)
         else:
             if (self.max_length != None) or (self.precision != None) or (
                     self.scale != None) or (self.srid != None):
