@@ -1389,17 +1389,29 @@ class MetaData(Element):
 
             # Try to open the file from the local directory being processed
             if (local_directory != None) and (os.path.isfile(local_directory + os.path.sep + filename)):
-                self.data = ET.parse(local_directory + os.path.sep + filename)
-                self.raw_data = self.data.getroot()
+                try:
+                    self.data = ET.parse(local_directory + os.path.sep + filename)
+                    self.raw_data = self.data.getroot()
+                except Exception:
+                    print("Could not open " + local_directory + os.path.sep + filename)
+                    sys.exit(0)
             # If not available, go open via HTTP
             else:
-                req = urllib.request.Request(self.uri)
-                response = urllib.request.urlopen(req)
-                self.data = response.read()
-                self.raw_data = ET.fromstring(self.data)
+                try:
+                    req = urllib.request.Request(self.uri)
+                    response = urllib.request.urlopen(req)
+                    self.data = response.read()
+                    self.raw_data = ET.fromstring(self.data)
+                except Exception:
+                    print("Could not open " + self.uri)
+                    sys.exit(0)
         else:
-            self.data = ET.parse(self.uri)
-            self.raw_data = self.data.getroot()
+            try:
+                self.data = ET.parse(self.uri)
+                self.raw_data = self.data.getroot()
+            except Exception:
+                print("Could not open " + self.uri)
+                sys.exit(0)
         # Start with a ! to ensure it does not overlap with a possible namespace name
         self.namespaces = {'!Included Alias': {}}
         self.annotation = []
