@@ -4,11 +4,6 @@
 
 """
 CSDL to JSON Convertor version 0.1
-
-The Distributed Management Task Force (DMTF) grants rights under copyright in
-this software on the terms of the BSD 3-Clause License as set forth below; no
-other rights are granted by DMTF. This software might be subject to other rights
-(such as patent rights) of other parties.
 """
 
 import cgi
