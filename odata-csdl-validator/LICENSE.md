@@ -4,7 +4,7 @@ other rights are granted by DMTF. This software might be subject to other rights
 (such as patent rights) of other parties.
 
 
-Copyrights.
+### Copyrights.
 
 Copyright (c) 2016, Contributing Member(s) of Distributed Management Task Force,
 Inc.. All rights reserved.
@@ -12,16 +12,14 @@ Inc.. All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-    Redistributions of source code must retain the above copyright notice, this
-    list of conditions and the following disclaimer.
-
-    Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution.
-
-    Neither the name of the Distributed Management Task Force (DMTF) nor the
-    names of its contributors may be used to endorse or promote products derived
-    from this software without specific prior written permission.
+* Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+* Neither the name of the Distributed Management Task Force (DMTF) nor the names
+of its contributors may be used to endorse or promote products derived from this
+software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -35,7 +33,7 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Patents.
+### Patents.
 
 This software may be subject to third party patent rights, including provisional
 patent rights ("patent rights"). DMTF makes no representations to users of the
