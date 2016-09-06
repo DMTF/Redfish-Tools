@@ -28,9 +28,10 @@ Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
   * default *port*         is 8000
   * *mockupDir* is absolute or relative to CWD if starting with . or ..
   * -T option causes mockup server to generate etags on GETs for certain hard coded APIs for testing client patch etag code
-    * 
+    * response header Etag: "W/12345" is returned on GET /redfish/v1/Systems/1
+    * response header Etag: "123456"  is returned on GET /redfish/v1/AccountService/Accounts/1
 * Example:    
-`.\redfishMockupServer -P 8001`   # to start another service on port 8001
+`.\redfishMockupServer -P 8001 -D ./MyServerMockup9`   # to start another service on port 8001 from folder *./MyServerMockup9*
 
 
 
