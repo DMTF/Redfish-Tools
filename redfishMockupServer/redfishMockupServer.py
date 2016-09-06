@@ -132,7 +132,6 @@ def usage(program):
         print("      -H <IpAddr>   --Host=<IpAddr>    # hostIP, default: 127.0.0.1")
         print("      -P <port>     --Port=<port>      # port:  default is 8000")
         print("      -D <dir>,     --Dir=<dir>        # the to the mockup directory. It may be relative to CWD")
-        print("      -D <dir>,     --Dir=<dir>        # the to the mockup directory. It may be relative to CWD")
         print("      -T --TestEtag  # etag testing--enable returning etag for certain APIs for testing.  See Readme")
         sys.stdout.flush()
 
