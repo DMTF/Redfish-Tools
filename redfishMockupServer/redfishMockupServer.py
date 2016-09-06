@@ -130,10 +130,10 @@ def main(argv):
         
         try:
                 opts, args = getopt.getopt(argv[1:],"hLH:P:",["help","Load","Host=","Port="])
-        except getopt.GetoptError as err:
+        except getopt.GetoptError:
                 #usage()
-                print(err)
-                usage()
+                print("Error parsing options")
+                usage(program)
                 sys.exit(2)
 
         for opt, arg in opts:
@@ -153,9 +153,11 @@ def main(argv):
         print ('program: ', program)
         print ('Hostname:', hostname)
         print ('Port:', port)
+        sys.stdout.flush()
 
         myServer=HTTPServer((hostname, port), RfMockupServer)
         print( 'Serving Redfish mockup on port:', port)
+        sys.stdout.flush()
         try:
                 myServer.serve_forever()
         except KeyboardInterupt:
@@ -163,6 +165,7 @@ def main(argv):
 
         myServer.server_close()
         print("Shutting down http server")
+        sys.stdout.flush()
         
 
 # the below is only executed if the program is run as a script
