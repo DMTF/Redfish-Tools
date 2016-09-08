@@ -1,5 +1,7 @@
 # Redfish Documentation Generator
 
+Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+
 ## About
 
 The Documentation Generator is a python tool that parses a set of JSON schema files (typically the entire set for a version) and generates a markdown document.

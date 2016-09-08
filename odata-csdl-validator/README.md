@@ -1,4 +1,6 @@
-# OData Validator - Version 1.0
+# OData CSDL Validator
+
+Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
 
 ## About
 The OData Validator is a python3 tool which crawls through OData formatted metadata, parses it and validates that it conforms to OData V4.0.
