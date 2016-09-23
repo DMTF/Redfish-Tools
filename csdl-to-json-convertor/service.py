@@ -14,6 +14,7 @@ import Utilities as UT
 import os
 import argparse
 import configparser
+from collections import defaultdict
 
 # Enable the printing of error information
 #cgitb.enable()
@@ -195,6 +196,10 @@ class JsonSchemaGenerator:
     #  Returns True if the type has the specified base type n its hierarchy. #
     ##########################################################################
     def has_basetype(self, typetable, type, basetype):
+
+        # This is a pre-parsed JSON object. Skip it
+        if "Node" not in type:
+            return True
 
         # does it have the base type anywhere in it's hierarchy?
         while True:
@@ -1414,7 +1419,7 @@ class JsonSchemaGenerator:
     #  all the data types relevent to generation of JSON                           #
     ################################################################################
     @staticmethod
-    def generate_typetable(url, directory, is_from_refuri):
+    def generate_typetable(url, directory, is_from_refuri, args):
 
         JsonSchemaGenerator.parsed.append(url)
         data = UT.Utilities.open_url(url, directory)
@@ -1433,7 +1438,24 @@ class JsonSchemaGenerator:
 
             #todo: only load types from referenced namespaces			      
             if not refuri in JsonSchemaGenerator.parsed:
-                typetable = dict(list(typetable.items()) + list(JsonSchemaGenerator.generate_typetable(refuri, directory, True)["Typetable"].items()))
+                temptable = JsonSchemaGenerator.generate_typetable(refuri, directory, True, args)
+                if "Typetable" in temptable:
+                    typetable = dict(list(typetable.items()) + list(temptable["Typetable"].items()))
+                else:
+                    if args.stubs != None and args.stubs.has_section(refuri):
+                        options = args.stubs.items(refuri)
+                        d = {}
+                        typename = None
+                        for k, v in options:
+                            if k == 'typename':
+                                typename = v
+                            else:
+                                d[k] = v
+                        d["IsFromRefUri"] = is_from_refuri
+                        typetable[typename] = d
+                    else:
+                        print('Unable to find '+refuri+' or stub')
+                        sys.exit(1)
     
         for dataservices in root.iter("{http://docs.oasis-open.org/odata/ns/edmx}DataServices"):
             current_file_typetable = {}
@@ -1722,6 +1744,7 @@ def main():
     parser.add_argument('--copyright', '-C', dest='copyright', help='The copyright notice to add to the JSON')
     parser.add_argument('--outdir', '-O', dest='outdir', default='./json', help='The output directory for the JSON schema output')
     parser.add_argument('--verbose', '-v', action='count', default=0, dest='verbose', help='Increase the verbosity of the output')
+    parser.add_argument('--stubs', '-S', dest='stubs', help='INI files containing stubs of referenced external schema')
 
     args = parser.parse_args()
 
@@ -1732,6 +1755,12 @@ def main():
 
     if args.copyright == None:
         args.copyright = 'Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
+
+    if args.stubs != None:
+        config = configparser.ConfigParser()
+        config.optionxform=str
+        config.readfp(open(args.stubs))
+        args.stubs = config
 
     if args.verbose >= 1:
         pdb.set_trace()
@@ -1814,7 +1843,7 @@ def generate_json(url, directory, args):
         jsonresults = {}
             
         # Create the type table
-        typeinfo = JsonSchemaGenerator.generate_typetable(filename, directory, False)
+        typeinfo = JsonSchemaGenerator.generate_typetable(filename, directory, False, args)
         typetable = typeinfo["Typetable"]
         namespaces = typeinfo["Namespaces"]
 			    
