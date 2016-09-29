@@ -122,7 +122,7 @@ class Utilities:
 
         except:
             decoded = ""
-            print("failed to open " + url + " as " + filename)
+            #print("failed to open " + url + " as " + filename)
 
         return decoded
 
