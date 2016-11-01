@@ -1569,6 +1569,9 @@ class JsonSchemaGenerator:
                     # todo: support other versions (derived) of Resource and ReferenceableMember
                     elif ( basetype == "Resource.v1_0_0.Resource" ):
                         output += self.generate_json_for_reference_type(typetable, typename, namespace, depth + 1, prefixuri, True)
+                    elif ( basetype == "Resource.v1_0_0.ReferenceableMember" ) and ( currentNamespace == typename ):
+                        # In this case, we have a schema with the sole purpose of defining a ReferenceableMember (like Redundancy)
+                        output += self.generate_json_for_reference_type(typetable, typename, namespace, depth + 1, prefixuri, True)
                     elif ( self.isabstract(typedata) ):
                         output += self.generate_json_for_reference_type(typetable, typename, namespace, depth + 1, prefixuri, False)
                     else:
