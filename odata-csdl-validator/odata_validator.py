@@ -1034,8 +1034,10 @@ class Element(object):
                 for element in term.applies_to:
                     if type(self).__name__ == element:
                         found_element = True
-                if not found_element:
-                    raise SchemaError("Term {} does not apply to this type".format(term.name))
+# ODATA Team says that the AppliesTo Attribute is more of a guideline than a rule. Because of this
+# things should not be disallowed due to a failure to follow applies to checks.
+#                if not found_element:
+#                    raise SchemaError("Term {} does not apply to this type".format(term.name))
 
     def evaluate_expression(self, element):
         """Parses a passed in expression element.
