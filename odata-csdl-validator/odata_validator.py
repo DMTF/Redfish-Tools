@@ -1417,7 +1417,7 @@ class MetaData(Element):
                     retry_count += 1
                 if retry_count >= retry_count_max:
                     print("Could not open " + self.uri)
-                    print("Too many conenction resets")
+                    print("Too many connection resets")
                     sys.exit(0)
         else:
             try:
