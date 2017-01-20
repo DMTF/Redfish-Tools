@@ -2316,6 +2316,8 @@ class NavigationProperty(Element):
         collection, _ = is_collection(self.type)
 
         if 'Nullable' in self.raw_data.attrib:
+            if collection:
+                raise SchemaError("Collection type cannot specify Nullable attribute")
             self.used_attribs.append('Nullable')
             check_type(self.raw_data.attrib['Nullable'], 'Boolean')
             self.nullable = (self.raw_data.attrib['Nullable'] == 'true')
