@@ -24,6 +24,7 @@ import unicodedata
 import os
 import argparse
 import urllib.request
+import errno
 
 global_namespaces = {}
 local_directory = None
@@ -1399,13 +1400,24 @@ class MetaData(Element):
                     sys.exit(0)
             # If not available, go open via HTTP
             else:
-                try:
-                    req = urllib.request.Request(self.uri)
-                    response = urllib.request.urlopen(req)
-                    self.data = response.read()
-                    self.raw_data = ET.fromstring(self.data)
-                except Exception:
+                retry_count = 0
+                retry_count_max = 20
+                while retry_count < retry_count_max:
+                    try:
+                        req = urllib.request.Request(self.uri)
+                        response = urllib.request.urlopen(req)
+                        self.data = response.read()
+                        self.raw_data = ET.fromstring(self.data)
+                        break
+                    except Exception as e:
+                        if e.errno != errno.ECONNRESET:
+                            print("Could not open " + self.uri)
+                            print( e )
+                            sys.exit(0)
+                    retry_count += 1
+                if retry_count >= retry_count_max:
                     print("Could not open " + self.uri)
+                    print("Too many connection resets")
                     sys.exit(0)
         else:
             try:
