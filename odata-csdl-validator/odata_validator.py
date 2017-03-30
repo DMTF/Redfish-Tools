@@ -2202,13 +2202,7 @@ class Property(Element):
                     raise SchemaError( "Type {} only allowed on a property when it is of a complex "
                         "type that is exclusively used as the type of a term, not in complex type".format
                             (type_element.error_id))
-                uses = get_all_uses( self.parent )
-                for element, attr in uses:
-                    if attr != "data_services" and not(attr == 'type' and isinstance(element, Term)):
-                        raise SchemaError( "Type {} only allowed on a property when it is of a "
-                            "complex type that is exclusively used as the type of a term, not "
-                            "exclusively used as type of a term".format
-                            (type_element.error_id))
+                self.check_vocabulary_parent_uses( self.parent, type_element )
 
             elif not any( x in type_element.provides_type
                 for x in ['Edm.PrimitiveType', 'Edm.ComplexType', 'Edm.EnumType']):
@@ -2270,6 +2264,33 @@ class Property(Element):
         #             print(
         #                 "{}->{}->{}->{}".format(
         #                     metadata.uri, schema.name, self.parent.name, self.name))
+
+    def check_vocabulary_parent_uses(self, parent, type_element):
+        """Function for checking how the parents are using this term.
+
+        This function is called for vocabulary terms to ensure the highest level use is a Term.
+
+        Args:
+            parent: The parent to check
+            type_element: The type element of the term
+
+        Returns:
+            None
+
+        Raises:
+            SchemaError: If there is an error in validating the parent usage of the term.
+        """
+
+        uses = get_all_uses( parent )
+        for element, attr in uses:
+            if isinstance(element.parent, ComplexType):
+                # Parent is Complex; scan its parents
+                self.check_vocabulary_parent_uses(element.parent, type_element)
+            elif attr != "data_services" and not(attr == 'type' and isinstance(element, Term)):
+                raise SchemaError( "Type {} only allowed on a property when it is of a "
+                    "complex type that is exclusively used as the type of a term, not "
+                    "exclusively used as type of a term".format
+                    (type_element.error_id))
 
 class NavigationProperty(Element):
     """Class defining an OData NavigationProperty element.
