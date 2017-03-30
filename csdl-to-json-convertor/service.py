@@ -81,7 +81,12 @@ class JsonSchemaGenerator:
         elif ( typetype != "Action" and self.include_type(simplename, current_namespace, root_namespace, typetable ) ) or (typetype == "Action" and self.include_type(simplename, current_typedata["BoundNamespace"], root_namespace, typetable) ):
             refvalue = "#/definitions/" + simplename
         else:
-            refvalue = schemaBaseLocation + current_typedata["Alias"] + ".json#/definitions/" + simplename
+            if "StubRef" in current_typedata:
+                # If the reference comes from a stub, just use its value
+                refvalue = current_typedata["StubRef"]
+            else:
+                # Otherwise use the base schema file
+                refvalue = schemaBaseLocation + current_typedata["Alias"] + ".json#/definitions/" + simplename
 
         return refvalue
 
