@@ -1155,6 +1155,7 @@ class JsonSchemaGenerator:
             firstenumvalue = True
             founddescriptions=False
             foundlongdescriptions=False
+            founddeprecated=False
 
             for member in members:
                 if firstenumvalue:
@@ -1170,6 +1171,9 @@ class JsonSchemaGenerator:
 
                 if member["LongDescription"] != "":
                    foundlongdescriptions = True
+
+                if member["Deprecated"] != "":
+                   founddeprecated = True
 
             output += "\n"
             output += UT.Utilities.indent(depth) + "]"
@@ -1210,6 +1214,24 @@ class JsonSchemaGenerator:
                 output += "\n"
                 output += UT.Utilities.indent(depth)  + "}"
 
+            if founddeprecated:
+                output += ",\n"
+                output += UT.Utilities.indent(depth) + "\"enumDeprecated\": {\n"
+                firstenumvalue = True
+
+                for member in members:
+                    if member["Deprecated"] != "":
+                        if firstenumvalue:
+                            firstenumvalue = False
+
+                        else:
+                            output += ",\n"
+
+                        output += UT.Utilities.indent(depth+1) + "\"" + member["Name"] + "\": \"" + member["Deprecated"] + "\""
+
+                output += "\n"
+                output += UT.Utilities.indent(depth)  + "}"
+
         return output
 
     ############################################################################################
@@ -1224,13 +1246,16 @@ class JsonSchemaGenerator:
         for member in typedata["Node"].iter("{http://docs.oasis-open.org/odata/ns/edm}Member"):
             description = ""
             longdescription = ""
+            deprecated = ""
             for annotation in member.iter("{http://docs.oasis-open.org/odata/ns/edm}Annotation"):
                 if annotation.attrib["Term"] == "OData.Description":
                    description = annotation.attrib["String"]
                 elif annotation.attrib["Term"] == "OData.LongDescription":
                    longdescription = annotation.attrib["String"]
+                elif annotation.attrib["Term"] == "Redfish.Deprecated":
+                   deprecated = annotation.attrib["String"]
 
-            members.append({"Name":member.attrib["Name"], "Description":description, "LongDescription":longdescription})
+            members.append({"Name":member.attrib["Name"], "Description":description, "LongDescription":longdescription, "Deprecated":deprecated})
 
         return self.generate_enum_type(typetable, typedata, typename, namespace, depth, isnullable, members)
 
@@ -1250,6 +1275,7 @@ class JsonSchemaGenerator:
                         for record in element.iter("{http://docs.oasis-open.org/odata/ns/edm}Record"):
                             description = ""
                             longdescription = ""
+                            deprecated = ""
                             for propertyvalue in record.iter("{http://docs.oasis-open.org/odata/ns/edm}PropertyValue"):
                                 if propertyvalue.attrib["Property"] == "Member":
                                     member = propertyvalue.attrib["String"]
@@ -1260,8 +1286,10 @@ class JsonSchemaGenerator:
                                     description = annotation.attrib["String"]
                                 elif annotation.attrib["Term"] == "OData.LongDescription":
                                     longdescription = annotation.attrib["String"]
+                                elif annotation.attrib["Term"] == "Redfish.Deprecated":
+                                    deprecated = annotation.attrib["String"]
 
-                            members.append({"Name":member,"Description":description,"LongDescription":longdescription})
+                            members.append({"Name":member,"Description":description,"LongDescription":longdescription,"Deprecated":deprecated})
                     break
             break
 
