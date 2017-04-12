@@ -1795,7 +1795,7 @@ def main():
         set_config_args(args, config)
 
     if args.copyright == None:
-        args.copyright = 'Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
+        args.copyright = 'Copyright 2014-2017 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
 
     if args.stubs != None:
         config = configparser.ConfigParser()
