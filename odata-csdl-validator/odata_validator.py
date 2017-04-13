@@ -3011,13 +3011,20 @@ class ComplexType(Element, StructuredType):
             check_type(self.raw_data.attrib['OpenType'], 'Boolean')
             self.open_type = (self.raw_data.attrib['OpenType'] == 'true')
 
+        prop_names = []
         for prop in self._get_elements('Property'):
             data = Property(prop, self)
+            if data.name in prop_names:
+                raise SchemaError("Property name {} not unique".format(data.name))
+            prop_names.append(data.name)
             self.defined_properties.append(data)
             self.children.append(data)
 
         for nav_prop in self._get_elements('NavigationProperty'):
             data = NavigationProperty(nav_prop, self)
+            if data.name in prop_names:
+                raise SchemaError("NavigationProperty name {} not unique".format(data.name))
+            prop_names.append(data.name)
             self.defined_nav_properties.append(data)
             self.children.append(data)
 
