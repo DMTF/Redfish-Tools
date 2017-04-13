@@ -1005,7 +1005,7 @@ class JsonSchemaGenerator:
                 output += ",\n" + UT.Utilities.indent(depth) + "\"format\": \"date-time\""
 
             if typename == "Edm.Guid":
-                output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\""
+                output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\""
 
             if typename == "Edm.Duration":
                 output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"-?P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?\""
@@ -1795,7 +1795,7 @@ def main():
         set_config_args(args, config)
 
     if args.copyright == None:
-        args.copyright = 'Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
+        args.copyright = 'Copyright 2014-2017 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
 
     if args.stubs != None:
         config = configparser.ConfigParser()
