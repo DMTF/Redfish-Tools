@@ -203,8 +203,9 @@ class JsonSchemaGenerator:
     def has_basetype(self, typetable, type, basetype):
 
         # This is a pre-parsed JSON object. Skip it
+        # This happens for entities we load in stubs
         if "Node" not in type:
-            return True
+            return False
 
         # does it have the base type anywhere in it's hierarchy?
         while True:
