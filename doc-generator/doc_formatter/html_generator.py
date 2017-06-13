@@ -9,10 +9,10 @@ Brief : Defines HtmlGenerator class.
 
 Initial author: Second Rise LLC.
 """
-
 import html
 import markdown
 from . import DocFormatter
+from . import ToCParser
 
 class HtmlGenerator(DocFormatter):
     """Provides methods for generating markdown from Redfish schemas. """
@@ -25,6 +25,7 @@ class HtmlGenerator(DocFormatter):
             'inline': ', ',
             'linebreak': '<br>'
             }
+        self.table_of_contents = ''
         self.css_content = """
 <style>
  * {margin: 0; padding: 0;}
@@ -39,6 +40,8 @@ class HtmlGenerator(DocFormatter):
  ul, ol {margin-left: 2em;}
  li {margin: 0 0 0.5em;}
  p {margin: 0 0 0.5em;}
+ div.toc {margin: 0 0 2em 0;}
+ .toc ul {list-style-type: none;}
  table{
     max-width: 100%;
     background-color: transparent;
@@ -346,21 +349,33 @@ pre.code{
                 contents.append(section['json_payload'])
 
         self.sections = []
-        return '\n'.join(contents)
+        contents = '\n'.join(contents)
+        return contents
 
 
     def output_document(self):
         """Return full contents of document"""
-        body = self.emit()
+
+
         supplemental = self.config['supplemental']
+        body = ''
 
         intro = supplemental.get('Introduction')
         if intro:
             intro = self.process_intro(intro)
-            body = intro + body
+            body += intro
+
+        body += self.emit()
 
         if 'Postscript' in supplemental:
             body += self.markdown_to_html(supplemental['Postscript'])
+
+        if self.config.get('add_toc'):
+            toc = self.generate_toc(body)
+            if '[add_toc]' in body:
+                body = body.replace('[add_toc]', toc, 1)
+            else:
+                body = toc + body
 
         if 'Title' in supplemental:
             doc_title = supplemental['Title']
@@ -373,6 +388,35 @@ pre.code{
         headlines.append('</head>')
         head = '\n'.join(headlines)
         return '\n'.join(['<!doctype html>', '<html>', head, '<body>', body, '</body></html>'])
+
+
+    def generate_toc(self, html_blob):
+        """ Generate a TOC for an HTML blob (probably the body of this document) """
+
+        toc = ''
+        levels = ['h2']
+        parser = ToCParser(levels)
+        parser.feed(html_blob)
+        toc_data = parser.close()
+
+        current_level = 0
+        for entry in toc_data:
+            level = levels.index(entry['level'])
+            if level > current_level:
+                toc += "<ul>\n"
+            if level < current_level:
+                toc += "</ul>\n"
+            current_level = level
+
+            toc += "<li>" + '<a href="#' + entry['link_id'] +'">' + entry['text'] + "</a></li>\n"
+
+        while current_level > 0:
+            current_level = current_level - 1
+            toc += "</ul>\n"
+
+        toc = '<div class="toc">' + "<ul>\n" + toc + "</ul>\n</div>\n"
+
+        return toc
 
 
     def process_intro(self, intro_blob):
@@ -432,14 +476,11 @@ pre.code{
             }
 
         if text:
-            if link_id:
-                section_text = html.escape(text, False)
-                section_text = '<a name="' + link_id + '"></a>' + section_text
-            else:
-                section_text = html.escape(text, False)
+            section_text = html.escape(text, False)
 
             self.this_section['head'] = text
-            self.this_section['heading'] = self.head_two(section_text)
+            self.this_section['heading'] = self.head_two(section_text, link_id)
+            self.this_section['link_id'] = link_id
 
         self.sections.append(self.this_section)
 
@@ -559,25 +600,34 @@ pre.code{
         """ Split text at linebreaks and output as paragraphs """
         return '\n'.join([HtmlGenerator.para(line) for line in '\n'.split(text) if line])
 
-    def head_one(self, text):
+    def head_one(self, text, anchor_id=None):
         """ Make a top-level heading, relative to the current formatter level """
         level = str(self.level + 1)
-        return '<h' + level + '>' + text + '</h' + level + '>'
+        return self._head_base(text, level, anchor_id)
 
-    def head_two(self, text):
+    def head_two(self, text, anchor_id=None):
         """ Make a second-level heading, relative to the current formatter level """
         level = str(self.level + 2)
-        return '<h' + level + '>' + text + '</h' + level + '>'
+        return self._head_base(text, level, anchor_id)
 
-    def head_three(self, text):
+    def head_three(self, text, anchor_id=None):
         """ Make a third-level heading, relative to the current formatter level """
         level = str(self.level + 3)
-        return '<h' + level + '>' + text + '</h' + level + '>'
+        return self._head_base(text, level, anchor_id)
 
-    def head_four(self, text):
+    def head_four(self, text, anchor_id=None):
         """ Make a fourth-level heading, relative to the current formatter level """
         level = str(self.level + 4)
-        return '<h' + level + '>' + text + '</h' + level + '>'
+        return self._head_base(text, level, anchor_id)
+
+    @staticmethod
+    def _head_base(text, level, anchor_id=None):
+        if anchor_id:
+            open_tag = '<h' + level + ' id="' + anchor_id + '">'
+        else:
+            open_tag = '<h' + level + '>'
+        return open_tag + text + '</h' + level + '>'
+
 
     @staticmethod
     def markdown_to_html(markdown_blob):
@@ -585,7 +635,8 @@ pre.code{
         html_blob = markdown.markdown(markdown_blob,
                                       extensions=['markdown.extensions.codehilite',
                                                   'markdown.extensions.fenced_code',
-                                                  'markdown.extensions.tables'])
+                                                  'markdown.extensions.tables',
+                                                  'markdown.extensions.toc'])
         # Look for empty table rows; used to get tables without headers recognized:
         if '<table>' in html_blob:
             lines = []

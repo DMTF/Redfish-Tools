@@ -25,15 +25,23 @@ schema_root_uri, string. If absent, defaults to "http://redfish.dmtf.org/schemas
 
 omit_version_in_headers, boolean. Default false. If false, schema sections in the generated documentation will be headed by schema name and version number. If true, only the schema name will appear in the heading.
 
+add_toc, boolean. Default false. Add a Table of Contents (relevant for HTML output only)
+
 - omit_version_in_headers: false
 - schema_root_uri: http://redfish.dmtf.org/schemas/v1/
+- add_toc: true
 
+Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output.
 
 # Introduction
 
 Text placed here will appear at the top of the output.  Document common usage, common properties excluded from the schema tables, and anything else useful. Typically you will start with a first-level heading (title), but in this example we start with this paragraph.
 
 # Title goes here
+
+Optionally specify that this is where you want the TOC:
+
+[add_toc]
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum
 
@@ -302,5 +310,5 @@ This is the ResetBios Action documentation.
 Use this section to "rewrite" URIs for links to schemas not documented in this output. * wildcard is supported. Include each as a second-level heading with a pipe separating the URI to replace from the replacement.
 
 ## http://redfish.dmtf.org/schemas/v1/Manager.json#/definitions/Manager | http://www.example.com/Manager_documentation
-## redfish.dmtf.org/schemas/v1/Therm* | https://www.example.com/Thermal_documentation
+
 ## *//redfish.dmtf.org/schemas/v1/Drive*.json | https://www.example.com/Drive_documentation

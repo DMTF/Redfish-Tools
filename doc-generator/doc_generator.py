@@ -144,6 +144,7 @@ def main():
         config['excluded_schemas_by_match'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
 
     config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
+    config['add_toc'] = config['supplemental']['keywords'].get('add_toc')
 
     config['normative'] = args.normative
 
