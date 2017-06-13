@@ -1,15 +1,70 @@
-# Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/LICENSE.md
-
 """
 File : markdown_generator.py
 
 Brief : This file contains definitions for the MarkdownGenerator class.
 
 Initial author: Second Rise LLC.
-"""
 
+
+The Distributed Management Task Force (DMTF) grants rights under copyright in
+this software on the terms of the BSD 3-Clause License as set forth below; no
+other rights are granted by DMTF. This software might be subject to other rights
+(such as patent rights) of other parties.
+
+Copyrights.
+
+Copyright (c) 2016, Contributing Member(s) of Distributed Management Task Force,
+Inc.. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+    Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+    Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+    Neither the name of the Distributed Management Task Force (DMTF) nor the
+    names of its contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+Patents.
+
+This software may be subject to third party patent rights, including provisional
+patent rights ("patent rights"). DMTF makes no representations to users of the
+standard as to the existence of such rights, and is not responsible to
+recognize, disclose, or identify any or all such third party patent right,
+owners or claimants, nor for any incomplete or inaccurate identification or
+disclosure of such rights, owners or claimants. DMTF shall have no liability to
+any party, in any manner or circumstance, under any legal theory whatsoever, for
+failure to recognize, disclose, or identify any such third party patent rights,
+or for such party’s reliance on the software or incorporation thereof in its
+product, protocols or testing procedures. DMTF shall have no liability to any
+party using such software, whether such use is foreseeable or not, nor to any
+patent owner or claimant, and shall have no liability or responsibility for
+costs or losses incurred if software is withdrawn or modified after publication,
+and shall be indemnified and held harmless by any party using the software from
+any and all claims of infringement by a patent owner for such use.
+
+DMTF Members that contributed to this software source code might have made
+patent licensing commitments in connection with their participation in the DMTF.
+For details, see http://dmtf.org/sites/default/files/patent-10-18-01.pdf and
+http://www.dmtf.org/about/policies/disclosures.
+"""
 from . import DocFormatter
 
 class MarkdownGenerator(DocFormatter):
@@ -19,8 +74,8 @@ class MarkdownGenerator(DocFormatter):
     """
 
 
-    def __init__(self, property_data, traverser, config):
-        super(MarkdownGenerator, self).__init__(property_data, traverser, config)
+    def __init__(self, property_data, traverser, config, level=0):
+        super(MarkdownGenerator, self).__init__(property_data, traverser, config, level)
         self.sections = []
         self.separators = {
             'inline': ', ',
@@ -29,10 +84,13 @@ class MarkdownGenerator(DocFormatter):
 
 
     def format_property_row(self, schema_name, prop_name, prop_info, meta=None, current_depth=0):
-        """Format information for a single property. Returns an object with 'row' and 'details'.
+        """Format information for a single property.
+
+        Returns an object with 'row', 'details', and 'action_details':
 
         'row': content for the main table being generated.
         'details': content for the Property Details section.
+        'action_details': content for the Actions section.
 
         This may include embedded objects with their own properties.
         """
@@ -44,19 +102,25 @@ class MarkdownGenerator(DocFormatter):
         if not meta:
             meta = {}
 
-        name_and_version = '**' + self.escape_for_markdown(prop_name, self.config['escape_chars']) + '**'
+        if prop_name:
+            name_and_version = self.bold(self.escape_for_markdown(prop_name,
+                                                                  self.config['escape_chars']))
+        else:
+            name_and_version = ''
         if 'version' in meta:
             version_display = self.truncate_version(meta['version'], 2) + '+'
             if 'version_deprecated' in meta:
                 deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
-                name_and_version += ' *(v' + version_display + ', deprecated v' + deprecated_display +  ')*'
+                name_and_version += ' ' + self.italic('(v' + version_display +
+                                                      ', deprecated v' + deprecated_display +  ')')
             else:
-                name_and_version += ' *(v' + version_display + ')*'
+                name_and_version += ' ' + self.italic('(v' + version_display + ')')
         elif 'version_deprecated' in meta:
             deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
-            name_and_version += ' *(deprecated v' + deprecated_display +  ')*'
+            name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
 
-        formatted_details = self.parse_property_info(schema_name, prop_name, traverser, prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_name, prop_name, traverser, prop_info,
+                                                     current_depth)
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -82,23 +146,37 @@ class MarkdownGenerator(DocFormatter):
 
         if formatted_details['prop_is_array']:
             if formatted_details['item_description'] == '':
-                name_and_version += ' [ {} ]'
+                if formatted_details['array_of_objects']:
+                    name_and_version += ' [ {} ]'
+                else:
+                    name_and_version += ' [ ]'
             else:
-                name_and_version += ' [ {'
+                if formatted_details['array_of_objects']:
+                    name_and_version += ' [ {'
+                else:
+                    name_and_version += ' ['
+
+        if formatted_details['add_link_text']:
+            if formatted_details['descr']:
+                formatted_details['descr'] += ' '
+            formatted_details['descr'] += formatted_details['add_link_text']
 
         # If there are prop_details (enum details), add a note to the description:
         if formatted_details['has_direct_prop_details']:
-            formatted_details['descr'] += ' *See Property Details, below, for more information about this property.*'
+            text_descr = 'See Property Details, below, for more information about this property.'
+            formatted_details['descr'] += ' ' + self.italic(text_descr)
 
-
+        if formatted_details['has_action_details']:
+            text_descr = 'For more information, see the Action Details section below.'
+            formatted_details['descr'] += ' ' + self.italic(text_descr)
         prop_type = formatted_details['prop_type']
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
 
         if formatted_details['read_only']:
-            prop_type += '<br><br>*' + 'read-only' + '*'
+            prop_type += '<br><br>' + self.italic('read-only')
         else:
-            prop_type += '<br><br>*' + 'read-write' + '*'
+            prop_type += '<br><br>' + self.italic('read-write')
 
         row = []
         row.append(indentation_string + name_and_version)
@@ -113,16 +191,21 @@ class MarkdownGenerator(DocFormatter):
 
         if len(formatted_details['item_description']) > 0:
             formatted.append(formatted_details['item_description'])
-            formatted.append('| ' + indentation_string + '} ] |   |   |')
+            if formatted_details['array_of_objects']:
+                formatted.append('| ' + indentation_string + '} ] |   |   |')
+            else:
+                formatted.append('| ' + indentation_string + '] |   |   |')
 
-        return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details']})
+        return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
+                'action_details':formatted_details.get('action_details')})
 
 
-    def format_property_details(self, prop_name, prop_type, enum, enum_details, supplemental_details):
+    def format_property_details(self, prop_name, prop_type, enum, enum_details,
+                                supplemental_details):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
-        contents.append('### ' + prop_name + ':\n')
+        contents.append(self.head_three(prop_name + ':'))
 
         if isinstance(prop_type, list):
             prop_type = ', '.join(prop_type)
@@ -146,25 +229,31 @@ class MarkdownGenerator(DocFormatter):
         return '\n'.join(contents) + '\n'
 
 
-    def format_list_of_object_descriptions(self, schema_name, prop_items, traverser, current_depth):
-        """Format a (possibly nested) list of embedded objects.
+    def format_action_details(self, prop_name, action_details):
+        """Generate a formatted Actions section.
 
-        We expect this to amount to one definition, usually for 'items' in an array."""
+        Currently, Actions details are entirely derived from the supplemental documentation."""
 
-        if isinstance(prop_items, dict):
-            return self.format_object_description(schema_name, prop_items, traverser, current_depth)
+        contents = []
+        contents.append(self.head_three(action_details.get('action_name', prop_name)))
+        if action_details.get('text'):
+            contents.append(action_details.get('text'))
+        if action_details.get('example'):
+            example = '```json\n' + action_details['example'] + '\n```\n'
+            contents.append('Example Action POST:\n')
+            contents.append(example)
 
-        rows = []
-        details = {}
-        if isinstance(prop_items, list):
-            for prop_item in prop_items:
-                formatted = self.format_list_of_object_descriptions(schema_name, prop_item, traverser, current_depth)
-                rows.extend(formatted['rows'])
-                details.update(formatted['details'])
-            return ({'rows': rows, 'details': details})
+        return '\n'.join(contents) + '\n'
 
-        return None
 
+    def link_to_own_schema(self, schema_name):
+        """Format a reference to a schema in this project's namespace"""
+        return self.italic(schema_name)
+
+
+    def link_to_outside_schema(self, schema_uri):
+        """Format a reference to a schema_uri, which should be a valid URI"""
+        return self.italic('['+ schema_uri + '](' + schema_uri + ')')
 
 
     def emit(self):
@@ -173,19 +262,22 @@ class MarkdownGenerator(DocFormatter):
         contents = []
 
         for section in self.sections:
-            contents.append(section['heading'])
-            if section['description']:
+            contents.append(section.get('heading'))
+            if section.get('description'):
                 contents.append(section['description'])
-            if section['json_payload']:
+            if section.get('json_payload'):
                 contents.append(section['json_payload'])
             # something is awry if there are no properties, but ...
-            if section['properties']:
+            if section.get('properties'):
                 contents.append('|     |     |     |')
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
-            if section['property_details']:
-                contents.append('\n## Property Details\n')
+            if section.get('property_details'):
+                contents.append('\n' + self.head_two('Property Details'))
                 contents.append('\n'.join(section['property_details']))
+            if len(section.get('action_details', [])):
+                contents.append('\n' + self.head_two('Actions'))
+                contents.append('\n\n'.join(section.get('action_details')))
 
         self.sections = []
         return '\n'.join(contents)
@@ -194,7 +286,6 @@ class MarkdownGenerator(DocFormatter):
     def output_document(self):
         """Return full contents of document"""
         body = self.emit()
-
         supplemental = self.config['supplemental']
 
         if 'Title' in supplemental:
@@ -211,21 +302,68 @@ search: true
 ---
 """
 
-        if 'Introduction' in supplemental:
-            prelude += '\n' + supplemental['Introduction'] + '\n'
+        intro = supplemental.get('Introduction')
+        if intro:
+            intro = self.process_intro(intro)
+            prelude += '\n' + intro + '\n'
         contents = [prelude, body]
         if 'Postscript' in supplemental:
             contents.append('\n' + supplemental['Postscript'])
         return '\n'.join(contents)
 
 
-    def add_section(self, text):
+    def process_intro(self, intro_blob):
+        """ Process the intro text, generating and inserting any schema fragments """
+        parts = []
+        intro = []
+        part_text = []
+
+        fragment_config = {
+            'schema_root_uri': self.config['schema_root_uri'],
+            'output_format': 'markdown',
+            'normative': self.config['normative'],
+            'cwd': self.config['cwd'],
+            'schema_supplement': {},
+            'supplemental': {},
+            'excluded_annotations': [],
+            'excluded_annotations_by_match': [],
+            'excluded_properties': [],
+            'excluded_by_match': [],
+            'excluded_schemas': [],
+            'excluded_schemas_by_match': [],
+            'escape_chars': [],
+            'uri_replacements': {},
+            }
+
+        for line in intro_blob.splitlines():
+            if line.startswith('#include_fragment'):
+                if len(part_text):
+                    parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
+                    part_text = []
+                    fragment_id = line[17:].strip()
+                    fragment_content = self.generate_fragment_doc(fragment_id, fragment_config)
+                    parts.append({'type': 'fragment', 'content': fragment_content})
+            else:
+                part_text.append(line)
+
+        if len(part_text):
+            parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
+
+        for part in parts:
+            if part['type'] == 'markdown':
+                intro.append(part['content'])
+            elif part['type'] == 'fragment':
+                intro.append(part['content'])
+        return '\n'.join(intro)
+
+
+    def add_section(self, text, link_id=False):
         """ Add a top-level heading """
         self.this_section = {'head': text,
-                             'heading': '\n# ' + text + '\n',
+                             'heading': '\n' + self.head_one(text),
                              'properties': [],
                              'property_details': []
-                             }
+                            }
 
         self.sections.append(self.this_section)
 
@@ -255,9 +393,41 @@ search: true
         self.this_section['property_details'].append(formatted_details)
 
 
+    def head_one(self, text):
+        """Add a top-level heading, relative to the generator's level"""
+        add_level = '' + '#' * self.level
+        return add_level + '# ' + text + "\n"
+
+    def head_two(self, text):
+        """Add a second-level heading, relative to the generator's level"""
+        add_level = '' + '#' * self.level
+        return add_level + '## ' + text + "\n"
+
+    def head_three(self, text):
+        """Add a third-level heading, relative to the generator's level"""
+        add_level = '' + '#' * self.level
+        return add_level + '### ' + text + "\n"
+
+    def head_four(self, text):
+        """Add a fourth-level heading, relative to the generator's level"""
+        add_level = '' + '#' * self.level
+        return add_level + '##### ' + text + "\n"
+
+
     @staticmethod
     def escape_for_markdown(text, chars):
         """Escape selected characters in text to prevent auto-formatting in markdown."""
         for char in chars:
             text = text.replace(char, '\\' + char)
         return text
+
+    @staticmethod
+    def bold(text):
+        """Apply bold to text"""
+        return '**' + text + '**'
+
+
+    @staticmethod
+    def italic(text):
+        """Apply italic to text"""
+        return '*' + text + '*'
