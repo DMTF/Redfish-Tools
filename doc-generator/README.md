@@ -8,36 +8,60 @@ The Documentation Generator is a python tool that parses a set of JSON schema fi
 
 Output is GitHub-flavored markdown targeted for the Slate documentation tool (https://github.com/tripit/slate).
 
-## Usage
+## Installation
 
-* Ensure that the machine running the tool has python3 installed. For markdown output, only the standard library is required. For HTML output, python-markdown must also be installed: https://pythonhosted.org/Markdown/install.html
+* Ensure that the machine running the tool has python3 installed. For markdown output, only the standard library is required.
+* For HTML output, python-markdown and Pygments must also be installed:
+  * python-markdown: https://pythonhosted.org/Markdown/install.html
+  * Pygments: http://pygments.org/
 
-* Identify the location of the JSON schema file(s) on your local system.
+If you are using pip:
 
 ```
-usage: doc_generator.py [-h] [-n] [--format {markdown,html}] [--out OUTFILE]
+% pip install -r requirements.txt
+```
+
+## Usage
+
+By default, doc_generator will look for a json-schema directory and
+supplement file in the directory from which it is run. Alternatively,
+you can specify these locations on the command line.
+
+```
+usage: doc_generator.py [-h] [-n] [--format {markdown,html}] [--out
+OUTFILE]
                         [--sup SUPFILE] [--escape ESCAPE_CHARS]
-                        import_from [import_from ...]
+                        [import_from]
 
 Generate documentation for Redfish JSON schema files.
 
 positional arguments:
-  import_from           Name of a file or directory to process (wildcards are
-                        acceptable)
+  import_from           Name of a file or directory to process
+  (wildcards are
+                        acceptable). Default: json-schema
 
 optional arguments:
   -h, --help            show this help message and exit
   -n, --normative       Produce normative (developer-focused) output
   --format {markdown,html}
                         Output format
-  --out OUTFILE         Output file (default depends on output format)
-  --sup SUPFILE         Path to the supplemental material document. Default is
-                        usersupplement.md for user-focused documentation, and
+  --out OUTFILE         Output file (default depends on output format:
+                        output.md for markdown, index.html for html)
+  --sup SUPFILE         Path to the supplemental material
+  document. Default is
+                        usersupplement.md for user-focused
+                        documentation, and
                         devsupplement.md for normative documentation.
   --escape ESCAPE_CHARS
-                        Characters to escape (\) in generated markdown; e.g.,
-                        --escape=@#. Use --escape=@ if strings with embedded @
+                        Characters to escape (\) in generated
+                        markdown; e.g.,
+                        --escape=@#. Use --escape=@ if strings with
+                        embedded @
                         are being converted to mailto links.
+
+Example:
+   doc_generator.py --format=html
+   doc_generator.py --format=html --out=/path/to/output/index.html /path/to/spmf/json-files
 ```
 
 Normative output prefers longDescriptions to descriptions.

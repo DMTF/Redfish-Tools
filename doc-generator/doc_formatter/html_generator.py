@@ -10,16 +10,16 @@ Brief : Defines HtmlGenerator class.
 Initial author: Second Rise LLC.
 """
 
-from . import DocFormatter
-import markdown
 import html
+import markdown
+from . import DocFormatter
 
 class HtmlGenerator(DocFormatter):
     """Provides methods for generating markdown from Redfish schemas. """
 
 
-    def __init__(self, property_data, traverser, config):
-        super(HtmlGenerator, self).__init__(property_data, traverser, config)
+    def __init__(self, property_data, traverser, config, level=0):
+        super(HtmlGenerator, self).__init__(property_data, traverser, config, level)
         self.sections = []
         self.separators = {
             'inline': ', ',
@@ -58,7 +58,7 @@ class HtmlGenerator(DocFormatter):
 table.properties{
     width: 100%;
 }
-.property-details table{
+.property-details-content {
     margin-left: 5em;
 }
 pre.code{
@@ -66,15 +66,88 @@ pre.code{
     margin-left: 5em;
     color: #0000FF
 }
+
+.codehilite .hll { background-color: #ffffcc }
+.codehilite  { background: #f8f8f8; }
+.codehilite .c { color: #408080; font-style: italic } /* Comment */
+.codehilite .err { border: 1px solid #FF0000 } /* Error */
+.codehilite .k { color: #008000; font-weight: bold } /* Keyword */
+.codehilite .o { color: #666666 } /* Operator */
+.codehilite .ch { color: #408080; font-style: italic } /* Comment.Hashbang */
+.codehilite .cm { color: #408080; font-style: italic } /* Comment.Multiline */
+.codehilite .cp { color: #BC7A00 } /* Comment.Preproc */
+.codehilite .cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
+.codehilite .c1 { color: #408080; font-style: italic } /* Comment.Single */
+.codehilite .cs { color: #408080; font-style: italic } /* Comment.Special */
+.codehilite .gd { color: #A00000 } /* Generic.Deleted */
+.codehilite .ge { font-style: italic } /* Generic.Emph */
+.codehilite .gr { color: #FF0000 } /* Generic.Error */
+.codehilite .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.codehilite .gi { color: #00A000 } /* Generic.Inserted */
+.codehilite .go { color: #888888 } /* Generic.Output */
+.codehilite .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.codehilite .gs { font-weight: bold } /* Generic.Strong */
+.codehilite .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.codehilite .gt { color: #0044DD } /* Generic.Traceback */
+.codehilite .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.codehilite .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.codehilite .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.codehilite .kp { color: #008000 } /* Keyword.Pseudo */
+.codehilite .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.codehilite .kt { color: #B00040 } /* Keyword.Type */
+.codehilite .m { color: #666666 } /* Literal.Number */
+.codehilite .s { color: #BA2121 } /* Literal.String */
+.codehilite .na { color: #7D9029 } /* Name.Attribute */
+.codehilite .nb { color: #008000 } /* Name.Builtin */
+.codehilite .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.codehilite .no { color: #880000 } /* Name.Constant */
+.codehilite .nd { color: #AA22FF } /* Name.Decorator */
+.codehilite .ni { color: #999999; font-weight: bold } /* Name.Entity */
+.codehilite .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+.codehilite .nf { color: #0000FF } /* Name.Function */
+.codehilite .nl { color: #A0A000 } /* Name.Label */
+.codehilite .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+.codehilite .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.codehilite .nv { color: #19177C } /* Name.Variable */
+.codehilite .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+.codehilite .w { color: #bbbbbb } /* Text.Whitespace */
+.codehilite .mb { color: #666666 } /* Literal.Number.Bin */
+.codehilite .mf { color: #666666 } /* Literal.Number.Float */
+.codehilite .mh { color: #666666 } /* Literal.Number.Hex */
+.codehilite .mi { color: #666666 } /* Literal.Number.Integer */
+.codehilite .mo { color: #666666 } /* Literal.Number.Oct */
+.codehilite .sa { color: #BA2121 } /* Literal.String.Affix */
+.codehilite .sb { color: #BA2121 } /* Literal.String.Backtick */
+.codehilite .sc { color: #BA2121 } /* Literal.String.Char */
+.codehilite .dl { color: #BA2121 } /* Literal.String.Delimiter */
+.codehilite .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.codehilite .s2 { color: #BA2121 } /* Literal.String.Double */
+.codehilite .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+.codehilite .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.codehilite .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+.codehilite .sx { color: #008000 } /* Literal.String.Other */
+.codehilite .sr { color: #BB6688 } /* Literal.String.Regex */
+.codehilite .s1 { color: #BA2121 } /* Literal.String.Single */
+.codehilite .ss { color: #19177C } /* Literal.String.Symbol */
+.codehilite .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.codehilite .fm { color: #0000FF } /* Name.Function.Magic */
+.codehilite .vc { color: #19177C } /* Name.Variable.Class */
+.codehilite .vg { color: #19177C } /* Name.Variable.Global */
+.codehilite .vi { color: #19177C } /* Name.Variable.Instance */
+.codehilite .vm { color: #19177C } /* Name.Variable.Magic */
+.codehilite .il { color: #666666 } /* Literal.Number.Integer.Long */
 </style>
 """
 
 
     def format_property_row(self, schema_name, prop_name, prop_info, meta=None, current_depth=0):
-        """Format information for a single property. Returns an object with 'row' and 'details'.
+        """Format information for a single property.
+
+        Returns an object with 'row', 'details', and 'action_details':
 
         'row': content for the main table being generated.
         'details': content for the Property Details section.
+        'action_details': content for the Actions section.
 
         This may include embedded objects with their own properties.
         """
@@ -93,7 +166,8 @@ pre.code{
             if 'version_deprecated' in meta:
                 version_depr = html.escape(meta['version_deprecated'], False)
                 deprecated_display = self.truncate_version(version_depr, 2)
-                name_and_version += ' ' + self.italic('(v' + version_display + ', deprecated v' + deprecated_display +  ')')
+                name_and_version += ' ' + self.italic('(v' + version_display +
+                                                      ', deprecated v' + deprecated_display +  ')')
             else:
                 name_and_version += ' ' + self.italic('(v' + version_display + ')')
         elif 'version_deprecated' in meta:
@@ -101,7 +175,8 @@ pre.code{
             deprecated_display = self.truncate_version(version_depr, 2)
             name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
 
-        formatted_details = self.parse_property_info(schema_name, prop_name, traverser, prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_name, prop_name, traverser,
+                                                     prop_info, current_depth)
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -121,21 +196,37 @@ pre.code{
 
         if formatted_details['prop_is_object']:
             if formatted_details['object_description'] == '':
-                name_and_version += ' {}'
+                name_and_version += ' { }'
             else:
                 name_and_version += ' {'
 
         if formatted_details['prop_is_array']:
             if formatted_details['item_description'] == '':
-                name_and_version += ' [ {} ]'
+                if formatted_details['array_of_objects']:
+                    name_and_version += ' [ { } ]'
+                else:
+                    name_and_version += ' [ ] '
             else:
-                name_and_version += ' [ {'
+                if formatted_details['array_of_objects']:
+                    name_and_version += ' [ {'
+                else:
+                    name_and_version += ' [ '
 
         formatted_details['descr'] = html.escape(formatted_details['descr'], False)
+        if formatted_details['add_link_text']:
+            if formatted_details['descr']:
+                formatted_details['descr'] += ' '
+            formatted_details['descr'] += formatted_details['add_link_text']
+
         # If there are prop_details (enum details), add a note to the description:
         if formatted_details['has_direct_prop_details']:
-            formatted_details['descr'] += '<br>' + self.italic('See Property Details, below, for more information about this property.')
+            text_descr = 'See Property Details, below, for more information about this property.'
+            formatted_details['descr'] += '<br>' + self.italic(text_descr)
 
+        # If this is an Action with details, add a note to the description:
+        if formatted_details['has_action_details']:
+            text_descr = 'For more information, see the Action Details section below.'
+            formatted_details['descr'] += '<br>' + self.italic(text_descr)
 
         prop_type = html.escape(formatted_details['prop_type'], False)
         if formatted_details['prop_units']:
@@ -163,14 +254,18 @@ pre.code{
         if len(formatted_details['item_description']) > 0:
             formatted.append(formatted_details['item_description'])
             desc_row = [''] * len(row)
-            desc_row[0] = indentation_string + '} ]'
+            if formatted_details['array_of_objects']:
+                desc_row[0] = indentation_string + '} ]'
+            else:
+                desc_row[0] = indentation_string + ']'
             formatted.append(self.make_row(desc_row))
 
+        return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
+                'action_details':formatted_details.get('action_details')})
 
-        return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details']})
 
-
-    def format_property_details(self, prop_name, prop_type, enum, enum_details, supplemental_details):
+    def format_property_details(self, prop_name, prop_type, enum, enum_details,
+                                supplemental_details):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
@@ -189,7 +284,9 @@ pre.code{
             table_rows = []
             enum.sort()
             for enum_item in enum:
-                table_rows.append(self.make_row([html.escape(enum_item, False), html.escape(enum_details.get(enum_item, ''), False)]))
+                table_rows.append(self.make_row([html.escape(enum_item, False),
+                                                 html.escape(enum_details.get(enum_item, ''),
+                                                             False)]))
             contents.append(self.make_table(table_rows, [header_row], 'enum enum-details'))
 
         elif enum:
@@ -203,24 +300,20 @@ pre.code{
         return '\n'.join(contents) + '\n'
 
 
-    def format_list_of_object_descriptions(self, schema_name, prop_items, traverser, current_depth):
-        """Format a (possibly nested) list of embedded objects.
+    def format_action_details(self, prop_name, action_details):
+        """Generate a formatted Actions section.
 
-        We expect this to amount to one definition, usually for 'items' in an array."""
+        Currently, Actions details are entirely derived from the supplemental documentation."""
 
-        if isinstance(prop_items, dict):
-            return self.format_object_description(schema_name, prop_items, traverser, current_depth)
+        contents = []
+        contents.append(self.head_four(action_details.get('action_name', prop_name)))
+        contents.append(self.markdown_to_html(action_details.get('text', '')))
+        if action_details.get('example'):
+            example = '```json\n' + action_details['example'] + '\n```\n'
+            contents.append(self.para('Example Action POST:'))
+            contents.append(self.markdown_to_html(example))
 
-        rows = []
-        details = {}
-        if isinstance(prop_items, list):
-            for prop_item in prop_items:
-                formatted = self.format_list_of_object_descriptions(schema_name, prop_item, traverser, current_depth)
-                rows.extend(formatted['rows'])
-                details.update(formatted['details'])
-            return ({'rows': rows, 'details': details})
-
-        return None
+        return '\n'.join(contents) + '\n'
 
 
     def emit(self):
@@ -229,21 +322,28 @@ pre.code{
         contents = []
 
         for section in self.sections:
-            contents.append(section['heading'])
-            if section['description']:
+            contents.append(section.get('heading'))
+
+            if section.get('description'):
                 contents.append(section['description'])
-            # something is awry if there are no properties, but ...
-            if section['properties']:
+            # something is awry if there are no properties
+            if section.get('properties'):
                 contents.append(self.make_table(section['properties'], None, 'properties'))
-            if section['property_details']:
+            if section.get('property_details'):
                 deets = []
                 deets.append(self.head_three('Property Details'))
-                deets.append('\n'.join(section['property_details']))
+                deets.append(self.make_div('\n'.join(section['property_details']),
+                                           'property-details-content'))
                 contents.append(self.make_div('\n'.join(deets), 'property-details'))
-            if section['json_payload']:
+            if len(section.get('action_details', [])):
+                action_details = '\n'.join(section['action_details'])
+                deets = []
+                deets.append(self.head_three('Actions'))
+                deets.append(self.make_div(action_details, 'property-details-content'))
+                contents.append(self.make_div('\n'.join(deets), 'property-details'))
+            if section.get('json_payload'):
                 contents.append(self.head_three('Example Response'))
                 contents.append(section['json_payload'])
-
 
         self.sections = []
         return '\n'.join(contents)
@@ -254,8 +354,11 @@ pre.code{
         body = self.emit()
         supplemental = self.config['supplemental']
 
-        if 'Introduction' in supplemental:
-            body = self.markdown_to_html(supplemental['Introduction']) + body
+        intro = supplemental.get('Introduction')
+        if intro:
+            intro = self.process_intro(intro)
+            body = intro + body
+
         if 'Postscript' in supplemental:
             body += self.markdown_to_html(supplemental['Postscript'])
 
@@ -269,18 +372,74 @@ pre.code{
         headlines.append(styles)
         headlines.append('</head>')
         head = '\n'.join(headlines)
-
         return '\n'.join(['<!doctype html>', '<html>', head, '<body>', body, '</body></html>'])
 
 
-    def add_section(self, text):
-        """ Add a top-level heading """
-        self.this_section = {
-            'head': text,
-            'heading': self.head_two(html.escape(text, False)),
-            'properties': [],
-            'property_details': []
+    def process_intro(self, intro_blob):
+        """ Process the Intro markdown, pulling in any schema fragments """
+
+        parts = []
+        intro = []
+        part_text = []
+
+        fragment_config = {
+            'schema_root_uri': self.config['schema_root_uri'],
+            'output_format': 'html',
+            'normative': self.config['normative'],
+            'cwd': self.config['cwd'],
+            'schema_supplement': {},
+            'supplemental': {},
+            'excluded_annotations': [],
+            'excluded_annotations_by_match': [],
+            'excluded_properties': [],
+            'excluded_by_match': [],
+            'excluded_schemas': [],
+            'excluded_schemas_by_match': [],
+            'escape_chars': [],
+            'uri_replacements': {},
             }
+
+        for line in intro_blob.splitlines():
+            if line.startswith('#include_fragment'):
+                if len(part_text):
+                    parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
+                    part_text = []
+                    fragment_id = line[17:].strip()
+                    fragment_content = self.generate_fragment_doc(fragment_id, fragment_config)
+                    parts.append({'type': 'fragment', 'content': fragment_content})
+            else:
+                part_text.append(line)
+
+        if len(part_text):
+            parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
+
+        for part in parts:
+            if part['type'] == 'markdown':
+                intro.append(self.markdown_to_html(part['content']))
+            elif part['type'] == 'fragment':
+                intro.append(part['content'])
+        return '\n'.join(intro)
+
+
+    def add_section(self, text, link_id=False):
+        """ Add a top-level heading """
+
+        self.this_section = {
+            'properties': [],
+            'property_details': [],
+            'head': '',
+            'heading': ''
+            }
+
+        if text:
+            if link_id:
+                section_text = html.escape(text, False)
+                section_text = '<a name="' + link_id + '"></a>' + section_text
+            else:
+                section_text = html.escape(text, False)
+
+            self.this_section['head'] = text
+            self.this_section['heading'] = self.head_two(section_text)
 
         self.sections.append(self.this_section)
 
@@ -296,51 +455,8 @@ pre.code{
         This may include comments as well as a ```json block. """
         if json_payload:
 
-            chunks = []
-            chunk = ''
-            chunk_is_json = False
-            chunk_is_code = False
-            for line in json_payload.splitlines():
-                if line.startswith('```'):
-                    if chunk_is_code:
-                        if chunk_is_json:
-                            code_type = 'json'
-                        else:
-                            code_type = 'code'
-                        chunks.append({'content': chunk, 'content_type': code_type})
-                        chunk = ''
-                        chunk_is_json = chunk_is_code = False
-                    else:
-                        chunks.append({'content': chunk, 'content_type': 'text'})
-                        chunk = ''
-                        chunk_is_code = True
-                        chunk_is_json = 'json' in line
-                else:
-                    chunk = chunk + '\n' + line
-            if chunk:
-                if chunk_is_code:
-                    if chunk_is_json:
-                        code_type = 'json'
-                    else:
-                        code_type = 'code'
-                else:
-                    code_type = 'text'
-                chunks.append({'content': chunk, 'content_type': code_type})
-
-            contents = []
-            for chunk in chunks:
-                if chunk['content_type'] == 'json':
-                    contents.append('<pre class="code json">\n' +
-                                    html.escape(chunk['content'], False) +
-                                    '\n</pre>')
-                elif chunk['content_type'] == 'code':
-                    contents.append('<pre class="code">\n' +
-                                    html.escape(chunk['content'], False) +
-                                    '\n</pre>')
-                else:
-                    contents.append(self.markdown_to_html(chunk['content']))
             self.this_section['json_payload'] = ('<div class="json-payload">' +
-                                                 '\n'.join(contents) + '</div>')
+                                                 self.markdown_to_html(json_payload) + '</div>')
         else:
             self.this_section['json_payload'] = None
 
@@ -357,6 +473,33 @@ pre.code{
         self.this_section['property_details'].append(formatted_details)
 
 
+    def link_to_own_schema(self, schema_name):
+        """ Provide a link to schema_name, assuming it's in this project's namespace """
+
+        if self.is_documented_schema(schema_name):
+            return '<a href="#' + schema_name + '">' + schema_name + '</a>'
+        else:
+            uri = self.traverser.get_uri_for_schema(schema_name)
+            if uri:
+                return '<a href="' + uri + '" target="_blank">' + schema_name + '</a>'
+
+        return schema_name
+
+
+    def link_to_outside_schema(self, uri):
+        """ Provide a link to a scheme in another namespace """
+        return '<a href="' + uri + '" target="_blank">' + uri + '</a>'
+
+
+    def get_documentation_link(self, ref_uri):
+        """ Provide a link to documentation, if provided """
+
+        target = self.get_documentation_uri(ref_uri)
+        if target:
+            return 'See <a href="' + target + '" target="_blank">' + target + '</a>'
+        return False
+
+
     @staticmethod
     def bold(text):
         """Apply bold to text"""
@@ -369,6 +512,7 @@ pre.code{
 
     @staticmethod
     def make_div(text, css_class=None):
+        """ Make a div, optionally applying a css class """
         div = []
         if css_class:
             div.append('<div class="' + css_class + '">')
@@ -380,16 +524,19 @@ pre.code{
 
     @staticmethod
     def make_row(cells):
+        """ Make an HTML row """
         row = ''.join(['<td>' + cell + '</td>' for cell in cells])
         return '<tr>' + row + '</tr>'
 
     @staticmethod
     def make_header_row(cells):
+        """ Make an HTML row, using table header markup """
         row = ''.join(['<th>' + cell + '</th>' for cell in cells])
         return '<tr>' + row + '</tr>'
 
     @staticmethod
     def make_table(rows, header_rows=None, css_class=None):
+        """ Make an HTML table from the provided rows, which should be HTML markup """
         if header_rows:
             head = '<thead>\n' + '\n'.join(header_rows) + '\n</thead>\n'
         else:
@@ -404,29 +551,71 @@ pre.code{
 
     @staticmethod
     def para(text):
+        """ Wrap text as HTML paragraph """
         return '<p>' + text + '</p>'
 
     @staticmethod
     def make_paras(text):
+        """ Split text at linebreaks and output as paragraphs """
         return '\n'.join([HtmlGenerator.para(line) for line in '\n'.split(text) if line])
 
-    @staticmethod
-    def head_one(text):
-        return '<h1>' + text + '</h1>'
+    def head_one(self, text):
+        """ Make a top-level heading, relative to the current formatter level """
+        level = str(self.level + 1)
+        return '<h' + level + '>' + text + '</h' + level + '>'
 
-    @staticmethod
-    def head_two(text):
-        return '<h2>' + text + '</h2>'
+    def head_two(self, text):
+        """ Make a second-level heading, relative to the current formatter level """
+        level = str(self.level + 2)
+        return '<h' + level + '>' + text + '</h' + level + '>'
 
-    @staticmethod
-    def head_three(text):
-        return '<h3>' + text + '</h3>'
+    def head_three(self, text):
+        """ Make a third-level heading, relative to the current formatter level """
+        level = str(self.level + 3)
+        return '<h' + level + '>' + text + '</h' + level + '>'
 
-    @staticmethod
-    def head_four(text):
-        return '<h4>' + text + '</h4>'
+    def head_four(self, text):
+        """ Make a fourth-level heading, relative to the current formatter level """
+        level = str(self.level + 4)
+        return '<h' + level + '>' + text + '</h' + level + '>'
 
     @staticmethod
     def markdown_to_html(markdown_blob):
         """ Convert markdown to HTML """
-        return markdown.markdown(markdown_blob)
+        html_blob = markdown.markdown(markdown_blob,
+                                      extensions=['markdown.extensions.codehilite',
+                                                  'markdown.extensions.fenced_code',
+                                                  'markdown.extensions.tables'])
+        # Look for empty table rows; used to get tables without headers recognized:
+        if '<table>' in html_blob:
+            lines = []
+            html_updated = False
+            in_thead = False
+            thead_lines = []
+            discard_thead = False
+            for line in html_blob.splitlines():
+                if in_thead:
+                    if line == '</thead>':
+                        thead_lines.append(line)
+                        in_thead = False
+                        if discard_thead:
+                            html_updated = True
+                        else:
+                            [lines.append(x) for x in thead_lines]
+                    elif line not in ['<tr>', '<th></th>', '</tr>']:
+                        discard_thead = False
+                        continue
+                    else:
+                        thead_lines.append(line)
+                elif line == '<thead>':
+                    in_thead = True
+                    discard_thead = True
+                    thead_lines = [line]
+                    continue
+                else:
+                    lines.append(line)
+
+            if html_updated:
+                html_blob = '\n'.join(lines)
+
+        return html_blob
