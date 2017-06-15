@@ -30,7 +30,8 @@ class HtmlGenerator(DocFormatter):
 <style>
  * {margin: 0; padding: 0;}
  body {font: 0.8125em Helvetica, sans-serif; color: #222; background: #FFF; width: 90%; margin: 2em auto;}
- h1, h2, h3, h4{margin:1em 0 .5em;}
+ h1, h3, h4{margin:1em 0 .5em;}
+ h2 {margin: 2em 0 .5em;}
  h3 {
     border-bottom: 1px solid #000000
  }
