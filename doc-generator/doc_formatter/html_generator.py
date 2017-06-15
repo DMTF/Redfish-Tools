@@ -158,6 +158,7 @@ pre.code{
         traverser = self.traverser
         formatted = []     # The row itself
         indentation_string = '&nbsp;' * 6 * current_depth
+        collapse_array = False # Should we collapse a list description into one row? For lists of simple types
 
         if not meta:
             meta = {}
@@ -213,7 +214,8 @@ pre.code{
                 if formatted_details['array_of_objects']:
                     name_and_version += ' [ {'
                 else:
-                    name_and_version += ' [ '
+                    collapse_array = True
+                    name_and_version += ' [ ] '
 
         formatted_details['descr'] = html.escape(formatted_details['descr'], False)
         if formatted_details['add_link_text']:
@@ -235,6 +237,13 @@ pre.code{
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
 
+        if collapse_array:
+            item_list = formatted_details['item_list']
+            if len(item_list):
+                if isinstance(item_list, list):
+                    item_list = ', '.join([html.escape(x) for x in item_list])
+                prop_type += '<br>(' + item_list + ')'
+
         if formatted_details['read_only']:
             prop_access = 'read-only'
         else:
@@ -254,7 +263,7 @@ pre.code{
             desc_row[0] = indentation_string + '}'
             formatted.append(self.make_row(desc_row))
 
-        if len(formatted_details['item_description']) > 0:
+        if not collapse_array and len(formatted_details['item_description']) > 0:
             formatted.append(formatted_details['item_description'])
             desc_row = [''] * len(row)
             if formatted_details['array_of_objects']:

@@ -571,6 +571,7 @@ class DocFormatter:
         object_description = ''
         prop_is_array = False
         item_description = ''
+        item_list = '' # For lists of simple types
         array_of_objects = False
         has_prop_details = False
         has_prop_actions = False
@@ -598,9 +599,11 @@ class DocFormatter:
         # or a $ref:
         prop_item = prop_info.get('items')
         list_of_objects = False
+        collapse_description = False
         if isinstance(prop_item, dict):
             if 'type' in prop_item and 'properties' not in prop_item:
                 prop_items = [prop_item]
+                collapse_description = True
             else:
                 prop_items = self.extend_property_info(schema_name, prop_item, traverser)
                 array_of_objects = True
@@ -659,6 +662,10 @@ class DocFormatter:
             if list_of_objects:
                 item_formatted = self.format_list_of_object_descrs(schema_name, prop_items,
                                                                    traverser, current_depth)
+                if collapse_description:
+                    # remember, we set collapse_description when we made prop_items a single-element list.
+                    item_list = prop_items[0].get('type')
+
             else:
                 item_formatted = self.format_non_object_descr(schema_name, prop_item, traverser,
                                                               current_depth)
@@ -677,6 +684,7 @@ class DocFormatter:
                 'array_of_objects': array_of_objects,
                 'object_description': object_description,
                 'item_description': item_description,
+                'item_list': item_list,
                 'prop_details': prop_details,
                 'has_direct_prop_details': has_prop_details,
                 'has_action_details': has_prop_actions,
