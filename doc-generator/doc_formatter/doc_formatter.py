@@ -50,6 +50,10 @@ class DocFormatter:
             'linebreak': '<br>'
             }
 
+        # Properties to carry through from parent when a ref is extended:
+        self.parent_props = ['description', 'longDescription', 'readonly']
+
+
 
     def emit(self):
         """ Output contents thus far """
@@ -258,7 +262,8 @@ class DocFormatter:
         schema_name = prop_info['_from_schema_name']
         prop_name = prop_info['_prop_name']
         meta = {}
-        prop_info = frag_gen.extend_property_info(schema_name, prop_info, meta)
+        # prop_info = frag_gen.extend_property_info(schema_name, prop_info, meta)
+        prop_info = frag_gen.extend_property_info(schema_name, prop_info, frag_gen.traverser)
         formatted = frag_gen.format_property_row(schema_name, prop_name, prop_info, meta)
         if formatted:
             frag_gen.add_section('')
@@ -285,6 +290,132 @@ class DocFormatter:
         prop_ref = prop_info.get('$ref', None)
         prop_anyof = prop_info.get('anyOf', None)
         prop_infos = []
+
+        if prop_ref and traverser.ref_to_own_schema(prop_ref):
+            prop_infos = self._extend_prop_ref(schema_name, prop_ref, traverser)
+
+        elif prop_anyof:
+            prop_infos = self._extend_prop_anyof(schema_name, prop_anyof, traverser)
+
+        else:
+            prop_infos = [prop_info]
+
+        # add annotations as needed.
+        annotated_prop_infos = []
+        for pi in prop_infos:
+            annotated_prop_infos.append(self._annotate_ref_info(schema_name, pi, prop_info, traverser))
+
+        return annotated_prop_infos
+
+
+    def _extend_prop_ref(self, schema_name, prop_ref, traverser):
+        check_ref = traverser.parse_ref(prop_ref, schema_name)
+        if check_ref == 'odata.4.0.0#/definitions/idRef':
+            # TODO: actually get this from odata.4.0.0.
+            prop_info = {'properties':  {'@odata.id': {'type': 'string',
+                                                       "description": "The unique identifier for a resource.",
+                                                       "longDescription": "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification.",
+                                                       }
+                                         }
+                         }
+        else:
+            prop_info = traverser.find_ref_data(check_ref)
+
+        return self.extend_property_info(schema_name, prop_info, traverser)
+
+
+    def _extend_prop_anyof(self, schema_name, prop_anyof, traverser):
+        prop_infos = []
+        for elt in prop_anyof:
+            if elt.get('type') == 'null':
+                continue
+            elif '$ref' in elt:
+                this_ref = elt.get('$ref')
+                if traverser.ref_to_own_schema(this_ref):
+                    return self._extend_prop_ref(schema_name, this_ref, traverser)
+
+            prop_infos.append(elt)
+
+        return prop_infos
+
+
+    def _annotate_ref_info(self, schema_name, prop_info, parent_prop_info, traverser):
+        """ Annotate property info from traversal. """
+
+        from_schema_name = prop_info.get('_from_schema_name')
+        is_versioned_schema = traverser.is_versioned_schema(from_schema_name)
+        is_other_schema = from_schema_name and (schema_name != from_schema_name)
+        is_collection_of = traverser.is_collection_of(from_schema_name)
+        prop_name = prop_info.get('_prop_name', False)
+        is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
+
+        if is_collection_of:
+            prop_info = {'type': 'object'}  # All we need is the collection name; we don't carry the rest through.
+
+        # If an object, include just the definition and description, and append a reference if possible:
+        if prop_info.get('type') == 'object':
+            ref_description = prop_info.get('description')
+            ref_longDescription = prop_info.get('longDescription')
+            link_detail = ''
+            append_ref = ''
+
+            # Links to other Redfish resources are a special case.
+            if is_other_schema or is_ref_to_same_schema:
+                if is_versioned_schema and is_collection_of:
+                    append_ref = 'Contains a link to a resource.'
+                    link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of) + '. See the ' +
+                                   is_collection_of + ' schema for details.')
+
+                else:
+                    if is_versioned_schema:
+                        link_detail = ('Link to a ' + prop_name +
+                                       ' resource. See the Links section and the ' + self.link_to_own_schema(from_schema_name) +
+                                       ' schema for details.')
+
+                    if is_ref_to_same_schema:
+                        # e.g., a Chassis is contained by another Chassis
+                        link_detail = ('Link to another ' + prop_name + ' resource.')
+
+                    else:
+                        append_ref = ('See the ' + self.link_to_own_schema(from_schema_name) +
+                                      ' schema for details on this property.')
+
+
+                new_prop_info = {
+                    'type': prop_info.get('type'),
+                    'readonly': prop_info.get('readonly'),
+                    'description': ref_description,
+                    'longDescription': ref_longDescription,
+                    'add_link_text': append_ref
+                    }
+
+                if link_detail:
+                    new_prop_info['properties'] = {'@odata.id': {'type': 'string',
+                                                                 'readonly': True,
+                                                                 'description': '',
+                                                                 'add_link_text': link_detail}
+                                                   }
+                # if parent_props were specified in prop_info, they take precedence:
+                for x in prop_info.keys():
+                    if x in self.parent_props:
+                        if parent_prop_info[x]:
+                            new_prop_info[x] = parent_prop_info[x]
+                        elif prop_info[x]:
+                            new_prop_info[x] = prop_info[x]
+
+                prop_info = new_prop_info
+
+        return prop_info
+
+
+    def old_extend_property_info(self, schema_name, prop_info, traverser):
+        """If prop_info contains a $ref or anyOf attribute, extend it with that information.
+
+        Returns an array of objects. Arrays of arrays of objects are possible but not expected.
+        """
+        prop_ref = prop_info.get('$ref', None)
+        prop_anyof = prop_info.get('anyOf', None)
+        prop_infos = []
         outside_ref = None
 
         # Properties to carry through from parent when a ref is extended:
@@ -297,7 +428,7 @@ class DocFormatter:
                     this_ref = elt.get('$ref')
                     if not traverser.ref_to_own_schema(this_ref):
                         outside_ref = this_ref
-                        break
+
                     check_ref = traverser.parse_ref(this_ref, schema_name)
                     if check_ref == 'odata.4.0.0#/definitions/idRef':
                         is_link = True
