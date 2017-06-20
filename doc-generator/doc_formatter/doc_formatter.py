@@ -282,7 +282,7 @@ class DocFormatter:
         return frag_gen.emit()
 
 
-    def extend_property_info(self, schema_name, prop_info, traverser):
+    def new_extend_property_info(self, schema_name, prop_info, traverser):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
         Returns an array of objects. Arrays of arrays of objects are possible but not expected.
@@ -408,7 +408,7 @@ class DocFormatter:
         return prop_info
 
 
-    def old_extend_property_info(self, schema_name, prop_info, traverser):
+    def extend_property_info(self, schema_name, prop_info, traverser):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
         Returns an array of objects. Arrays of arrays of objects are possible but not expected.
@@ -426,9 +426,6 @@ class DocFormatter:
             for elt in prop_anyof:
                 if '$ref' in elt:
                     this_ref = elt.get('$ref')
-                    if not traverser.ref_to_own_schema(this_ref):
-                        outside_ref = this_ref
-
                     check_ref = traverser.parse_ref(this_ref, schema_name)
                     if check_ref == 'odata.4.0.0#/definitions/idRef':
                         is_link = True
@@ -436,7 +433,7 @@ class DocFormatter:
                         prop_anyof = None
                         break
 
-        elif prop_ref:
+        if prop_ref:
             check_ref = traverser.parse_ref(prop_ref, schema_name)
             if check_ref == 'odata.4.0.0#/definitions/idRef':
                 prop_ref = None
@@ -447,11 +444,7 @@ class DocFormatter:
                                             }
                             }
 
-        if prop_ref:
-            if not traverser.ref_to_own_schema(prop_ref):
-                outside_ref = prop_ref
-
-        if prop_ref and not outside_ref:
+        if prop_ref and traverser.ref_to_own_schema(prop_ref):
             prop_ref = traverser.parse_ref(prop_ref, schema_name)
             ref_info = traverser.find_ref_data(prop_ref)
 
@@ -532,7 +525,7 @@ class DocFormatter:
                         if x in parent_props:
                             elt[x] = prop_info[x]
                 elt = self.extend_property_info(schema_name, elt, traverser)
-                prop_infos.append(elt)
+                prop_infos.extend(elt)
 
         else:
             prop_infos.append(prop_info)
