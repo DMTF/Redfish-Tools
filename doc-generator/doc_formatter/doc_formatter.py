@@ -118,24 +118,22 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_list_of_object_descrs(self, schema_name, prop_items, traverser, current_depth):
+    def format_list_of_object_descrs(self, schema_name, prop_items, current_depth):
         """Format a (possibly nested) list of embedded objects.
 
         We expect this to amount to one definition, usually for 'items' in an array."""
 
         if isinstance(prop_items, dict):
             if 'properties' in prop_items:
-                return self.format_object_descr(schema_name, prop_items, traverser, current_depth)
+                return self.format_object_descr(schema_name, prop_items, current_depth)
             else:
-                return self.format_non_object_descr(schema_name, prop_items, traverser,
-                                                    current_depth)
+                return self.format_non_object_descr(schema_name, prop_items, current_depth)
 
         rows = []
         details = {}
         if isinstance(prop_items, list):
             for prop_item in prop_items:
-                formatted = self.format_list_of_object_descrs(schema_name, prop_item, traverser,
-                                                              current_depth)
+                formatted = self.format_list_of_object_descrs(schema_name, prop_item, current_depth)
                 rows.extend(formatted['rows'])
                 details.update(formatted['details'])
             return ({'rows': rows, 'details': details})
@@ -221,7 +219,7 @@ class DocFormatter:
                 for prop_name in prop_names:
                     meta = doc_generator_meta.get(prop_name, {})
                     prop_info = properties[prop_name]
-                    prop_info = self.extend_property_info(schema_name, prop_info, traverser)
+                    prop_info = self.extend_property_info(schema_name, prop_info)
 
                     formatted = self.format_property_row(schema_name, prop_name, prop_info, meta)
                     if formatted:
@@ -246,7 +244,6 @@ class DocFormatter:
 
         Used to generate documentation for schema fragments.
         """
-
         frag_gen = self.__class__(self.property_data, self.traverser, config, level=self.level+1)
         ref = frag_gen.traverser.parse_ref(path)
         if not ref:
@@ -262,8 +259,7 @@ class DocFormatter:
         schema_name = prop_info['_from_schema_name']
         prop_name = prop_info['_prop_name']
         meta = {}
-        # prop_info = frag_gen.extend_property_info(schema_name, prop_info, meta)
-        prop_info = frag_gen.extend_property_info(schema_name, prop_info, frag_gen.traverser)
+        prop_info = frag_gen.extend_property_info(schema_name, prop_info)
         formatted = frag_gen.format_property_row(schema_name, prop_name, prop_info, meta)
         if formatted:
             frag_gen.add_section('')
@@ -282,137 +278,12 @@ class DocFormatter:
         return frag_gen.emit()
 
 
-    def new_extend_property_info(self, schema_name, prop_info, traverser):
+    def extend_property_info(self, schema_name, prop_info):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
         Returns an array of objects. Arrays of arrays of objects are possible but not expected.
         """
-        prop_ref = prop_info.get('$ref', None)
-        prop_anyof = prop_info.get('anyOf', None)
-        prop_infos = []
-
-        if prop_ref and traverser.ref_to_own_schema(prop_ref):
-            prop_infos = self._extend_prop_ref(schema_name, prop_ref, traverser)
-
-        elif prop_anyof:
-            prop_infos = self._extend_prop_anyof(schema_name, prop_anyof, traverser)
-
-        else:
-            prop_infos = [prop_info]
-
-        # add annotations as needed.
-        annotated_prop_infos = []
-        for pi in prop_infos:
-            annotated_prop_infos.append(self._annotate_ref_info(schema_name, pi, prop_info, traverser))
-
-        return annotated_prop_infos
-
-
-    def _extend_prop_ref(self, schema_name, prop_ref, traverser):
-        check_ref = traverser.parse_ref(prop_ref, schema_name)
-        if check_ref == 'odata.4.0.0#/definitions/idRef':
-            # TODO: actually get this from odata.4.0.0.
-            prop_info = {'properties':  {'@odata.id': {'type': 'string',
-                                                       "description": "The unique identifier for a resource.",
-                                                       "longDescription": "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification.",
-                                                       }
-                                         }
-                         }
-        else:
-            prop_info = traverser.find_ref_data(check_ref)
-
-        return self.extend_property_info(schema_name, prop_info, traverser)
-
-
-    def _extend_prop_anyof(self, schema_name, prop_anyof, traverser):
-        prop_infos = []
-        for elt in prop_anyof:
-            if elt.get('type') == 'null':
-                continue
-            elif '$ref' in elt:
-                this_ref = elt.get('$ref')
-                if traverser.ref_to_own_schema(this_ref):
-                    return self._extend_prop_ref(schema_name, this_ref, traverser)
-
-            prop_infos.append(elt)
-
-        return prop_infos
-
-
-    def _annotate_ref_info(self, schema_name, prop_info, parent_prop_info, traverser):
-        """ Annotate property info from traversal. """
-
-        from_schema_name = prop_info.get('_from_schema_name')
-        is_versioned_schema = traverser.is_versioned_schema(from_schema_name)
-        is_other_schema = from_schema_name and (schema_name != from_schema_name)
-        is_collection_of = traverser.is_collection_of(from_schema_name)
-        prop_name = prop_info.get('_prop_name', False)
-        is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
-
-        if is_collection_of:
-            prop_info = {'type': 'object'}  # All we need is the collection name; we don't carry the rest through.
-
-        # If an object, include just the definition and description, and append a reference if possible:
-        if prop_info.get('type') == 'object':
-            ref_description = prop_info.get('description')
-            ref_longDescription = prop_info.get('longDescription')
-            link_detail = ''
-            append_ref = ''
-
-            # Links to other Redfish resources are a special case.
-            if is_other_schema or is_ref_to_same_schema:
-                if is_versioned_schema and is_collection_of:
-                    append_ref = 'Contains a link to a resource.'
-                    link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of) + '. See the ' +
-                                   is_collection_of + ' schema for details.')
-
-                else:
-                    if is_versioned_schema:
-                        link_detail = ('Link to a ' + prop_name +
-                                       ' resource. See the Links section and the ' + self.link_to_own_schema(from_schema_name) +
-                                       ' schema for details.')
-
-                    if is_ref_to_same_schema:
-                        # e.g., a Chassis is contained by another Chassis
-                        link_detail = ('Link to another ' + prop_name + ' resource.')
-
-                    else:
-                        append_ref = ('See the ' + self.link_to_own_schema(from_schema_name) +
-                                      ' schema for details on this property.')
-
-
-                new_prop_info = {
-                    'type': prop_info.get('type'),
-                    'readonly': prop_info.get('readonly'),
-                    'description': ref_description,
-                    'longDescription': ref_longDescription,
-                    'add_link_text': append_ref
-                    }
-
-                if link_detail:
-                    new_prop_info['properties'] = {'@odata.id': {'type': 'string',
-                                                                 'readonly': True,
-                                                                 'description': '',
-                                                                 'add_link_text': link_detail}
-                                                   }
-                # if parent_props were specified in prop_info, they take precedence:
-                for x in prop_info.keys():
-                    if x in self.parent_props:
-                        if parent_prop_info[x]:
-                            new_prop_info[x] = parent_prop_info[x]
-                        elif prop_info[x]:
-                            new_prop_info[x] = prop_info[x]
-
-                prop_info = new_prop_info
-
-        return prop_info
-
-
-    def extend_property_info(self, schema_name, prop_info, traverser):
-        """If prop_info contains a $ref or anyOf attribute, extend it with that information.
-
-        Returns an array of objects. Arrays of arrays of objects are possible but not expected.
-        """
+        traverser = self.traverser
         prop_ref = prop_info.get('$ref', None)
         prop_anyof = prop_info.get('anyOf', None)
         prop_infos = []
@@ -510,7 +381,7 @@ class DocFormatter:
                 prop_info = ref_info
 
                 if '$ref' in ref_info or 'anyOf' in ref_info:
-                    return self.extend_property_info(ref_info['_from_schema_name'], ref_info, traverser)
+                    return self.extend_property_info(ref_info['_from_schema_name'], ref_info)
 
             prop_infos.append(prop_info)
 
@@ -524,7 +395,7 @@ class DocFormatter:
                     for x in prop_info.keys():
                         if x in parent_props:
                             elt[x] = prop_info[x]
-                elt = self.extend_property_info(schema_name, elt, traverser)
+                elt = self.extend_property_info(schema_name, elt)
                 prop_infos.extend(elt)
 
         else:
@@ -580,7 +451,7 @@ class DocFormatter:
 
 
     # TODO: we may not use this. Find out and either remove it or document it better:
-    def always_expand_schema(self, schema_name, traverser):
+    def always_expand_schema(self, schema_name):
         """ Optional special case for schemas that lack top-level $ref;
 
         If expand_defs_from_non_output_schemas is true, expand properties that are in schemas that are present
@@ -591,12 +462,12 @@ class DocFormatter:
 
         if self.skip_schema(schema_name):
             return False
-        return (traverser.is_known_schema(schema_name) and not
-                traverser.is_collection_of(schema_name) and not
+        return (self.traverser.is_known_schema(schema_name) and not
+                self.traverser.is_collection_of(schema_name) and not
                 self.is_documented_schema(schema_name))
 
 
-    def parse_property_info(self, schema_name, prop_name, traverser, prop_infos, current_depth):
+    def parse_property_info(self, schema_name, prop_name, prop_infos, current_depth):
         """Parse a list of one more more property info objects into strings for display.
 
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
@@ -610,8 +481,7 @@ class DocFormatter:
                 return self._parse_single_property_info(schema_name, prop_name, prop_info,
                                                         current_depth)
             else:
-                return self.parse_property_info(schema_name, prop_name, traverser, prop_info,
-                                                current_depth)
+                return self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
 
         parsed = {'prop_type': [],
                   'prop_units': False,
@@ -629,8 +499,7 @@ class DocFormatter:
                  }
 
 
-        anyof_details = [self.parse_property_info(schema_name, prop_name, traverser, x,
-                                                  current_depth)
+        anyof_details = [self.parse_property_info(schema_name, prop_name, x, current_depth)
                          for x in prop_infos]
 
         # Remove details for anyOf props with prop_type = 'null'.
@@ -729,7 +598,7 @@ class DocFormatter:
                 prop_items = [prop_item]
                 collapse_description = True
             else:
-                prop_items = self.extend_property_info(schema_name, prop_item, traverser)
+                prop_items = self.extend_property_info(schema_name, prop_item)
                 array_of_objects = True
 
             list_of_objects = True
@@ -775,8 +644,7 @@ class DocFormatter:
 
         # embedded object:
         if prop_is_object:
-            object_formatted = self.format_object_descr(schema_name, prop_info, traverser,
-                                                        current_depth)
+            object_formatted = self.format_object_descr(schema_name, prop_info, current_depth)
             object_description = object_formatted['rows']
             if object_formatted['details']:
                 prop_details.update(object_formatted['details'])
@@ -784,15 +652,13 @@ class DocFormatter:
         # embedded items:
         if prop_is_array:
             if list_of_objects:
-                item_formatted = self.format_list_of_object_descrs(schema_name, prop_items,
-                                                                   traverser, current_depth)
+                item_formatted = self.format_list_of_object_descrs(schema_name, prop_items, current_depth)
                 if collapse_description:
                     # remember, we set collapse_description when we made prop_items a single-element list.
                     item_list = prop_items[0].get('type')
 
             else:
-                item_formatted = self.format_non_object_descr(schema_name, prop_item, traverser,
-                                                              current_depth)
+                item_formatted = self.format_non_object_descr(schema_name, prop_item, current_depth)
 
             item_description = item_formatted['rows']
             if item_formatted['details']:
@@ -816,7 +682,7 @@ class DocFormatter:
                }
 
 
-    def format_object_descr(self, schema_name, prop_info, traverser, current_depth=0):
+    def format_object_descr(self, schema_name, prop_info, current_depth=0):
         """Format the properties for an embedded object."""
 
         properties = prop_info.get('properties')
@@ -833,7 +699,7 @@ class DocFormatter:
             prop_names = self.exclude_annotations(prop_names)
             for prop_name in prop_names:
                 base_detail_info = properties[prop_name]
-                detail_info = self.extend_property_info(schema_name, base_detail_info, traverser)
+                detail_info = self.extend_property_info(schema_name, base_detail_info)
 
                 depth = current_depth + 1
                 formatted = self.format_property_row(schema_name, prop_name, detail_info,
@@ -848,7 +714,7 @@ class DocFormatter:
         return {'rows': output, 'details': details, 'action_details': action_details}
 
 
-    def format_non_object_descr(self, schema_name, prop_dict, traverser, current_depth=0):
+    def format_non_object_descr(self, schema_name, prop_dict, current_depth=0):
         """For definitions that just list simple types without a 'properties' entry"""
 
         output = []
@@ -856,7 +722,7 @@ class DocFormatter:
         action_details = {}
 
         prop_name = prop_dict.get('_prop_name', '')
-        detail_info = self.extend_property_info(schema_name, prop_dict, traverser)
+        detail_info = self.extend_property_info(schema_name, prop_dict)
 
         depth = current_depth + 1
         formatted = self.format_property_row(schema_name, prop_name, detail_info,

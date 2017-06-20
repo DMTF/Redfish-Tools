@@ -180,8 +180,7 @@ pre.code{
             deprecated_display = self.truncate_version(version_depr, 2)
             name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
 
-        formatted_details = self.parse_property_info(schema_name, prop_name, traverser,
-                                                     prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
