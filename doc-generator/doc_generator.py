@@ -334,7 +334,7 @@ def process_files(schema_name, refs):
     """
     property_data = {}
     for info in refs:
-        process_data_file(schema_name, info, property_data)
+        property_data = process_data_file(schema_name, info, property_data)
     return property_data
 
 
@@ -384,6 +384,16 @@ def process_data_file(schema_name, ref, property_data):
         warnings.warn('Unable to find properties in path ' + ref['ref'] + ' from ' + filename)
         return
 
+    meta = extend_metadata(meta, properties, version)
+    meta = extend_metadata(meta, property_data['definitions'], version)
+    property_data['doc_generator_meta'] = meta
+
+    if schema_name == 'ComputerSystem' and version == '1.4.0':
+        import json; print(json.dumps(property_data['doc_generator_meta'], indent=3))
+    return property_data
+
+
+def extend_metadata(meta, properties, version):
     for prop_name in properties.keys():
         props = properties[prop_name]
         if prop_name not in meta:
@@ -394,8 +404,11 @@ def process_data_file(schema_name, ref, property_data):
             if 'version_deprecated' not in meta[prop_name]:
                 meta[prop_name]['version_deprecated'] = version
 
-    property_data['doc_generator_meta'] = meta
-    return
+        # build out metadata for sub-properties.
+        if props.get('properties'):
+            meta[prop_name] = extend_metadata(meta[prop_name], props['properties'], version)
+
+    return meta
 
 
 def get_version_string(filename):
