@@ -14,12 +14,13 @@ Initial author: Second Rise LLC.
 class SchemaTraverser:
     """Provides methods for traversing Redfish schemas (imported from JSON into objects). """
 
-    def __init__(self, root_uri, schema_data):
+    def __init__(self, root_uri, schema_data, meta_data):
         """Set up the SchemaTraverser.
 
         root_uri: is the string to strip from absolute refs.
                   Typically 'http://redfish.dmtf.org/schemas/v1/'
         schema_data: dict of schema_name: json_data
+        meta_data: dict of schema_name: metadata (dict of props/definitions with version add/depr)
         """
 
         # Ensure root_uri has a trailing slash.
@@ -28,6 +29,8 @@ class SchemaTraverser:
 
         self.root_uri = root_uri
         self.schemas = schema_data
+        self.meta = meta_data
+        import json; print(json.dumps(meta_data, indent=3))
 
 
     def find_ref_data(self, ref):

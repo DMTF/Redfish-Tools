@@ -183,8 +183,10 @@ def generate_docs(file_list, config, level=0):
     files, schema_data = group_files(files_to_process)
 
     property_data = {}
+    doc_generator_meta = {}
     for schema_name in files.keys():
         property_data[schema_name] = process_files(schema_name, files[schema_name])
+        doc_generator_meta[schema_name] = property_data[schema_name]['doc_generator_meta']
         latest_info = files[schema_name][-1]
         latest_file = os.path.join(latest_info['root'], latest_info['filename'])
         latest_data = load_as_json(latest_file)
@@ -192,7 +194,7 @@ def generate_docs(file_list, config, level=0):
         latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
         schema_data[schema_name] = latest_data
 
-    traverser = SchemaTraverser(config['schema_root_uri'], schema_data)
+    traverser = SchemaTraverser(config['schema_root_uri'], schema_data, doc_generator_meta)
 
     # Generate output
     if config['output_format'] == 'markdown':
@@ -385,28 +387,29 @@ def process_data_file(schema_name, ref, property_data):
         return
 
     meta = extend_metadata(meta, properties, version)
-    meta = extend_metadata(meta, property_data['definitions'], version)
+    meta['definitions'] = meta.get('definitions', {})
+    meta['definitions'] = extend_metadata(meta['definitions'], property_data['definitions'], version)
     property_data['doc_generator_meta'] = meta
 
-    if schema_name == 'ComputerSystem' and version == '1.4.0':
-        import json; print(json.dumps(property_data['doc_generator_meta'], indent=3))
     return property_data
 
 
 def extend_metadata(meta, properties, version):
+    child_version = version # version to track for sub-properties
     for prop_name in properties.keys():
         props = properties[prop_name]
         if prop_name not in meta:
             meta[prop_name] = {}
             if version: # Track version only when first seen
                 meta[prop_name]['version'] = version
+                child_version = None # whole property is new, so don't note version on children
         if 'deprecated' in props:
             if 'version_deprecated' not in meta[prop_name]:
                 meta[prop_name]['version_deprecated'] = version
 
         # build out metadata for sub-properties.
         if props.get('properties'):
-            meta[prop_name] = extend_metadata(meta[prop_name], props['properties'], version)
+            meta[prop_name] = extend_metadata(meta[prop_name], props['properties'], child_version)
 
     return meta
 
