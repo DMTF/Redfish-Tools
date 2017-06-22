@@ -11,6 +11,7 @@ Initial author: Second Rise LLC.
 """
 
 import re
+import copy
 import warnings
 
 class DocFormatter:
@@ -220,9 +221,13 @@ class DocFormatter:
                     # meta = doc_generator_meta.get(prop_name, {})
                     prop_info = properties[prop_name]
                     meta = prop_info.get('_doc_generator_meta', {})
-                    prop_info = self.extend_property_info(schema_name, prop_info)
+                    prop_infos = self.extend_property_info(schema_name, prop_info)
 
-                    formatted = self.format_property_row(schema_name, prop_name, prop_info, meta)
+                    # XXX prop_infos is a list of prop_info, each with metadata.
+                    if len(prop_infos) > 1:
+                        import pdb; pdb.set_trace()
+
+                    formatted = self.format_property_row(schema_name, prop_name, prop_infos, meta)
                     if formatted:
                         self.add_property_row(formatted['row'])
                         if formatted['details']:
@@ -288,6 +293,12 @@ class DocFormatter:
         traverser = self.traverser
         prop_ref = prop_info.get('$ref', None)
         prop_anyof = prop_info.get('anyOf', None)
+        context_meta = prop_info.get('_doc_generator_meta')
+        if not context_meta:
+            context_meta = {}
+        else:
+            context_meta = copy.deepcopy(context_meta)
+
         prop_infos = []
         outside_ref = None
 
@@ -320,6 +331,13 @@ class DocFormatter:
         if prop_ref and traverser.ref_to_own_schema(prop_ref):
             prop_ref = traverser.parse_ref(prop_ref, schema_name)
             ref_info = traverser.find_ref_data(prop_ref)
+            meta = ref_info.get('_doc_generator_meta', {})
+            node_name = traverser.get_node_from_ref(prop_ref)
+            if node_name == 'BootSourceOverrideMode':
+                import pdb; pdb.set_trace()
+            if node_name in context_meta:
+                import pdb; pdb.set_trace()
+                meta = self.merge_metadata(meta, context_meta[node_name])
 
             if ref_info:
                 from_schema_name = ref_info.get('_from_schema_name')
@@ -328,7 +346,6 @@ class DocFormatter:
                 is_collection_of = traverser.is_collection_of(from_schema_name)
                 prop_name = ref_info.get('_prop_name', False)
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
-                meta = ref_info.get('_doc_generator_meta', {})
 
                 if is_collection_of and ref_info.get('anyOf'):
                     ref_info = {'type': 'object'}
@@ -382,8 +399,6 @@ class DocFormatter:
                     if x in parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
                 prop_info = ref_info
-
-                prop_info['_doc_generator_meta'] = meta
 
                 if '$ref' in ref_info or 'anyOf' in ref_info:
                     return self.extend_property_info(ref_info['_from_schema_name'], ref_info)
@@ -695,6 +710,10 @@ class DocFormatter:
         output = []
         details = {}
         action_details = {}
+        if not prop_info.get('_doc_generator_meta'):
+            context_meta = {}
+        else:
+            context_meta = copy.deepcopy(prop_info.get('_doc_generator_meta'))
 
         # If prop_info was extracted from a different schema, it will be present as
         # _from_schema_name
@@ -704,9 +723,21 @@ class DocFormatter:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
             for prop_name in prop_names:
+                if prop_name == 'BootSourceOverrideMode':
+                    import pdb; pdb.set_trace()
                 base_detail_info = properties[prop_name]
-                meta = base_detail_info.get('_doc_generator_meta')
                 detail_info = self.extend_property_info(schema_name, base_detail_info)
+                meta = detail_info[0].get('_doc_generator_meta')
+                if not meta:
+                    meta = {}
+                else:
+                    meta = copy.deepcopy(meta)
+
+                if prop_name == 'BootSourceOverrideMode':
+                    import pdb; pdb.set_trace()
+                if prop_name in context_meta:
+                    meta = self.merge_metadata(meta, context_meta[prop_name])
+                    detail_info[0]['_doc_generator_meta'] = copy.deepcopy(meta)
 
                 depth = current_depth + 1
                 formatted = self.format_property_row(schema_name, prop_name, detail_info,
@@ -805,3 +836,22 @@ class DocFormatter:
                 break
 
         return '.'.join(keep)
+
+
+    @staticmethod
+    def merge_metadata(meta, context_meta):
+        """ Merge version and version_deprecated information from meta with that from context_meta """
+        if ('version' in meta) and ('version' in context_meta):
+            # compare versions ...
+            pass
+
+        elif 'version' in context_meta:
+            meta['version'] = context_meta['version']
+
+        if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
+            # compare versions ...
+            pass
+        elif 'version_deprecated' in context_meta:
+            meta['version_deprecated'] = context_meta['version_deprecated']
+
+        return meta

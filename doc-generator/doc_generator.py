@@ -414,7 +414,7 @@ def extend_metadata(meta, properties, version):
                 child_version = None # whole property is new, so don't note version on children
         if 'deprecated' in props:
             if 'version_deprecated' not in meta[prop_name]:
-                meta[prop_name]['version_deprecated'] = version
+                meta[prop_name]['version_deprecated'] = props['deprecated']
 
         properties[prop_name]['_doc_generator_meta'] = meta[prop_name]
 

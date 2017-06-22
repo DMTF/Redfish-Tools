@@ -143,7 +143,7 @@ pre.code{
 </style>
 """
 
-
+    # TODO: remove meta arg
     def format_property_row(self, schema_name, prop_name, prop_info, meta=None, current_depth=0):
         """Format information for a single property.
 
@@ -161,7 +161,16 @@ pre.code{
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
 
-        # meta = traverser.get_metadata_for_property(schema_name, prop_name)
+        # if not isinstance(prop_info, list):
+        #     import pdb; pdb.set_trace()
+
+        # elif len(prop_info) > 1:
+        #     import pdb; pdb.set_trace()
+
+        if isinstance(prop_info, list):
+            meta = prop_info[0].get('_doc_generator_meta')
+        elif isinstance(prop_info, dict):
+            meta = prop_info.get('_doc_generator_meta')
         if not meta:
             meta = {}
 
@@ -177,6 +186,7 @@ pre.code{
             else:
                 name_and_version += ' ' + self.italic('(v' + version_display + ')')
         elif 'version_deprecated' in meta:
+            import pdb; pdb.set_trace()
             version_depr = html.escape(meta['version_deprecated'], False)
             deprecated_display = self.truncate_version(version_depr, 2)
             name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')

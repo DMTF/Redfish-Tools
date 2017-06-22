@@ -10,6 +10,7 @@ Brief : Provides utilities for resolving references in a set of Redfish json sch
 
 Initial author: Second Rise LLC.
 """
+import copy
 
 class SchemaTraverser:
     """Provides methods for traversing Redfish schemas (imported from JSON into objects). """
@@ -50,21 +51,40 @@ class SchemaTraverser:
         for element in elements:
             if element in schema:
                 schema = schema[element]
-                if element in meta:
-                    meta = meta[element]
-                else:
-                    meta = {}
+                meta = meta.get(element, {})
             else:
                 return None
 
         schema['_from_schema_name'] = schema_name
         schema['_prop_name'] = element
-        schema['_doc_generator_meta'] = meta.get('_doc_generator_meta')
+        schema['_doc_generator_meta'] = copy.deepcopy(meta)
 
         # Rebuild the ref for this item.
         ref_uri = self.root_uri + schema_name + '.json' + '#' + path
         schema['_ref_uri'] = ref_uri
         return schema
+
+
+    def find_meta_data(self, ref):
+        """Find meta data identified by ref within self.meta."""
+
+        if '#' not in ref:
+            return None
+
+        schema_name, path = ref.split('#')
+
+        meta = self.meta.get(schema_name)
+        if not meta:
+            return {}
+
+        elements = [x for x in path.split('/') if x]
+        for element in elements:
+            if element in schema:
+                meta = meta.get(element)
+            else:
+                return {}
+
+        return meta
 
 
     def ref_to_own_schema(self, ref):
@@ -110,6 +130,12 @@ class SchemaTraverser:
             ref = target_schema + '#' + prop_ref_path
 
         return ref
+
+
+    def get_node_from_ref(self, ref):
+        """Convenience method to get the final node from a $ref. """
+        _, _, node = ref.rpartition('/')
+        return node
 
 
     def is_versioned_schema(self, schema_name):
