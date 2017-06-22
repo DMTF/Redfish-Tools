@@ -14,13 +14,13 @@ Initial author: Second Rise LLC.
 class SchemaTraverser:
     """Provides methods for traversing Redfish schemas (imported from JSON into objects). """
 
-    def __init__(self, root_uri, schema_data, meta_data):
+    def __init__(self, root_uri, schema_data, property_data):
         """Set up the SchemaTraverser.
 
         root_uri: is the string to strip from absolute refs.
                   Typically 'http://redfish.dmtf.org/schemas/v1/'
         schema_data: dict of schema_name: json_data
-        meta_data: dict of schema_name: metadata (dict of props/definitions with version add/depr)
+        property_data: pre-processed versioned schemas with meta data.
         """
 
         # Ensure root_uri has a trailing slash.
@@ -29,8 +29,7 @@ class SchemaTraverser:
 
         self.root_uri = root_uri
         self.schemas = schema_data
-        self.meta = meta_data
-        import json; print(json.dumps(meta_data, indent=3))
+        self.meta = property_data
 
 
     def find_ref_data(self, ref):
@@ -45,15 +44,22 @@ class SchemaTraverser:
         if not schema:
             return None
 
+        meta = self.meta.get(schema_name, {})
+
         elements = [x for x in path.split('/') if x]
         for element in elements:
             if element in schema:
                 schema = schema[element]
+                if element in meta:
+                    meta = meta[element]
+                else:
+                    meta = {}
             else:
                 return None
 
         schema['_from_schema_name'] = schema_name
         schema['_prop_name'] = element
+        schema['_doc_generator_meta'] = meta.get('_doc_generator_meta')
 
         # Rebuild the ref for this item.
         ref_uri = self.root_uri + schema_name + '.json' + '#' + path
@@ -133,10 +139,22 @@ class SchemaTraverser:
         return None
 
 
-
     def get_uri_for_schema(self, schema_name):
         """Given a schema name (versioned or unversioned), return the URI for it."""
 
-        if self.schemas.get(schema_name, None):
+        if self.schemas.get(schema_name):
             return self.root_uri + schema_name + '.json'
         return None
+
+
+    def get_metadata_for_schema(self, schema_name):
+        """Given a schema name, return the meta dict for it."""
+
+        return self.meta.get(schema_name, {})
+
+
+    def get_metadata_for_property(self, schema_name, property_name):
+        """Given a schema name and property name, return the meta dict for it."""
+
+        meta = self.get_metadata_for_schema(schema_name)
+        return meta.get(property_name, {})

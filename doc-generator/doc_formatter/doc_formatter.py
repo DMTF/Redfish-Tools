@@ -173,10 +173,10 @@ class DocFormatter:
             supplemental = schema_supplement.get(schema_key,
                                                  schema_supplement.get(schema_name, {}))
 
-            if 'doc_generator_meta' not in details:
-                warnings.warn("No meta data for", schema_name)
-                continue
-            doc_generator_meta = details['doc_generator_meta']
+            # if 'doc_generator_meta' not in details:
+            #     warnings.warn("No meta data for", schema_name)
+            #     continue
+            # doc_generator_meta = details['doc_generator_meta']
             definitions = details['definitions']
             properties = details['properties']
 
@@ -217,8 +217,9 @@ class DocFormatter:
                 prop_names = self.organize_prop_names(prop_names)
 
                 for prop_name in prop_names:
-                    meta = doc_generator_meta.get(prop_name, {})
+                    # meta = doc_generator_meta.get(prop_name, {})
                     prop_info = properties[prop_name]
+                    meta = prop_info.get('_doc_generator_meta', {})
                     prop_info = self.extend_property_info(schema_name, prop_info)
 
                     formatted = self.format_property_row(schema_name, prop_name, prop_info, meta)
@@ -258,9 +259,10 @@ class DocFormatter:
 
         schema_name = prop_info['_from_schema_name']
         prop_name = prop_info['_prop_name']
+        prop_infos = frag_gen.extend_property_info(schema_name, prop_info)
         meta = {}
-        prop_info = frag_gen.extend_property_info(schema_name, prop_info)
-        formatted = frag_gen.format_property_row(schema_name, prop_name, prop_info, meta)
+
+        formatted = frag_gen.format_property_row(schema_name, prop_name, prop_infos)
         if formatted:
             frag_gen.add_section('')
             frag_gen.add_property_row(formatted['row'])
@@ -326,6 +328,7 @@ class DocFormatter:
                 is_collection_of = traverser.is_collection_of(from_schema_name)
                 prop_name = ref_info.get('_prop_name', False)
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
+                meta = ref_info.get('_doc_generator_meta', {})
 
                 if is_collection_of and ref_info.get('anyOf'):
                     ref_info = {'type': 'object'}
@@ -379,6 +382,8 @@ class DocFormatter:
                     if x in parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
                 prop_info = ref_info
+
+                prop_info['_doc_generator_meta'] = meta
 
                 if '$ref' in ref_info or 'anyOf' in ref_info:
                     return self.extend_property_info(ref_info['_from_schema_name'], ref_info)
@@ -467,6 +472,7 @@ class DocFormatter:
                 self.is_documented_schema(schema_name))
 
 
+    # XXX do we need to look up meta data here?
     def parse_property_info(self, schema_name, prop_name, prop_infos, current_depth):
         """Parse a list of one more more property info objects into strings for display.
 
@@ -693,17 +699,18 @@ class DocFormatter:
         # If prop_info was extracted from a different schema, it will be present as
         # _from_schema_name
         schema_name = prop_info.get('_from_schema_name', schema_name)
-
+        # import pdb; pdb.set_trace()
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
             for prop_name in prop_names:
                 base_detail_info = properties[prop_name]
+                meta = base_detail_info.get('_doc_generator_meta')
                 detail_info = self.extend_property_info(schema_name, base_detail_info)
 
                 depth = current_depth + 1
                 formatted = self.format_property_row(schema_name, prop_name, detail_info,
-                                                     {}, current_depth=depth)
+                                                     meta, current_depth=depth)
                 if formatted:
                     output.append(formatted['row'])
                     if formatted['details']:

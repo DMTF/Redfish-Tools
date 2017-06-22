@@ -161,6 +161,7 @@ pre.code{
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
 
+        # meta = traverser.get_metadata_for_property(schema_name, prop_name)
         if not meta:
             meta = {}
 

@@ -192,6 +192,7 @@ def generate_docs(file_list, config, level=0):
         latest_data = load_as_json(latest_file)
         latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
         latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
+
         schema_data[schema_name] = latest_data
 
     traverser = SchemaTraverser(config['schema_root_uri'], schema_data, doc_generator_meta)
@@ -388,15 +389,23 @@ def process_data_file(schema_name, ref, property_data):
 
     meta = extend_metadata(meta, properties, version)
     meta['definitions'] = meta.get('definitions', {})
-    meta['definitions'] = extend_metadata(meta['definitions'], property_data['definitions'], version)
+    definitions = property_data['definitions']
+    # Add version metadata for sub-properties in definitions:
+    for prop_name in definitions.keys():
+        thisprop = definitions[prop_name].get('properties')
+        if thisprop:
+            meta['definitions'][prop_name] = extend_metadata(meta['definitions'].get(prop_name, {}),
+                                                             thisprop, version)
+    # meta['definitions'] = extend_metadata(meta['definitions'], definitions, version)
     property_data['doc_generator_meta'] = meta
 
     return property_data
 
 
 def extend_metadata(meta, properties, version):
-    child_version = version # version to track for sub-properties
+
     for prop_name in properties.keys():
+        child_version = version # version to track for sub-properties
         props = properties[prop_name]
         if prop_name not in meta:
             meta[prop_name] = {}
@@ -407,9 +416,12 @@ def extend_metadata(meta, properties, version):
             if 'version_deprecated' not in meta[prop_name]:
                 meta[prop_name]['version_deprecated'] = version
 
+        properties[prop_name]['_doc_generator_meta'] = meta[prop_name]
+
         # build out metadata for sub-properties.
         if props.get('properties'):
-            meta[prop_name] = extend_metadata(meta[prop_name], props['properties'], child_version)
+            child_props = props['properties']
+            meta[prop_name] = extend_metadata(meta[prop_name], child_props, child_version)
 
     return meta
 
