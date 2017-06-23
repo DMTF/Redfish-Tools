@@ -213,7 +213,7 @@ class DocFormatter:
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
                     meta = prop_info.get('_doc_generator_meta', {})
-                    prop_infos = self.extend_property_info(schema_name, prop_info)
+                    prop_infos = self.extend_property_info(schema_name, prop_info, properties.get('_doc_generator_meta'))
 
                     # FIXME prop_infos is a list of prop_info, each with metadata.
                     if len(prop_infos) > 1:
@@ -279,7 +279,7 @@ class DocFormatter:
         return frag_gen.emit()
 
 
-    def extend_property_info(self, schema_name, prop_info):
+    def extend_property_info(self, schema_name, prop_info, context_meta=None):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
         Returns an array of objects. Arrays of arrays of objects are possible but not expected.
@@ -287,7 +287,7 @@ class DocFormatter:
         traverser = self.traverser
         prop_ref = prop_info.get('$ref', None)
         prop_anyof = prop_info.get('anyOf', None)
-        context_meta = prop_info.get('_doc_generator_meta')
+        # context_meta = prop_info.get('_doc_generator_meta')
         if not context_meta:
             context_meta = {}
 
@@ -327,9 +327,7 @@ class DocFormatter:
             if not meta:
                 meta = {}
             node_name = traverser.get_node_from_ref(prop_ref)
-
-            if node_name in context_meta:
-                meta = self.merge_metadata(meta, context_meta[node_name])
+            meta = self.merge_metadata(node_name, meta, context_meta)
 
             if ref_info:
                 from_schema_name = ref_info.get('_from_schema_name')
@@ -393,7 +391,7 @@ class DocFormatter:
                 prop_info = ref_info
 
                 if '$ref' in ref_info or 'anyOf' in ref_info:
-                    return self.extend_property_info(ref_info['_from_schema_name'], ref_info)
+                    return self.extend_property_info(ref_info['_from_schema_name'], ref_info, context_meta)
 
             prop_infos.append(prop_info)
 
@@ -407,7 +405,7 @@ class DocFormatter:
                     for x in prop_info.keys():
                         if x in parent_props:
                             elt[x] = prop_info[x]
-                elt = self.extend_property_info(schema_name, elt)
+                elt = self.extend_property_info(schema_name, elt, context_meta)
                 prop_infos.extend(elt)
 
         else:
@@ -611,7 +609,7 @@ class DocFormatter:
                 prop_items = [prop_item]
                 collapse_description = True
             else:
-                prop_items = self.extend_property_info(schema_name, prop_item)
+                prop_items = self.extend_property_info(schema_name, prop_item, prop_info.get('_doc_generator_meta'))
                 array_of_objects = True
 
             list_of_objects = True
@@ -716,14 +714,13 @@ class DocFormatter:
             prop_names = self.exclude_annotations(prop_names)
             for prop_name in prop_names:
                 base_detail_info = properties[prop_name]
-                detail_info = self.extend_property_info(schema_name, base_detail_info)
+                detail_info = self.extend_property_info(schema_name, base_detail_info, context_meta)
                 meta = detail_info[0].get('_doc_generator_meta')
                 if not meta:
                     meta = {}
 
-                if prop_name in context_meta:
-                    meta = self.merge_metadata(meta, context_meta[prop_name])
-                    detail_info[0]['_doc_generator_meta'] = meta
+                meta = self.merge_metadata(prop_name, meta, context_meta)
+                detail_info[0]['_doc_generator_meta'] = meta
 
                 depth = current_depth + 1
                 formatted = self.format_property_row(schema_name, prop_name, detail_info, depth)
@@ -822,20 +819,52 @@ class DocFormatter:
         return '.'.join(keep)
 
 
-    @staticmethod
-    def merge_metadata(meta, context_meta):
-        """ Merge version and version_deprecated information from meta with that from context_meta """
+    def compare_versions(self, version, context_version):
+        """ Returns +1 if version is newer than context_version, -1 if version is older, 0 if equal """
+
+        if version == context_version:
+            return 0
+        else:
+            version_parts = version.split('.')
+            context_parts = context_version.split('.')
+            # versions are expected to have three parts
+            for i in range(3):
+                if version_parts[i] > context_parts[i]:
+                    return +1
+                if version_parts[i] < context_parts[i]:
+                    return 1
+            return 0
+
+    def merge_metadata(self, node_name, meta, context_meta):
+        """ Merge version and version_deprecated information from meta with that from context_meta
+
+        context_meta contains version info for the parent, plus embedded version info for node_name
+        (and its siblings). We want:
+        * If context_meta['node_name']['version'] is newer than meta['version'], use the newer version.
+          (implication is that this property was added to the parent after it was already defined elsewhere.)
+        * If context_meta['version'] equals meta['version'], remove the version.
+          (implication is that this property was added along with its parent, so we don't need to
+          reiterate the version.)
+        """
+        node_meta = context_meta.get(node_name, {})
+
+        if ('version' in meta) and ('version' in node_meta):
+            compare = self.compare_versions(meta['version'], node_meta['version'])
+            if compare > 0:
+                # node_meta is newer; use that.
+                meta['version'] = node_meta['version']
+        elif 'version' in node_meta:
+            meta['version'] = node_meta['version']
+
         if ('version' in meta) and ('version' in context_meta):
-            # TODO: compare versions ...
-            pass
+            if meta['version'] == context_meta['version']:
+                del meta['version']
 
-        elif 'version' in context_meta:
-            meta['version'] = context_meta['version']
-
-        if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
-            # TODO: compare versions ...
-            pass
-        elif 'version_deprecated' in context_meta:
-            meta['version_deprecated'] = context_meta['version_deprecated']
+        # TODO: handle version_deprecated. Current schema files don't allow for this (bug)
+        # if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
+        #     # TODO: compare versions ...
+        #     pass
+        # elif 'version_deprecated' in context_meta:
+        #     meta['version_deprecated'] = context_meta['version_deprecated']
 
         return meta
