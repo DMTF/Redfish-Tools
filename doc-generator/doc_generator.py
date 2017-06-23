@@ -391,12 +391,12 @@ def process_data_file(schema_name, ref, property_data):
     meta['definitions'] = meta.get('definitions', {})
     definitions = property_data['definitions']
     # Add version metadata for sub-properties in definitions:
-    for prop_name in definitions.keys():
-        thisprop = definitions[prop_name].get('properties')
-        if thisprop:
-            meta['definitions'][prop_name] = extend_metadata(meta['definitions'].get(prop_name, {}),
-                                                             thisprop, version)
-    # meta['definitions'] = extend_metadata(meta['definitions'], definitions, version)
+    # for prop_name in definitions.keys():
+    #     thisprop = definitions[prop_name].get('properties')
+    #     if thisprop:
+    #         meta['definitions'][prop_name] = extend_metadata(meta['definitions'].get(prop_name, {}),
+    #                                                          thisprop, version)
+    meta['definitions'] = extend_metadata(meta['definitions'], definitions, version)
     property_data['doc_generator_meta'] = meta
 
     return property_data
@@ -405,13 +405,11 @@ def process_data_file(schema_name, ref, property_data):
 def extend_metadata(meta, properties, version):
 
     for prop_name in properties.keys():
-        child_version = version # version to track for sub-properties
         props = properties[prop_name]
         if prop_name not in meta:
             meta[prop_name] = {}
             if version: # Track version only when first seen
                 meta[prop_name]['version'] = version
-                child_version = None # whole property is new, so don't note version on children
         if 'deprecated' in props:
             if 'version_deprecated' not in meta[prop_name]:
                 meta[prop_name]['version_deprecated'] = props['deprecated']
@@ -421,7 +419,7 @@ def extend_metadata(meta, properties, version):
         # build out metadata for sub-properties.
         if props.get('properties'):
             child_props = props['properties']
-            meta[prop_name] = extend_metadata(meta[prop_name], child_props, child_version)
+            meta[prop_name] = extend_metadata(meta[prop_name], child_props, version)
 
     return meta
 

@@ -174,10 +174,6 @@ class DocFormatter:
             supplemental = schema_supplement.get(schema_key,
                                                  schema_supplement.get(schema_name, {}))
 
-            # if 'doc_generator_meta' not in details:
-            #     warnings.warn("No meta data for", schema_name)
-            #     continue
-            # doc_generator_meta = details['doc_generator_meta']
             definitions = details['definitions']
             properties = details['properties']
 
@@ -218,7 +214,6 @@ class DocFormatter:
                 prop_names = self.organize_prop_names(prop_names)
 
                 for prop_name in prop_names:
-                    # meta = doc_generator_meta.get(prop_name, {})
                     prop_info = properties[prop_name]
                     meta = prop_info.get('_doc_generator_meta', {})
                     prop_infos = self.extend_property_info(schema_name, prop_info)
