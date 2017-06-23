@@ -161,11 +161,11 @@ pre.code{
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
 
-        # if not isinstance(prop_info, list):
-        #     import pdb; pdb.set_trace()
+        if not isinstance(prop_info, list):
+            import pdb; pdb.set_trace()
 
-        # elif len(prop_info) > 1:
-        #     import pdb; pdb.set_trace()
+        elif len(prop_info) > 1:
+            import pdb; pdb.set_trace()
 
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
@@ -175,6 +175,7 @@ pre.code{
             meta = {}
 
         name_and_version = self.bold(html.escape(prop_name, False))
+        deprecated_descr = None
         if 'version' in meta:
             version_text = html.escape(meta['version'], False)
             version_display = self.truncate_version(version_text, 2) + '+'
@@ -186,10 +187,7 @@ pre.code{
             else:
                 name_and_version += ' ' + self.italic('(v' + version_display + ')')
         elif 'version_deprecated' in meta:
-            import pdb; pdb.set_trace()
-            version_depr = html.escape(meta['version_deprecated'], False)
-            deprecated_display = self.truncate_version(version_depr, 2)
-            name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
+            deprecated_descr = html.escape(meta['version_deprecated'], False)
 
         formatted_details = self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
 
@@ -243,6 +241,9 @@ pre.code{
         if formatted_details['has_action_details']:
             text_descr = 'For more information, see the Action Details section below.'
             formatted_details['descr'] += '<br>' + self.italic(text_descr)
+
+        if deprecated_descr:
+            formatted_details['descr'] += ' ' + self.italic(deprecated_descr)
 
         prop_type = html.escape(formatted_details['prop_type'], False)
         if formatted_details['prop_units']:

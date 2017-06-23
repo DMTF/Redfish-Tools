@@ -333,10 +333,8 @@ class DocFormatter:
             ref_info = traverser.find_ref_data(prop_ref)
             meta = ref_info.get('_doc_generator_meta', {})
             node_name = traverser.get_node_from_ref(prop_ref)
-            if node_name == 'BootSourceOverrideMode':
-                import pdb; pdb.set_trace()
+
             if node_name in context_meta:
-                import pdb; pdb.set_trace()
                 meta = self.merge_metadata(meta, context_meta[node_name])
 
             if ref_info:
@@ -718,13 +716,11 @@ class DocFormatter:
         # If prop_info was extracted from a different schema, it will be present as
         # _from_schema_name
         schema_name = prop_info.get('_from_schema_name', schema_name)
-        # import pdb; pdb.set_trace()
+
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
             for prop_name in prop_names:
-                if prop_name == 'BootSourceOverrideMode':
-                    import pdb; pdb.set_trace()
                 base_detail_info = properties[prop_name]
                 detail_info = self.extend_property_info(schema_name, base_detail_info)
                 meta = detail_info[0].get('_doc_generator_meta')
@@ -733,8 +729,6 @@ class DocFormatter:
                 else:
                     meta = copy.deepcopy(meta)
 
-                if prop_name == 'BootSourceOverrideMode':
-                    import pdb; pdb.set_trace()
                 if prop_name in context_meta:
                     meta = self.merge_metadata(meta, context_meta[prop_name])
                     detail_info[0]['_doc_generator_meta'] = copy.deepcopy(meta)
