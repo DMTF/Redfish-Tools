@@ -11,7 +11,6 @@ Initial author: Second Rise LLC.
 """
 
 import re
-import copy
 import warnings
 
 class DocFormatter:
@@ -55,7 +54,6 @@ class DocFormatter:
         self.parent_props = ['description', 'longDescription', 'readonly']
 
 
-
     def emit(self):
         """ Output contents thus far """
         raise NotImplementedError
@@ -95,7 +93,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_property_row(self, schema_name, prop_name, prop_info, meta=None, current_depth=0):
+    def format_property_row(self, schema_name, prop_name, prop_info, current_depth=0):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
         'row': content for the main table being generated.
@@ -154,7 +152,6 @@ class DocFormatter:
         Iterates through property_data and traverses schemas for details.
         Format of output will depend on the format_* methods of the class.
         """
-
         property_data = self.property_data
         traverser = self.traverser
         config = self.config
@@ -218,11 +215,11 @@ class DocFormatter:
                     meta = prop_info.get('_doc_generator_meta', {})
                     prop_infos = self.extend_property_info(schema_name, prop_info)
 
-                    # XXX prop_infos is a list of prop_info, each with metadata.
+                    # FIXME prop_infos is a list of prop_info, each with metadata.
                     if len(prop_infos) > 1:
                         import pdb; pdb.set_trace()
 
-                    formatted = self.format_property_row(schema_name, prop_name, prop_infos, meta)
+                    formatted = self.format_property_row(schema_name, prop_name, prop_infos)
                     if formatted:
                         self.add_property_row(formatted['row'])
                         if formatted['details']:
@@ -259,8 +256,10 @@ class DocFormatter:
 
         schema_name = prop_info['_from_schema_name']
         prop_name = prop_info['_prop_name']
+        meta = prop_info.get('_doc_generator_meta')
+        if not meta:
+            meta = {}
         prop_infos = frag_gen.extend_property_info(schema_name, prop_info)
-        meta = {}
 
         formatted = frag_gen.format_property_row(schema_name, prop_name, prop_infos)
         if formatted:
@@ -291,8 +290,6 @@ class DocFormatter:
         context_meta = prop_info.get('_doc_generator_meta')
         if not context_meta:
             context_meta = {}
-        else:
-            context_meta = copy.deepcopy(context_meta)
 
         prop_infos = []
         outside_ref = None
@@ -326,7 +323,9 @@ class DocFormatter:
         if prop_ref and traverser.ref_to_own_schema(prop_ref):
             prop_ref = traverser.parse_ref(prop_ref, schema_name)
             ref_info = traverser.find_ref_data(prop_ref)
-            meta = ref_info.get('_doc_generator_meta', {})
+            meta = ref_info.get('_doc_generator_meta')
+            if not meta:
+                meta = {}
             node_name = traverser.get_node_from_ref(prop_ref)
 
             if node_name in context_meta:
@@ -703,10 +702,10 @@ class DocFormatter:
         output = []
         details = {}
         action_details = {}
-        if not prop_info.get('_doc_generator_meta'):
+
+        context_meta = prop_info.get('_doc_generator_meta')
+        if not context_meta:
             context_meta = {}
-        else:
-            context_meta = copy.deepcopy(prop_info.get('_doc_generator_meta'))
 
         # If prop_info was extracted from a different schema, it will be present as
         # _from_schema_name
@@ -721,16 +720,13 @@ class DocFormatter:
                 meta = detail_info[0].get('_doc_generator_meta')
                 if not meta:
                     meta = {}
-                else:
-                    meta = copy.deepcopy(meta)
 
                 if prop_name in context_meta:
                     meta = self.merge_metadata(meta, context_meta[prop_name])
-                    detail_info[0]['_doc_generator_meta'] = copy.deepcopy(meta)
+                    detail_info[0]['_doc_generator_meta'] = meta
 
                 depth = current_depth + 1
-                formatted = self.format_property_row(schema_name, prop_name, detail_info,
-                                                     meta, current_depth=depth)
+                formatted = self.format_property_row(schema_name, prop_name, detail_info, depth)
                 if formatted:
                     output.append(formatted['row'])
                     if formatted['details']:
@@ -752,8 +748,7 @@ class DocFormatter:
         detail_info = self.extend_property_info(schema_name, prop_dict)
 
         depth = current_depth + 1
-        formatted = self.format_property_row(schema_name, prop_name, detail_info,
-                                             {}, current_depth=depth)
+        formatted = self.format_property_row(schema_name, prop_name, detail_info, depth)
 
         if formatted:
             output.append(formatted['row'])
@@ -831,14 +826,14 @@ class DocFormatter:
     def merge_metadata(meta, context_meta):
         """ Merge version and version_deprecated information from meta with that from context_meta """
         if ('version' in meta) and ('version' in context_meta):
-            # compare versions ...
+            # TODO: compare versions ...
             pass
 
         elif 'version' in context_meta:
             meta['version'] = context_meta['version']
 
         if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
-            # compare versions ...
+            # TODO: compare versions ...
             pass
         elif 'version_deprecated' in context_meta:
             meta['version_deprecated'] = context_meta['version_deprecated']

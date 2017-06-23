@@ -249,8 +249,10 @@ def group_files(files):
             data = data[pathpart]
 
         ref_files = []
+
         # is_versioned_schema will be True if there is an "anyOf" pointing to one or more versioned files.
         is_versioned_schema = False
+
         # is_collection_of will contain the type of objects in the collection.
         is_collection_of = None
 

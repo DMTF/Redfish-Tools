@@ -10,18 +10,17 @@ Brief : Provides utilities for resolving references in a set of Redfish json sch
 
 Initial author: Second Rise LLC.
 """
-import copy
 
 class SchemaTraverser:
     """Provides methods for traversing Redfish schemas (imported from JSON into objects). """
 
-    def __init__(self, root_uri, schema_data, property_data):
+    def __init__(self, root_uri, schema_data, meta_data):
         """Set up the SchemaTraverser.
 
         root_uri: is the string to strip from absolute refs.
                   Typically 'http://redfish.dmtf.org/schemas/v1/'
         schema_data: dict of schema_name: json_data
-        property_data: pre-processed versioned schemas with meta data.
+        meta_data: metadata (versioning) by schema and property
         """
 
         # Ensure root_uri has a trailing slash.
@@ -30,7 +29,7 @@ class SchemaTraverser:
 
         self.root_uri = root_uri
         self.schemas = schema_data
-        self.meta = property_data
+        self.meta = meta_data
 
 
     def find_ref_data(self, ref):
@@ -57,7 +56,7 @@ class SchemaTraverser:
 
         schema['_from_schema_name'] = schema_name
         schema['_prop_name'] = element
-        schema['_doc_generator_meta'] = copy.deepcopy(meta)
+        schema['_doc_generator_meta'] = meta
 
         # Rebuild the ref for this item.
         ref_uri = self.root_uri + schema_name + '.json' + '#' + path
@@ -171,16 +170,3 @@ class SchemaTraverser:
         if self.schemas.get(schema_name):
             return self.root_uri + schema_name + '.json'
         return None
-
-
-    def get_metadata_for_schema(self, schema_name):
-        """Given a schema name, return the meta dict for it."""
-
-        return self.meta.get(schema_name, {})
-
-
-    def get_metadata_for_property(self, schema_name, property_name):
-        """Given a schema name and property name, return the meta dict for it."""
-
-        meta = self.get_metadata_for_schema(schema_name)
-        return meta.get(property_name, {})

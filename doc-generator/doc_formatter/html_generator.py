@@ -9,6 +9,7 @@ Brief : Defines HtmlGenerator class.
 
 Initial author: Second Rise LLC.
 """
+
 import html
 import markdown
 from . import DocFormatter
@@ -143,8 +144,7 @@ pre.code{
 </style>
 """
 
-    # TODO: remove meta arg
-    def format_property_row(self, schema_name, prop_name, prop_info, meta=None, current_depth=0):
+    def format_property_row(self, schema_name, prop_name, prop_info, current_depth=0):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
