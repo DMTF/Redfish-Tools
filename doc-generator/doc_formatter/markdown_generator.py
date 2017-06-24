@@ -68,7 +68,6 @@ class MarkdownGenerator(DocFormatter):
             name_and_version += ' ' + self.italic('(v' + version_display + ')')
         # elif 'version_deprecated' in meta:
         if 'version_deprecated' in meta:
-            import pdb; pdb.set_trace()
             # deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
             # name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
             deprecated_descr = self.escape_for_markdown(meta['version_deprecated'],
