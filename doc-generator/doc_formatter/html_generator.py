@@ -161,12 +161,6 @@ pre.code{
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
 
-        if not isinstance(prop_info, list):
-            import pdb; pdb.set_trace()
-
-        elif len(prop_info) > 1:
-            import pdb; pdb.set_trace()
-
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
         elif isinstance(prop_info, dict):
@@ -179,14 +173,15 @@ pre.code{
         if 'version' in meta:
             version_text = html.escape(meta['version'], False)
             version_display = self.truncate_version(version_text, 2) + '+'
-            if 'version_deprecated' in meta:
-                version_depr = html.escape(meta['version_deprecated'], False)
-                deprecated_display = self.truncate_version(version_depr, 2)
-                name_and_version += ' ' + self.italic('(v' + version_display +
-                                                      ', deprecated v' + deprecated_display +  ')')
-            else:
-                name_and_version += ' ' + self.italic('(v' + version_display + ')')
-        elif 'version_deprecated' in meta:
+            # if 'version_deprecated' in meta:
+            #     version_depr = html.escape(meta['version_deprecated'], False)
+            #     deprecated_display = self.truncate_version(version_depr, 2)
+            #     name_and_version += ' ' + self.italic('(v' + version_display +
+            #                                           ', deprecated v' + deprecated_display +  ')')
+            # else:
+            name_and_version += ' ' + self.italic('(v' + version_display + ')')
+        # elif 'version_deprecated' in meta:
+        if 'version_deprecated' in meta:
             deprecated_descr = html.escape(meta['version_deprecated'], False)
 
         formatted_details = self.parse_property_info(schema_name, prop_name, prop_info, current_depth)

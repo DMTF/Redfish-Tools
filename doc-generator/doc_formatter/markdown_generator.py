@@ -27,7 +27,7 @@ class MarkdownGenerator(DocFormatter):
             }
 
 
-    def format_property_row(self, schema_name, prop_name, prop_info, meta=None, current_depth=0):
+    def format_property_row(self, schema_name, prop_name, prop_info, current_depth=0):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -44,6 +44,10 @@ class MarkdownGenerator(DocFormatter):
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
 
+        if isinstance(prop_info, list):
+            meta = prop_info[0].get('_doc_generator_meta')
+        elif isinstance(prop_info, dict):
+            meta = prop_info.get('_doc_generator_meta')
         if not meta:
             meta = {}
 
@@ -52,17 +56,23 @@ class MarkdownGenerator(DocFormatter):
                                                                   self.config['escape_chars']))
         else:
             name_and_version = ''
+
+        deprecated_descr = None
         if 'version' in meta:
             version_display = self.truncate_version(meta['version'], 2) + '+'
-            if 'version_deprecated' in meta:
-                deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
-                name_and_version += ' ' + self.italic('(v' + version_display +
-                                                      ', deprecated v' + deprecated_display +  ')')
-            else:
-                name_and_version += ' ' + self.italic('(v' + version_display + ')')
-        elif 'version_deprecated' in meta:
-            deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
-            name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
+            # if 'version_deprecated' in meta:
+                # deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
+                # name_and_version += ' ' + self.italic('(v' + version_display +
+                # ', deprecated v' + deprecated_display +  ')')
+            # else:
+            name_and_version += ' ' + self.italic('(v' + version_display + ')')
+        # elif 'version_deprecated' in meta:
+        if 'version_deprecated' in meta:
+            import pdb; pdb.set_trace()
+            # deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
+            # name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
+            deprecated_descr = self.escape_for_markdown(meta['version_deprecated'],
+                                                        self.config['escape_chars'])
 
         formatted_details = self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
 
@@ -114,7 +124,12 @@ class MarkdownGenerator(DocFormatter):
         if formatted_details['has_action_details']:
             text_descr = 'For more information, see the Action Details section below.'
             formatted_details['descr'] += ' ' + self.italic(text_descr)
+
+        if deprecated_descr:
+            formatted_details['descr'] += ' ' + self.italic(deprecated_descr)
+
         prop_type = formatted_details['prop_type']
+
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
 
