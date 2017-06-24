@@ -161,12 +161,6 @@ pre.code{
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
 
-        if not isinstance(prop_info, list):
-            import pdb; pdb.set_trace()
-
-        elif len(prop_info) > 1:
-            import pdb; pdb.set_trace()
-
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
         elif isinstance(prop_info, dict):
