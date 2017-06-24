@@ -215,10 +215,6 @@ class DocFormatter:
                     meta = prop_info.get('_doc_generator_meta', {})
                     prop_infos = self.extend_property_info(schema_name, prop_info, properties.get('_doc_generator_meta'))
 
-                    # FIXME prop_infos is a list of prop_info, each with metadata.
-                    if len(prop_infos) > 1:
-                        import pdb; pdb.set_trace()
-
                     formatted = self.format_property_row(schema_name, prop_name, prop_infos)
                     if formatted:
                         self.add_property_row(formatted['row'])
@@ -609,7 +605,7 @@ class DocFormatter:
                 prop_items = [prop_item]
                 collapse_description = True
             else:
-                prop_items = self.extend_property_info(schema_name, prop_item, prop_info.get('_doc_generator_meta'))
+                prop_items = self.extend_property_info(schema_name, prop_item)
                 array_of_objects = True
 
             list_of_objects = True
