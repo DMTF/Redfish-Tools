@@ -856,11 +856,11 @@ class DocFormatter:
             if meta['version'] == context_meta['version']:
                 del meta['version']
 
-        # TODO: handle version_deprecated. Current schema files don't allow for this (bug)
-        # if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
-        #     # TODO: compare versions ...
-        #     pass
-        # elif 'version_deprecated' in context_meta:
-        #     meta['version_deprecated'] = context_meta['version_deprecated']
+
+        if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
+            # TODO: compare versions ...
+            pass
+        elif 'version_deprecated' in node_meta:
+            meta['version_deprecated'] = node_meta['version_deprecated']
 
         return meta
