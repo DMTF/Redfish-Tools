@@ -173,16 +173,21 @@ pre.code{
         if 'version' in meta:
             version_text = html.escape(meta['version'], False)
             version_display = self.truncate_version(version_text, 2) + '+'
-            # if 'version_deprecated' in meta:
-            #     version_depr = html.escape(meta['version_deprecated'], False)
-            #     deprecated_display = self.truncate_version(version_depr, 2)
-            #     name_and_version += ' ' + self.italic('(v' + version_display +
-            #                                           ', deprecated v' + deprecated_display +  ')')
-            # else:
-            name_and_version += ' ' + self.italic('(v' + version_display + ')')
-        # elif 'version_deprecated' in meta:
-        if 'version_deprecated' in meta:
-            deprecated_descr = html.escape(meta['version_deprecated'], False)
+            if 'version_deprecated' in meta:
+                version_depr = html.escape(meta['version_deprecated'], False)
+                deprecated_display = self.truncate_version(version_depr, 2)
+                name_and_version += ' ' + self.italic('(v' + version_display +
+                                                      ', deprecated v' + deprecated_display +  ')')
+                deprecated_descr = html.escape("Deprecated v" + deprecated_display + '+. ' +
+                                               meta['version_deprecated_explanation'], False)
+            else:
+                name_and_version += ' ' + self.italic('(v' + version_display + ')')
+        elif 'version_deprecated' in meta:
+            version_depr = html.escape(meta['version_deprecated'], False)
+            deprecated_display = self.truncate_version(version_depr, 2)
+            name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
+            deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
+                                            meta['version_deprecated_explanation'], False)
 
         formatted_details = self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
 

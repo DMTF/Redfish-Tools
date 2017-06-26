@@ -414,7 +414,11 @@ def extend_metadata(meta, properties, version):
                 meta[prop_name]['version'] = version
         if 'deprecated' in props:
             if 'version_deprecated' not in meta[prop_name]:
-                meta[prop_name]['version_deprecated'] = props['deprecated']
+                if not version:
+                    warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
+                else:
+                    meta[prop_name]['version_deprecated'] = version
+                meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
 
         properties[prop_name]['_doc_generator_meta'] = meta[prop_name]
 

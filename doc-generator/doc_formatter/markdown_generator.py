@@ -60,18 +60,20 @@ class MarkdownGenerator(DocFormatter):
         deprecated_descr = None
         if 'version' in meta:
             version_display = self.truncate_version(meta['version'], 2) + '+'
-            # if 'version_deprecated' in meta:
-                # deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
-                # name_and_version += ' ' + self.italic('(v' + version_display +
-                # ', deprecated v' + deprecated_display +  ')')
-            # else:
-            name_and_version += ' ' + self.italic('(v' + version_display + ')')
-        # elif 'version_deprecated' in meta:
-        if 'version_deprecated' in meta:
-            # deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
-            # name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
-            deprecated_descr = self.escape_for_markdown(meta['version_deprecated'],
-                                                        self.config['escape_chars'])
+            if 'version_deprecated' in meta:
+                deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
+                name_and_version += ' ' + self.italic('(v' + version_display +
+                                                      ', deprecated v' + deprecated_display +  ')')
+                deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
+                                    self.escape_for_markdown(meta['version_deprecated_explanation'], self.config['escape_chars']))
+            else:
+                name_and_version += ' ' + self.italic('(v' + version_display + ')')
+        elif 'version_deprecated' in meta:
+            deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
+            name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
+            deprecated_descr =  ("Deprecated v" + deprecated_display + '+. ' +
+                                 self.escape_for_markdown(meta['version_deprecated_explanation'],
+                                                          self.config['escape_chars']))
 
         formatted_details = self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
 

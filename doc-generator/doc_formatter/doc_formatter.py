@@ -841,6 +841,8 @@ class DocFormatter:
         * If context_meta['version'] equals meta['version'], remove the version.
           (implication is that this property was added along with its parent, so we don't need to
           reiterate the version.)
+        For deprecations, it's even less likely differing versions will make sense, but we generally want the
+        older version.
         """
         node_meta = context_meta.get(node_name, {})
 
@@ -858,9 +860,12 @@ class DocFormatter:
 
 
         if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
-            # TODO: compare versions ...
-            pass
+            compare = self.compare_versions(meta['version_deprecated'], node_meta['version_deprecated'])
+            if compare < 0:
+                # node_meta is older, use that:
+                meta['version_deprecated'] = node_meta['version_deprecated']
         elif 'version_deprecated' in node_meta:
             meta['version_deprecated'] = node_meta['version_deprecated']
+            meta['version_deprecated_explanation'] = node_meta.get('version_deprecated_explanation', '')
 
         return meta
