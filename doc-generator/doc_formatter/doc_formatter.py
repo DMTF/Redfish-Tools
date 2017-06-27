@@ -29,6 +29,8 @@ class DocFormatter:
         self.config = config
         self.level = level
         self.this_section = None
+        self.current_version = {} # marker for latest version within property we're displaying.
+        self.current_depth = 0
 
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
@@ -179,6 +181,7 @@ class DocFormatter:
             else:
                 section_name = details['name_and_version']
             self.add_section(section_name, schema_name)
+            self.current_version = {}
 
             # Normative docs prefer longDescription to description
             if config['normative'] and 'longDescription' in definitions[schema_name]:
@@ -260,6 +263,8 @@ class DocFormatter:
         formatted = frag_gen.format_property_row(schema_name, prop_name, prop_infos)
         if formatted:
             frag_gen.add_section('')
+            frag_gen.current_version = {}
+
             frag_gen.add_property_row(formatted['row'])
             if len(formatted['details']):
                 prop_details = {}
@@ -283,7 +288,6 @@ class DocFormatter:
         traverser = self.traverser
         prop_ref = prop_info.get('$ref', None)
         prop_anyof = prop_info.get('anyOf', None)
-        # context_meta = prop_info.get('_doc_generator_meta')
         if not context_meta:
             context_meta = {}
 
@@ -605,7 +609,7 @@ class DocFormatter:
                 prop_items = [prop_item]
                 collapse_description = True
             else:
-                prop_items = self.extend_property_info(schema_name, prop_item)
+                prop_items = self.extend_property_info(schema_name, prop_item, prop_info.get('_doc_generator_meta'))
                 array_of_objects = True
 
             list_of_objects = True
@@ -838,9 +842,6 @@ class DocFormatter:
         (and its siblings). We want:
         * If context_meta['node_name']['version'] is newer than meta['version'], use the newer version.
           (implication is that this property was added to the parent after it was already defined elsewhere.)
-        * If context_meta['version'] equals meta['version'], remove the version.
-          (implication is that this property was added along with its parent, so we don't need to
-          reiterate the version.)
         For deprecations, it's even less likely differing versions will make sense, but we generally want the
         older version.
         """
@@ -853,11 +854,6 @@ class DocFormatter:
                 meta['version'] = node_meta['version']
         elif 'version' in node_meta:
             meta['version'] = node_meta['version']
-
-        if ('version' in meta) and ('version' in context_meta):
-            if meta['version'] == context_meta['version']:
-                del meta['version']
-
 
         if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
             compare = self.compare_versions(meta['version_deprecated'], node_meta['version_deprecated'])

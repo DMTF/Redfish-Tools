@@ -44,6 +44,13 @@ class MarkdownGenerator(DocFormatter):
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
 
+        if current_depth < self.current_depth:
+            for i in range(current_depth, self.current_depth):
+                if i in self.current_version:
+                    del self.current_version[i]
+        self.current_depth = current_depth
+        parent_depth = current_depth - 1
+
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
         elif isinstance(prop_info, dict):
@@ -58,6 +65,15 @@ class MarkdownGenerator(DocFormatter):
             name_and_version = ''
 
         deprecated_descr = None
+        if self.current_version.get(parent_depth) and 'version' in meta:
+            version = meta.get('version')
+            if self.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+                del meta['version']
+            self.current_version[current_depth] = version
+
+        if not self.current_version.get(current_depth):
+            self.current_version[current_depth] = meta.get('version')
+
         if 'version' in meta:
             version_display = self.truncate_version(meta['version'], 2) + '+'
             if 'version_deprecated' in meta:
@@ -333,7 +349,6 @@ search: true
                              'properties': [],
                              'property_details': []
                             }
-
         self.sections.append(self.this_section)
 
 
