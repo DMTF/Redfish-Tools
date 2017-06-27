@@ -107,7 +107,7 @@ class DocFormatter:
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details):
+                                supplemental_details, meta, anchor=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
         raise NotImplementedError
 
@@ -632,7 +632,9 @@ class DocFormatter:
             anchor = schema_name + '|details|' + prop_name
             prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
                                                                    prop_enum, prop_enum_details,
-                                                                   supplemental_details, anchor)
+                                                                   supplemental_details,
+                                                                   prop_info.get('_doc_generator_meta', {}),
+                                                                   anchor)
 
 
         # Currently, Action details will be available only from the supplemental doc.

@@ -392,12 +392,6 @@ def process_data_file(schema_name, ref, property_data):
     meta = extend_metadata(meta, properties, version)
     meta['definitions'] = meta.get('definitions', {})
     definitions = property_data['definitions']
-    # Add version metadata for sub-properties in definitions:
-    # for prop_name in definitions.keys():
-    #     thisprop = definitions[prop_name].get('properties')
-    #     if thisprop:
-    #         meta['definitions'][prop_name] = extend_metadata(meta['definitions'].get(prop_name, {}),
-    #                                                          thisprop, version)
     meta['definitions'] = extend_metadata(meta['definitions'], definitions, version)
     property_data['doc_generator_meta'] = meta
 
@@ -420,12 +414,22 @@ def extend_metadata(meta, properties, version):
                     meta[prop_name]['version_deprecated'] = version
                 meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
 
-        properties[prop_name]['_doc_generator_meta'] = meta[prop_name]
+        if props.get('enum'):
+            enum = props.get('enum')
+            meta[prop_name]['enum'] = meta[prop_name].get('enum', {})
+            for enum_name in enum:
+                if enum_name not in meta[prop_name]['enum']:
+                    meta[prop_name]['enum'][enum_name] = {}
+                    if version:
+                        meta[prop_name]['enum'][enum_name]['version'] = version
+                # TODO: handle deprecated enums (requires decision on how these will appear in schema)
 
         # build out metadata for sub-properties.
         if props.get('properties'):
             child_props = props['properties']
             meta[prop_name] = extend_metadata(meta[prop_name], child_props, version)
+
+        properties[prop_name]['_doc_generator_meta'] = meta[prop_name]
 
     return meta
 

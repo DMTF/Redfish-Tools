@@ -9,6 +9,8 @@ Brief : This file contains definitions for the MarkdownGenerator class.
 
 Initial author: Second Rise LLC.
 """
+
+import copy
 from . import DocFormatter
 
 class MarkdownGenerator(DocFormatter):
@@ -60,6 +62,9 @@ class MarkdownGenerator(DocFormatter):
             has_enum = 'enum' in prop_info
         if not meta:
             meta = {}
+
+        # We want to modify a local copy of meta, deleting redundant version info
+        meta = copy.deepcopy(meta)
 
         if prop_name:
             name_and_version = self.bold(self.escape_for_markdown(prop_name,
@@ -194,11 +199,14 @@ class MarkdownGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, anchor=None):
+                                supplemental_details, meta, anchor=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
         contents.append(self.head_three(prop_name + ':'))
+
+        parent_version = meta.get('version')
+        enum_meta = meta.get('enum', {})
 
         if prop_description:
             contents.append(self.para(self.escape_for_markdown(prop_description, self.config['escape_chars'])))
@@ -214,13 +222,25 @@ class MarkdownGenerator(DocFormatter):
             contents.append('| --- | --- |')
             enum.sort()
             for enum_item in enum:
-                contents.append('| ' + enum_item + ' | ' + enum_details.get(enum_item, '') + ' |')
+                enum_name = enum_item
+                if 'version' in enum_meta.get(enum_item, {}):
+                    version = enum_meta[enum_name]['version']
+                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                        version_display = self.truncate_version(version, 2) + '+'
+                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                contents.append('| ' + enum_name + ' | ' + enum_details.get(enum_item, '') + ' |')
 
         elif enum:
             contents.append('| ' + prop_type + ' |')
             contents.append('| --- |')
             for enum_item in enum:
-                contents.append('| ' + enum_item + ' | ')
+                enum_name = enum_item
+                if 'version' in enum_meta.get(enum_item, {}):
+                    version = enum_meta[enum_name]['version']
+                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                        version_display = self.truncate_version(version, 2) + '+'
+                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                contents.append('| ' + enum_name + ' | ')
 
         return '\n'.join(contents) + '\n'
 

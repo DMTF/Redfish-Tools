@@ -10,6 +10,7 @@ Brief : Defines HtmlGenerator class.
 Initial author: Second Rise LLC.
 """
 
+import copy
 import html
 import markdown
 from . import DocFormatter
@@ -178,6 +179,9 @@ pre.code{
         if not meta:
             meta = {}
 
+        # We want to modify a local copy of meta, deleting redundant version info
+        meta = copy.deepcopy(meta)
+
         name_and_version = self.bold(html.escape(prop_name, False))
         deprecated_descr = None
         if self.current_version.get(parent_depth) and 'version' in meta:
@@ -316,11 +320,14 @@ pre.code{
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, anchor=None):
+                                supplemental_details, meta, anchor=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
         contents.append(self.head_four(html.escape(prop_name, False) + ':', anchor))
+
+        parent_version = meta.get('version')
+        enum_meta = meta.get('enum', {})
 
         if prop_description:
             contents.append(self.para(prop_description))
@@ -338,7 +345,14 @@ pre.code{
             table_rows = []
             enum.sort()
             for enum_item in enum:
-                table_rows.append(self.make_row([html.escape(enum_item, False),
+                enum_name = html.escape(enum_item, False)
+                if 'version' in enum_meta.get(enum_item, {}):
+                    version = enum_meta[enum_item]['version']
+                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                        version_text = html.escape(version, False)
+                        version_display = self.truncate_version(version_text, 2) + '+'
+                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                table_rows.append(self.make_row([enum_name,
                                                  html.escape(enum_details.get(enum_item, ''),
                                                              False)]))
             contents.append(self.make_table(table_rows, [header_row], 'enum enum-details'))
@@ -348,7 +362,15 @@ pre.code{
             table_rows = []
             enum.sort()
             for enum_item in enum:
-                table_rows.append(self.make_row([html.escape(enum_item, False)]))
+                enum_name = html.escape(enum_item, False)
+                if 'version' in enum_meta.get(enum_item, {}):
+                    version = enum_meta[enum_item]['version']
+                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                        version_text = html.escape(version, False)
+                        version_display = self.truncate_version(version_text, 2) + '+'
+                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+
+                table_rows.append(self.make_row([enum_name]))
             contents.append(self.make_table(table_rows, [header_row], 'enum'))
 
         return '\n'.join(contents) + '\n'
