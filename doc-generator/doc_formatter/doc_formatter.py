@@ -477,7 +477,6 @@ class DocFormatter:
                 self.is_documented_schema(schema_name))
 
 
-    # XXX do we need to look up meta data here?
     def parse_property_info(self, schema_name, prop_name, prop_infos, current_depth):
         """Parse a list of one more more property info objects into strings for display.
 
@@ -630,9 +629,10 @@ class DocFormatter:
                 prop_enum_details = prop_info.get('enumLongDescriptions')
             else:
                 prop_enum_details = prop_info.get('enumDescriptions')
+            anchor = schema_name + '|details|' + prop_name
             prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
                                                                    prop_enum, prop_enum_details,
-                                                                   supplemental_details)
+                                                                   supplemental_details, anchor)
 
 
         # Currently, Action details will be available only from the supplemental doc.
