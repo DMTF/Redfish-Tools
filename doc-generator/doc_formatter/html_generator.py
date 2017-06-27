@@ -304,12 +304,15 @@ pre.code{
                 'action_details':formatted_details.get('action_details')})
 
 
-    def format_property_details(self, prop_name, prop_type, enum, enum_details,
+    def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
                                 supplemental_details):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
         contents.append(self.head_four(html.escape(prop_name, False) + ':'))
+
+        if prop_description:
+            contents.append(self.para(prop_description))
 
         if isinstance(prop_type, list):
             prop_type = ', '.join([html.escape(x, False) for x in prop_type])

@@ -106,7 +106,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_property_details(self, prop_name, prop_type, enum, enum_details,
+    def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
                                 supplemental_details):
         """Generate a formatted table of enum information for inclusion in Property Details."""
         raise NotImplementedError
@@ -630,8 +630,8 @@ class DocFormatter:
                 prop_enum_details = prop_info.get('enumLongDescriptions')
             else:
                 prop_enum_details = prop_info.get('enumDescriptions')
-            prop_details[prop_name] = self.format_property_details(prop_name, prop_type, prop_enum,
-                                                                   prop_enum_details,
+            prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
+                                                                   prop_enum, prop_enum_details,
                                                                    supplemental_details)
 
 

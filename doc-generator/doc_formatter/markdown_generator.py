@@ -185,12 +185,15 @@ class MarkdownGenerator(DocFormatter):
                 'action_details':formatted_details.get('action_details')})
 
 
-    def format_property_details(self, prop_name, prop_type, enum, enum_details,
+    def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
                                 supplemental_details):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
         contents.append(self.head_three(prop_name + ':'))
+
+        if prop_description:
+            contents.append(self.para(self.escape_for_markdown(prop_description, self.config['escape_chars'])))
 
         if isinstance(prop_type, list):
             prop_type = ', '.join(prop_type)
@@ -397,6 +400,9 @@ search: true
         add_level = '' + '#' * self.level
         return add_level + '##### ' + text + "\n"
 
+    def para(self, text):
+        """Add a paragraph of text. Doesn't actually test for paragraph breaks within text"""
+        return "\n" + text + "\n"
 
     @staticmethod
     def escape_for_markdown(text, chars):
