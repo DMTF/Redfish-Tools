@@ -43,6 +43,7 @@ class MarkdownGenerator(DocFormatter):
         formatted = []     # The row itself
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
+        has_enum = False
 
         if current_depth < self.current_depth:
             for i in range(current_depth, self.current_depth):
@@ -53,8 +54,10 @@ class MarkdownGenerator(DocFormatter):
 
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
+            has_enum = 'enum' in prop_info[0]
         elif isinstance(prop_info, dict):
             meta = prop_info.get('_doc_generator_meta')
+            has_enum = 'enum' in prop_info
         if not meta:
             meta = {}
 
@@ -135,7 +138,10 @@ class MarkdownGenerator(DocFormatter):
 
         # If there are prop_details (enum details), add a note to the description:
         if formatted_details['has_direct_prop_details']:
-            text_descr = 'See Property Details, below, for more information about this property.'
+            if has_enum:
+                text_descr = 'See ' + prop_name + ' in Property Details, below, for the possible values of this property.'
+            else:
+                text_descr = 'See Property Details, below, for more information about this property.'
             formatted_details['descr'] += ' ' + self.italic(text_descr)
 
         if formatted_details['has_action_details']:
@@ -146,6 +152,8 @@ class MarkdownGenerator(DocFormatter):
             formatted_details['descr'] += ' ' + self.italic(deprecated_descr)
 
         prop_type = formatted_details['prop_type']
+        if has_enum:
+            prop_type += '<br>(enum)'
 
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
@@ -186,7 +194,7 @@ class MarkdownGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details):
+                                supplemental_details, anchor=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
