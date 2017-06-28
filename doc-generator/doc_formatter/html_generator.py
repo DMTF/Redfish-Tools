@@ -249,7 +249,7 @@ pre.code{
                     collapse_array = True
                     name_and_version += ' [ ] '
 
-        formatted_details['descr'] = html.escape(formatted_details['descr'], False)
+        formatted_details['descr'] = self.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
@@ -703,7 +703,7 @@ pre.code{
 
 
     @staticmethod
-    def markdown_to_html(markdown_blob):
+    def markdown_to_html(markdown_blob, **args):
         """ Convert markdown to HTML """
         html_blob = markdown.markdown(markdown_blob,
                                       extensions=['markdown.extensions.codehilite',
@@ -741,5 +741,9 @@ pre.code{
 
             if html_updated:
                 html_blob = '\n'.join(lines)
+
+        elif args.get('no_para'):
+            if html_blob[0:3] == '<p>':
+                html_blob = html_blob[3:-4]
 
         return html_blob

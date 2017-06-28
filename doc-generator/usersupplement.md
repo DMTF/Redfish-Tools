@@ -35,6 +35,8 @@ Note: you can specify the location of the TOC, presumably in the Introduction se
 
 # Description Overrides
 
+Note: markdown is allowed in description overrides, but HTML markup is not; it will be escaped.
+
 * Status: See  [The Status Object](#status_description), above.
 
 # Introduction

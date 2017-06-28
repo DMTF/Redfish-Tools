@@ -816,7 +816,6 @@ class DocFormatter:
         local_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('description overrides')
         if local_overrides:
             if prop_name in local_overrides:
-                import pdb; pdb.set_trace()
                 prop_info['description'] = prop_info['longDescription'] = local_overrides[prop_name]
                 return prop_info
         if prop_name in self.config.get('property_description_overrides', {}):
