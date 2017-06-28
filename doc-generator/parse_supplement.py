@@ -31,7 +31,8 @@ def parse_file(filehandle):
         '# Excluded Annotations',  # parse out properties (## headings) to exclude.
         '# Excluded Schemas',      # parse out schemas (## headings) to exclude.
         '# Schema Supplement',     # parse out for schema-specific details (see below)
-        '# Schema Documentation',   # list of search/replace patterns for links
+        '# Schema Documentation',  # list of search/replace patterns for links
+        '# Description Overrides', # list of property name:description to substitute throughout the doc
         ]
 
     for line in filehandle:
@@ -63,8 +64,12 @@ def parse_file(filehandle):
     if 'Excluded Schemas' in parsed:
         parsed['Excluded Schemas'] = parse_excluded_properties(parsed['Excluded Schemas'])
 
+    if 'Description Overrides' in parsed:
+        parsed['Description Overrides'] = parse_description_overrides(parsed['Description Overrides'])
+
     if 'Schema Supplement' in parsed:
         parsed['Schema Supplement'] = parse_schema_supplement(parsed['Schema Supplement'])
+
         # Second pass to pull out property details
         parsed['property details'] = parse_property_details(parsed['Schema Supplement'])
         parsed['action details'] = parse_action_details(parsed['Schema Supplement'])
@@ -176,6 +181,24 @@ def parse_excluded_properties(markdown_blob):
     return parsed
 
 
+def parse_description_overrides(markdown_blob):
+    """Create a { property_name : description } dict from markdown blob. Ignore any lines that don't parse."""
+
+    parsed = {}
+
+    lines = markdown_blob.splitlines()
+    for line in lines:
+        line = line.strip()
+        if line.startswith('*'):
+            line = line[1:]
+            property_name, description = line.split(':', 1)
+            property_name = property_name.strip()
+            description = description.strip()
+            if property_name and description:
+                parsed[property_name] = description
+    return parsed
+
+
 def parse_schema_supplement(markdown_blob):
     """Parse the schema supplement by schema, description, and payload.
 
@@ -211,6 +234,10 @@ def parse_schema_supplement(markdown_blob):
     for schema_name, blob in parsed.items():
         parsed[schema_name] = parse_schema_details(blob)
 
+        # Parse description overrides, if present
+        if 'description overrides' in parsed[schema_name]:
+            parsed[schema_name]['description overrides'] = parse_description_overrides(parsed[schema_name]['description overrides'])
+
     return parsed
 
 
@@ -221,7 +248,7 @@ def parse_schema_details(markdown_blob):
     """
 
     markers = ['### description', '### jsonpayload', '### property details', '### action details',
-               '### schema-intro', '### schema-postscript', '### mockup']
+               '### schema-intro', '### schema-postscript', '### mockup', '### description overrides']
     parsed = {}
     current_marker = None
     bloblines = []

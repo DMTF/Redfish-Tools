@@ -33,6 +33,10 @@ add_toc, boolean. Default false. Add a Table of Contents (relevant for HTML outp
 
 Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output.
 
+# Description Overrides
+
+* Status: See  [The Status Object](#status_description), above.
+
 # Introduction
 
 Text placed here will appear at the top of the output.  Document common usage, common properties excluded from the schema tables, and anything else useful. Typically you will start with a first-level heading (title), but in this example we start with this paragraph.
@@ -51,6 +55,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 ## You can now include Schema fragments:
 
 A fragment is a definition pulled out of some schema. Use #include_fragment at the beginning of a line, followed by the $ref path to the fragment. It will be processed like definitions elsewhere in the document,  and will be output in place of the #include_fragment keyword.
+
+<h2 id="status_description">The Status Object</h2>
 
 #include_fragment http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status
 
@@ -160,6 +166,10 @@ NB: a mockup can be included either as a path on the local filesystem, or as a f
 ### Mockup
 
 mockups/public-rackmount1/Chassis/1U/index.json
+
+### Description Overrides
+
+* Name :  Name of this Chassis. For example, "Covfefe."
 
 ## Processor
 
