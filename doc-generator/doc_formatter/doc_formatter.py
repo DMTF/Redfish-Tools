@@ -10,6 +10,7 @@ Brief : Contains DocFormatter class
 Initial author: Second Rise LLC.
 """
 
+import copy
 import re
 import warnings
 
@@ -157,10 +158,11 @@ class DocFormatter:
         property_data = self.property_data
         traverser = self.traverser
         config = self.config
+        schema_supplement = config.get('schema_supplement', {})
 
         schema_names = self.documented_schemas
         schema_names.sort()
-        schema_supplement = config.get('schema_supplement', {})
+
 
         for schema_name in schema_names:
 
@@ -215,6 +217,7 @@ class DocFormatter:
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
+                    prop_info = self.apply_overrides(prop_info, schema_name, prop_name)
                     meta = prop_info.get('_doc_generator_meta', {})
                     prop_infos = self.extend_property_info(schema_name, prop_info, properties.get('_doc_generator_meta'))
 
@@ -320,6 +323,7 @@ class DocFormatter:
         if prop_ref and traverser.ref_to_own_schema(prop_ref):
             prop_ref = traverser.parse_ref(prop_ref, schema_name)
             ref_info = traverser.find_ref_data(prop_ref)
+            ref_info = self.apply_overrides(ref_info)
             meta = ref_info.get('_doc_generator_meta')
             if not meta:
                 meta = {}
@@ -796,6 +800,29 @@ class DocFormatter:
     def is_documented_schema(self, schema_name):
         """ True if the schema will appear as a section in the output documentation """
         return schema_name in self.documented_schemas
+
+
+    def apply_overrides(self, prop_info, schema_name=None, prop_name=None):
+        """ Apply overrides from config to prop_info. Returns a modified copy of prop_info. """
+
+        prop_info = copy.deepcopy(prop_info)
+
+        if not schema_name:
+            schema_name = prop_info.get('_schema_name')
+
+        if not prop_name:
+            prop_name = prop_info.get('_prop_name')
+
+        local_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('description overrides')
+        if local_overrides:
+            if prop_name in local_overrides:
+                import pdb; pdb.set_trace()
+                prop_info['description'] = prop_info['longDescription'] = local_overrides[prop_name]
+                return prop_info
+        if prop_name in self.config.get('property_description_overrides', {}):
+            prop_info['description'] = prop_info['longDescription'] = self.config['property_description_overrides'][prop_name]
+
+        return prop_info
 
 
     @staticmethod

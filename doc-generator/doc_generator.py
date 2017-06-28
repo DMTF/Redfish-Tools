@@ -143,6 +143,9 @@ def main():
         config['excluded_schemas'] = config['supplemental']['Excluded Schemas'].get('exact_match')
         config['excluded_schemas_by_match'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
 
+    if 'Description Overrides' in config['supplemental']:
+        config['property_description_overrides'] = config['supplemental']['Description Overrides']
+
     config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
     config['add_toc'] = config['supplemental']['keywords'].get('add_toc')
 
