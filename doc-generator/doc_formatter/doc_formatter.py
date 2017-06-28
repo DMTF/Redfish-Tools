@@ -294,9 +294,6 @@ class DocFormatter:
         prop_infos = []
         outside_ref = None
 
-        # Properties to carry through from parent when a ref is extended:
-        parent_props = ['description', 'longDescription', 'readonly']
-
         # Check for anyOf with a $ref to odata.4.0.0 idRef, and replace it with that ref.
         if prop_anyof:
             for elt in prop_anyof:
@@ -386,7 +383,7 @@ class DocFormatter:
 
                 # if parent_props were specified in prop_info, they take precedence:
                 for x in prop_info.keys():
-                    if x in parent_props and prop_info[x]:
+                    if x in self.parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
                 prop_info = ref_info
 
@@ -403,7 +400,7 @@ class DocFormatter:
                     continue
                 if '$ref' in elt:
                     for x in prop_info.keys():
-                        if x in parent_props:
+                        if x in self.parent_props:
                             elt[x] = prop_info[x]
                 elt = self.extend_property_info(schema_name, elt, context_meta)
                 prop_infos.extend(elt)
