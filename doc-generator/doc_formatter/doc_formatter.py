@@ -312,13 +312,20 @@ class DocFormatter:
         if prop_ref:
             check_ref = traverser.parse_ref(prop_ref, schema_name)
             if check_ref == 'odata.4.0.0#/definitions/idRef':
+                # idRef is a special case; we just want to pull in its definition and stop.
+                prop_info = traverser.find_ref_data(check_ref)
                 prop_ref = None
-                prop_info = {'properties':  {'@odata.id': {'type': 'string',
-                                                           "description": "The unique identifier for a resource.",
-                                                           "longDescription": "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification.",
-                                                          }
-                                            }
-                            }
+                if not prop_info:
+                    # We must not have the odata schema, but we know what it is.
+                    prop_info = {'properties':
+                                 {'@odata.id':
+                                  {'type': 'string',
+                                   'readonly': True,
+                                   "description": "The unique identifier for a resource.",
+                                   "longDescription": "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification.",
+                                   }
+                                  }
+                                 }
 
         if prop_ref and traverser.ref_to_own_schema(prop_ref):
             prop_ref = traverser.parse_ref(prop_ref, schema_name)
@@ -340,6 +347,21 @@ class DocFormatter:
 
                 if is_collection_of and ref_info.get('anyOf'):
                     ref_info = {'type': 'object'}
+                    # anyof_ref = ref_info['anyOf'].get('$ref', None)
+                    # check_ref = traverser.parse_ref(anyof_ref, schema_name)
+                    # if check_ref == 'odata.4.0.0#/definitions/idRef':
+                    #     ref_info = traverser.find_ref_data(check_ref)
+                    #     if not ref_info:
+                    #         # We must not have the odata schema, but we know what it is.
+                    #         ref_info = {'properties':
+                    #                     {'@odata.id':
+                    #                      {'type': 'string',
+                    #                       'readonly': True,
+                    #                       "description": "The unique identifier for a resource.",
+                    #                       "longDescription": "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification.",
+                    #                       }
+                    #                      }
+                    #                     }
 
                 # If an object, include just the definition and description, and append a reference if possible:
                 if ref_info.get('type') == 'object':
