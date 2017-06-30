@@ -302,8 +302,7 @@ class DocFormatter:
             for elt in prop_anyof:
                 if '$ref' in elt:
                     this_ref = elt.get('$ref')
-                    check_ref = traverser.parse_ref(this_ref, schema_name)
-                    if check_ref == 'odata.4.0.0#/definitions/idRef':
+                    if this_ref.endswith('odata.4.0.0.json#/definitions/idRef'):
                         is_link = True
                         prop_ref = this_ref
                         prop_anyof = None
@@ -704,9 +703,9 @@ class DocFormatter:
 
         We special-case this a couple of places where we treat other refs a little differently. """
         prop_info = None
-        check_ref = self.traverser.parse_ref(ref)
-        if check_ref == 'odata.4.0.0#/definitions/idRef':
+        if ref.endswith('odata.4.0.0.json#/definitions/idRef'):
             # idRef is a special case; we just want to pull in its definition and stop.
+            check_ref = self.traverser.parse_ref(ref)
             prop_info = self.traverser.find_ref_data(check_ref)
             prop_ref = None
             if not prop_info:
