@@ -12,6 +12,7 @@ Initial author: Second Rise LLC.
 """
 import re
 import urllib.request
+import os.path
 import warnings
 
 def parse_file(filehandle):
@@ -33,6 +34,7 @@ def parse_file(filehandle):
         '# Schema Supplement',     # parse out for schema-specific details (see below)
         '# Schema Documentation',  # list of search/replace patterns for links
         '# Description Overrides', # list of property name:description to substitute throughout the doc
+        '# Schema URI Mapping',    # map URI(s) to local repo(s)
         ]
 
     for line in filehandle:
@@ -76,6 +78,9 @@ def parse_file(filehandle):
 
     if 'Schema Documentation' in parsed:
         parsed['Schema Documentation'] = parse_documentation_links(parsed['Schema Documentation'])
+
+    if 'Schema URI Mapping' in parsed:
+        parsed['local_to_uri'], parsed['uri_to_local'] = parse_uri_mapping(parsed['Schema URI Mapping'])
 
     return parsed
 
@@ -146,6 +151,33 @@ def parse_documentation_links(markdown_blob):
                 linkmap[to_replace].append({'full_match': to_replace,
                                             'replace_with':  replace_with})
     return linkmap
+
+
+def parse_uri_mapping(markdown_blob):
+    """Parse a Schema URI mapping section, producing maps in both directions."""
+    local_to_uri = {}
+    uri_to_local = {}
+
+    for line in markdown_blob.splitlines():
+        if line.startswith('## Local-repo:'):
+            scratch = line[14:]
+            scratch = scratch.strip()
+            parts = scratch.split(' ')
+            if len(parts) == 2:
+                uri = parts[0] # Actually a URI part -- domain and path
+                local_path = parts[1]
+
+                # Validate the local_path and normalize it:
+                abs_local_path = os.path.abspath(local_path)
+                if os.path.isdir(abs_local_path):
+                    local_to_uri[abs_local_path] = uri
+                    uri_to_local[uri] = abs_local_path
+                else:
+                    warnings.warn('URI mapping has a bad local path "' + local_path + '"')
+            else:
+                warnings.warn('Could not parse URI mapping: "' + line + '"')
+
+    return local_to_uri, uri_to_local
 
 
 def parse_title_from_introduction(markdown_blob):
@@ -286,7 +318,7 @@ def parse_schema_details(markdown_blob):
                             mockup = response.read().decode('utf-8') # JSON is UTF-8 by spec.
                         else:
                             warnings.warn('Unable to retrieve Mockup from URL "'
-                                          + mockup_location + ':', "Server returned",
+                                          + mockup_location + '":', "Server returned",
                                           response.status, "status")
                     except Exception as ex:
                         warnings.warn('Unable to retrieve Mockup from URL "' + mockup_location

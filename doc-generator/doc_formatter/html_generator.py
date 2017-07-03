@@ -250,6 +250,7 @@ pre.code{
                     name_and_version += ' [ ] '
 
         formatted_details['descr'] = self.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
+
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '

@@ -599,6 +599,9 @@ class DocFormatter:
         else:
             descr = prop_info.get('description', '')
 
+        if descr is None:
+            descr = ''
+
         add_link_text = prop_info.get('add_link_text', '')
 
         # Items, if present, will have a definition with either an object, a list of types,

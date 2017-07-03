@@ -59,8 +59,9 @@ class SchemaTraverser:
         schema['_doc_generator_meta'] = meta
 
         # Rebuild the ref for this item.
-        ref_uri = self.root_uri + schema_name + '.json' + '#' + path
-        schema['_ref_uri'] = ref_uri
+        # ref_uri = self.root_uri + schema_name + '.json' + '#' + path
+        # schema['_ref_uri'] = ref_uri
+        schema['_ref_uri'] = ref
         return schema
 
 
