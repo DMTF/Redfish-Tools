@@ -145,7 +145,7 @@ pre.code{
 </style>
 """
 
-    def format_property_row(self, schema_name, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -156,7 +156,6 @@ pre.code{
 
         This may include embedded objects with their own properties.
         """
-
         traverser = self.traverser
         formatted = []     # The row itself
         indentation_string = '&nbsp;' * 6 * current_depth
@@ -212,7 +211,7 @@ pre.code{
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
                                             meta['version_deprecated_explanation'], False)
 
-        formatted_details = self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -258,8 +257,8 @@ pre.code{
 
         # If there are prop_details (enum details), add a note to the description:
         if formatted_details['has_direct_prop_details']:
-            anchor = schema_name + '|details|' + prop_name
             if has_enum:
+                anchor = schema_ref + '|details|' + prop_name
                 text_descr = 'See <a href="#' + anchor + '">' + prop_name + '</a> in Property Details, below, for the possible values of this property.'
             else:
                 text_descr = 'See Property Details, below, for more information about this property.'
@@ -588,15 +587,17 @@ pre.code{
         self.this_section['property_details'].append(formatted_details)
 
 
-    def link_to_own_schema(self, schema_name):
-        """ Provide a link to schema_name, assuming it's in this project's namespace """
+    def link_to_own_schema(self, schema_ref, schema_uri):
+        """ Provide a link to schema_ref, preferring an in-document link to the schema_uri. """
+        schema_name = self.traverser.get_schema_name(schema_ref)
+        if not schema_name:
+            schema_name = schema_ref
 
-        if self.is_documented_schema(schema_name):
+        if self.is_documented_schema(schema_ref):
             return '<a href="#' + schema_name + '">' + schema_name + '</a>'
         else:
-            uri = self.traverser.get_uri_for_schema(schema_name)
-            if uri:
-                return '<a href="' + uri + '" target="_blank">' + schema_name + '</a>'
+            return '<a href="' + schema_uri + '" target="_blank">' + schema_name + '</a>'
+
 
         return schema_name
 

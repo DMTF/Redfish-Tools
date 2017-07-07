@@ -38,13 +38,14 @@ class SchemaTraverser:
         if '#' not in ref:
             return None
 
-        schema_name, path = ref.split('#')
+        schema_ref, path = self.get_schema_ref_and_path(ref)
 
-        schema = self.schemas.get(schema_name, None)
+        schema = self.schemas.get(schema_ref, None)
         if not schema:
+            # TODO: this is where we go off to The Internet!!!
             return None
 
-        meta = self.meta.get(schema_name, {})
+        meta = self.meta.get(schema_ref, {})
 
         elements = [x for x in path.split('/') if x]
         for element in elements:
@@ -54,7 +55,7 @@ class SchemaTraverser:
             else:
                 return None
 
-        schema['_from_schema_name'] = schema_name
+        schema['_from_schema_ref'] = schema_ref
         schema['_prop_name'] = element
         schema['_doc_generator_meta'] = meta
 
@@ -68,12 +69,9 @@ class SchemaTraverser:
     def find_meta_data(self, ref):
         """Find meta data identified by ref within self.meta."""
 
-        if '#' not in ref:
-            return None
+        schema_ref, path = self.get_schema_ref_and_path(ref)
 
-        schema_name, path = ref.split('#')
-
-        meta = self.meta.get(schema_name)
+        meta = self.meta.get(schema_ref)
         if not meta:
             return {}
 
@@ -87,26 +85,22 @@ class SchemaTraverser:
         return meta
 
 
+    def get_schema_name(self, ref):
+        """Get the schema name for the given ref."""
+        schema_ref, path = self.get_schema_ref_and_path(ref)
+        return self.schemas.get(schema_ref, {}).get('_schema_name')
+
+
     def ref_to_own_schema(self, ref):
         """Does this $ref point to one of our own schemas? """
 
         if '#' not in ref:
             return False
 
-        prop_ref_uri = ref.split('#')[0]
+        schema_ref, path = self.get_schema_ref_and_path(ref)
 
-        if not prop_ref_uri:
+        if self.schemas.get(schema_ref):
             return True
-
-        if prop_ref_uri.startswith(self.root_uri):
-            return True
-
-        dir_end = prop_ref_uri.rfind('/')
-        if dir_end > -1:
-            schema_name = prop_ref_uri[dir_end+1:]
-            schema_name = schema_name[:-5] # remove '.json' suffix
-            if self.schemas.get(schema_name):
-                return True
 
         return False
 
@@ -165,9 +159,20 @@ class SchemaTraverser:
         return None
 
 
-    def get_uri_for_schema(self, schema_name):
-        """Given a schema name (versioned or unversioned), return the URI for it."""
+    @staticmethod
+    def get_schema_ref_and_path(ref):
+        """Get the normalized ref to the schema, and the path part.
 
-        if self.schemas.get(schema_name):
-            return self.root_uri + schema_name + '.json'
-        return None
+        This is the full URI of the json file, minus protocol.
+        """
+
+        if '#' in ref:
+            schema_ref, path = ref.split('#')
+        else:
+            schema_ref = ref
+            path = ''
+
+        if '://' in schema_ref:
+            protocol, schema_ref = schema_ref.split('://')
+
+        return schema_ref, path

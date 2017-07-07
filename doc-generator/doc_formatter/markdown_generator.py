@@ -29,7 +29,7 @@ class MarkdownGenerator(DocFormatter):
             }
 
 
-    def format_property_row(self, schema_name, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -99,7 +99,7 @@ class MarkdownGenerator(DocFormatter):
                                  self.escape_for_markdown(meta['version_deprecated_explanation'],
                                                           self.config['escape_chars']))
 
-        formatted_details = self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -262,14 +262,15 @@ class MarkdownGenerator(DocFormatter):
         return '\n'.join(contents) + '\n'
 
 
-    def link_to_own_schema(self, schema_name):
-        """Format a reference to a schema in this project's namespace"""
-        return self.italic(schema_name)
+    def link_to_own_schema(self, schema_ref, schema_full_uri):
+        """Format a reference to a schema."""
+        result = super().link_to_own_schema(schema_ref, schema_full_uri)
+        return self.italic(result)
 
 
-    def link_to_outside_schema(self, schema_uri):
+    def link_to_outside_schema(self, schema_full_uri):
         """Format a reference to a schema_uri, which should be a valid URI"""
-        return self.italic('['+ schema_uri + '](' + schema_uri + ')')
+        return self.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
 
 
     def emit(self):

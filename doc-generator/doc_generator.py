@@ -71,16 +71,18 @@ class DocGenerator:
 
         property_data = {}
         doc_generator_meta = {}
-        for schema_name in files.keys():
-            property_data[schema_name] = self.process_files(schema_name, files[schema_name])
-            doc_generator_meta[schema_name] = property_data[schema_name]['doc_generator_meta']
-            latest_info = files[schema_name][-1]
+
+        for normalized_uri in files.keys():
+            property_data[normalized_uri] = self.process_files(normalized_uri, files[normalized_uri])
+            doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
+            latest_info = files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
             latest_data = self.load_as_json(latest_file)
             latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
             latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
+            latest_data['_schema_name'] = latest_info.get('schema_name')
 
-            schema_data[schema_name] = latest_data
+            schema_data[normalized_uri] = latest_data
 
         traverser = SchemaTraverser(self.config['schema_root_uri'], schema_data, doc_generator_meta)
 
@@ -99,8 +101,9 @@ class DocGenerator:
         """Traverse files, grouping any unversioned/versioned schemas together.
 
         Parses json to identify versioned files.
-        Returns a dict of {schema_name : [versioned files]} where each
-        versioned file is a dict of root, filename, ref path.
+        Returns a dict of {normalized_uri : [versioned files]} where each
+        versioned file is a dict of {root, filename, ref path, schema_name,
+        _is_versioned_schema, _is_collection_of}.
         """
 
         file_list = files.copy()
@@ -112,14 +115,16 @@ class DocGenerator:
         for filename in file_list:
             # Get the (probably versioned) filename, and save the data:
             root, _, fname = filename.rpartition(os.sep)
+
             data = self.load_as_json(filename)
 
             schema_name = self.get_schema_name(fname, data)
             if schema_name is None: continue
 
-            # uri = construct_uri_for_filename(fname, config)
+            normalized_uri = self.construct_uri_for_filename(filename)
 
-            all_schemas[schema_name] = data
+            data['_schema_name'] = schema_name
+            all_schemas[normalized_uri] = data
 
             if filename in processed_files: continue
 
@@ -158,7 +163,8 @@ class DocGenerator:
                         if ref_filename in file_list:
                             ref_files.append({'root': root,
                                               'filename': ref_fn,
-                                              'ref': refpath_path})
+                                              'ref': refpath_path,
+                                              'schema_name': schema_name})
                         elif ref_filename not in missing_files:
                             missing_files.append(ref_filename)
 
@@ -171,7 +177,7 @@ class DocGenerator:
                                 # It's a collection. What is it a collection of?
                                 member_ref = obj['properties']['Members'].get('items', {}).get('$ref')
                                 if member_ref:
-                                    is_collection_of = member_ref.split('/')[-1]
+                                    is_collection_of = self.normalize_ref(member_ref)
                         ref_files = []
                         continue
 
@@ -186,7 +192,8 @@ class DocGenerator:
                 if ref_filename in file_list:
                     ref_files.append({'root': root,
                                       'filename': ref_fn,
-                                      'ref': refpath_path})
+                                      'ref': refpath_path,
+                                      'schema_name': schema_name})
                 elif ref_filename not in missing_files:
                     missing_files.append(ref_filename)
 
@@ -197,19 +204,20 @@ class DocGenerator:
                 # Add the _is_versioned_schema and  is_collection_of hints to each ref object
                 [x.update({'_is_versioned_schema': is_versioned_schema, '_is_collection_of': is_collection_of})
                  for x in ref_files]
-                grouped_files[schema_name] = ref_files
+                grouped_files[normalized_uri] = ref_files
 
-            if not schema_name in grouped_files:
+            if not normalized_uri in grouped_files:
                 # this is not an unversioned schema after all.
-                grouped_files[schema_name] = [{'root': root,
-                                               'filename': fname,
-                                               'ref': ref,
-                                               '_is_versioned_schema': is_versioned_schema,
-                                               '_is_collection_of': is_collection_of}]
+                grouped_files[normalized_uri] = [{'root': root,
+                                                  'filename': fname,
+                                                  'ref': ref,
+                                                  'schema_name': schema_name,
+                                                  '_is_versioned_schema': is_versioned_schema,
+                                                  '_is_collection_of': is_collection_of}]
 
             # Note these files as processed:
             processed_files.append(filename)
-            for file_refs in grouped_files[schema_name]:
+            for file_refs in grouped_files[normalized_uri]:
                 ref_filename = os.path.join(file_refs['root'], file_refs['filename'])
                 processed_files.append(ref_filename)
 
@@ -219,7 +227,7 @@ class DocGenerator:
         return grouped_files, all_schemas
 
 
-    def process_files(self, schema_name, refs):
+    def process_files(self, schema_ref, refs):
         """Loop through a set of refs and process the specified files into property data.
 
         Returns a property_data object consisting of the properties from the last ref file,
@@ -228,34 +236,38 @@ class DocGenerator:
         """
         property_data = {}
         for info in refs:
-            property_data = self.process_data_file(schema_name, info, property_data)
+            property_data = self.process_data_file(schema_ref, info, property_data)
         return property_data
 
 
-    def process_data_file(self, schema_name, ref, property_data):
+    def process_data_file(self, schema_ref, ref, property_data):
         """Process a single file by ref name, identifying metadata and updating property_data."""
 
         filename = os.path.join(ref['root'], ref['filename'])
+        normalized_uri = self.construct_uri_for_filename(filename)
+
+        data = self.load_as_json(filename)
+        schema_name = self.get_schema_name(filename, data, True)
         version = self.get_version_string(ref['filename'])
+
         property_data['schema_name'] = schema_name
         property_data['latest_version'] = version
         property_data['name_and_version'] = schema_name
+        property_data['normalized_uri'] = normalized_uri
         if version:
             property_data['name_and_version'] += ' ' + version
-        property_data['properties'] = {}
+        # property_data['properties'] = {} # TODO: should this be here?
 
         if 'properties' not in property_data:
             property_data['properties'] = {}
-        meta = property_data.get('doc_generator_meta', {})
+        meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
 
         if version == '1.0.0':
             version = None
 
-        if (not version) and (schema_name in property_data):
-            warnings.warn('Check', schema_name, 'for version problems.',
+        if (not version) and (schema_ref in property_data):
+            warnings.warn('Check', schema_ref, 'for version problems.',
                           'Are there two files with either version 1.0.0 or no version?')
-
-        data = self.load_as_json(filename)
 
         try:
             property_data['definitions'] = data['definitions']
@@ -359,7 +371,7 @@ class DocGenerator:
 
 
     @staticmethod
-    def get_schema_name(filename, data):
+    def get_schema_name(filename, data, unversioned=False):
         """Get the schema name, preferably from a 'title' found in the data, otherwise from filename
 
         Returns a string or None, the latter indicating that this is an old-style schema that
@@ -381,19 +393,36 @@ class DocGenerator:
             if schema_name[0] == '#':
                 schema_name = schema_name[1:]
 
+        if unversioned:
+            schema_name, _, _ = schema_name.partition('.')
+
         return schema_name
 
 
-# def construct_uri_for_filename(fname):
-#     """Use the schema URI mapping to construct a URI for this file"""
+    def construct_uri_for_filename(self, fname):
+        """Use the schema URI mapping to construct a URI for this file"""
 
-#     if self.config.get('local_to_uri'):
+        local_to_uri = self.config.get('local_to_uri')
+        if local_to_uri:
+            for local_path in local_to_uri.keys():
+                if fname.startswith(local_path):
+                    return fname.replace(local_path, local_to_uri[local_path])
 
-#         for local_path in self.config.local_to_uri.keys():
-#             if fname.startswith(local_path):
-#                 return fname.replace(local_path, self.config.local_to_uri(local_path))
+        return fname
 
-#     return fname
+    @staticmethod
+    def normalize_ref(ref):
+        """Get the normalized version of ref we use to index a schema.
+
+        Get the URL part of ref and strip off the protocol."""
+        if '#' in ref:
+            ref, path = ref.split('#')
+
+        if '://' in ref:
+            protocol, ref = ref.split('://')
+
+        return ref
+
 
 
 def main():

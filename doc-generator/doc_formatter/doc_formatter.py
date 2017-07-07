@@ -36,11 +36,13 @@ class DocFormatter:
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
         self.documented_schemas = []
-        schemas = [x for x in property_data.keys() if not self.skip_schema(x)]
-        for schema_name in schemas:
-            details = self.property_data[schema_name]
+        schemas = [x for x in property_data.keys()]
+        for schema_ref in schemas:
+            details = self.property_data[schema_ref]
+            if self.skip_schema(details['schema_name']):
+                continue
             if len(details['properties']):
-                self.documented_schemas.append(schema_name)
+                self.documented_schemas.append(schema_ref)
 
         self.uri_match_keys = None
         if self.config.get('uri_replacements'):
@@ -96,7 +98,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_property_row(self, schema_name, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
         'row': content for the main table being generated.
@@ -120,22 +122,22 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_list_of_object_descrs(self, schema_name, prop_items, current_depth):
+    def format_list_of_object_descrs(self, schema_ref, prop_items, current_depth):
         """Format a (possibly nested) list of embedded objects.
 
         We expect this to amount to one definition, usually for 'items' in an array."""
 
         if isinstance(prop_items, dict):
             if 'properties' in prop_items:
-                return self.format_object_descr(schema_name, prop_items, current_depth)
+                return self.format_object_descr(schema_ref, prop_items, current_depth)
             else:
-                return self.format_non_object_descr(schema_name, prop_items, current_depth)
+                return self.format_non_object_descr(schema_ref, prop_items, current_depth)
 
         rows = []
         details = {}
         if isinstance(prop_items, list):
             for prop_item in prop_items:
-                formatted = self.format_list_of_object_descrs(schema_name, prop_item, current_depth)
+                formatted = self.format_list_of_object_descrs(schema_ref, prop_item, current_depth)
                 rows.extend(formatted['rows'])
                 details.update(formatted['details'])
             return ({'rows': rows, 'details': details})
@@ -160,13 +162,14 @@ class DocFormatter:
         config = self.config
         schema_supplement = config.get('schema_supplement', {})
 
-        schema_names = self.documented_schemas
-        schema_names.sort()
+        schema_keys = self.documented_schemas
+        schema_keys.sort()
 
 
-        for schema_name in schema_names:
+        for schema_ref in schema_keys:
 
-            details = property_data[schema_name]
+            details = property_data[schema_ref]
+            schema_name = details['schema_name']
 
             # Look up supplemental details for this schema/version
             version = details.get('latest_version', '1')
@@ -179,7 +182,7 @@ class DocFormatter:
             properties = details['properties']
 
             if config.get('omit_version_in_headers'):
-                section_name = details['schema_name']
+                section_name = schema_name
             else:
                 section_name = details['name_and_version']
             self.add_section(section_name, schema_name)
@@ -219,9 +222,9 @@ class DocFormatter:
                     prop_info = properties[prop_name]
                     prop_info = self.apply_overrides(prop_info, schema_name, prop_name)
                     meta = prop_info.get('_doc_generator_meta', {})
-                    prop_infos = self.extend_property_info(schema_name, prop_info, properties.get('_doc_generator_meta'))
+                    prop_infos = self.extend_property_info(schema_ref, prop_info, properties.get('_doc_generator_meta'))
 
-                    formatted = self.format_property_row(schema_name, prop_name, prop_infos)
+                    formatted = self.format_property_row(schema_ref, prop_name, prop_infos)
                     if formatted:
                         self.add_property_row(formatted['row'])
                         if formatted['details']:
@@ -239,13 +242,14 @@ class DocFormatter:
         return self.output_document()
 
 
-    def generate_fragment_doc(self, path, config):
+    def generate_fragment_doc(self, ref, config):
         """Given a path to a definition, generate a block of documentation.
 
         Used to generate documentation for schema fragments.
         """
         frag_gen = self.__class__(self.property_data, self.traverser, config, level=self.level+1)
-        ref = frag_gen.traverser.parse_ref(path)
+
+        # TODO: normalize ref
         if not ref:
             warnings.warn("Can't generate fragment for '" + path +
                           "': could not parse as schema URI.")
@@ -256,14 +260,14 @@ class DocFormatter:
             warnings.warn("Can't generate fragment for '" + path + "': could not find data.")
             return ''
 
-        schema_name = prop_info['_from_schema_name']
+        schema_ref = prop_info['_from_schema_ref']
         prop_name = prop_info['_prop_name']
         meta = prop_info.get('_doc_generator_meta')
         if not meta:
             meta = {}
-        prop_infos = frag_gen.extend_property_info(schema_name, prop_info)
+        prop_infos = frag_gen.extend_property_info(schema_ref, prop_info)
 
-        formatted = frag_gen.format_property_row(schema_name, prop_name, prop_infos)
+        formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos)
         if formatted:
             frag_gen.add_section('')
             frag_gen.current_version = {}
@@ -283,7 +287,7 @@ class DocFormatter:
         return frag_gen.emit()
 
 
-    def extend_property_info(self, schema_name, prop_info, context_meta=None):
+    def extend_property_info(self, schema_ref, prop_info, context_meta=None):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
         Returns an array of objects. Arrays of arrays of objects are possible but not expected.
@@ -296,6 +300,8 @@ class DocFormatter:
 
         prop_infos = []
         outside_ref = None
+        schema_name = traverser.get_schema_name(schema_ref)
+
 
         # Check for anyOf with a $ref to odata.4.0.0 idRef, and replace it with that ref.
         if prop_anyof:
@@ -309,13 +315,15 @@ class DocFormatter:
                         break
 
         if prop_ref:
-            idref_info = self.process_for_idRef(prop_ref)
-            if idref_info:
-                prop_ref = None
-                prop_info = idref_info
+            if prop_ref.startswith('#'):
+                prop_ref = schema_ref + prop_ref
+            else:
+                idref_info = self.process_for_idRef(prop_ref)
+                if idref_info:
+                    prop_ref = None
+                    prop_info = idref_info
 
         if prop_ref and traverser.ref_to_own_schema(prop_ref):
-            prop_ref = traverser.parse_ref(prop_ref, schema_name)
             ref_info = traverser.find_ref_data(prop_ref)
             ref_info = self.apply_overrides(ref_info)
             meta = ref_info.get('_doc_generator_meta')
@@ -325,10 +333,10 @@ class DocFormatter:
             meta = self.merge_metadata(node_name, meta, context_meta)
 
             if ref_info:
-                from_schema_name = ref_info.get('_from_schema_name')
-                is_versioned_schema = traverser.is_versioned_schema(from_schema_name)
-                is_other_schema = from_schema_name and (schema_name != from_schema_name)
-                is_collection_of = traverser.is_collection_of(from_schema_name)
+                from_schema_ref = ref_info.get('_from_schema_ref')
+                is_versioned_schema = traverser.is_versioned_schema(from_schema_ref)
+                is_other_schema = from_schema_ref and (schema_ref != from_schema_ref)
+                is_collection_of = traverser.is_collection_of(from_schema_ref)
                 prop_name = ref_info.get('_prop_name', False)
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
 
@@ -350,17 +358,20 @@ class DocFormatter:
                     link_detail = ''
                     append_ref = ''
 
+                    from_schema_uri, _, _ = ref_info.get('_ref_uri', '').partition('#')
+
                     # Links to other Redfish resources are a special case.
                     if is_other_schema or is_ref_to_same_schema:
                         if is_versioned_schema and is_collection_of:
                             append_ref = 'Contains a link to a resource.'
-                            link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of) + '. See the ' +
-                                           is_collection_of + ' schema for details.')
+                            ref_schema_name = self.traverser.get_schema_name(is_collection_of)
+                            link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of, from_schema_uri)
+                                           + '. See the ' + ref_schema_name + ' schema for details.')
 
                         else:
                             if is_versioned_schema:
-                                link_detail = ('Link to a ' + prop_name +
-                                               ' resource. See the Links section and the ' + self.link_to_own_schema(from_schema_name) +
+                                link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
+                                               + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                ' schema for details.')
 
                             if is_ref_to_same_schema:
@@ -368,7 +379,7 @@ class DocFormatter:
                                 link_detail = ('Link to another ' + prop_name + ' resource.')
 
                             else:
-                                append_ref = ('See the ' + self.link_to_own_schema(from_schema_name) +
+                                append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                               ' schema for details on this property.')
 
                         new_ref_info = {
@@ -394,7 +405,7 @@ class DocFormatter:
                 prop_info = ref_info
 
                 if '$ref' in ref_info or 'anyOf' in ref_info:
-                    return self.extend_property_info(ref_info['_from_schema_name'], ref_info, context_meta)
+                    return self.extend_property_info(ref_info['_from_schema_ref'], ref_info, context_meta)
 
             prop_infos.append(prop_info)
 
@@ -408,7 +419,7 @@ class DocFormatter:
                     for x in prop_info.keys():
                         if x in self.parent_props:
                             elt[x] = prop_info[x]
-                elt = self.extend_property_info(schema_name, elt, context_meta)
+                elt = self.extend_property_info(schema_ref, elt, context_meta)
                 prop_infos.extend(elt)
 
         else:
@@ -480,7 +491,7 @@ class DocFormatter:
                 self.is_documented_schema(schema_name))
 
 
-    def parse_property_info(self, schema_name, prop_name, prop_infos, current_depth):
+    def parse_property_info(self, schema_ref, prop_name, prop_infos, current_depth):
         """Parse a list of one more more property info objects into strings for display.
 
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
@@ -491,10 +502,10 @@ class DocFormatter:
         if len(prop_infos) == 1:
             prop_info = prop_infos[0]
             if isinstance(prop_info, dict):
-                return self._parse_single_property_info(schema_name, prop_name, prop_info,
+                return self._parse_single_property_info(schema_ref, prop_name, prop_info,
                                                         current_depth)
             else:
-                return self.parse_property_info(schema_name, prop_name, prop_info, current_depth)
+                return self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
 
         parsed = {'prop_type': [],
                   'prop_units': False,
@@ -512,7 +523,7 @@ class DocFormatter:
                  }
 
 
-        anyof_details = [self.parse_property_info(schema_name, prop_name, x, current_depth)
+        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, current_depth)
                          for x in prop_infos]
 
         # Remove details for anyOf props with prop_type = 'null'.
@@ -561,7 +572,7 @@ class DocFormatter:
         return parsed
 
 
-    def _parse_single_property_info(self, schema_name, prop_name, prop_info, current_depth):
+    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, current_depth):
         """Parse definition of a specific property into strings for display.
 
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
@@ -582,6 +593,7 @@ class DocFormatter:
         has_prop_details = False
         has_prop_actions = False
         action_details = {}
+        schema_name = traverser.get_schema_name(schema_ref)
 
         if isinstance(prop_type, list):
             prop_is_object = 'object' in prop_type
@@ -614,7 +626,7 @@ class DocFormatter:
                 prop_items = [prop_item]
                 collapse_description = True
             else:
-                prop_items = self.extend_property_info(schema_name, prop_item, prop_info.get('_doc_generator_meta'))
+                prop_items = self.extend_property_info(schema_ref, prop_item, prop_info.get('_doc_generator_meta'))
                 array_of_objects = True
 
             list_of_objects = True
@@ -635,7 +647,7 @@ class DocFormatter:
                 prop_enum_details = prop_info.get('enumLongDescriptions')
             else:
                 prop_enum_details = prop_info.get('enumDescriptions')
-            anchor = schema_name + '|details|' + prop_name
+            anchor = schema_ref + '|details|' + prop_name
             prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
                                                                    prop_enum, prop_enum_details,
                                                                    supplemental_details,
@@ -663,7 +675,7 @@ class DocFormatter:
 
         # embedded object:
         if prop_is_object:
-            object_formatted = self.format_object_descr(schema_name, prop_info, current_depth)
+            object_formatted = self.format_object_descr(schema_ref, prop_info, current_depth)
             object_description = object_formatted['rows']
             if object_formatted['details']:
                 prop_details.update(object_formatted['details'])
@@ -671,13 +683,13 @@ class DocFormatter:
         # embedded items:
         if prop_is_array:
             if list_of_objects:
-                item_formatted = self.format_list_of_object_descrs(schema_name, prop_items, current_depth)
+                item_formatted = self.format_list_of_object_descrs(schema_ref, prop_items, current_depth)
                 if collapse_description:
                     # remember, we set collapse_description when we made prop_items a single-element list.
                     item_list = prop_items[0].get('type')
 
             else:
-                item_formatted = self.format_non_object_descr(schema_name, prop_item, current_depth)
+                item_formatted = self.format_non_object_descr(schema_ref, prop_item, current_depth)
 
             item_description = item_formatted['rows']
             if item_formatted['details']:
@@ -708,9 +720,7 @@ class DocFormatter:
         prop_info = None
         if ref.endswith('odata.4.0.0.json#/definitions/idRef'):
             # idRef is a special case; we just want to pull in its definition and stop.
-            check_ref = self.traverser.parse_ref(ref)
-            prop_info = self.traverser.find_ref_data(check_ref)
-            prop_ref = None
+            prop_info = self.traverser.find_ref_data(ref)
             if not prop_info:
                 # We must not have the odata schema, but we know what it is.
                 prop_info = {'properties':
@@ -725,7 +735,7 @@ class DocFormatter:
         return prop_info
 
 
-    def format_object_descr(self, schema_name, prop_info, current_depth=0):
+    def format_object_descr(self, schema_ref, prop_info, current_depth=0):
         """Format the properties for an embedded object."""
 
         properties = prop_info.get('properties')
@@ -738,15 +748,15 @@ class DocFormatter:
             context_meta = {}
 
         # If prop_info was extracted from a different schema, it will be present as
-        # _from_schema_name
-        schema_name = prop_info.get('_from_schema_name', schema_name)
+        # _from_schema_ref
+        schema_ref = prop_info.get('_from_schema_ref', schema_ref)
 
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
             for prop_name in prop_names:
                 base_detail_info = properties[prop_name]
-                detail_info = self.extend_property_info(schema_name, base_detail_info, context_meta)
+                detail_info = self.extend_property_info(schema_ref, base_detail_info, context_meta)
                 meta = detail_info[0].get('_doc_generator_meta')
                 if not meta:
                     meta = {}
@@ -755,7 +765,7 @@ class DocFormatter:
                 detail_info[0]['_doc_generator_meta'] = meta
 
                 depth = current_depth + 1
-                formatted = self.format_property_row(schema_name, prop_name, detail_info, depth)
+                formatted = self.format_property_row(schema_ref, prop_name, detail_info, depth)
                 if formatted:
                     output.append(formatted['row'])
                     if formatted['details']:
@@ -766,7 +776,7 @@ class DocFormatter:
         return {'rows': output, 'details': details, 'action_details': action_details}
 
 
-    def format_non_object_descr(self, schema_name, prop_dict, current_depth=0):
+    def format_non_object_descr(self, schema_ref, prop_dict, current_depth=0):
         """For definitions that just list simple types without a 'properties' entry"""
 
         output = []
@@ -774,10 +784,10 @@ class DocFormatter:
         action_details = {}
 
         prop_name = prop_dict.get('_prop_name', '')
-        detail_info = self.extend_property_info(schema_name, prop_dict)
+        detail_info = self.extend_property_info(schema_ref, prop_dict)
 
         depth = current_depth + 1
-        formatted = self.format_property_row(schema_name, prop_name, detail_info, depth)
+        formatted = self.format_property_row(schema_ref, prop_name, detail_info, depth)
 
         if formatted:
             output.append(formatted['row'])
@@ -788,14 +798,17 @@ class DocFormatter:
 
 
 
-    def link_to_own_schema(self, schema_name):
+    def link_to_own_schema(self, schema_ref, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links. """
-        return schema_name
+        schema_name = self.traverser.get_schema_name(schema_ref)
+        if schema_name:
+            return schema_name
+        return schema_ref
 
 
-    def link_to_outside_schema(self, schema_uri):
+    def link_to_outside_schema(self, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links."""
-        return schema_uri
+        return schema_full_uri
 
     def get_documentation_uri(self, ref_uri):
         """ If ref_uri is matched in self.config['uri_replacements'], provide a reference to that """
