@@ -249,7 +249,6 @@ class DocFormatter:
         """
         frag_gen = self.__class__(self.property_data, self.traverser, config, level=self.level+1)
 
-        # TODO: normalize ref
         if not ref:
             warnings.warn("Can't generate fragment for '" + path +
                           "': could not parse as schema URI.")
@@ -324,15 +323,20 @@ class DocFormatter:
                     prop_info = idref_info
 
         if prop_ref and traverser.ref_to_own_schema(prop_ref):
-            ref_info = traverser.find_ref_data(prop_ref)
-            ref_info = self.apply_overrides(ref_info)
-            meta = ref_info.get('_doc_generator_meta')
-            if not meta:
-                meta = {}
-            node_name = traverser.get_node_from_ref(prop_ref)
-            meta = self.merge_metadata(node_name, meta, context_meta)
 
-            if ref_info:
+            ref_info = traverser.find_ref_data(prop_ref)
+
+            if not ref_info:
+                warnings.warn("Unable to find data for " + prop_ref)
+
+            else:
+                ref_info = self.apply_overrides(ref_info)
+                meta = ref_info.get('_doc_generator_meta')
+                if not meta:
+                    meta = {}
+                node_name = traverser.get_node_from_ref(prop_ref)
+                meta = self.merge_metadata(node_name, meta, context_meta)
+
                 from_schema_ref = ref_info.get('_from_schema_ref')
                 is_versioned_schema = traverser.is_versioned_schema(from_schema_ref)
                 is_other_schema = from_schema_ref and (schema_ref != from_schema_ref)
@@ -661,8 +665,8 @@ class DocFormatter:
         if 'supplemental' in self.config and 'action details' in self.config['supplemental']:
             action_config = self.config['supplemental']['action details']
             action_name = prop_name
-            if action_name.startswith('#'):
-                _, action_name = action_name.split('.')
+            if '.' in action_name:
+                _, _, action_name = action_name.rpartition('.')
             if action_config.get(schema_name) and action_name in action_config[schema_name].keys():
                 supplemental_actions = action_config[schema_name][action_name]
                 supplemental_actions['action_name'] = action_name

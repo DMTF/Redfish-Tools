@@ -500,7 +500,6 @@ pre.code{
         part_text = []
 
         fragment_config = {
-            'schema_root_uri': self.config['schema_root_uri'],
             'output_format': 'html',
             'normative': self.config['normative'],
             'cwd': self.config['cwd'],

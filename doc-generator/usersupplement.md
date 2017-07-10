@@ -21,14 +21,11 @@ Keywords and their values as bullet points with name:value paris in the "Keyword
 
 At present, we support:
 
-schema_root_uri, string. If absent, defaults to "http://redfish.dmtf.org/schemas/v1/"
-
 omit_version_in_headers, boolean. Default false. If false, schema sections in the generated documentation will be headed by schema name and version number. If true, only the schema name will appear in the heading.
 
 add_toc, boolean. Default false. Add a Table of Contents (relevant for HTML output only)
 
 - omit_version_in_headers: false
-- schema_root_uri: http://redfish.dmtf.org/schemas/v1/
 - add_toc: true
 
 Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output.

@@ -11,25 +11,31 @@ Brief : Provides utilities for resolving references in a set of Redfish json sch
 Initial author: Second Rise LLC.
 """
 
+import urllib.request
+import json
+import warnings
+
+
+# Format user warnings simply
+def simple_warning_format(message, category, filename, lineno, file=None, line=None):
+    """ a basic format for warnings from this program """
+    return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
+
+warnings.formatwarning = simple_warning_format
+
+
 class SchemaTraverser:
     """Provides methods for traversing Redfish schemas (imported from JSON into objects). """
 
-    def __init__(self, root_uri, schema_data, meta_data):
+    def __init__(self, schema_data, meta_data):
         """Set up the SchemaTraverser.
 
-        root_uri: is the string to strip from absolute refs.
-                  Typically 'http://redfish.dmtf.org/schemas/v1/'
-        schema_data: dict of schema_name: json_data
+        schema_data: dict of normalized_schema_uri: json_data
         meta_data: metadata (versioning) by schema and property
         """
-
-        # Ensure root_uri has a trailing slash.
-        if root_uri[-1] != '/':
-            root_uri += '/'
-
-        self.root_uri = root_uri
         self.schemas = schema_data
         self.meta = meta_data
+        self.remote_schemas = {} # dict of uri:json_data retrieved dynamically
 
 
     def find_ref_data(self, ref):
@@ -39,11 +45,15 @@ class SchemaTraverser:
             return None
 
         schema_ref, path = self.get_schema_ref_and_path(ref)
+        if self.ref_to_own_schema(ref):
+            schema = self.schemas.get(schema_ref, None)
+            if not schema:
+                return None
 
-        schema = self.schemas.get(schema_ref, None)
-        if not schema:
-            # TODO: this is where we go off to The Internet!!!
-            return None
+        else:
+            schema = self.get_remote_schema(ref)
+            if not schema:
+                return None
 
         meta = self.meta.get(schema_ref, {})
 
@@ -58,10 +68,6 @@ class SchemaTraverser:
         schema['_from_schema_ref'] = schema_ref
         schema['_prop_name'] = element
         schema['_doc_generator_meta'] = meta
-
-        # Rebuild the ref for this item.
-        # ref_uri = self.root_uri + schema_name + '.json' + '#' + path
-        # schema['_ref_uri'] = ref_uri
         schema['_ref_uri'] = ref
         return schema
 
@@ -88,7 +94,15 @@ class SchemaTraverser:
     def get_schema_name(self, ref):
         """Get the schema name for the given ref."""
         schema_ref, path = self.get_schema_ref_and_path(ref)
-        return self.schemas.get(schema_ref, {}).get('_schema_name')
+        schema = self.schemas.get(schema_ref)
+        if schema:
+            return schema.get('_schema_name')
+
+        schema = self.get_remote_schema(ref)
+        if schema:
+            return schema.get('_schema_name', ref)
+
+        return ref
 
 
     def ref_to_own_schema(self, ref):
@@ -159,6 +173,34 @@ class SchemaTraverser:
         return None
 
 
+    def get_remote_schema(self, uri):
+        """Attempt to retrieve schema by URI (or find it in our cache)"""
+
+        if '#' in uri:
+            uri, path = uri.split('#')
+
+        schema_data = self.remote_schemas.get(uri)
+
+        if schema_data:
+            return schema_data
+
+        try:
+            if '://' not in uri or not uri.lower().startswith('http'):
+                uri = 'http://' + uri
+            f = urllib.request.urlopen(uri)
+            schema_string = f.read().decode('utf-8')
+            schema_data = json.loads(schema_string)
+            if schema_data:
+                schema_data['_schema_name'] = self.find_schema_name(uri, schema_data)
+                self.remote_schemas[uri] = schema_data
+                return schema_data
+
+        except Exception as ex:
+            warnings.warn("Unable to retrieve schema from '" + uri + "': " + str(ex))
+
+        return None
+
+
     @staticmethod
     def get_schema_ref_and_path(ref):
         """Get the normalized ref to the schema, and the path part.
@@ -176,3 +218,32 @@ class SchemaTraverser:
             protocol, schema_ref = schema_ref.split('://')
 
         return schema_ref, path
+
+
+    @staticmethod
+    def find_schema_name(filename, data, unversioned=False):
+        """Get the schema name, preferably from a 'title' found in the data, otherwise from filename
+
+        Returns a string or None, the latter indicating that this is an old-style schema that
+        should be skipped."""
+
+        schema_name = None
+
+        if 'title' not in data:
+            schema_name = filename[:-5]
+        else:
+            title_parts = data['title'].split('.')
+            if len(title_parts) > 3:
+                return None
+
+            schema_name = title_parts[0]
+            if len(title_parts) > 1 and title_parts[1].startswith('v'):
+                schema_name += '.' + title_parts[1]
+
+            if schema_name[0] == '#':
+                schema_name = schema_name[1:]
+
+        if unversioned:
+            schema_name, _, _ = schema_name.partition('.')
+
+        return schema_name

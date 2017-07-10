@@ -84,7 +84,7 @@ class DocGenerator:
 
             schema_data[normalized_uri] = latest_data
 
-        traverser = SchemaTraverser(self.config['schema_root_uri'], schema_data, doc_generator_meta)
+        traverser = SchemaTraverser(schema_data, doc_generator_meta)
 
         # Generate output
         if self.config['output_format'] == 'markdown':
@@ -118,7 +118,7 @@ class DocGenerator:
 
             data = self.load_as_json(filename)
 
-            schema_name = self.get_schema_name(fname, data)
+            schema_name = SchemaTraverser.find_schema_name(fname, data)
             if schema_name is None: continue
 
             normalized_uri = self.construct_uri_for_filename(filename)
@@ -247,7 +247,7 @@ class DocGenerator:
         normalized_uri = self.construct_uri_for_filename(filename)
 
         data = self.load_as_json(filename)
-        schema_name = self.get_schema_name(filename, data, True)
+        schema_name = SchemaTraverser.find_schema_name(filename, data, True)
         version = self.get_version_string(ref['filename'])
 
         property_data['schema_name'] = schema_name
@@ -256,7 +256,6 @@ class DocGenerator:
         property_data['normalized_uri'] = normalized_uri
         if version:
             property_data['name_and_version'] += ' ' + version
-        # property_data['properties'] = {} # TODO: should this be here?
 
         if 'properties' not in property_data:
             property_data['properties'] = {}
@@ -370,35 +369,6 @@ class DocGenerator:
         print(outfile.name, "written.")
 
 
-    @staticmethod
-    def get_schema_name(filename, data, unversioned=False):
-        """Get the schema name, preferably from a 'title' found in the data, otherwise from filename
-
-        Returns a string or None, the latter indicating that this is an old-style schema that
-        should be skipped."""
-
-        schema_name = None
-
-        if 'title' not in data:
-            schema_name = filename[:-5]
-        else:
-            title_parts = data['title'].split('.')
-            if len(title_parts) > 3:
-                return None
-
-            schema_name = title_parts[0]
-            if len(title_parts) > 1 and title_parts[1].startswith('v'):
-                schema_name += '.' + title_parts[1]
-
-            if schema_name[0] == '#':
-                schema_name = schema_name[1:]
-
-        if unversioned:
-            schema_name, _, _ = schema_name.partition('.')
-
-        return schema_name
-
-
     def construct_uri_for_filename(self, fname):
         """Use the schema URI mapping to construct a URI for this file"""
 
@@ -441,7 +411,6 @@ def main():
         'normative': False,
         'escape_chars': [],
         'cwd': os.getcwd(),
-        'schema_root_uri': 'http://redfish.dmtf.org/schemas/v1/',
         'uri_replacements': {},
         'local_to_uri': {},
         'uri_to_local': {}
