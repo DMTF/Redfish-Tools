@@ -81,6 +81,13 @@ def parse_file(filehandle):
 
     if 'Schema URI Mapping' in parsed:
         parsed['local_to_uri'], parsed['uri_to_local'] = parse_uri_mapping(parsed['Schema URI Mapping'])
+        if not parsed.get('uri_to_local'):
+            warnings.warn("Schema URI Mapping found in supplemental document didn't provide any mappings. " +
+                          "Output is likely to be incomplete.\n\n")
+    else:
+        warnings.warn("Schema URI Mapping not found in supplemental document. " +
+                      "Output is likely to be incomplete.\n\n")
+
 
     return parsed
 

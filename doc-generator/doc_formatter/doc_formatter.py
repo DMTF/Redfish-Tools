@@ -301,7 +301,6 @@ class DocFormatter:
         outside_ref = None
         schema_name = traverser.get_schema_name(schema_ref)
 
-
         # Check for anyOf with a $ref to odata.4.0.0 idRef, and replace it with that ref.
         if prop_anyof:
             for elt in prop_anyof:
@@ -320,10 +319,14 @@ class DocFormatter:
                 idref_info = self.process_for_idRef(prop_ref)
                 if idref_info:
                     prop_ref = None
+                    # if parent_props were specified in prop_info, they take precedence:
+                    for x in prop_info.keys():
+                        if x in self.parent_props and prop_info[x]:
+                            idref_info[x] = prop_info[x]
                     prop_info = idref_info
 
-        if prop_ref and traverser.ref_to_own_schema(prop_ref):
-
+        # if prop_ref and traverser.ref_to_own_schema(prop_ref):
+        if prop_ref:
             ref_info = traverser.find_ref_data(prop_ref)
 
             if not ref_info:

@@ -4,6 +4,7 @@ This document is an example of a usersupplement.md document, which contains conf
 
 The supplement is split into several major sections, noted by first-level headings. All are optional, and the order of sections doesn't matter. Sections may include first-level headings (you will almost certainly want one in the Introduction); only exact matches for the following are detected as section delimiters:
 
+- Schema URI Mapping
 - Keyword Configuration
 - Introduction
 - Postscript
@@ -13,6 +14,15 @@ The supplement is split into several major sections, noted by first-level headin
 - Schema Supplement
 
 Text at the top of the supplement, like this text, is ignored up until the first recognized section header.
+
+
+# Schema URI Mapping
+
+Map schema URIs to local files. You may omit the protocol (e.g., https://) from the URI.
+The doc generator will use the local files when specified and otherwise
+follow the full URI, including data from remote files if possible.
+
+## Local-repo: redfish.dmtf.org/schemas/v1 ./json-schema
 
 
 # Keyword Configuration
@@ -29,15 +39,6 @@ add_toc, boolean. Default false. Add a Table of Contents (relevant for HTML outp
 - add_toc: true
 
 Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output.
-
-# Schema URI Mapping
-
-Map schema URIs to local files. You may omit the protocol (e.g., https://) from the URI.
-The doc generator will use the local files when specified and otherwise
-follow the full URI, including data from remote files if possible.
-
-## Local-repo: redfish.dmtf.org/schemas/v1 ./json-schema
-
 
 # Description Overrides
 
