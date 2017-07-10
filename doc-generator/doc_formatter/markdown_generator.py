@@ -336,7 +336,6 @@ search: true
         part_text = []
 
         fragment_config = {
-            'schema_root_uri': self.config['schema_root_uri'],
             'output_format': 'markdown',
             'normative': self.config['normative'],
             'cwd': self.config['cwd'],
