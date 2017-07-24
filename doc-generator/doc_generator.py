@@ -289,19 +289,20 @@ class DocGenerator:
             warnings.warn('Unable to find properties in path ' + ref['ref'] + ' from ' + filename)
             return
 
-        meta = self.extend_metadata(meta, properties, version)
+        meta = self.extend_metadata(meta, properties, version, normalized_uri + '#properties/')
         meta['definitions'] = meta.get('definitions', {})
         definitions = property_data['definitions']
-        meta['definitions'] = self.extend_metadata(meta['definitions'], definitions, version)
+        meta['definitions'] = self.extend_metadata(meta['definitions'], definitions, version, normalized_uri + '#definitions/')
         property_data['doc_generator_meta'] = meta
 
         return property_data
 
 
-    def extend_metadata(self, meta, properties, version):
+    def extend_metadata(self, meta, properties, version, normalized_uri=''):
 
         for prop_name in properties.keys():
             props = properties[prop_name]
+
             if prop_name not in meta:
                 meta[prop_name] = {}
                 if version: # Track version only when first seen
@@ -317,17 +318,25 @@ class DocGenerator:
             if props.get('enum'):
                 enum = props.get('enum')
                 meta[prop_name]['enum'] = meta[prop_name].get('enum', {})
+                # deprecated enums are not currently discernable from schema data, so look them up in config:
+                prop_ref = normalized_uri + prop_name
+
+                enum_deprecations = self.config.get('enum_deprecations', {}).get(prop_ref, {})
                 for enum_name in enum:
                     if enum_name not in meta[prop_name]['enum']:
                         meta[prop_name]['enum'][enum_name] = {}
                         if version:
                             meta[prop_name]['enum'][enum_name]['version'] = version
-                    # TODO: handle deprecated enums (requires decision on how these will appear in schema)
+                    if enum_deprecations:
+                        if enum_deprecations.get(enum_name):
+                            meta[prop_name]['enum'][enum_name]['version_deprecated'] = enum_deprecations[enum_name]['version']
+                            meta[prop_name]['enum'][enum_name]['version_deprecated_explanation'] = enum_deprecations[enum_name]['description']
 
             # build out metadata for sub-properties.
             if props.get('properties'):
                 child_props = props['properties']
-                meta[prop_name] = self.extend_metadata(meta[prop_name], child_props, version)
+                meta[prop_name] = self.extend_metadata(meta[prop_name], child_props, version,
+                                                       normalized_uri + prop_name + '/properties/')
 
             properties[prop_name]['_doc_generator_meta'] = meta[prop_name]
 
@@ -518,6 +527,9 @@ def main():
 
     if 'uri_to_local' in config['supplemental']:
         config['uri_to_local'] = config['supplemental']['uri_to_local']
+
+    if 'enum_deprecations' in config['supplemental']:
+        config['enum_deprecations'] = config['supplemental']['enum_deprecations']
 
     config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
 

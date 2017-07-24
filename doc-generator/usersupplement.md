@@ -46,6 +46,25 @@ Note: markdown is allowed in description overrides, but HTML markup is not; it w
 
 * Status: See  [The Status Object](#status_description), above.
 
+
+# Enum Deprecations
+
+Second-level heading with path to enum definition (omit protocol):
+
+## redfish.dmtf.org/schemas/v1/ComputerSystem.v1_3_0.json#definitions/BootSource
+
+(Bullet with Enum name, pipe, version string, pipe, descriptive text.)
+
+* Floppy | 1.3+ | Deprecated in version 1.3+. The kids just think a floppy is a 3D printout of the "Save" icon now.
+
+* SomethingElse | 9.9+ | This will be ignored because it doesn't match anything, but it shows a second item.
+
+Non-bulleted lines will be ignored.
+
+## redfish.dmtf.org/schemas/v1/LogEntry.v1_2_0.json#definitions/LogEntryCode
+
+* Assert | 1.2+ | This is an example of deprecation on an enum with no enum descriptions. It will appear differently in the output.
+
 # Introduction
 
 Text placed here will appear at the top of the output.  Document common usage, common properties excluded from the schema tables, and anything else useful. Typically you will start with a first-level heading (title), but in this example we start with this paragraph.

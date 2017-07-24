@@ -35,6 +35,7 @@ def parse_file(filehandle):
         '# Schema Documentation',  # list of search/replace patterns for links
         '# Description Overrides', # list of property name:description to substitute throughout the doc
         '# Schema URI Mapping',    # map URI(s) to local repo(s)
+        '# Enum Deprecations',     # Version and description info for deprecated enums
         ]
 
     for line in filehandle:
@@ -88,6 +89,8 @@ def parse_file(filehandle):
         warnings.warn("Schema URI Mapping not found in supplemental document. " +
                       "Output is likely to be incomplete.\n\n")
 
+    if 'Enum Deprecations' in parsed:
+        parsed['enum_deprecations'] = parse_enum_deprecations(parsed['Enum Deprecations'])
 
     return parsed
 
@@ -432,5 +435,47 @@ def parse_action_details(schema_supplement):
             new_blob = '\n'.join(new_blob_lines)
             example = '\n'.join(example_lines)
             parsed[schema_name][property] = {'text': new_blob, 'example': example}
+
+    return parsed
+
+
+def parse_enum_deprecations(markdown_blob):
+    """Parse enum deprecation info.
+
+    Creates a dict of Name: version & description, keyed by $ref.
+    """
+
+    parsed = {}
+
+    # First, split by major heading (ref)
+    ref = None
+    blob = ''
+    lines = markdown_blob.splitlines()
+    for line in lines:
+        line = line.strip()
+        if line.startswith('## '):
+            if ref:
+                parsed[ref] = blob
+                blob = ''
+            line = line[3:]
+            ref = line.strip()
+        else:
+            blob += '\n' + line
+
+    if ref and blob:
+        parsed[ref] = blob
+
+    for ref in parsed:
+        lines = parsed[ref].splitlines()
+        parsed[ref] = {}
+        for line in lines:
+            if line.startswith('*'):
+                line = line[1:]
+                name, version_string, description = line.split('|', 2)
+                name = name.strip()
+                version_string = version_string.strip()
+                description = description.strip()
+                if name and version_string:
+                    parsed[ref][name] = {"version": version_string, "description": description}
 
     return parsed

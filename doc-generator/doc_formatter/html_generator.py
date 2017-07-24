@@ -346,15 +346,35 @@ pre.code{
             enum.sort()
             for enum_item in enum:
                 enum_name = html.escape(enum_item, False)
-                if 'version' in enum_meta.get(enum_item, {}):
-                    version = enum_meta[enum_item]['version']
+                enum_item_meta = enum_meta.get(enum_item, {})
+                deprecated_descr = None
+
+                if 'version' in enum_item_meta:
+                    version = enum_item_meta['version']
                     if not parent_version or self.compare_versions(version, parent_version) > 0:
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
-                table_rows.append(self.make_row([enum_name,
-                                                 html.escape(enum_details.get(enum_item, ''),
-                                                             False)]))
+
+                        if 'version_deprecated' in enum_item_meta:
+                            version_depr = html.escape(enum_item_meta['version_deprecated'], False)
+                            enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
+                            if enum_item_meta.get('version_deprecated_explanation'):
+                                deprecated_descr = html.escape(enum_item_meta['version_deprecated_explanation'], False)
+                        else:
+                            enum_name += ' ' + self.italic('(v' + version_display + ')')
+                elif 'version_deprecated' in enum_item_meta:
+                    version_depr = html.escape(enum_item_meta['version_deprecated'], False)
+                    enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
+                    if enum_item_meta.get('version_deprecated_explanation'):
+                        deprecated_descr = html.escape(enum_item_meta['version_deprecated_explanation'], False)
+
+                descr = html.escape(enum_details.get(enum_item), False)
+                if deprecated_descr:
+                    if descr:
+                        descr += ' ' + self.italic(deprecated_descr)
+                    else:
+                        descr += self.italic(deprecated_descr)
+                table_rows.append(self.make_row([enum_name, descr]))
             contents.append(self.make_table(table_rows, [header_row], 'enum enum-details'))
 
         elif enum:
@@ -363,12 +383,27 @@ pre.code{
             enum.sort()
             for enum_item in enum:
                 enum_name = html.escape(enum_item, False)
-                if 'version' in enum_meta.get(enum_item, {}):
-                    version = enum_meta[enum_item]['version']
+                enum_item_meta = enum_meta.get(enum_item, {})
+
+                if 'version' in enum_item_meta:
+                    version = enum_item_meta['version']
                     if not parent_version or self.compare_versions(version, parent_version) > 0:
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+
+                        if 'version_deprecated' in enum_item_meta:
+                            version_depr = html.escape(enum_item_meta['version_deprecated'], False)
+                            enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
+                            if enum_item_meta.get('version_deprecated_explanation'):
+                                enum_name += '<br>' + self.italic(html.escape(enum_item_meta['version_deprecated_explanation'], False))
+                        else:
+                            enum_name += ' ' + self.italic('(v' + version_display + ')')
+
+                elif 'version_deprecated' in enum_item_meta:
+                    version_depr = html.escape(enum_item_meta['version_deprecated'], False)
+                    enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
+                    if enum_item_meta.get('version_deprecated_explanation'):
+                        enum_name += '<br>' + self.italic(html.escape(enum_item_meta['version_deprecated_explanation'], False))
 
                 table_rows.append(self.make_row([enum_name]))
             contents.append(self.make_table(table_rows, [header_row], 'enum'))
