@@ -27,6 +27,11 @@ By default, doc_generator will look for a json-schema directory and
 supplement file in the directory from which it is run. Alternatively,
 you can specify these locations on the command line.
 
+You must also specify a mapping from schema URIs to local directories.
+The doc_generator tool uses this information to determine whether to get
+referenced data from local files, or to attempt to retrieve it over the
+internet. See "The Supplemental File," below.
+
 ```
 usage: doc_generator.py [-h] [-n] [--format {markdown,html}] [--out
 OUTFILE]
@@ -48,7 +53,7 @@ optional arguments:
   --out OUTFILE         Output file (default depends on output format:
                         output.md for markdown, index.html for html)
   --sup SUPFILE         Path to the supplemental material
-  document. Default is
+                        document. Default is
                         usersupplement.md for user-focused
                         documentation, and
                         devsupplement.md for normative documentation.
@@ -67,3 +72,14 @@ Example:
 Normative output prefers longDescriptions to descriptions.
 
 For Slate, place the output index.html.md in your Slate repository's source directory.
+
+## The Supplemental Material Document
+
+usersupplement.md in this directory is an example of a supplemental
+material document. It includes explanations of each type of
+information you can include in the supplement.
+
+The most important element of the supplemental document is the *Schema
+URI Mapping* section. In this section, you identify partial URIs that
+map to local directories, directing the doc_generator to look in the
+specified local directory when following references in a schema.

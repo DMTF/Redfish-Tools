@@ -9,6 +9,8 @@ Brief : This file contains definitions for the MarkdownGenerator class.
 
 Initial author: Second Rise LLC.
 """
+
+import copy
 from . import DocFormatter
 
 class MarkdownGenerator(DocFormatter):
@@ -27,7 +29,7 @@ class MarkdownGenerator(DocFormatter):
             }
 
 
-    def format_property_row(self, schema_name, prop_name, prop_info, meta=None, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -42,29 +44,62 @@ class MarkdownGenerator(DocFormatter):
         traverser = self.traverser
         formatted = []     # The row itself
         indentation_string = '&nbsp;' * 6 * current_depth
+        collapse_array = False # Should we collapse a list description into one row? For lists of simple types
+        has_enum = False
 
+        if current_depth < self.current_depth:
+            for i in range(current_depth, self.current_depth):
+                if i in self.current_version:
+                    del self.current_version[i]
+        self.current_depth = current_depth
+        parent_depth = current_depth - 1
+
+        if isinstance(prop_info, list):
+            meta = prop_info[0].get('_doc_generator_meta')
+            has_enum = 'enum' in prop_info[0]
+        elif isinstance(prop_info, dict):
+            meta = prop_info.get('_doc_generator_meta')
+            has_enum = 'enum' in prop_info
         if not meta:
             meta = {}
+
+        # We want to modify a local copy of meta, deleting redundant version info
+        meta = copy.deepcopy(meta)
 
         if prop_name:
             name_and_version = self.bold(self.escape_for_markdown(prop_name,
                                                                   self.config['escape_chars']))
         else:
             name_and_version = ''
+
+        deprecated_descr = None
+        if self.current_version.get(parent_depth) and 'version' in meta:
+            version = meta.get('version')
+            if self.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+                del meta['version']
+            self.current_version[current_depth] = version
+
+        if not self.current_version.get(current_depth):
+            self.current_version[current_depth] = meta.get('version')
+
         if 'version' in meta:
             version_display = self.truncate_version(meta['version'], 2) + '+'
             if 'version_deprecated' in meta:
                 deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
                 name_and_version += ' ' + self.italic('(v' + version_display +
                                                       ', deprecated v' + deprecated_display +  ')')
+                deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
+                                    self.escape_for_markdown(meta['version_deprecated_explanation'], self.config['escape_chars']))
             else:
                 name_and_version += ' ' + self.italic('(v' + version_display + ')')
         elif 'version_deprecated' in meta:
             deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
             name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
+            deprecated_descr =  ("Deprecated v" + deprecated_display + '+. ' +
+                                 self.escape_for_markdown(meta['version_deprecated_explanation'],
+                                                          self.config['escape_chars']))
 
-        formatted_details = self.parse_property_info(schema_name, prop_name, traverser, prop_info,
-                                                     current_depth)
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -98,7 +133,8 @@ class MarkdownGenerator(DocFormatter):
                 if formatted_details['array_of_objects']:
                     name_and_version += ' [ {'
                 else:
-                    name_and_version += ' ['
+                    collapse_array = True
+                    name_and_version += ' [ ]'
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
@@ -107,15 +143,33 @@ class MarkdownGenerator(DocFormatter):
 
         # If there are prop_details (enum details), add a note to the description:
         if formatted_details['has_direct_prop_details']:
-            text_descr = 'See Property Details, below, for more information about this property.'
+            if has_enum:
+                text_descr = 'See ' + prop_name + ' in Property Details, below, for the possible values of this property.'
+            else:
+                text_descr = 'See Property Details, below, for more information about this property.'
             formatted_details['descr'] += ' ' + self.italic(text_descr)
 
         if formatted_details['has_action_details']:
             text_descr = 'For more information, see the Action Details section below.'
             formatted_details['descr'] += ' ' + self.italic(text_descr)
+
+        if deprecated_descr:
+            formatted_details['descr'] += ' ' + self.italic(deprecated_descr)
+
         prop_type = formatted_details['prop_type']
+        if has_enum:
+            prop_type += '<br>(enum)'
+
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
+
+        if collapse_array:
+            item_list = formatted_details['item_list']
+            if len(item_list):
+                if isinstance(item_list, list):
+                    item_list = ', '.join(item_list)
+                prop_type += ' (' + item_list + ')'
+
 
         if formatted_details['read_only']:
             prop_type += '<br><br>' + self.italic('read-only')
@@ -133,7 +187,7 @@ class MarkdownGenerator(DocFormatter):
             formatted.append(formatted_details['object_description'])
             formatted.append('| ' + indentation_string + '} |   |   |')
 
-        if len(formatted_details['item_description']) > 0:
+        if not collapse_array and len(formatted_details['item_description']) > 0:
             formatted.append(formatted_details['item_description'])
             if formatted_details['array_of_objects']:
                 formatted.append('| ' + indentation_string + '} ] |   |   |')
@@ -144,12 +198,18 @@ class MarkdownGenerator(DocFormatter):
                 'action_details':formatted_details.get('action_details')})
 
 
-    def format_property_details(self, prop_name, prop_type, enum, enum_details,
-                                supplemental_details):
+    def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
+                                supplemental_details, meta, anchor=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
         contents.append(self.head_three(prop_name + ':'))
+
+        parent_version = meta.get('version')
+        enum_meta = meta.get('enum', {})
+
+        if prop_description:
+            contents.append(self.para(self.escape_for_markdown(prop_description, self.config['escape_chars'])))
 
         if isinstance(prop_type, list):
             prop_type = ', '.join(prop_type)
@@ -162,13 +222,64 @@ class MarkdownGenerator(DocFormatter):
             contents.append('| --- | --- |')
             enum.sort()
             for enum_item in enum:
-                contents.append('| ' + enum_item + ' | ' + enum_details.get(enum_item, '') + ' |')
+                enum_name = enum_item
+                enum_item_meta = enum_meta.get(enum_item, {})
+                version_display = None
+                deprecated_descr = None
+                if 'version' in enum_item_meta:
+                    version = enum_item_meta['version']
+                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                        version_display = self.truncate_version(version, 2) + '+'
+                if version_display:
+                    if 'version_deprecated' in enum_item_meta:
+                        version_depr = enum_item_meta['version_deprecated']
+                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
+                        if enum_item_meta.get('version_deprecated_explanation'):
+                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
+                    else:
+                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                else:
+                    if 'version_deprecated' in enum_item_meta:
+                        version_depr = enum_item_meta['version_deprecated']
+                        enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
+                        if enum_item_meta.get('version_deprecated_explanation'):
+                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
+                descr = enum_details.get(enum_item, '')
+                if deprecated_descr:
+                    if descr:
+                        descr += ' ' + self.italic(deprecated_descr)
+                    else:
+                        descr = self.italic(deprecated_descr)
+                contents.append('| ' + enum_name + ' | ' + descr + ' |')
 
         elif enum:
             contents.append('| ' + prop_type + ' |')
             contents.append('| --- |')
             for enum_item in enum:
-                contents.append('| ' + enum_item + ' | ')
+                enum_name = enum_item
+                enum_item_meta = enum_meta.get(enum_item, {})
+                version_display = None
+
+                if 'version' in enum_item_meta:
+                    version = enum_item_meta['version']
+                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                        version_display = self.truncate_version(version, 2) + '+'
+                if version_display:
+                    if 'version_deprecated' in enum_item_meta:
+                        version_depr = enum_item_meta['version_deprecated']
+                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
+                        if enum_item_meta.get('version_deprecated_explanation'):
+                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
+                    else:
+                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                else:
+                    if 'version_deprecated' in enum_item_meta:
+                        version_depr = enum_item_meta['version_deprecated']
+                        enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
+                        if enum_item_meta.get('version_deprecated_explanation'):
+                            enum_name += ' ' + self.italic(enum_item_meta['version_deprecated_explanation'])
+
+                contents.append('| ' + enum_name + ' | ')
 
         return '\n'.join(contents) + '\n'
 
@@ -190,14 +301,15 @@ class MarkdownGenerator(DocFormatter):
         return '\n'.join(contents) + '\n'
 
 
-    def link_to_own_schema(self, schema_name):
-        """Format a reference to a schema in this project's namespace"""
-        return self.italic(schema_name)
+    def link_to_own_schema(self, schema_ref, schema_full_uri):
+        """Format a reference to a schema."""
+        result = super().link_to_own_schema(schema_ref, schema_full_uri)
+        return self.italic(result)
 
 
-    def link_to_outside_schema(self, schema_uri):
+    def link_to_outside_schema(self, schema_full_uri):
         """Format a reference to a schema_uri, which should be a valid URI"""
-        return self.italic('['+ schema_uri + '](' + schema_uri + ')')
+        return self.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
 
 
     def emit(self):
@@ -263,7 +375,6 @@ search: true
         part_text = []
 
         fragment_config = {
-            'schema_root_uri': self.config['schema_root_uri'],
             'output_format': 'markdown',
             'normative': self.config['normative'],
             'cwd': self.config['cwd'],
@@ -308,7 +419,6 @@ search: true
                              'properties': [],
                              'property_details': []
                             }
-
         self.sections.append(self.this_section)
 
 
@@ -357,6 +467,9 @@ search: true
         add_level = '' + '#' * self.level
         return add_level + '##### ' + text + "\n"
 
+    def para(self, text):
+        """Add a paragraph of text. Doesn't actually test for paragraph breaks within text"""
+        return "\n" + text + "\n"
 
     @staticmethod
     def escape_for_markdown(text, chars):
