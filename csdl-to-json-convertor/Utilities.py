@@ -82,7 +82,7 @@ class Utilities:
             if hostname in connections.keys():
                 conn = connections[hostname]
             else:
-                conn = http.client.HTTPConnection(hostname)
+                conn = http.client.HTTPSConnection(hostname)
                 connections[hostname] = conn
 
             conn.request("GET", resname)
