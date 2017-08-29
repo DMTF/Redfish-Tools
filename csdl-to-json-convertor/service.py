@@ -1432,6 +1432,7 @@ class JsonSchemaGenerator:
         if len(data) == 0:
             return {}
 
+        root = None
         root = ET.fromstring(data)
         typetable = {}
         namespaces = []
