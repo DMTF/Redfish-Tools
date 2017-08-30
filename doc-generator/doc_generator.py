@@ -16,351 +16,532 @@ Initial author: Second Rise LLC.
 import argparse
 import json
 import os
+import warnings
 from schema_traverser import SchemaTraverser
 import parse_supplement
 
-config = None
+
+# Format user warnings simply
+def simple_warning_format(message, category, filename, lineno, file=None, line=None):
+    """ a basic format for warnings from this program """
+    return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
+
+warnings.formatwarning = simple_warning_format
+
+
+class DocGenerator:
+    """Redfish Documentation Generator class. Provides 'generate_docs' method."""
+
+    def __init__(self, import_from, outfile, config):
+        self.config = config
+        self.import_from = import_from
+        self.outfile = outfile
+
+
+    def generate_doc(self):
+        output = self.generate_docs()
+        self.write_output(output, self.outfile)
+
+    @staticmethod
+    def get_files(text_input):
+        """From text input (command line or parsed from file), create a list of files. """
+
+        files_to_process = []
+        for file_to_import in text_input:
+            if os.path.isdir(file_to_import):
+                for root, _, files in os.walk(file_to_import):
+                    files.sort(key=str.lower)
+                    for filename in files:
+                        if filename[-4:] == 'json':
+                            files_to_process.append(os.path.join(root, filename))
+            elif os.path.isfile(file_to_import):
+                files_to_process.append(file_to_import)
+            else:
+                warnings.warn('Oops, ' + file_to_import + ' not found, or contains no .json files.\n')
+        return files_to_process
+
+
+    def generate_docs(self, level=0):
+        """Given a list of files, generate a block of documentation.
+
+        This is the main loop of the product.
+        """
+        files_to_process = self.get_files(self.import_from)
+        files, schema_data = self.group_files(files_to_process)
+
+        property_data = {}
+        doc_generator_meta = {}
+
+        for normalized_uri in files.keys():
+            property_data[normalized_uri] = self.process_files(normalized_uri, files[normalized_uri])
+            doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
+            latest_info = files[normalized_uri][-1]
+            latest_file = os.path.join(latest_info['root'], latest_info['filename'])
+            latest_data = self.load_as_json(latest_file)
+            latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
+            latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
+            latest_data['_schema_name'] = latest_info.get('schema_name')
+
+            schema_data[normalized_uri] = latest_data
+
+        traverser = SchemaTraverser(schema_data, doc_generator_meta)
+
+        # Generate output
+        if self.config['output_format'] == 'markdown':
+            from doc_formatter import MarkdownGenerator
+            generator = MarkdownGenerator(property_data, traverser, self.config, level)
+        elif self.config['output_format'] == 'html':
+            from doc_formatter import HtmlGenerator
+            generator = HtmlGenerator(property_data, traverser, self.config, level)
+
+        return generator.generate_output()
+
+
+    def group_files(self, files):
+        """Traverse files, grouping any unversioned/versioned schemas together.
+
+        Parses json to identify versioned files.
+        Returns a dict of {normalized_uri : [versioned files]} where each
+        versioned file is a dict of {root, filename, ref path, schema_name,
+        _is_versioned_schema, _is_collection_of}.
+        """
+
+        file_list = files.copy()
+        grouped_files = {}
+        all_schemas = {}
+        missing_files = []
+        processed_files = []
+
+        for filename in file_list:
+            # Get the (probably versioned) filename, and save the data:
+            root, _, fname = filename.rpartition(os.sep)
+
+            data = self.load_as_json(filename)
+
+            schema_name = SchemaTraverser.find_schema_name(fname, data)
+            if schema_name is None: continue
+
+            normalized_uri = self.construct_uri_for_filename(filename)
+
+            data['_schema_name'] = schema_name
+            all_schemas[normalized_uri] = data
+
+            if filename in processed_files: continue
+
+            ref = ''
+            if '$ref' in data:
+                ref = data['$ref'][1:] # drop initial '#'
+            else:
+                continue
+
+            if fname.count('.') > 1:
+                continue
+
+            original_ref = ref
+            for pathpart in ref.split('/'):
+                if not pathpart: continue
+                data = data[pathpart]
+
+            ref_files = []
+
+            # is_versioned_schema will be True if there is an "anyOf" pointing to one or more versioned files.
+            is_versioned_schema = False
+
+            # is_collection_of will contain the type of objects in the collection.
+            is_collection_of = None
+
+            if 'anyOf' in data:
+                for obj in data['anyOf']:
+                    if '$ref' in obj:
+                        refpath_uri, refpath_path = obj['$ref'].split('#')
+                        if refpath_path == '/definitions/idRef':
+                            is_versioned_schema = True
+                            continue
+                        ref_fn = refpath_uri.split('/')[-1]
+                        # Skip files that are not present.
+                        ref_filename = os.path.join(root, ref_fn)
+                        if ref_filename in file_list:
+                            ref_files.append({'root': root,
+                                              'filename': ref_fn,
+                                              'ref': refpath_path,
+                                              'schema_name': schema_name})
+                        elif ref_filename not in missing_files:
+                            missing_files.append(ref_filename)
+
+                    else:
+                        # If there is anything that's not a ref, this isn't an unversioned schema.
+                        # It's probably a Collection. Zero out ref_files and skip the rest so we
+                        # can save this as a single-file group.
+                        if 'properties' in obj:
+                            if 'Members' in obj['properties']:
+                                # It's a collection. What is it a collection of?
+                                member_ref = obj['properties']['Members'].get('items', {}).get('$ref')
+                                if member_ref:
+                                    is_collection_of = self.normalize_ref(member_ref)
+                        ref_files = []
+                        continue
+
+            elif '$ref' in data:
+                refpath_uri, refpath_path = data['$ref'].split('#')
+                if refpath_path == '/definitions/idRef':
+                    continue
+
+                ref_fn = refpath_uri.split('/')[-1]
+                # Skip files that are not present.
+                ref_filename = os.path.join(root, ref_fn)
+                if ref_filename in file_list:
+                    ref_files.append({'root': root,
+                                      'filename': ref_fn,
+                                      'ref': refpath_path,
+                                      'schema_name': schema_name})
+                elif ref_filename not in missing_files:
+                    missing_files.append(ref_filename)
+
+            else:
+                ref = original_ref
+
+            if len(ref_files):
+                # Add the _is_versioned_schema and  is_collection_of hints to each ref object
+                [x.update({'_is_versioned_schema': is_versioned_schema, '_is_collection_of': is_collection_of})
+                 for x in ref_files]
+                grouped_files[normalized_uri] = ref_files
+
+            if not normalized_uri in grouped_files:
+                # this is not an unversioned schema after all.
+                grouped_files[normalized_uri] = [{'root': root,
+                                                  'filename': fname,
+                                                  'ref': ref,
+                                                  'schema_name': schema_name,
+                                                  '_is_versioned_schema': is_versioned_schema,
+                                                  '_is_collection_of': is_collection_of}]
+
+            # Note these files as processed:
+            processed_files.append(filename)
+            for file_refs in grouped_files[normalized_uri]:
+                ref_filename = os.path.join(file_refs['root'], file_refs['filename'])
+                processed_files.append(ref_filename)
+
+        if len(missing_files):
+            warnings.warn("Some referenced files were missing: " + ' '.join(missing_files))
+
+        return grouped_files, all_schemas
+
+
+    def process_files(self, schema_ref, refs):
+        """Loop through a set of refs and process the specified files into property data.
+
+        Returns a property_data object consisting of the properties from the last ref file,
+        and metadata ('doc_generator_meta') indicating version for properties introduced after
+        1.0 and version_deprecated for deprecated properties.
+        """
+        property_data = {}
+        for info in refs:
+            property_data = self.process_data_file(schema_ref, info, property_data)
+        return property_data
+
+
+    def process_data_file(self, schema_ref, ref, property_data):
+        """Process a single file by ref name, identifying metadata and updating property_data."""
+
+        filename = os.path.join(ref['root'], ref['filename'])
+        normalized_uri = self.construct_uri_for_filename(filename)
+
+        data = self.load_as_json(filename)
+        schema_name = SchemaTraverser.find_schema_name(filename, data, True)
+        version = self.get_version_string(ref['filename'])
+
+        property_data['schema_name'] = schema_name
+        property_data['latest_version'] = version
+        property_data['name_and_version'] = schema_name
+        property_data['normalized_uri'] = normalized_uri
+        if version:
+            property_data['name_and_version'] += ' ' + version
+
+        if 'properties' not in property_data:
+            property_data['properties'] = {}
+        meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
+
+        if version == '1.0.0':
+            version = None
+
+        if (not version) and (schema_ref in property_data):
+            warnings.warn('Check', schema_ref, 'for version problems.',
+                          'Are there two files with either version 1.0.0 or no version?')
+
+        try:
+            property_data['definitions'] = data['definitions']
+            for ref_part in ref['ref'].split('/'):
+                if not ref_part:
+                    continue
+                data = data[ref_part]
+
+            # resolve anyOf to embedded object, if present:
+            if 'anyOf' in data:
+                for elt in data['anyOf']:
+                    if ('type' in elt) and (elt['type'] == 'object'):
+                        data = elt
+                        break
+
+            properties = data['properties']
+            property_data['properties'] = properties
+
+        except KeyError:
+            warnings.warn('Unable to find properties in path ' + ref['ref'] + ' from ' + filename)
+            return
+
+        meta = self.extend_metadata(meta, properties, version, normalized_uri + '#properties/')
+        meta['definitions'] = meta.get('definitions', {})
+        definitions = property_data['definitions']
+        meta['definitions'] = self.extend_metadata(meta['definitions'], definitions, version, normalized_uri + '#definitions/')
+        property_data['doc_generator_meta'] = meta
+
+        return property_data
+
+
+    def extend_metadata(self, meta, properties, version, normalized_uri=''):
+
+        for prop_name in properties.keys():
+            props = properties[prop_name]
+
+            if prop_name not in meta:
+                meta[prop_name] = {}
+                if version: # Track version only when first seen
+                    meta[prop_name]['version'] = version
+            if 'deprecated' in props:
+                if 'version_deprecated' not in meta[prop_name]:
+                    if not version:
+                        warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
+                    else:
+                        meta[prop_name]['version_deprecated'] = version
+                    meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
+
+            if props.get('enum'):
+                enum = props.get('enum')
+                meta[prop_name]['enum'] = meta[prop_name].get('enum', {})
+                # deprecated enums are not currently discernable from schema data, so look them up in config:
+                prop_ref = normalized_uri + prop_name
+
+                enum_deprecations = self.config.get('enum_deprecations', {}).get(prop_ref, {})
+                for enum_name in enum:
+                    if enum_name not in meta[prop_name]['enum']:
+                        meta[prop_name]['enum'][enum_name] = {}
+                        if version:
+                            meta[prop_name]['enum'][enum_name]['version'] = version
+                    if enum_deprecations:
+                        if enum_deprecations.get(enum_name):
+                            meta[prop_name]['enum'][enum_name]['version_deprecated'] = enum_deprecations[enum_name]['version']
+                            meta[prop_name]['enum'][enum_name]['version_deprecated_explanation'] = enum_deprecations[enum_name]['description']
+
+            # build out metadata for sub-properties.
+            if props.get('properties'):
+                child_props = props['properties']
+                meta[prop_name] = self.extend_metadata(meta[prop_name], child_props, version,
+                                                       normalized_uri + prop_name + '/properties/')
+
+            properties[prop_name]['_doc_generator_meta'] = meta[prop_name]
+
+        return meta
+
+
+    @staticmethod
+    def get_version_string(filename):
+        """Parse the version string from a filename. Returned format is, e.g., v1.0.1"""
+
+        parts = filename.split('.')
+        version = ''
+        if parts[1][0] == 'v':
+            version = parts[1][1:]
+            version = version.replace('_', '.')
+        return version
+
+
+    @staticmethod
+    def load_as_json(filename):
+        """Load json data from a file, printing an error message on failure."""
+        data = {}
+        try:
+            # Parse file as json
+            jsondata = open(filename, 'r', encoding="utf8")
+            data = json.load(jsondata)
+            jsondata.close()
+        except (OSError, json.JSONDecodeError) as ex:
+            warnings.warn('Unable to read ' + filename + ': ' + str(ex))
+
+        return data
+
+    @staticmethod
+    def write_output(markdown, outfile):
+        """Write output to a file."""
+
+        print(markdown, file=outfile)
+        outfile.close()
+        print(outfile.name, "written.")
+
+
+    def construct_uri_for_filename(self, fname):
+        """Use the schema URI mapping to construct a URI for this file"""
+
+        local_to_uri = self.config.get('local_to_uri')
+        if local_to_uri:
+            for local_path in local_to_uri.keys():
+                if fname.startswith(local_path):
+                    return fname.replace(local_path, local_to_uri[local_path])
+
+        return fname
+
+    @staticmethod
+    def normalize_ref(ref):
+        """Get the normalized version of ref we use to index a schema.
+
+        Get the URL part of ref and strip off the protocol."""
+        if '#' in ref:
+            ref, path = ref.split('#')
+
+        if '://' in ref:
+            protocol, ref = ref.split('://')
+
+        return ref
+
+
 
 def main():
     """Parse and validate arguments, then process data and produce markdown output."""
 
-    global config
     config = {
         'supplemental': {},
+        'excluded_annotations': [],
+        'excluded_annotations_by_match': [],
         'excluded_properties': [],
         'excluded_by_match': [],
         'excluded_schemas': [],
         'excluded_schemas_by_match': [],
+        'expand_defs_from_non_output_schemas': False,
         'schema_supplement': None,
         'normative': False,
         'escape_chars': [],
+        'cwd': os.getcwd(),
+        'uri_replacements': {},
+        'local_to_uri': {},
+        'uri_to_local': {}
         }
 
     help_description = 'Generate documentation for Redfish JSON schema files.\n\n'
-    help_epilog      = 'Example:\n   doc_generator.py --format=html --out=/path/to/output/index.html /path/to/spmf/json-files'
+    help_epilog = ('Example:\n   doc_generator.py --format=html\n   doc_generator.py'
+                   ' --format=html'
+                   ' --out=/path/to/output/index.html /path/to/spmf/json-files')
     parser = argparse.ArgumentParser(description=help_description,
                                      epilog=help_epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('import_from', metavar='import_from', nargs='+',
-                        help='Name of a file or directory to process (wildcards are acceptable)')
-    parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False, help='Produce normative (developer-focused) output')
-    parser.add_argument('--format', dest='format', default='markdown', choices=['markdown', 'html'], help='Output format')
-    parser.add_argument('--out', dest='outfile', default='output.md',  help='Output file (default depends on output format -- output.md for markdown, index.html for html)')
-    parser.add_argument('--sup', dest='supfile', help='Path to the supplemental material document. Default is usersupplement.md for user-focused documentation, and devsupplement.md for normative documentation.')
-    parser.add_argument('--escape', dest='escape_chars', help="Characters to escape (\\) in generated markdown; e.g., --escape=@#. Use --escape=@ if strings with embedded @ are being converted to mailto links.")
-
-    usage = parser.format_usage()
-    parser.usage = usage + '\n\n' + help_epilog + '\n '
+    parser.add_argument('import_from', metavar='import_from', nargs='*',
+                        help=('Name of a file or directory to process (wildcards are acceptable).'
+                              'Default: json-schema'))
+    parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False,
+                        help='Produce normative (developer-focused) output')
+    parser.add_argument('--format', dest='format', default='markdown',
+                        choices=['markdown', 'html'], help='Output format')
+    parser.add_argument('--out', dest='outfile', default='output.md',
+                        help=('Output file (default depends on output format: '
+                              'output.md for markdown, index.html for html)'))
+    parser.add_argument('--sup', dest='supfile',
+                        help=('Path to the supplemental material document. '
+                              'Default is usersupplement.md for user-focused documentation, '
+                              'and devsupplement.md for normative documentation.'))
+    parser.add_argument('--escape', dest='escape_chars',
+                        help=("Characters to escape (\\) in generated markdown; "
+                              "e.g., --escape=@#. Use --escape=@ if strings with embedded @ "
+                              "are being converted to mailto links."))
 
     args = parser.parse_args()
 
-    output_format = args.format
+    config['output_format'] = args.format
 
-    files_to_process = []
-    for file_to_import in args.import_from:
-        if os.path.isdir(file_to_import):
-            for root, skip, files in os.walk(file_to_import):
-                files.sort(key=str.lower)
-                for filename in files:
-                    if filename[-4:] == 'json':
-                        files_to_process.append(os.path.join(root, filename))
-        elif os.path.isfile(file_to_import):
-            files_to_process.append(file_to_import)
-        else:
-            print('Oops,', file_to_import, 'not found, or contains no .json files.\n')
-
+    if len(args.import_from):
+        import_from = args.import_from
+    else:
+        import_from = [config.get('cwd') + '/json-schema']
 
     # Determine outfile and verify that it is writeable:
     outfile_name = args.outfile
     if outfile_name == 'output.md':
-        if output_format == 'html':
+        if config['output_format'] == 'html':
             outfile_name = 'index.html'
 
     try:
-        outfile = open(outfile_name, 'w')
+        outfile = open(outfile_name, 'w', encoding="utf8")
     except (OSError) as ex:
-        print('Unable to open', outfile_name, 'to write:', ex)
+        warnings.warn('Unable to open ' + outfile_name + ' to write: ' + str(ex))
 
     # Ensure supfile is readable (if not, warn but proceed)
+    supfile_expected = False
     if args.supfile:
         supfile = args.supfile
+        supfile_expected = True
     elif args.normative:
-        supfile = 'devsupplement.md'
+        supfile = config.get('cwd') + '/devsupplement.md'
     else:
-        supfile = 'usersupplement.md'
+        supfile = config.get('cwd') + '/usersupplement.md'
 
     try:
-        supfile = open(supfile, 'r')
+        supfile = open(supfile, 'r', encoding="utf8")
+        config['supplemental'] = parse_supplement.parse_file(supfile)
     except (OSError) as ex:
-        print('Unable to open', supfile, 'to read:', ex)
-    config['supplemental'] = parse_supplement.parse_file(supfile)
+        if supfile_expected:
+            warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
+        else:
+            warnings.warn('No supplemental file specified and ' + supfile +
+                          ' not found. Proceeding.')
+
+
+    if 'keywords' in config['supplemental']:
+        # Promote the keywords to top-level keys.
+        config.update(config['supplemental']['keywords'])
+
+    if 'Schema Documentation' in config['supplemental']:
+        config['uri_replacements'] = config['supplemental']['Schema Documentation']
+
+    if 'Excluded Annotations' in config['supplemental']:
+        config['excluded_properties'].extend(
+            config['supplemental']['Excluded Annotations'].get('exact_match'))
+        config['excluded_annotations'].extend(
+            config['supplemental']['Excluded Annotations'].get('exact_match'))
+        config['excluded_by_match'].extend(
+            config['supplemental']['Excluded Annotations'].get('wildcard_match'))
+        config['excluded_annotations_by_match'].extend(
+            config['supplemental']['Excluded Annotations'].get('wildcard_match'))
 
     if 'Excluded Properties' in config['supplemental']:
-        config['excluded_properties'] = config['supplemental']['Excluded Properties'].get('exact_match')
-        config['excluded_by_match'] = config['supplemental']['Excluded Properties'].get('wildcard_match')
+        config['excluded_properties'].extend(
+            config['supplemental']['Excluded Properties'].get('exact_match', []))
+        config['excluded_by_match'].extend(
+            config['supplemental']['Excluded Properties'].get('wildcard_match', []))
 
     if 'Excluded Schemas' in config['supplemental']:
         config['excluded_schemas'] = config['supplemental']['Excluded Schemas'].get('exact_match')
         config['excluded_schemas_by_match'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
 
-    config['schema_supplement'] = config['supplemental'].get('Schema Supplement')
+    if 'Description Overrides' in config['supplemental']:
+        config['property_description_overrides'] = config['supplemental']['Description Overrides']
+
+    if 'local_to_uri' in config['supplemental']:
+        config['local_to_uri'] = config['supplemental']['local_to_uri']
+
+    if 'uri_to_local' in config['supplemental']:
+        config['uri_to_local'] = config['supplemental']['uri_to_local']
+
+    if 'enum_deprecations' in config['supplemental']:
+        config['enum_deprecations'] = config['supplemental']['enum_deprecations']
+
+    config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
+
+    if 'keywords' in config['schema_supplement']:
+        config['add_toc'] = config['supplemental']['keywords'].get('add_toc')
 
     config['normative'] = args.normative
 
     if args.escape_chars:
         config['escape_chars'] = [x for x in args.escape_chars]
 
-    files, schema_data = group_files(files_to_process)
-
-    property_data = {}
-    for schema_name in files.keys():
-        property_data[schema_name] = process_files(schema_name, files[schema_name])
-        latest_info = files[schema_name][-1]
-        latest_file = os.path.join(latest_info['root'], latest_info['filename'])
-        latest_data = load_as_json(latest_file)
-        schema_data[schema_name] = latest_data
-
-    traverser = SchemaTraverser('http://redfish.dmtf.org/schemas/v1/', schema_data)
-
-    # Generate output
-    if output_format == 'markdown':
-        from doc_formatter import MarkdownGenerator
-        generator = MarkdownGenerator(property_data, traverser, config)
-    elif output_format == 'html':
-        from doc_formatter import HtmlGenerator
-        generator = HtmlGenerator(property_data, traverser, config)
-
-    output = generator.generate_output()
-
-    write_output(output, outfile)
-
-
-def group_files(files):
-    """Traverse files, grouping any unversioned/versioned schemas together.
-
-    Parses json to identify versioned files.
-    Returns a dict of {schema_name : [versioned files]} where each
-    versioned file is a dict of root, filename, ref path.
-    """
-
-    file_list = files.copy()
-    grouped_files = {}
-    all_schemas = {}
-    missing_files = []
-    processed_files = []
-    for filename in file_list:
-        if filename in processed_files: continue
-
-        root, skip, fname = filename.rpartition(os.sep)
-        data = load_as_json(filename)
-
-        # Find the title, ref, and anyOf refs (skipping odata idRef)
-        if 'title' not in data: continue
-
-        title_parts = data['title'].split('.')
-        if len(title_parts) > 3: continue # old file/version scheme Name.1.0.0.Name or Name.1.0.0
-
-        schema_name = title_parts[0]
-        if len(title_parts) > 1 and title_parts[1].startswith('v'):
-            schema_name += '.' + title_parts[1]
-
-        if schema_name[0] == '#': schema_name = schema_name[1:]
-
-        all_schemas[schema_name] = data
-
-        ref = ''
-        if '$ref' in data:
-            ref = data['$ref'][1:] # drop initial '#'
-        else:
-            continue
-
-        if fname.count('.') > 1:
-            continue
-
-        original_ref = ref
-        for pathpart in ref.split('/'):
-            if not pathpart: continue
-            data = data[pathpart]
-
-        ref_files = []
-        if 'anyOf' in data:
-            for obj in data['anyOf']:
-                if '$ref' in obj:
-                    refpath_uri, refpath_path = obj['$ref'].split('#')
-                    if refpath_path == '/definitions/idRef':
-                        continue
-                    ref_fn = refpath_uri.split('/')[-1]
-                    ref_files.append({'root': root,
-                                      'filename': ref_fn,
-                                      'ref': refpath_path})
-                else:
-                    # If there is anything that's not a ref, this isn't an unversioned schema.
-                    # It's probably a Collection. Zero out ref_files and skip the rest so we
-                    # can save this as a single-file group.
-                    ref_files = []
-                    continue
-
-        elif '$ref' in data:
-            refpath_uri, refpath_path = data['$ref'].split('#')
-            ref_fn = refpath_uri.split('/')[-1]
-            ref_files.append({'root': root,
-                              'filename': ref_fn,
-                              'ref': refpath_path})
-        else:
-            ref = original_ref
-        if len(ref_files):
-            grouped_files[schema_name] = ref_files
-
-        if not schema_name in grouped_files:
-            # this is not an unversioned schema after all.
-            grouped_files[schema_name] = [{'root': root,
-                                           'filename': fname,
-                                           'ref': ref}]
-
-        # Note these files as processed:
-        processed_files.append(filename)
-        for file_refs in grouped_files[schema_name]:
-            ref_filename = os.path.join(file_refs['root'], file_refs['filename'])
-            processed_files.append(ref_filename)
-            if ref_filename not in file_list:
-                missing_files.append(ref_filename)
-
-    if len(missing_files):
-        print("Some referenced files were missing:", missing_files)
-
-    return grouped_files, all_schemas
-
-
-def process_files(schema_name, refs):
-    """Loop through a set of refs and process the specified files into property data.
-
-    Returns a property_data object consisting of the properties from the last ref file,
-    and metadata ('doc_generator_meta') indicating version for properties introduced after
-    1.0 and version_deprecated for deprecated properties.
-    """
-    property_data = {}
-    for info in refs:
-        process_data_file(schema_name, info, property_data)
-    return property_data
-
-
-def process_data_file(schema_name, ref, property_data):
-    """Process a single file by ref name, identifying version metadata and updating property_data."""
-
-    filename = os.path.join(ref['root'], ref['filename'])
-    version = get_version_string(ref['filename'])
-    property_data['latest_version'] = version
-    property_data['name_and_version'] = schema_name
-    if version:
-        property_data['name_and_version'] += ' ' + version
-    property_data['properties'] = {}
-
-    if 'properties' not in property_data:
-        property_data['properties'] = {}
-    meta = property_data.get('doc_generator_meta', {})
-
-    if version == '1.0.0': version = None
-
-    if (not version) and (schema_name in property_data):
-        print('Check', schema_name, 'for version problems. Are there two files with either version 1.0.0 or no version?')
-
-    data = load_as_json(filename)
-
-    try:
-        property_data['definitions'] = data['definitions']
-        for ref_part in ref['ref'].split('/'):
-            if not ref_part: continue
-            data = data[ref_part]
-
-        # resolve anyOf to embedded object, if present:
-        if 'anyOf' in data:
-            for elt in data['anyOf']:
-                if ('type' in elt) and (elt['type'] == 'object'):
-                    data = elt
-                    break
-
-        properties = data['properties']
-        property_data['properties'] = properties
-
-    except KeyError:
-        print('Unable to find properties in path', ref['ref'], 'from', filename)
-        return
-
-    for prop_name in properties.keys():
-        props = properties[prop_name]
-        if prop_name not in meta:
-            meta[prop_name] = {}
-            if version: # Track version only when first seen
-                meta[prop_name]['version'] = version
-        if 'deprecated' in props:
-            if 'version_deprecated' not in meta[prop_name]:
-                meta[prop_name]['version_deprecated'] = version
-
-    property_data['doc_generator_meta'] = meta
-
-    return
-
-
-def organize_prop_names(prop_names):
-    """Strip out excluded property names, and sort the remainder."""
-
-
-    # Strip out properties based on exact match:
-    prop_names = [x for x in prop_names if x not in config['excluded_properties']]
-
-    # Strip out properties based on partial match:
-    included_prop_names = []
-    for prop_name in prop_names:
-        excluded = False
-        for x in config['excluded_by_match']:
-            if x in prop_name:
-                excluded = True
-                break
-        if not excluded:
-            included_prop_names.append(prop_name)
-
-    included_prop_names.sort()
-    return included_prop_names
-
-
-def get_version_string(filename):
-    """Parse the version string from a filename. Returned format is, e.g., v1.0.1"""
-
-    parts = filename.split('.')
-    version = ''
-    if parts[1][0] == 'v':
-        version = parts[1][1:]
-        version = version.replace('_', '.')
-    return version
-
-
-def truncate_version(version_string, num_parts):
-    """Truncate the version string to the specified number of parts."""
-
-    parts = version_string.split('.')
-    return '.'.join(parts[0:num_parts])
-
-
-def load_as_json(filename):
-    """Load json data from a file, printing an error message on failure."""
-    data = ''
-    try:
-        # Parse file as json
-        jsondata = open(filename, 'r')
-        data = json.load(jsondata)
-        jsondata.close()
-    except (OSError, json.JSONDecodeError) as ex:
-        print('Unable to read', filename, ':', ex)
-
-    return data
-
-
-def write_output(markdown, outfile):
-    """Write output to a file."""
-
-    print(markdown, file=outfile)
-    outfile.close()
-    print(outfile.name, "written.")
-
+    doc_generator = DocGenerator(import_from, outfile, config)
+    doc_generator.generate_doc()
 
 main()

@@ -32,7 +32,7 @@ if enable_debugging == True:
 schemaLocation = "http://redfish.dmtf.org/schemas/" 
 schemaBaseLocation = schemaLocation + "v1/"
 odataSchema = schemaBaseLocation + "odata.4.0.0.json"
-redfishSchema = schemaLocation + "v1/redfish-schema.v1_1_0.json"
+redfishSchema = schemaLocation + "v1/redfish-schema.v1_2_0.json"
 
 #########################################################################################################
 # Class Name: JsonSchemaGenerator                                                                       #
@@ -81,7 +81,12 @@ class JsonSchemaGenerator:
         elif ( typetype != "Action" and self.include_type(simplename, current_namespace, root_namespace, typetable ) ) or (typetype == "Action" and self.include_type(simplename, current_typedata["BoundNamespace"], root_namespace, typetable) ):
             refvalue = "#/definitions/" + simplename
         else:
-            refvalue = schemaBaseLocation + current_typedata["Alias"] + ".json#/definitions/" + simplename
+            if "StubRef" in current_typedata:
+                # If the reference comes from a stub, just use its value
+                refvalue = current_typedata["StubRef"]
+            else:
+                # Otherwise use the base schema file
+                refvalue = schemaBaseLocation + current_typedata["Alias"] + ".json#/definitions/" + simplename
 
         return refvalue
 
@@ -198,8 +203,9 @@ class JsonSchemaGenerator:
     def has_basetype(self, typetable, type, basetype):
 
         # This is a pre-parsed JSON object. Skip it
+        # This happens for entities we load in stubs
         if "Node" not in type:
-            return True
+            return False
 
         # does it have the base type anywhere in it's hierarchy?
         while True:
@@ -1000,7 +1006,7 @@ class JsonSchemaGenerator:
                 output += ",\n" + UT.Utilities.indent(depth) + "\"format\": \"date-time\""
 
             if typename == "Edm.Guid":
-                output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\""
+                output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\""
 
             if typename == "Edm.Duration":
                 output += ",\n" + UT.Utilities.indent(depth) + "\"pattern\": \"-?P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?\""
@@ -1155,6 +1161,7 @@ class JsonSchemaGenerator:
             firstenumvalue = True
             founddescriptions=False
             foundlongdescriptions=False
+            founddeprecated=False
 
             for member in members:
                 if firstenumvalue:
@@ -1170,6 +1177,9 @@ class JsonSchemaGenerator:
 
                 if member["LongDescription"] != "":
                    foundlongdescriptions = True
+
+                if member["Deprecated"] != "":
+                   founddeprecated = True
 
             output += "\n"
             output += UT.Utilities.indent(depth) + "]"
@@ -1210,6 +1220,24 @@ class JsonSchemaGenerator:
                 output += "\n"
                 output += UT.Utilities.indent(depth)  + "}"
 
+            if founddeprecated:
+                output += ",\n"
+                output += UT.Utilities.indent(depth) + "\"enumDeprecated\": {\n"
+                firstenumvalue = True
+
+                for member in members:
+                    if member["Deprecated"] != "":
+                        if firstenumvalue:
+                            firstenumvalue = False
+
+                        else:
+                            output += ",\n"
+
+                        output += UT.Utilities.indent(depth+1) + "\"" + member["Name"] + "\": \"" + member["Deprecated"] + "\""
+
+                output += "\n"
+                output += UT.Utilities.indent(depth)  + "}"
+
         return output
 
     ############################################################################################
@@ -1224,13 +1252,16 @@ class JsonSchemaGenerator:
         for member in typedata["Node"].iter("{http://docs.oasis-open.org/odata/ns/edm}Member"):
             description = ""
             longdescription = ""
+            deprecated = ""
             for annotation in member.iter("{http://docs.oasis-open.org/odata/ns/edm}Annotation"):
                 if annotation.attrib["Term"] == "OData.Description":
                    description = annotation.attrib["String"]
                 elif annotation.attrib["Term"] == "OData.LongDescription":
                    longdescription = annotation.attrib["String"]
+                elif annotation.attrib["Term"] == "Redfish.Deprecated":
+                   deprecated = annotation.attrib["String"]
 
-            members.append({"Name":member.attrib["Name"], "Description":description, "LongDescription":longdescription})
+            members.append({"Name":member.attrib["Name"], "Description":description, "LongDescription":longdescription, "Deprecated":deprecated})
 
         return self.generate_enum_type(typetable, typedata, typename, namespace, depth, isnullable, members)
 
@@ -1250,6 +1281,7 @@ class JsonSchemaGenerator:
                         for record in element.iter("{http://docs.oasis-open.org/odata/ns/edm}Record"):
                             description = ""
                             longdescription = ""
+                            deprecated = ""
                             for propertyvalue in record.iter("{http://docs.oasis-open.org/odata/ns/edm}PropertyValue"):
                                 if propertyvalue.attrib["Property"] == "Member":
                                     member = propertyvalue.attrib["String"]
@@ -1260,8 +1292,10 @@ class JsonSchemaGenerator:
                                     description = annotation.attrib["String"]
                                 elif annotation.attrib["Term"] == "OData.LongDescription":
                                     longdescription = annotation.attrib["String"]
+                                elif annotation.attrib["Term"] == "Redfish.Deprecated":
+                                    deprecated = annotation.attrib["String"]
 
-                            members.append({"Name":member,"Description":description,"LongDescription":longdescription})
+                            members.append({"Name":member,"Description":description,"LongDescription":longdescription,"Deprecated":deprecated})
                     break
             break
 
@@ -1765,7 +1799,7 @@ def main():
         set_config_args(args, config)
 
     if args.copyright == None:
-        args.copyright = 'Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
+        args.copyright = 'Copyright 2014-2017 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright'
 
     if args.stubs != None:
         config = configparser.ConfigParser()

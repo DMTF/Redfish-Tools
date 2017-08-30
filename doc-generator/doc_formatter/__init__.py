@@ -4,4 +4,5 @@
 
 from .doc_formatter import DocFormatter
 from .markdown_generator import MarkdownGenerator
+from .toc_parser import ToCParser
 from .html_generator import HtmlGenerator

@@ -24,6 +24,7 @@ import unicodedata
 import os
 import argparse
 import urllib.request
+import errno
 
 global_namespaces = {}
 local_directory = None
@@ -1399,13 +1400,24 @@ class MetaData(Element):
                     sys.exit(0)
             # If not available, go open via HTTP
             else:
-                try:
-                    req = urllib.request.Request(self.uri)
-                    response = urllib.request.urlopen(req)
-                    self.data = response.read()
-                    self.raw_data = ET.fromstring(self.data)
-                except Exception:
+                retry_count = 0
+                retry_count_max = 20
+                while retry_count < retry_count_max:
+                    try:
+                        req = urllib.request.Request(self.uri)
+                        response = urllib.request.urlopen(req)
+                        self.data = response.read()
+                        self.raw_data = ET.fromstring(self.data)
+                        break
+                    except Exception as e:
+                        if e.errno != errno.ECONNRESET:
+                            print("Could not open " + self.uri)
+                            print( e )
+                            sys.exit(0)
+                    retry_count += 1
+                if retry_count >= retry_count_max:
                     print("Could not open " + self.uri)
+                    print("Too many connection resets")
                     sys.exit(0)
         else:
             try:
@@ -2190,13 +2202,7 @@ class Property(Element):
                     raise SchemaError( "Type {} only allowed on a property when it is of a complex "
                         "type that is exclusively used as the type of a term, not in complex type".format
                             (type_element.error_id))
-                uses = get_all_uses( self.parent )
-                for element, attr in uses:
-                    if attr != "data_services" and not(attr == 'type' and isinstance(element, Term)):
-                        raise SchemaError( "Type {} only allowed on a property when it is of a "
-                            "complex type that is exclusively used as the type of a term, not "
-                            "exclusively used as type of a term".format
-                            (type_element.error_id))
+                self.check_vocabulary_parent_uses( self.parent, type_element )
 
             elif not any( x in type_element.provides_type
                 for x in ['Edm.PrimitiveType', 'Edm.ComplexType', 'Edm.EnumType']):
@@ -2259,6 +2265,33 @@ class Property(Element):
         #                 "{}->{}->{}->{}".format(
         #                     metadata.uri, schema.name, self.parent.name, self.name))
 
+    def check_vocabulary_parent_uses(self, parent, type_element):
+        """Function for checking how the parents are using this term.
+
+        This function is called for vocabulary terms to ensure the highest level use is a Term.
+
+        Args:
+            parent: The parent to check
+            type_element: The type element of the term
+
+        Returns:
+            None
+
+        Raises:
+            SchemaError: If there is an error in validating the parent usage of the term.
+        """
+
+        uses = get_all_uses( parent )
+        for element, attr in uses:
+            if isinstance(element.parent, ComplexType):
+                # Parent is Complex; scan its parents
+                self.check_vocabulary_parent_uses(element.parent, type_element)
+            elif attr != "data_services" and not(attr == 'type' and isinstance(element, Term)):
+                raise SchemaError( "Type {} only allowed on a property when it is of a "
+                    "complex type that is exclusively used as the type of a term, not "
+                    "exclusively used as type of a term".format
+                    (type_element.error_id))
+
 class NavigationProperty(Element):
     """Class defining an OData NavigationProperty element.
 
@@ -2316,6 +2349,8 @@ class NavigationProperty(Element):
         collection, _ = is_collection(self.type)
 
         if 'Nullable' in self.raw_data.attrib:
+            if collection:
+                raise SchemaError("Collection type cannot specify Nullable attribute")
             self.used_attribs.append('Nullable')
             check_type(self.raw_data.attrib['Nullable'], 'Boolean')
             self.nullable = (self.raw_data.attrib['Nullable'] == 'true')
@@ -2976,13 +3011,20 @@ class ComplexType(Element, StructuredType):
             check_type(self.raw_data.attrib['OpenType'], 'Boolean')
             self.open_type = (self.raw_data.attrib['OpenType'] == 'true')
 
+        prop_names = []
         for prop in self._get_elements('Property'):
             data = Property(prop, self)
+            if data.name in prop_names:
+                raise SchemaError("Property name {} not unique".format(data.name))
+            prop_names.append(data.name)
             self.defined_properties.append(data)
             self.children.append(data)
 
         for nav_prop in self._get_elements('NavigationProperty'):
             data = NavigationProperty(nav_prop, self)
+            if data.name in prop_names:
+                raise SchemaError("NavigationProperty name {} not unique".format(data.name))
+            prop_names.append(data.name)
             self.defined_nav_properties.append(data)
             self.children.append(data)
 
@@ -5968,4 +6010,7 @@ def main():
     print("No errors in MetaData")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except:
+        sys.exit(1)
