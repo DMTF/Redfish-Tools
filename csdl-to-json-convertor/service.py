@@ -76,7 +76,7 @@ class JsonSchemaGenerator:
 
 #todo: fix logic to be more generic post-v1
         # If the current type is defined in this namespace
-        if (current_typename == "Resource.Item") :
+        if (current_typename == "Resource.Item") or (current_typename == "Resource.ItemOrCollection") :
             refvalue = odataSchema + "#/definitions/idRef"
         elif ( typetype != "Action" and self.include_type(simplename, current_namespace, root_namespace, typetable ) ) or (typetype == "Action" and self.include_type(simplename, current_typedata["BoundNamespace"], root_namespace, typetable) ):
             refvalue = "#/definitions/" + simplename
