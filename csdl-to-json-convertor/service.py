@@ -1466,6 +1466,7 @@ class JsonSchemaGenerator:
         if len(data) == 0:
             return {}
 
+        root = None
         root = ET.fromstring(data)
         typetable = {}
         namespaces = []
@@ -1746,10 +1747,12 @@ class JsonSchemaGenerator:
         elif url.endswith(".xml"):
             prefixuri =  schemaBaseLocation
             lastindex = url.find(".xml")
+            namespaceindex = url.find("_v1")
             filename=url
             result.update({'filename' : prefixuri + filename})
             result.update({'prefixuri' : prefixuri})
-            result.update({'namespace' : filename[:lastindex] + ".v1_0_0"})
+            print(filename[:namespaceindex])
+            result.update({'namespace' : filename[:namespaceindex] + ".v1_0_0"})
 
         if incorrect_url == True:
             result.update({'error' : 'Incorrect URL - Please specify a URL like:\n 1. http://<filename>#<namespace> or \n 2. http://<filename>#<datatype>\n e.g. http://localhost:9080/rest/v1/redfish.dmtf.org/redfish/v1/Chassis_v1#Chassis.Chassis'})

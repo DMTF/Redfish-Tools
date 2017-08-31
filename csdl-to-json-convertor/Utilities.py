@@ -80,13 +80,23 @@ class Utilities:
             resname  = url[hostStop :]
             
             if hostname in connections.keys():
+                # Already have a connection
                 conn = connections[hostname]
+                conn.request("GET", resname)
+                response = conn.getresponse()
             else:
+                # Try http 
                 conn = http.client.HTTPConnection(hostname)
                 connections[hostname] = conn
+                conn.request("GET", resname)
+                response = conn.getresponse()
+                if response.status == 301:
+                    # Try https
+                    conn = http.client.HTTPSConnection(hostname)
+                    connections[hostname] = conn
+                    conn.request("GET", resname)
+                    response = conn.getresponse()
 
-            conn.request("GET", resname)
-            response = conn.getresponse()
             data = response.read()
             decoded = data.decode("utf-8")
 
