@@ -389,7 +389,7 @@ class CSDLToJSON():
                 if type_name == object.attrib["BaseType"]:
                     # Match; processs it
                     self.generate_object( base_object, json_def, name )
-                    break
+                    return
 
     def generate_action( self, action, json_def ):
         """
@@ -601,11 +601,13 @@ class CSDLToJSON():
             if annotation.attrib["Term"] == "Redfish.Required":
                 if "required" not in json_obj_def:
                     json_obj_def["required"] = []
-                json_obj_def["required"].append( prop_name )
+                if prop_name not in json_obj_def["required"]:
+                    json_obj_def["required"].append( prop_name )
             if annotation.attrib["Term"] == "Redfish.RequiredOnCreate":
                 if "requiredOnCreate" not in json_obj_def:
                     json_obj_def["requiredOnCreate"] = []
-                json_obj_def["requiredOnCreate"].append( prop_name )
+                if prop_name not in json_obj_def["requiredOnCreate"]:
+                    json_obj_def["requiredOnCreate"].append( prop_name )
 
         # If this is a collection of navigation properties, add the @odata.count property
         if ( property.tag == ODATA_TAG_NAV_PROPERTY ) and ( is_array == True ):
@@ -817,7 +819,7 @@ def main( argv ):
     """
 
     # Get the input arguments
-    argget = argparse.ArgumentParser( description="A tool used to convert Redfish CSDL files to Redfish JSON Schema files" )
+    argget = argparse.ArgumentParser( description = "A tool used to convert Redfish CSDL files to Redfish JSON Schema files" )
     argget.add_argument( "--input", "-I", type = str, required = True, help = "The folder containing the CSDL files to convert" )
     argget.add_argument( "--output", "-O",  type = str, required = True, help = "The folder to write the converted JSON files" )
     argget.add_argument( "--config", "-C", type = str, help = "The configuration file containing definitions for various links and user strings" )
