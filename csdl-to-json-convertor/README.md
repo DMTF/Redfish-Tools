@@ -31,7 +31,6 @@ optional arguments:
   --config CONFIG, -C CONFIG
                         The configuration file containing definitions for
                         various links and user strings
-
 ```
 
 ### Config File
