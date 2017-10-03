@@ -70,7 +70,7 @@ Once the Resource_v1.xml definitions are cached, the tool loops on all files end
     * ... that are in an unversioned namespace and are not marked as abstract have their definition translated only to the unversioned JSON Schema file
     * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files
   * Action definitions...
-    * ... that are in an unversioned namespace are translated to both the unversioned JSON Schema file and all versioned JSON Schema files
+    * ... that are in an unversioned namespace are translated to all versioned JSON Schema files
     * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files
   * EnumType and TypeDefinition definitions...
     * ... that are in an unversioned namespace are translated to the unversioned JSON Schema file
