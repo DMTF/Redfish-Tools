@@ -66,7 +66,7 @@ Before any translation is done, the tool will attempt to locate the Resource_v1.
 
 Once the Resource_v1.xml definitions are cached, the tool loops on all files ending in ".xml" in the input directory.  For every namespace found in the file, it will generate a corresponding ".json" file in the following manner:
   * For EntityType and ComplexType definitions...
-    * ... that are in an unversioned namespace and are marked as abstract have definition that contains an "anyOf" statement in the unversioned JSON Schema that points to all versioned definitions
+    * ... that are in an unversioned namespace and are marked as abstract have a definition that contains an "anyOf" statement in the unversioned JSON Schema that points to all versioned definitions
     * ... that are in an unversioned namespace and are not marked as abstract have their definition translated only to the unversioned JSON Schema file
     * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files
   * Action definitions...
