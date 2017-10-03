@@ -60,6 +60,7 @@ The tool makes several assumptions about the format of the Redfish CSDL files:
   * Any referenced external namespaces have proper *Include* statements found at the top of the CSL file
   * All annotations have their expected facets filled; for example, the OData.Description annotation must use the *String=* facet
   * All namespaces follow the Redfish defined format where a namespace is either unversioned, or is in the form *name.vX_Y_Z*
+  * If a reference is made to another CSDL file, its JSON Schema file will be in the same folder
 
 Before any translation is done, the tool will attempt to locate the Resource_v1.xml schema.  This is to cache properties for base definitions that all resources use.  The tool will first check to see if the file exists in the input directory; if it doesn't exist there, it will access the remote location for the file.
 
