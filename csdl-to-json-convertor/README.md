@@ -30,7 +30,7 @@ optional arguments:
   -h, --help            show this help message and exit
   --config CONFIG, -C CONFIG
                         The configuration file containing definitions for
-                        varies links and user strings
+                        various links and user strings
 
 ```
 

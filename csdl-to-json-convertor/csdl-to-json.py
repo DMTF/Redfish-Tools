@@ -818,9 +818,9 @@ def main( argv ):
 
     # Get the input arguments
     argget = argparse.ArgumentParser( description="A tool used to convert Redfish CSDL files to Redfish JSON Schema files" )
-    argget.add_argument( "--input", "-I", type=str, required=True, help="The folder containing the CSDL files to convert" )
-    argget.add_argument( "--output", "-O",  type=str, required=True, help="The folder to write the converted JSON files" )
-    argget.add_argument( "--config", "-C", type=str, help="The configuration file containing definitions for varies links and user strings" )
+    argget.add_argument( "--input", "-I", type = str, required = True, help = "The folder containing the CSDL files to convert" )
+    argget.add_argument( "--output", "-O",  type = str, required = True, help = "The folder to write the converted JSON files" )
+    argget.add_argument( "--config", "-C", type = str, help = "The configuration file containing definitions for various links and user strings" )
     args = argget.parse_args()
 
     # Create the output directory (if needed)
