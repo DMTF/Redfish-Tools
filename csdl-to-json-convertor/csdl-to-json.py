@@ -671,8 +671,10 @@ class CSDLToJSON():
             json_type_def["type"] = "array"
             if ref == None:
                 json_type_def["items"] = { "type": json_type }
-            else:
+            elif ( is_nullable == False ) and ( ref != None ):
                 json_type_def["items"] = { "$ref": ref }
+            else:
+                json_type_def["items"] = { "anyOf": [ { "$ref": ref }, { "type": "null" } ] }
         else:
             if ref == None:
                 json_type_def["type"] = json_type
