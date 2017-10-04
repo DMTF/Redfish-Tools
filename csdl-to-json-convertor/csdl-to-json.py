@@ -653,7 +653,7 @@ class CSDLToJSON():
         # Determine if this is nullable
         if type_info.tag == ODATA_TAG_TYPE_DEF:
             is_nullable = False
-        if ( type_info.tag == ODATA_TAG_NAV_PROPERTY ) and ( is_array == True ):
+        elif ( type_info.tag == ODATA_TAG_NAV_PROPERTY ) and ( is_array == True ):
             is_nullable = False
         else:
             is_nullable = True
