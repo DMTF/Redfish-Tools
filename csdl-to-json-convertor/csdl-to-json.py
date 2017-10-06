@@ -901,25 +901,25 @@ def main( argv ):
                 sys.exit( 1 )
 
     # Step through each file in the input directory
-    for filename in os.listdir( args.input ):
-        if filename.endswith( ".xml" ):
-            print( "Generating JSON for: {}".format( filename ) )
+    for in_filename in os.listdir( args.input ):
+        if in_filename.endswith( ".xml" ):
+            print( "Generating JSON for: {}".format( in_filename ) )
             root = None
             try:
-                tree = ET.parse( args.input + os.path.sep + filename )
+                tree = ET.parse( args.input + os.path.sep + in_filename )
                 root = tree.getroot()
             except ET.ParseError:
-                print( "ERROR: {} contains a malformed XML document".format( filename ) )
+                print( "ERROR: {} contains a malformed XML document".format( in_filename ) )
             except:
-                print( "ERROR: Could not open {}".format( filename ) )
+                print( "ERROR: Could not open {}".format( in_filename ) )
             if root != None:
                 # Translate and write the JSON files
                 translator = CSDLToJSON( config_data["Copyright"], config_data["RedfishSchema"], config_data["ODataSchema"], config_data["Location"], root, resource_root )
                 translator.process()
                 for namespace in translator.json_out:
-                    filename = args.output + os.path.sep + namespace + ".json"
+                    out_filename = args.output + os.path.sep + namespace + ".json"
                     out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
-                    with open( filename, "w" ) as file:
+                    with open( out_filename, "w" ) as file:
                         file.write( out_string )
 
 def is_namespace_unversioned( namespace ):
