@@ -799,18 +799,24 @@ class CSDLToJSON():
                 json_type = [ "string", "boolean", "number" ]
         else:
             # Does not match the base CSDL types; need to map it via a reference
-            namespace_ref = type.rsplit( ".", 1 )[0]
-            type_ref = type.split( "." )[-1]
-            if namespace_ref in self.external_references:
-                ref = self.external_references[namespace_ref] + "#/definitions/" + type_ref
+
+            if ( type == "Resource.Item" ) or ( type == "Resource.ItemOrCollection" ):
+                # General reference; use the generic idRef term
+                ref = self.odata_schema + "#/definitions/idRef"
             else:
-                # Check if this is a cross reference between versioned and unversioned namespaces
-                if is_namespace_unversioned( namespace_ref ) != is_namespace_unversioned( self.namespace_under_process ):
-                    # It crosses; they'll be in different files
-                    ref = self.location + namespace_ref + ".json#/definitions/" + type_ref
+                # Make a reference that maps to a specific JSON file
+                namespace_ref = type.rsplit( ".", 1 )[0]
+                type_ref = type.split( "." )[-1]
+                if namespace_ref in self.external_references:
+                    ref = self.external_references[namespace_ref] + "#/definitions/" + type_ref
                 else:
-                    # No crossing; local reference
-                    ref = "#/definitions/" + type_ref
+                    # Check if this is a cross reference between versioned and unversioned namespaces
+                    if is_namespace_unversioned( namespace_ref ) != is_namespace_unversioned( self.namespace_under_process ):
+                        # It crosses; they'll be in different files
+                        ref = self.location + namespace_ref + ".json#/definitions/" + type_ref
+                    else:
+                        # No crossing; local reference
+                        ref = "#/definitions/" + type_ref
 
         return json_type, ref, pattern, format
 
