@@ -292,6 +292,9 @@ pre.code{
         else:
             prop_access = 'read-write'
 
+        if formatted_details['nullable']:
+            prop_access += ' (null)'
+
         row = []
         row.append(indentation_string + name_and_version)
         row.append(prop_type)

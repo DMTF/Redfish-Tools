@@ -507,7 +507,7 @@ class DocFormatter:
 
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
-        'has_direct_prop_details', 'has_action_details', 'action_details'
+        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
         """
 
         if len(prop_infos) == 1:
@@ -518,6 +518,7 @@ class DocFormatter:
             else:
                 return self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
 
+        # TODO: we never get here (with current spmf json schema). Cruft?
         parsed = {'prop_type': [],
                   'prop_units': False,
                   'read_only': False,
@@ -525,6 +526,7 @@ class DocFormatter:
                   'add_link_text': '',
                   'prop_is_object': False,
                   'prop_is_array': False,
+                  'nullable': False,
                   'object_description': [],
                   'item_description': [],
                   'prop_details': {},
@@ -545,6 +547,9 @@ class DocFormatter:
                 has_null = True
             else:
                 details.append(det)
+        # Save the null flag so we can display it later:
+        parsed['nullable'] = has_null
+
 
         # Uniquify these properties and save as lists:
         props_to_combine = ['prop_type', 'descr', 'object_description', 'item_description']
@@ -562,11 +567,6 @@ class DocFormatter:
                         property_values.append(val)
 
             parsed[property_name] = property_values
-
-        # add back null if we found one:
-        if has_null:
-            parsed['prop_type'].append('null')
-
 
         # read_only and units should be the same for all
         parsed['read_only'] = details[0]['read_only']
@@ -588,7 +588,7 @@ class DocFormatter:
 
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
-        'has_direct_prop_details', 'has_action_details', 'action_details'
+        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
         """
         traverser = self.traverser
 
@@ -613,6 +613,15 @@ class DocFormatter:
             prop_is_object = prop_type == 'object'
             prop_is_array = prop_type == 'array'
             prop_type = [prop_type]
+
+        cleaned_prop_type = []
+        has_null = False
+        for pt in prop_type:
+            if pt == 'null':
+                has_null = True
+            else:
+                cleaned_prop_type.append(pt)
+        prop_type = cleaned_prop_type
 
         prop_units = prop_info.get('units')
 
@@ -709,6 +718,7 @@ class DocFormatter:
         return {'prop_type': prop_type,
                 'prop_units': prop_units,
                 'read_only': read_only,
+                'nullable': has_null,
                 'descr': descr,
                 'add_link_text': add_link_text,
                 'prop_is_object': prop_is_object,

@@ -175,6 +175,8 @@ class MarkdownGenerator(DocFormatter):
             prop_type += '<br><br>' + self.italic('read-only')
         else:
             prop_type += '<br><br>' + self.italic('read-write')
+        if formatted_details['nullable']:
+            prop_type += ' ' + self.italic('(null)')
 
         row = []
         row.append(indentation_string + name_and_version)
