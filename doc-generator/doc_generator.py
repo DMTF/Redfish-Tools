@@ -531,6 +531,8 @@ def main():
     if 'enum_deprecations' in config['supplemental']:
         config['enum_deprecations'] = config['supplemental']['enum_deprecations']
 
+    config['units_translation'] = config['supplemental'].get('units_translation', {})
+
     config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
 
     if 'keywords' in config['schema_supplement']:

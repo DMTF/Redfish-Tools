@@ -292,6 +292,9 @@ pre.code{
         else:
             prop_access = 'read-write'
 
+        if formatted_details['nullable']:
+            prop_access += ' (null)'
+
         row = []
         row.append(indentation_string + name_and_version)
         row.append(prop_type)
@@ -552,6 +555,7 @@ pre.code{
             'excluded_schemas_by_match': [],
             'escape_chars': [],
             'uri_replacements': {},
+            'units_translation': self.config['units_translation'],
             }
 
         for line in intro_blob.splitlines():
