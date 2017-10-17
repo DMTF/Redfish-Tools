@@ -555,6 +555,7 @@ pre.code{
             'excluded_schemas_by_match': [],
             'escape_chars': [],
             'uri_replacements': {},
+            'units_translation': self.config['units_translation'],
             }
 
         for line in intro_blob.splitlines():

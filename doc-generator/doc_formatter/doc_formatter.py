@@ -884,6 +884,10 @@ class DocFormatter:
         if prop_name in self.config.get('property_description_overrides', {}):
             prop_info['description'] = prop_info['longDescription'] = self.config['property_description_overrides'][prop_name]
 
+        units_trans = self.config['units_translation'].get(prop_info.get('units'))
+        if units_trans:
+            prop_info['units'] = units_trans
+
         return prop_info
 
 

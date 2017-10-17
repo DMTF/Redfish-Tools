@@ -6,6 +6,9 @@ The supplement is split into several major sections, noted by first-level headin
 
 - Schema URI Mapping
 - Keyword Configuration
+- Description Overrides
+- Units Translation
+- Enum Deprecations
 - Introduction
 - Postscript
 - Excluded Properties
@@ -45,6 +48,16 @@ Note: you can specify the location of the TOC, presumably in the Introduction se
 Note: markdown is allowed in description overrides, but HTML markup is not; it will be escaped.
 
 * Status: See  [The Status Object](#status_description), above.
+
+# Units Translation
+
+String-replacement for "units" values. Case-sensitive. Any units not matched will be output as-is.
+
+| Value            | Replacement      |
+| ---------------- | ---------------- |
+| s                | seconds          |
+| Mb/s             | Mbits/second     |
+| By               | Bytes            |
 
 
 # Enum Deprecations
