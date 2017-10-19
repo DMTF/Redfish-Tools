@@ -75,7 +75,8 @@ class CSDLToJSON():
         self.cache_resource_definitions()
         self.namespace_under_process = None
         self.external_references = {}
-        self.build_external_references()
+        self.internal_references = {}
+        self.build_references()
         self.json_out = {}
         self.initialize_json_output()
 
@@ -110,16 +111,22 @@ class CSDLToJSON():
                             if ( prop.tag == ODATA_TAG_PROPERTY ) or ( prop.tag == ODATA_TAG_NAV_PROPERTY ):
                                 self.links_props.append( prop )
 
-    def build_external_references( self ):
+    def build_references( self ):
         """
-        Processes the external references of the XML document
+        Processes the references of the XML document
         """
 
+        # Create the external references
         for reference in self.root.iter( ODATA_TAG_REFERENCE ):
             for include in reference.iter( ODATA_TAG_INCLUDE ):
                 # Based on the URI and the namespace, build the expected JSON Schema reference
                 namespace = get_attrib( include, "Namespace" )
                 self.external_references[namespace] = get_attrib( reference, "Uri" ).rsplit( "/", 1 )[0] + "/" + namespace + ".json"
+
+        # Create the internal references
+        for schema in self.root.iter( ODATA_TAG_SCHEMA ):
+            # We just need the namespace for error checking when the definition is built later
+            self.internal_references[get_attrib( schema, "Namespace" )] = True
 
     def initialize_json_output( self ):
         """
@@ -825,7 +832,7 @@ class CSDLToJSON():
                 type_ref = type.split( "." )[-1]
                 if namespace_ref in self.external_references:
                     ref = self.external_references[namespace_ref] + "#/definitions/" + type_ref
-                else:
+                elif namespace_ref in self.internal_references:
                     # Check if this is a cross reference between versioned and unversioned namespaces
                     if is_namespace_unversioned( namespace_ref ) != is_namespace_unversioned( self.namespace_under_process ):
                         # It crosses; they'll be in different files
@@ -833,6 +840,8 @@ class CSDLToJSON():
                     else:
                         # No crossing; local reference
                         ref = "#/definitions/" + type_ref
+                else:
+                    print( "-- ERROR: Could not resolve reference to \"{}\" for \"{}\"".format( namespace_ref, type ) )
 
         return json_type, ref, pattern, format
 
