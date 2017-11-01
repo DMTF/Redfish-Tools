@@ -61,11 +61,12 @@ class CSDLToJSON():
         resource_root: The ET object of the Resource XML file
     """
 
-    def __init__( self, copyright, redfish_schema, odata_schema, location, root, resource_root ):
+    def __init__( self, copyright, redfish_schema, odata_schema, location, resource_location, root, resource_root ):
         self.copyright = copyright
         self.redfish_schema = redfish_schema
         self.odata_schema = odata_schema
         self.location = location
+        self.resource_location = resource_location
         self.root = root
         self.resource_root = resource_root
         self.resource_props = []
@@ -123,6 +124,9 @@ class CSDLToJSON():
                 namespace = get_attrib( include, "Namespace" )
                 self.external_references[namespace] = get_attrib( reference, "Uri" ).rsplit( "/", 1 )[0] + "/" + namespace + ".json"
 
+        # Need to add the unversioned Resource namespace since we copy in its base definitions
+        self.external_references["Resource"] = self.resource_location + "Resource.json"
+
         # Create the internal references
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
             # We just need the namespace for error checking when the definition is built later
@@ -171,7 +175,7 @@ class CSDLToJSON():
                         base_type = get_attrib( child, "BaseType", False )
                         name = get_attrib( child, "Name" )
                         if ( base_type == "Resource.v1_0_0.Resource" ) or ( base_type == "Resource.v1_0_0.ResourceCollection" ):
-                            self.json_out[self.namespace_under_process]["title"] = self.namespace_under_process + "." + name
+                            self.json_out[self.namespace_under_process]["title"] = "#" + self.namespace_under_process + "." + name
                             self.json_out[self.namespace_under_process]["$ref"] = "#/definitions/" + name
 
                     # Process EntityType and ComplexType definitions
@@ -212,7 +216,7 @@ class CSDLToJSON():
                         base_type = get_attrib( child, "BaseType", False )
                         name = get_attrib( child, "Name" )
                         if ( base_type == "Resource.v1_0_0.Resource" ) or ( base_type == "Resource.v1_0_0.ResourceCollection" ):
-                            self.json_out[self.namespace_under_process]["title"] = self.namespace_under_process + "." + name
+                            self.json_out[self.namespace_under_process]["title"] = "#" + self.namespace_under_process + "." + name
                             self.json_out[self.namespace_under_process]["$ref"] = "#/definitions/" + name
 
                     # Process EntityType and ComplexType definitions
@@ -939,7 +943,7 @@ def main( argv ):
                 print( "ERROR: Could not open {}".format( in_filename ) )
             if root != None:
                 # Translate and write the JSON files
-                translator = CSDLToJSON( config_data["Copyright"], config_data["RedfishSchema"], config_data["ODataSchema"], config_data["Location"], root, resource_root )
+                translator = CSDLToJSON( config_data["Copyright"], config_data["RedfishSchema"], config_data["ODataSchema"], config_data["Location"], config_data["ResourceLocation"], root, resource_root )
                 translator.process()
                 for namespace in translator.json_out:
                     out_filename = args.output + os.path.sep + namespace + ".json"
