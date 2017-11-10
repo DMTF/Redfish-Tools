@@ -1074,23 +1074,6 @@ def get_namespace_version( namespace ):
     groups = re.match( NAMESPACE_VER_REGEX, namespace )
     return groups.group( 1 ), groups.group( 2 ), groups.group( 3 )
 
-def is_errata_namespace( namespace ):
-    """
-    Checks if the given namespace is an errata namespace
-
-    Args:
-        namespace: The string name of the namespace
-
-    Returns:
-        True if the namespace is an errata namespace, False otherwise
-    """
-
-    if is_namespace_unversioned( namespace ) == False:
-        major, minor, errata = get_namespace_version( namespace )
-        if errata != "0":
-            return True
-    return False
-
 def get_attrib( element, name, required = True, default = "UNKNOWN_ATTRIB" ):
     """
     Gets a given attribute from an ET element in a safe manner, and provides warnings
