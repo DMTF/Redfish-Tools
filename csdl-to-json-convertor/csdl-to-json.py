@@ -455,6 +455,9 @@ class CSDLToJSON():
                 # Enum Long Description
                 if term == "OData.LongDescription":
                     json_def[name]["longDescription"] = get_attrib( child, "String" )
+                # Enum Deprecated
+                if term == "Redfish.Deprecated":
+                    json_def[name]["deprecated"] = get_attrib( child, "String" )
 
             # Enum members
             if child.tag == ODATA_TAG_MEMBER:
