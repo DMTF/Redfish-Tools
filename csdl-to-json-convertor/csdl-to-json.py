@@ -44,6 +44,7 @@ ODATA_TAG_TYPE_DEF = "{http://docs.oasis-open.org/odata/ns/edm}TypeDefinition"
 ODATA_TAG_ANNOTATION = "{http://docs.oasis-open.org/odata/ns/edm}Annotation"
 ODATA_TAG_PROPERTY = "{http://docs.oasis-open.org/odata/ns/edm}Property"
 ODATA_TAG_NAV_PROPERTY = "{http://docs.oasis-open.org/odata/ns/edm}NavigationProperty"
+ODATA_TAG_PARAMETER = "{http://docs.oasis-open.org/odata/ns/edm}Parameter"
 ODATA_TAG_MEMBER = "{http://docs.oasis-open.org/odata/ns/edm}Member"
 ODATA_TAG_RECORD = "{http://docs.oasis-open.org/odata/ns/edm}Record"
 ODATA_TAG_PROP_VAL = "{http://docs.oasis-open.org/odata/ns/edm}PropertyValue"
@@ -318,12 +319,14 @@ class CSDLToJSON():
         # Add the object to the definitions body if this is a new instance
         self.init_object_definition( name, json_def )
 
-        # If this object is an Action, add the predefined title and target properties
+        # If this object is an Action, add the predefined title and target properties, as well as the parameters block
         if object.tag == ODATA_TAG_ACTION:
             json_def[name]["properties"]["title"] = { "type": "string", "description": "Friendly action name" }
             json_def[name]["properties"]["target"] = { "type": "string", "format": "uri", "description": "Link to invoke action" }
+            json_def[name]["parameters"] = {}
 
         # Process the items in the object
+        first_parameter = True
         for child in object:
             # Process object level annotations
             if child.tag == ODATA_TAG_ANNOTATION:
@@ -368,6 +371,14 @@ class CSDLToJSON():
             # Process properties and navigation properties
             if ( child.tag == ODATA_TAG_PROPERTY ) or ( child.tag == ODATA_TAG_NAV_PROPERTY ):
                 self.generate_property( child, json_def[name] )
+
+            # Process action parameters
+            if child.tag == ODATA_TAG_PARAMETER:
+                # Filter out the first parameter; this is the binding parameter, which does not get translated to JSON
+                if first_parameter == True:
+                    first_parameter = False
+                else:
+                    self.generate_parameter( child, json_def[name] )
 
         # Add OData specific properties
         self.generate_odata_properties( object, json_def[name] )
@@ -619,7 +630,7 @@ class CSDLToJSON():
 
     def generate_property( self, property, json_obj_def ):
         """
-        Process a Property or NavigationProperty and adds it to the JSON object definition
+        Processes a Property or NavigationProperty and adds it to the JSON object definition
 
         Args:
             property: The Property or NavigationProperty to process
@@ -657,6 +668,28 @@ class CSDLToJSON():
         # If this is a collection of navigation properties, add the @odata.count property
         if ( property.tag == ODATA_TAG_NAV_PROPERTY ) and ( is_array == True ):
             json_obj_def["properties"][prop_name + "@odata.count"] = { "$ref": self.odata_schema + "#/definitions/count" }
+
+    def generate_parameter( self, parameter, json_obj_def ):
+        """
+        Processes a Parameter and adds it to the JSON object definition
+
+        Args:
+            parameter: The Parameter to process
+            json_obj_def: The JSON object definition to place the property
+        """
+
+        # Pull out parameter info
+        param_name = get_attrib( parameter, "Name" )
+        param_type = get_attrib( parameter, "Type" )
+        json_obj_def["parameters"][param_name] = {}
+
+        # Determine if this is an array
+        is_array = param_type.startswith( "Collection(" )
+        if is_array:
+            param_type = param_type[11:-1]
+
+        # Add the common type info
+        self.add_type_info( parameter, param_type, is_array, json_obj_def["parameters"][param_name] )
 
     def generate_odata_properties( self, object, json_obj_def ):
         """
@@ -698,11 +731,14 @@ class CSDLToJSON():
             is_nullable = False
         elif ( type_info.tag == ODATA_TAG_NAV_PROPERTY ) and ( is_array == True ):
             is_nullable = False
+        elif type_info.tag == ODATA_TAG_PARAMETER:
+            is_nullable = False
+            if get_attrib( type_info, "Nullable", False, "true" ) == "false":
+                json_type_def["requiredParameter"] = True
         else:
             is_nullable = True
-            if "Nullable" in type_info.attrib:
-                if get_attrib( type_info, "Nullable" ) == "false":
-                    is_nullable = False
+            if get_attrib( type_info, "Nullable", False, "true" ) == "false":
+                is_nullable = False
 
         # Convert the type as needed; some types will force a format, pattern, or reference
         json_type, ref, pattern, format = self.csdl_type_to_json_type( type, is_nullable )
