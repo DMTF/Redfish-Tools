@@ -23,8 +23,8 @@ import xml.etree.ElementTree as ET
 
 # Default configurations
 CONFIG_DEF_COPYRIGHT = "Copyright 2014-2017 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
-CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_2_0.json"
-CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.4.0.0.json"
+CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_3_0.json"
+CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_1.json"
 CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 
