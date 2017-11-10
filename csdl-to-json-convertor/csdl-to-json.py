@@ -184,8 +184,8 @@ class CSDLToJSON():
                         is_abstract = False
                         if get_attrib( child, "Abstract", False ) == "true":
                             is_abstract = True
-                        if ( child.tag == ODATA_TAG_COMPLEX ) and ( self.namespace_under_process == "Resource" ):
-                            # Special override for ComplexType definitions in Resource; we want those to be standalone
+                        if ( child.tag == ODATA_TAG_COMPLEX ) and ( self.namespace_under_process == "Resource" ) and ( get_attrib( child, "Name" ) == "Links" ):
+                            # Special override for the Links base definition; it needs to be standalone
                             is_abstract = False
                         if is_abstract:
                             self.generate_abstract_object( child, self.json_out[self.namespace_under_process]["definitions"] )
@@ -249,8 +249,8 @@ class CSDLToJSON():
 
         name = get_attrib( object, "Name" )
 
-        # The Resource namespace needs to be processed in a special manner since it doesn't follow the Redfish model for object inheritance
-        if self.namespace_under_process == "Resource":
+        # The entities in the Resource namespace need to be processed in a special manner since it doesn't follow the Redfish model for object inheritance
+        if ( self.namespace_under_process == "Resource" ) and ( object.tag == ODATA_TAG_ENTITY ):
             json_def[name] = { "anyOf": [] }
 
             # Append matching objects in the file to the anyOf list
@@ -266,14 +266,27 @@ class CSDLToJSON():
             else:
                 json_def[name] = { "anyOf": [] }
 
-            # Append matching objects in the file to the anyOf list
+            # Find the oldest definition of the object
+            oldest_version = None
             for schema in self.root.iter( ODATA_TAG_SCHEMA ):
                 namespace = get_attrib( schema, "Namespace" )
                 if namespace != self.namespace_under_process:
                     for child in schema:
                         if child.tag == object.tag:
                             if get_attrib( child, "Name" ) == name:
-                                json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
+                                if oldest_version == None:
+                                    oldest_version = namespace
+                                else:
+                                    if does_namespace_apply( oldest_version, namespace ) == False:
+                                        oldest_version = namespace
+
+            # Based on the oldest version, add the mapping for all namespaces
+            if oldest_version != None:
+                for schema in self.root.iter( ODATA_TAG_SCHEMA ):
+                    namespace = get_attrib( schema, "Namespace" )
+                    if namespace != self.namespace_under_process:
+                        if does_namespace_apply( oldest_version, namespace ):
+                            json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
         for child in object:
@@ -1024,6 +1037,23 @@ def get_namespace_version( namespace ):
 
     groups = re.match( NAMESPACE_VER_REGEX, namespace )
     return groups.group( 1 ), groups.group( 2 ), groups.group( 3 )
+
+def is_errata_namespace( namespace ):
+    """
+    Checks if the given namespace is an errata namespace
+
+    Args:
+        namespace: The string name of the namespace
+
+    Returns:
+        True if the namespace is an errata namespace, False otherwise
+    """
+
+    if is_namespace_unversioned( namespace ) == False:
+        major, minor, errata = get_namespace_version( namespace )
+        if errata != "0":
+            return True
+    return False
 
 def get_attrib( element, name, required = True, default = "UNKNOWN_ATTRIB" ):
     """
