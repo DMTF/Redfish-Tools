@@ -505,7 +505,7 @@ class DocFormatter:
     def parse_property_info(self, schema_ref, prop_name, prop_infos, current_depth):
         """Parse a list of one more more property info objects into strings for display.
 
-        Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
+        Returns a dict of 'prop_type', 'read_only', 'descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
         """
@@ -588,7 +588,8 @@ class DocFormatter:
 
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
-        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
+        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
+        'normative_descr', 'non_normative_descr'
         """
         traverser = self.traverser
 
@@ -626,13 +627,13 @@ class DocFormatter:
         prop_units = prop_info.get('units')
 
         read_only = prop_info.get('readonly')
-        if self.config['normative'] and 'longDescription' in prop_info:
-            descr = prop_info.get('longDescription', '')
-        else:
-            descr = prop_info.get('description', '')
+        normative_descr = prop_info.get('longDescription', '')
+        non_normative_descr = prop_info.get('description', '')
 
-        if descr is None:
-            descr = ''
+        if self.config['normative'] and normative_descr:
+            descr = normative_descr
+        else:
+            descr = non_normative_descr
 
         add_link_text = prop_info.get('add_link_text', '')
 
@@ -730,7 +731,9 @@ class DocFormatter:
                 'prop_details': prop_details,
                 'has_direct_prop_details': has_prop_details,
                 'has_action_details': has_prop_actions,
-                'action_details': action_details
+                'action_details': action_details,
+                'normative_descr': normative_descr,
+                'non_normative_descr': non_normative_descr
                }
 
 

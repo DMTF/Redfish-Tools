@@ -1,6 +1,6 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/LICENSE.md
 
 """
@@ -93,6 +93,9 @@ class DocGenerator:
         elif self.config['output_format'] == 'html':
             from doc_formatter import HtmlGenerator
             generator = HtmlGenerator(property_data, traverser, self.config, level)
+        elif self.config['output_format'] == 'csv':
+            from doc_formatter import CsvGenerator
+            generator = CsvGenerator(property_data, traverser, self.config, level)
 
         return generator.generate_output()
 
@@ -438,10 +441,10 @@ def main():
     parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False,
                         help='Produce normative (developer-focused) output')
     parser.add_argument('--format', dest='format', default='markdown',
-                        choices=['markdown', 'html'], help='Output format')
+                        choices=['markdown', 'html', 'csv'], help='Output format')
     parser.add_argument('--out', dest='outfile', default='output.md',
                         help=('Output file (default depends on output format: '
-                              'output.md for markdown, index.html for html)'))
+                              'output.md for markdown, index.html for html, output.csv for csv)'))
     parser.add_argument('--sup', dest='supfile',
                         help=('Path to the supplemental material document. '
                               'Default is usersupplement.md for user-focused documentation, '
@@ -465,6 +468,8 @@ def main():
     if outfile_name == 'output.md':
         if config['output_format'] == 'html':
             outfile_name = 'index.html'
+        if config['output_format'] == 'csv':
+            outfile_name = 'output.csv'
 
     try:
         outfile = open(outfile_name, 'w', encoding="utf8")
