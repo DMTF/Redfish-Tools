@@ -248,6 +248,8 @@ pre.code{
                     collapse_array = True
                     name_and_version += ' [ ] '
 
+        name_and_version = '<nobr>' + name_and_version  + '</nobr>'
+		
         formatted_details['descr'] = self.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
 
         if formatted_details['add_link_text']:
@@ -288,9 +290,9 @@ pre.code{
                 prop_type += '<br>(' + item_list + ')'
 
         if formatted_details['read_only']:
-            prop_access = 'read-only'
+            prop_access = '<nobr>read-only</nobr>'
         else:
-            prop_access = 'read-write'
+            prop_access = '<nobr>read-write</nobr>'
 
         if formatted_details['nullable']:
             prop_access += ' (null)'
