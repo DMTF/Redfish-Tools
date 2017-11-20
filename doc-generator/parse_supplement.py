@@ -335,16 +335,16 @@ def parse_schema_details(markdown_blob):
                                           + mockup_location + '":', "Server returned",
                                           response.status, "status")
                     except Exception as ex:
-                        warnings.warn('Unable to retrieve Mockup from URL "' + mockup_location
-                                      + ':', ex)
+                        warnings.warn('Unable to retrieve Mockup from URL "{0}": {1}'
+                                      .format(mockup_location, ex))
                 else:
                     # treat it as a local file
                     try:
                         mockup_file = open(mockup_location, 'r', encoding="utf8")
                         mockup = mockup_file.read()
                     except Exception as ex:
-                        warnings.warn('Unable to open Mockup file "' + mockup_location +
-                                      '" to read:', ex)
+                        warnings.warn('Unable to open Mockup file "{0}" to read: {1}'
+                                      .format(mockup_location, ex))
                 break
 
         if mockup:
