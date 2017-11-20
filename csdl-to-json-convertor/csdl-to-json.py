@@ -703,14 +703,9 @@ class CSDLToJSON():
         name = get_attrib( object, "Name" )
         base_type = get_attrib( object, "BaseType", False, None )
 
-        # If the object is the Resource, ReferenceableMember, or ResourceCollection object,
-        # or is derived from them, then we add the OData properties
-        if ( name == "Resource" or
-             name == "ReferenceableMember" or
-             name == "ResourceCollection" or 
-             base_type == "Resource.v1_0_0.Resource" or
-             base_type == "Resource.v1_0_0.ReferenceableMember" or
-             base_type == "Resource.v1_0_0.ResourceCollection" ):
+        # If the object is the Resource or ResourceCollection object, or is derived from them, then we add the OData properties
+        if ( name == "Resource" or name == "ResourceCollection" or 
+             base_type == "Resource.v1_0_0.Resource" or base_type == "Resource.v1_0_0.ResourceCollection" ):
             json_obj_def["properties"]["@odata.context"] = { "$ref": self.odata_schema + "#/definitions/context" }
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             json_obj_def["properties"]["@odata.type"] = { "$ref": self.odata_schema + "#/definitions/type" }
