@@ -113,6 +113,7 @@ class DocGenerator:
         processed_files = []
 
         for filename in file_list:
+            filename = os.path.abspath(filename)
             # Get the (probably versioned) filename, and save the data:
             root, _, fname = filename.rpartition(os.sep)
 
@@ -385,8 +386,9 @@ class DocGenerator:
         if local_to_uri:
             for local_path in local_to_uri.keys():
                 if fname.startswith(local_path):
-                    return fname.replace(local_path, local_to_uri[local_path])
-
+                    fname = fname.replace(local_path, local_to_uri[local_path])
+                    return fname.replace(os.sep, '/')
+                
         return fname
 
     @staticmethod
@@ -458,7 +460,7 @@ def main():
     if len(args.import_from):
         import_from = args.import_from
     else:
-        import_from = [config.get('cwd') + '/json-schema']
+        import_from = [ os.path.join(config.get('cwd'), 'json-schema') ]
 
     # Determine outfile and verify that it is writeable:
     outfile_name = args.outfile

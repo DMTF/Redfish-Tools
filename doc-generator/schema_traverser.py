@@ -43,7 +43,6 @@ class SchemaTraverser:
 
         if '#' not in ref:
             return None
-
         schema_ref, path = self.get_schema_ref_and_path(ref)
         if self.ref_to_own_schema(ref):
             schema = self.schemas.get(schema_ref, None)
