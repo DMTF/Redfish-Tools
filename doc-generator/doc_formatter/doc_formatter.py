@@ -247,7 +247,7 @@ class DocFormatter:
 
         Used to generate documentation for schema fragments.
         """
-        frag_gen = self.__class__(self.property_data, self.traverser, config, level=self.level+1)
+        frag_gen = self.__class__(self.property_data, self.traverser, config, level=self.level)
 
         if not ref:
             warnings.warn("Can't generate fragment for '" + path +
