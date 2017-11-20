@@ -62,7 +62,8 @@ class CsvGenerator(DocFormatter):
         """
 
         traverser = self.traverser
-        row = []     # The row itself
+        row = []
+        nextrows = []
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
@@ -80,8 +81,10 @@ class CsvGenerator(DocFormatter):
                 property_values = []
                 for val in formatted_details[property_name]:
                     if val and val not in property_values:
-                        if isinstance(val, list):
-                            pass # TODO: this is an object description. We need to do something different here.
+                        if isinstance(val, list): # this is a nested description; chain the property name
+                            for elt in val:
+                                elt[2] = '.'.join([prop_name, elt[2]])
+                                nextrows.append(elt)
                         else:
                             property_values.append(val)
                 formatted_details[property_name] = delim.join(property_values)
@@ -107,7 +110,10 @@ class CsvGenerator(DocFormatter):
 
         row = [schema_name, version, prop_name, prop_type, permissions, nullable,
                description, long_description, prop_units, min_val, max_val, enumerations, pattern]
-        return { 'row': row, 'details': {}, 'action_details': {} }
+        rows = [row]
+        for nextrow in nextrows:
+            rows.append(nextrow)
+        return { 'row': rows, 'details': {}, 'action_details': {} }
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
@@ -320,9 +326,10 @@ class CsvGenerator(DocFormatter):
             warnings.warn("JSON payloads are ignored in CSV output")
 
 
-    def add_property_row(self, formatted_text):
-        """ Add the row to the buffer. Unlike other formats, for CSV formatted_text is a list.  """
-        self.writer.writerow(formatted_text)
+    def add_property_row(self, rows):
+        """ Add the row to the buffer. Unlike other formats, for CSV the argument is list of lists.  """
+        for row in rows:
+            self.writer.writerow(row)
 
 
     def add_property_details(self, formatted_details):
