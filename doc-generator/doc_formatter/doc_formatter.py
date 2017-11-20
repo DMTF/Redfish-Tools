@@ -306,7 +306,7 @@ class DocFormatter:
             for elt in prop_anyof:
                 if '$ref' in elt:
                     this_ref = elt.get('$ref')
-                    if this_ref.endswith('odata.4.0.0.json#/definitions/idRef'):
+                    if this_ref.endswith('#/definitions/idRef'):
                         is_link = True
                         prop_ref = this_ref
                         prop_anyof = None
@@ -373,7 +373,7 @@ class DocFormatter:
                             append_ref = 'Contains a link to a resource.'
                             ref_schema_name = self.traverser.get_schema_name(is_collection_of)
 
-                            if from_schema_uri.endswith('redfish.dmtf.org/schemas/v1/odata.4.0.0.json'):
+                            if from_schema_uri.endswith('redfish.dmtf.org/schemas/v1/odata.4.0.0.json') or from_schema_uri.endswith('redfish.dmtf.org/schemas/v1/odata.v4_0_1.json'):
                                 from_schema_uri = 'http://' + is_collection_of
 
                             link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of, from_schema_uri)
@@ -739,7 +739,7 @@ class DocFormatter:
 
         We special-case this a couple of places where we treat other refs a little differently. """
         prop_info = None
-        if ref.endswith('odata.4.0.0.json#/definitions/idRef'):
+        if ref.endswith('#/definitions/idRef'):
             # idRef is a special case; we just want to pull in its definition and stop.
             prop_info = self.traverser.find_ref_data(ref)
             if not prop_info:
