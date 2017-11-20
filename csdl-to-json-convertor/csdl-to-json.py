@@ -909,7 +909,14 @@ def main( argv ):
     argget.add_argument( "--input", "-I", type = str, required = True, help = "The folder containing the CSDL files to convert" )
     argget.add_argument( "--output", "-O",  type = str, required = True, help = "The folder to write the converted JSON files" )
     argget.add_argument( "--config", "-C", type = str, help = "The configuration file containing definitions for various links and user strings" )
+    argget.add_argument( "--overwrite", "-W", type = str, help = "Overwrite the versioned files in the output directory if they already exist (default is True)" )
     args = argget.parse_args()
+
+    # Get the overwrite flag
+    overwrite = True
+    if args.overwrite != None:
+        if ( args.overwrite == "False" ) or ( args.overwrite == "false" ):
+            overwrite = False
 
     # Create the output directory (if needed)
     if not os.path.exists( args.output ):
@@ -994,9 +1001,10 @@ def main( argv ):
                 translator.process()
                 for namespace in translator.json_out:
                     out_filename = args.output + os.path.sep + namespace + ".json"
-                    out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
-                    with open( out_filename, "w" ) as file:
-                        file.write( out_string )
+                    if ( overwrite == True ) or is_namespace_unversioned( namespace ) or ( os.path.isfile( out_filename ) == False ):
+                        out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
+                        with open( out_filename, "w" ) as file:
+                            file.write( out_string )
 
 def is_namespace_unversioned( namespace ):
     """

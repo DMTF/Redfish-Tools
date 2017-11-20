@@ -18,6 +18,7 @@ The tool will process all files found in the folder specified by the *input* arg
 
 ```
 usage: csdl-to-json.py [-h] --input INPUT --output OUTPUT [--config CONFIG]
+                       [--overwrite OVERWRITE]
 
 A tool used to convert Redfish CSDL files to Redfish JSON Schema files
 
@@ -31,6 +32,9 @@ optional arguments:
   --config CONFIG, -C CONFIG
                         The configuration file containing definitions for
                         various links and user strings
+  --overwrite OVERWRITE, -W OVERWRITE
+                        Overwrite the versioned files in the output directory
+                        if they already exist (default is True)
 ```
 
 ### Config File
