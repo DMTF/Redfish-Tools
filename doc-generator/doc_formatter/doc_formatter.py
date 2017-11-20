@@ -509,6 +509,9 @@ class DocFormatter:
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
         """
+        if isinstance(prop_infos, dict):
+            return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
+                                                    current_depth)
 
         if len(prop_infos) == 1:
             prop_info = prop_infos[0]
@@ -518,7 +521,6 @@ class DocFormatter:
             else:
                 return self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
 
-        # TODO: we never get here (with current spmf json schema). Cruft?
         parsed = {'prop_type': [],
                   'prop_units': False,
                   'read_only': False,
