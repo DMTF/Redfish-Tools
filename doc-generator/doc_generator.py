@@ -73,7 +73,11 @@ class DocGenerator:
         doc_generator_meta = {}
 
         for normalized_uri in files.keys():
-            property_data[normalized_uri] = self.process_files(normalized_uri, files[normalized_uri])
+            data = self.process_files(normalized_uri, files[normalized_uri])
+            if not data:
+                warnings.warn("Unable to process files for " + normalized_uri)
+                continue
+            property_data[normalized_uri] = data
             doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
             latest_info = files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
@@ -81,7 +85,6 @@ class DocGenerator:
             latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
             latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
             latest_data['_schema_name'] = latest_info.get('schema_name')
-
             schema_data[normalized_uri] = latest_data
 
         traverser = SchemaTraverser(schema_data, doc_generator_meta)
@@ -106,14 +109,13 @@ class DocGenerator:
         _is_versioned_schema, _is_collection_of}.
         """
 
-        file_list = files.copy()
+        file_list = [os.path.abspath(filename) for filename in files]
         grouped_files = {}
         all_schemas = {}
         missing_files = []
         processed_files = []
 
         for filename in file_list:
-            filename = os.path.abspath(filename)
             # Get the (probably versioned) filename, and save the data:
             root, _, fname = filename.rpartition(os.sep)
 
@@ -160,7 +162,7 @@ class DocGenerator:
                             continue
                         ref_fn = refpath_uri.split('/')[-1]
                         # Skip files that are not present.
-                        ref_filename = os.path.join(root, ref_fn)
+                        ref_filename = os.path.abspath(os.path.join(root, ref_fn))
                         if ref_filename in file_list:
                             ref_files.append({'root': root,
                                               'filename': ref_fn,
@@ -189,7 +191,7 @@ class DocGenerator:
 
                 ref_fn = refpath_uri.split('/')[-1]
                 # Skip files that are not present.
-                ref_filename = os.path.join(root, ref_fn)
+                ref_filename = os.path.abspath(os.path.join(root, ref_fn))
                 if ref_filename in file_list:
                     ref_files.append({'root': root,
                                       'filename': ref_fn,
@@ -223,7 +225,12 @@ class DocGenerator:
                 processed_files.append(ref_filename)
 
         if len(missing_files):
-            warnings.warn("Some referenced files were missing: " + ' '.join(missing_files))
+            numfiles = len(missing_files)
+            if numfiles <= 10:
+                missing_files_list = '\n   '.join(missing_files)
+            else:
+                missing_files_list = '\n   '.join(missing_files[0:9]) + "\n   and " + str(numfiles - 10) + " more."
+            warnings.warn(str(numfiles) + " referenced files were missing: \n   " + missing_files_list)
 
         return grouped_files, all_schemas
 
@@ -388,7 +395,7 @@ class DocGenerator:
                 if fname.startswith(local_path):
                     fname = fname.replace(local_path, local_to_uri[local_path])
                     return fname.replace(os.sep, '/')
-                
+
         return fname
 
     @staticmethod

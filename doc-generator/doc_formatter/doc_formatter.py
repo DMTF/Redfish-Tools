@@ -422,6 +422,32 @@ class DocFormatter:
 
         elif prop_anyof:
             skip_null = len([x for x in prop_anyof if '$ref' in x])
+            sans_null = [x for x in prop_anyof if x.get('type') != 'null']
+
+            # This is a special case for references to multiple versions of the same object.
+            if len(sans_null) > 1:
+                match_ref = unversioned_ref = ''
+                for elt in prop_anyof:
+                    this_ref = elt.get('$ref')
+                    if this_ref:
+                        unversioned_ref = self.make_unversioned_ref(this_ref)
+                    if not unversioned_ref:
+                        break
+
+                    if not match_ref:
+                        match_ref = unversioned_ref
+                    else:
+                        if match_ref != unversioned_ref:
+                            break
+                if match_ref == unversioned_ref:
+                    prop_infos.append({
+                        'type': '',
+                        'description': '',
+                        'add_link_text': ('See the ' + self.link_to_outside_schema(unversioned_ref) +
+                                          ' schema for details.')
+                        })
+                    prop_anyof = [] # short-circuit any further processing
+
 
             for elt in prop_anyof:
                 if skip_null and (elt.get('type') == 'null'):
@@ -911,6 +937,18 @@ class DocFormatter:
                 break
 
         return '.'.join(keep)
+
+
+    @staticmethod
+    def make_unversioned_ref(this_ref):
+        """Get the un-versioned string based on a (possibly versioned) ref"""
+
+        unversioned = None
+        pattern = re.compile(r'(.+)\.([^\.]+)\.json#(.+)')
+        match = pattern.fullmatch(this_ref)
+        if match:
+            unversioned = match.group(1) + '.json#' + match.group(3)
+        return unversioned
 
 
     def compare_versions(self, version, context_version):
