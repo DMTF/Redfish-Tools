@@ -249,7 +249,7 @@ pre.code{
                     name_and_version += ' [ ] '
 
         name_and_version = '<nobr>' + name_and_version  + '</nobr>'
-		
+
         formatted_details['descr'] = self.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
 
         if formatted_details['add_link_text']:
@@ -306,10 +306,13 @@ pre.code{
         formatted.append(self.make_row(row))
 
         if len(formatted_details['object_description']) > 0:
-            formatted.append(formatted_details['object_description'])
-            desc_row = [''] * len(row)
-            desc_row[0] = indentation_string + '}'
-            formatted.append(self.make_row(desc_row))
+            formatted_object = formatted_details['object_description']
+            # Add a closing } to the last row of this object.
+            close_str = '<br>' + indentation_string + '}'
+            tmp_rows = formatted_object.rsplit('<tr>', 1)
+            tmp_rows[1] = tmp_rows[1].replace('</td>', close_str + '</td>', 1)
+            formatted_object = '<tr>'.join(tmp_rows)
+            formatted.append(formatted_object)
 
         if not collapse_array and len(formatted_details['item_description']) > 0:
             formatted.append(formatted_details['item_description'])
@@ -511,7 +514,7 @@ pre.code{
         """ Generate a TOC for an HTML blob (probably the body of this document) """
 
         toc = ''
-        levels = ['h2']
+        levels = ['h1', 'h2']
         parser = ToCParser(levels)
         parser.feed(html_blob)
         toc_data = parser.close()
