@@ -444,7 +444,7 @@ class DocFormatter:
                         'type': '',
                         'description': '',
                         'add_link_text': ('See the ' + self.link_to_outside_schema(unversioned_ref) +
-                                          ' schema for details')
+                                          ' schema for details.')
                         })
                     prop_anyof = [] # short-circuit any further processing
 
