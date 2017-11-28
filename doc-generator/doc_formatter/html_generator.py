@@ -447,6 +447,7 @@ pre.code{
 
         return '\n'.join(contents) + '\n'
 
+
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
         """Generate a formatted Actions section from parameter data. """
 
@@ -483,16 +484,6 @@ pre.code{
             formatted.append(self.para("(This action takes no parameters.)"))
 
         return "\n".join(formatted)
-
-
-    def format_action_parameters(self, prop_name, action_parameters):
-        """Generate a formatted Actions section from parameter data. """
-
-        if action_parameters:
-            has_parameters = ' has params'
-        else:
-            has_parameters = ' no params'
-        return '\n' + prop_name + has_parameters + '\n'
 
 
     def emit(self):
