@@ -141,7 +141,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_action_parameters(self, prop_name, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, action_parameters):
         """Generate a formatted Actions section parameters data"""
         raise NotImplementedError
 
@@ -640,7 +640,7 @@ class DocFormatter:
             has_prop_actions = True
 
         # Only objects within Actions have parameters
-        action_parameters = prop_info.get('parameters')
+        action_parameters = prop_info.get('parameters', {})
 
         if isinstance(prop_type, list):
             prop_is_object = 'object' in prop_type
@@ -673,7 +673,16 @@ class DocFormatter:
         add_link_text = prop_info.get('add_link_text', '')
 
         if within_action:
-            action_details = self.format_action_parameters(prop_name, action_parameters)
+            # Extend and parse parameter info
+            for action_param in action_parameters.keys():
+                params = action_parameters[action_param]
+                params = self.extend_property_info(schema_ref, params, {})
+                action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param], {})
+                # self.parse_property_info(schema_ref, action_param, params, 0)
+
+                # TODO: capture those enum details
+
+            action_details = self.format_action_parameters(schema_ref, prop_name, action_parameters)
             self.add_action_details(action_details)
 
         # Items, if present, will have a definition with either an object, a list of types,

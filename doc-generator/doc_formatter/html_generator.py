@@ -439,15 +439,31 @@ pre.code{
 
         return '\n'.join(contents) + '\n'
 
-
-    def format_action_parameters(self, prop_name, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, action_parameters):
         """Generate a formatted Actions section from parameter data. """
 
+        formatted = []
+
+        # if prop_name == '#ComputerSystem.Reset':
+        #     import pdb; pdb.set_trace()
+        if prop_name.startswith('#'): # expected
+            prop_name_parts = prop_name.split('.')
+            prop_name = prop_name_parts[-1]
+
+        formatted.append(self.head_four(prop_name))
+
         if action_parameters:
-            has_parameters = ' has params'
+            rows = []
+            for param_name in action_parameters:
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                rows.append(formatted_parameters.get('row'))
+            formatted.append('<table>')
+            [formatted.append(row) for row in rows]
+            formatted.append('</table>')
         else:
-            has_parameters = ' no params'
-        return '\n' + prop_name + has_parameters + '\n'
+            formatted.append(self.para("(This action takes no parameters.)"))
+
+        return "\n".join(formatted)
 
 
     def emit(self):
