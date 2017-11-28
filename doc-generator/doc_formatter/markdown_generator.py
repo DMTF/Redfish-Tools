@@ -330,12 +330,12 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('|     |     |     |')
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
+            if len(section.get('action_details', [])):
+                contents.append('\n' + self.head_two('Action Details'))
+                contents.append('\n\n'.join(section.get('action_details')))
             if section.get('property_details'):
                 contents.append('\n' + self.head_two('Property Details'))
                 contents.append('\n'.join(section['property_details']))
-            if len(section.get('action_details', [])):
-                contents.append('\n' + self.head_two('Actions'))
-                contents.append('\n\n'.join(section.get('action_details')))
 
         self.sections = []
         return '\n'.join(contents)

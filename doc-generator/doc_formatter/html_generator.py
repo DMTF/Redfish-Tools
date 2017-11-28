@@ -463,17 +463,17 @@ pre.code{
             # something is awry if there are no properties
             if section.get('properties'):
                 contents.append(self.make_table(section['properties'], None, 'properties'))
+            if len(section.get('action_details', [])):
+                action_details = '\n'.join(section['action_details'])
+                deets = []
+                deets.append(self.head_three('Action Details'))
+                deets.append(self.make_div(action_details, 'property-details-content'))
+                contents.append(self.make_div('\n'.join(deets), 'property-details'))
             if section.get('property_details'):
                 deets = []
                 deets.append(self.head_three('Property Details'))
                 deets.append(self.make_div('\n'.join(section['property_details']),
                                            'property-details-content'))
-                contents.append(self.make_div('\n'.join(deets), 'property-details'))
-            if len(section.get('action_details', [])):
-                action_details = '\n'.join(section['action_details'])
-                deets = []
-                deets.append(self.head_three('Actions'))
-                deets.append(self.make_div(action_details, 'property-details-content'))
                 contents.append(self.make_div('\n'.join(deets), 'property-details'))
             if section.get('json_payload'):
                 contents.append(self.head_three('Example Response'))
