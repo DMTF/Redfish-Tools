@@ -211,7 +211,8 @@ pre.code{
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
                                             meta['version_deprecated_explanation'], False)
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+                                                     meta.get('within_action'))
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -437,6 +438,16 @@ pre.code{
             contents.append(self.markdown_to_html(example))
 
         return '\n'.join(contents) + '\n'
+
+
+    def format_action_parameters(self, prop_name, action_parameters):
+        """Generate a formatted Actions section from parameter data. """
+
+        if action_parameters:
+            has_parameters = ' has params'
+        else:
+            has_parameters = ' no params'
+        return '\n' + prop_name + has_parameters + '\n'
 
 
     def emit(self):
