@@ -455,6 +455,14 @@ def main():
                         help=('Path to the supplemental material document. '
                               'Default is usersupplement.md for user-focused documentation, '
                               'and devsupplement.md for normative documentation.'))
+    parser.add_argument('--profile', dest='profile_doc',
+                        help=('Path to a JSON profile document, for profile output'))
+    parser.add_argument('-t', '--terse', action='store_true', dest='profile_terse',
+                        help=('Terse output (meaningful only with --profile). By default,'
+                              'profile output is verbose, including all properties regardless of'
+                              'profile requirements. "Terse" output is intended for use by'
+                              'Service developers, including only the subset of properties with'
+                              'profile requirements.'))
     parser.add_argument('--escape', dest='escape_chars',
                         help=("Characters to escape (\\) in generated markdown; "
                               "e.g., --escape=@#. Use --escape=@ if strings with embedded @ "
