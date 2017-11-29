@@ -447,7 +447,6 @@ pre.code{
 
         return '\n'.join(contents) + '\n'
 
-
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
         """Generate a formatted Actions section from parameter data. """
 
