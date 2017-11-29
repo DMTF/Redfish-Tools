@@ -92,7 +92,6 @@ class DocFormatter:
         formatted_row should be a chunk of text already formatted for output"""
         raise NotImplementedError
 
-
     def add_property_details(self, formatted_details):
         """Add a chunk of property details information for the current section/schema."""
         raise NotImplementedError
@@ -112,13 +111,6 @@ class DocFormatter:
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
                                 supplemental_details, meta, anchor=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
-        raise NotImplementedError
-
-    def format_action_details(self, prop_name, action_details):
-        """Generate a formatted Actions section.
-
-        Currently, Actions details are entirely derived from the supplemental documentation.
-        Note that there will be only one Actions section per schema"""
         raise NotImplementedError
 
 
@@ -143,6 +135,15 @@ class DocFormatter:
             return ({'rows': rows, 'details': details})
 
         return None
+
+    def format_action_details(self, prop_name, action_details):
+        """Generate a formatted Actions section from supplemental markdown."""
+        raise NotImplementedError
+
+
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+        """Generate a formatted Actions section parameters data"""
+        raise NotImplementedError
 
 
     def output_document(self):
@@ -179,7 +180,6 @@ class DocFormatter:
                                                  schema_supplement.get(schema_name, {}))
 
             definitions = details['definitions']
-            properties = details['properties']
 
             if config.get('omit_version_in_headers'):
                 section_name = schema_name
@@ -231,7 +231,6 @@ class DocFormatter:
                             prop_details.update(formatted['details'])
                         if formatted['action_details']:
                             self.add_action_details(formatted['action_details'])
-
 
                 if len(prop_details):
                     detail_names = [x for x in prop_details.keys()]
@@ -528,24 +527,25 @@ class DocFormatter:
                 self.is_documented_schema(schema_name))
 
 
-    def parse_property_info(self, schema_ref, prop_name, prop_infos, current_depth):
+    def parse_property_info(self, schema_ref, prop_name, prop_infos, current_depth, within_action=False):
         """Parse a list of one more more property info objects into strings for display.
 
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
         """
+
         if isinstance(prop_infos, dict):
             return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
-                                                    current_depth)
+                                                    current_depth, within_action)
 
         if len(prop_infos) == 1:
             prop_info = prop_infos[0]
             if isinstance(prop_info, dict):
                 return self._parse_single_property_info(schema_ref, prop_name, prop_info,
-                                                        current_depth)
+                                                        current_depth, within_action)
             else:
-                return self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
+                return self.parse_property_info(schema_ref, prop_name, prop_info, current_depth, within_action)
 
         parsed = {'prop_type': [],
                   'prop_units': False,
@@ -564,7 +564,7 @@ class DocFormatter:
                  }
 
 
-        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, current_depth)
+        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, current_depth, within_action)
                          for x in prop_infos]
 
         # Remove details for anyOf props with prop_type = 'null'.
@@ -611,7 +611,7 @@ class DocFormatter:
         return parsed
 
 
-    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, current_depth):
+    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, current_depth, within_action=False):
         """Parse definition of a specific property into strings for display.
 
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
@@ -633,6 +633,14 @@ class DocFormatter:
         has_prop_actions = False
         action_details = {}
         schema_name = traverser.get_schema_name(schema_ref)
+
+        # Some special treatment is required for Actions
+        is_action = prop_name == 'Actions'
+        if within_action:
+            has_prop_actions = True
+
+        # Only objects within Actions have parameters
+        action_parameters = prop_info.get('parameters', {})
 
         if isinstance(prop_type, list):
             prop_is_object = 'object' in prop_type
@@ -663,6 +671,25 @@ class DocFormatter:
             descr = ''
 
         add_link_text = prop_info.get('add_link_text', '')
+
+        if within_action:
+            # Extend and parse parameter info
+            for action_param in action_parameters.keys():
+                params = action_parameters[action_param]
+                params = self.extend_property_info(schema_ref, params, {})
+                action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param], {})
+
+            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
+
+            formatted_action_rows = []
+            for param_name in action_parameters:
+                formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                # Capture the enum details and merge them into the ones for the overall properties:
+                if formatted_action.get('details'):
+                    has_prop_details = True
+                    prop_details.update(formatted_action['details'])
+
+            self.add_action_details(action_details)
 
         # Items, if present, will have a definition with either an object, a list of types,
         # or a $ref:
@@ -705,6 +732,7 @@ class DocFormatter:
 
         # Currently, Action details will be available only from the supplemental doc.
         # We can expect a future update to get them from information in the schema JSON.
+        # TODO: remove this? Change it?
         supplemental_actions = None
         if 'supplemental' in self.config and 'action details' in self.config['supplemental']:
             action_config = self.config['supplemental']['action details']
@@ -723,7 +751,7 @@ class DocFormatter:
 
         # embedded object:
         if prop_is_object:
-            object_formatted = self.format_object_descr(schema_ref, prop_info, current_depth)
+            object_formatted = self.format_object_descr(schema_ref, prop_info, current_depth, is_action)
             object_description = object_formatted['rows']
             if object_formatted['details']:
                 prop_details.update(object_formatted['details'])
@@ -784,7 +812,7 @@ class DocFormatter:
         return prop_info
 
 
-    def format_object_descr(self, schema_ref, prop_info, current_depth=0):
+    def format_object_descr(self, schema_ref, prop_info, current_depth=0, is_action=False):
         """Format the properties for an embedded object."""
 
         properties = prop_info.get('properties')
@@ -803,14 +831,21 @@ class DocFormatter:
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
+            if is_action:
+                prop_names = [x for x in prop_names if x.startswith('#')]
+
             for prop_name in prop_names:
+                meta = {}
                 base_detail_info = properties[prop_name]
                 detail_info = self.extend_property_info(schema_ref, base_detail_info, context_meta)
-                meta = detail_info[0].get('_doc_generator_meta')
-                if not meta:
-                    meta = {}
-
+                meta = detail_info[0].get('_doc_generator_meta', {})
                 meta = self.merge_metadata(prop_name, meta, context_meta)
+
+                if is_action:
+                    # Trim out the properties; these are always Target and Title:
+                    detail_info[0]['properties'] = {}
+
+                meta['within_action'] = is_action
                 detail_info[0]['_doc_generator_meta'] = meta
 
                 depth = current_depth + 1
@@ -820,7 +855,7 @@ class DocFormatter:
                     if formatted['details']:
                         details.update(formatted['details'])
                     if formatted['action_details']:
-                        action_details.update(formatted['action_details'])
+                        action_details[prop_name] = formatted['action_details']
 
         return {'rows': output, 'details': details, 'action_details': action_details}
 

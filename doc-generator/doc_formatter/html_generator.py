@@ -211,7 +211,8 @@ pre.code{
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
                                             meta['version_deprecated_explanation'], False)
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+                                                     meta.get('within_action'))
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -258,7 +259,7 @@ pre.code{
             formatted_details['descr'] += formatted_details['add_link_text']
 
         # If there are prop_details (enum details), add a note to the description:
-        if formatted_details['has_direct_prop_details']:
+        if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
             if has_enum:
                 anchor = schema_ref + '|details|' + prop_name
                 text_descr = 'See <a href="#' + anchor + '">' + prop_name + '</a> in Property Details, below, for the possible values of this property.'
@@ -270,7 +271,8 @@ pre.code{
 
         # If this is an Action with details, add a note to the description:
         if formatted_details['has_action_details']:
-            text_descr = 'For more information, see the Action Details section below.'
+            anchor = schema_ref + '|action_details|' + prop_name
+            text_descr = 'For more information, see the <a href="#' + anchor + '">Action Details</a> section below.'
             formatted_details['descr'] += '<br>' + self.italic(text_descr)
 
         if deprecated_descr:
@@ -308,10 +310,7 @@ pre.code{
         if len(formatted_details['object_description']) > 0:
             formatted_object = formatted_details['object_description']
             # Add a closing } to the last row of this object.
-            close_str = '<br>' + indentation_string + '}'
-            tmp_rows = formatted_object.rsplit('<tr>', 1)
-            tmp_rows[1] = tmp_rows[1].replace('</td>', close_str + '</td>', 1)
-            formatted_object = '<tr>'.join(tmp_rows)
+            formatted_object = self._add_closing_brace(formatted_object, indentation_string)
             formatted.append(formatted_object)
 
         if not collapse_array and len(formatted_details['item_description']) > 0:
@@ -424,9 +423,7 @@ pre.code{
 
 
     def format_action_details(self, prop_name, action_details):
-        """Generate a formatted Actions section.
-
-        Currently, Actions details are entirely derived from the supplemental documentation."""
+        """Generate a formatted Actions section from supplemental markup."""
 
         contents = []
         contents.append(self.head_four(action_details.get('action_name', prop_name)))
@@ -437,6 +434,43 @@ pre.code{
             contents.append(self.markdown_to_html(example))
 
         return '\n'.join(contents) + '\n'
+
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+        """Generate a formatted Actions section from parameter data. """
+
+        formatted = []
+        anchor = schema_ref + '|action_details|' + prop_name
+
+        if prop_name.startswith('#'): # expected
+            prop_name_parts = prop_name.split('.')
+            prop_name = prop_name_parts[-1]
+
+        formatted.append(self.head_four(prop_name, anchor))
+        formatted.append(self.para(prop_descr))
+
+        if action_parameters:
+            rows = []
+            # Add a "start object" row for this parameter:
+            rows.append(self.make_row(['{', '','','']))
+            param_names = [x for x in action_parameters.keys()]
+            param_names.sort()
+            for param_name in param_names:
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                rows.append(formatted_parameters.get('row'))
+
+            # Add a closing } to the last row:
+            tmp_row = rows[-1]
+            tmp_row = self._add_closing_brace(tmp_row, '')
+            rows[-1] = tmp_row
+
+            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "Target" property of the Action.'))
+
+            formatted.append(self.make_table(rows))
+
+        else:
+            formatted.append(self.para("(This action takes no parameters.)"))
+
+        return "\n".join(formatted)
 
 
     def emit(self):
@@ -452,17 +486,17 @@ pre.code{
             # something is awry if there are no properties
             if section.get('properties'):
                 contents.append(self.make_table(section['properties'], None, 'properties'))
+            if len(section.get('action_details', [])):
+                action_details = '\n'.join(section['action_details'])
+                deets = []
+                deets.append(self.head_three('Action Details'))
+                deets.append(self.make_div(action_details, 'property-details-content'))
+                contents.append(self.make_div('\n'.join(deets), 'property-details'))
             if section.get('property_details'):
                 deets = []
                 deets.append(self.head_three('Property Details'))
                 deets.append(self.make_div('\n'.join(section['property_details']),
                                            'property-details-content'))
-                contents.append(self.make_div('\n'.join(deets), 'property-details'))
-            if len(section.get('action_details', [])):
-                action_details = '\n'.join(section['action_details'])
-                deets = []
-                deets.append(self.head_three('Actions'))
-                deets.append(self.make_div(action_details, 'property-details-content'))
                 contents.append(self.make_div('\n'.join(deets), 'property-details'))
             if section.get('json_payload'):
                 contents.append(self.head_three('Example Response'))
@@ -749,6 +783,17 @@ pre.code{
         else:
             open_tag = '<h' + level + '>'
         return open_tag + text + '</h' + level + '>'
+
+
+    def _add_closing_brace(self, html_blob, indentation_string):
+        """ Add a closing } to the last row of this blob of rows. """
+        close_str = '<br>' + indentation_string + '}'
+        tmp_rows = html_blob.rsplit('<tr>', 1)
+        if (len(tmp_rows) == 2):
+            tmp_rows[1] = tmp_rows[1].replace('</td>', close_str + '</td>', 1)
+            html_blob = '<tr>'.join(tmp_rows)
+        return html_blob
+
 
 
     @staticmethod

@@ -99,7 +99,8 @@ class MarkdownGenerator(DocFormatter):
                                  self.escape_for_markdown(meta['version_deprecated_explanation'],
                                                           self.config['escape_chars']))
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+                                                     meta.get('within_action'))
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -142,7 +143,7 @@ class MarkdownGenerator(DocFormatter):
             formatted_details['descr'] += formatted_details['add_link_text']
 
         # If there are prop_details (enum details), add a note to the description:
-        if formatted_details['has_direct_prop_details']:
+        if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
             if has_enum:
                 text_descr = 'See ' + prop_name + ' in Property Details, below, for the possible values of this property.'
             else:
@@ -287,9 +288,7 @@ class MarkdownGenerator(DocFormatter):
 
 
     def format_action_details(self, prop_name, action_details):
-        """Generate a formatted Actions section.
-
-        Currently, Actions details are entirely derived from the supplemental documentation."""
+        """Generate a formatted Actions section from supplemental markup."""
 
         contents = []
         contents.append(self.head_three(action_details.get('action_name', prop_name)))
@@ -301,6 +300,45 @@ class MarkdownGenerator(DocFormatter):
             contents.append(example)
 
         return '\n'.join(contents) + '\n'
+
+
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+        """Generate a formatted Actions section from parameter data. """
+
+        formatted = []
+
+        if prop_name.startswith('#'): # expected
+            prop_name_parts = prop_name.split('.')
+            prop_name = prop_name_parts[-1]
+
+        formatted.append(self.head_four(prop_name))
+        formatted.append(self.para(prop_descr))
+
+        if action_parameters:
+            rows = []
+            # Table start:
+            rows.append("|     |     |     |")
+            rows.append("| --- | --- | --- |")
+
+            # Add a "start object" row for this parameter:
+            rows.append('| ' + ' | '.join(['{', ' ',' ',' ']) + ' |')
+            param_names = [x for x in action_parameters.keys()]
+            param_names.sort()
+            for param_name in param_names:
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                rows.append(formatted_parameters.get('row'))
+
+            # Add a closing } row:
+            rows.append('| ' + ' | '.join(['}', ' ',' ',' ']) + ' |')
+
+            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "Target" property of the Action.'))
+
+            formatted.append('\n'.join(rows))
+
+        else:
+            formatted.append(self.para("(This action takes no parameters.)"))
+
+        return "\n".join(formatted)
 
 
     def link_to_own_schema(self, schema_ref, schema_full_uri):
@@ -330,12 +368,12 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('|     |     |     |')
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
+            if len(section.get('action_details', [])):
+                contents.append('\n' + self.head_two('Action Details'))
+                contents.append('\n\n'.join(section.get('action_details')))
             if section.get('property_details'):
                 contents.append('\n' + self.head_two('Property Details'))
                 contents.append('\n'.join(section['property_details']))
-            if len(section.get('action_details', [])):
-                contents.append('\n' + self.head_two('Actions'))
-                contents.append('\n\n'.join(section.get('action_details')))
 
         self.sections = []
         return '\n'.join(contents)
