@@ -259,7 +259,7 @@ pre.code{
             formatted_details['descr'] += formatted_details['add_link_text']
 
         # If there are prop_details (enum details), add a note to the description:
-        if formatted_details['has_direct_prop_details']:
+        if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
             if has_enum:
                 anchor = schema_ref + '|details|' + prop_name
                 text_descr = 'See <a href="#' + anchor + '">' + prop_name + '</a> in Property Details, below, for the possible values of this property.'
@@ -271,7 +271,8 @@ pre.code{
 
         # If this is an Action with details, add a note to the description:
         if formatted_details['has_action_details']:
-            text_descr = 'For more information, see the Action Details section below.'
+            anchor = schema_ref + '|action_details|' + prop_name
+            text_descr = 'For more information, see the <a href="#' + anchor + '">Action Details</a> section below.'
             formatted_details['descr'] += '<br>' + self.italic(text_descr)
 
         if deprecated_descr:
@@ -422,9 +423,7 @@ pre.code{
 
 
     def format_action_details(self, prop_name, action_details):
-        """Generate a formatted Actions section.
-
-        Currently, Actions details are entirely derived from the supplemental documentation."""
+        """Generate a formatted Actions section from supplemental markup."""
 
         contents = []
         contents.append(self.head_four(action_details.get('action_name', prop_name)))
@@ -440,12 +439,13 @@ pre.code{
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
+        anchor = schema_ref + '|action_details|' + prop_name
 
         if prop_name.startswith('#'): # expected
             prop_name_parts = prop_name.split('.')
             prop_name = prop_name_parts[-1]
 
-        formatted.append(self.head_four(prop_name))
+        formatted.append(self.head_four(prop_name, anchor))
         formatted.append(self.para(prop_descr))
 
         if action_parameters:
