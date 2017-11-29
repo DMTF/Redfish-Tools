@@ -141,7 +141,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_action_parameters(self, schema_ref, prop_name, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
         """Generate a formatted Actions section parameters data"""
         raise NotImplementedError
 
@@ -678,11 +678,17 @@ class DocFormatter:
                 params = action_parameters[action_param]
                 params = self.extend_property_info(schema_ref, params, {})
                 action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param], {})
-                # self.parse_property_info(schema_ref, action_param, params, 0)
 
-                # TODO: capture those enum details
+            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
 
-            action_details = self.format_action_parameters(schema_ref, prop_name, action_parameters)
+            formatted_action_rows = []
+            for param_name in action_parameters:
+                formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                # Capture the enum details and merge them into the ones for the overall properties:
+                if formatted_action.get('details'):
+                    has_prop_details = True
+                    prop_details.update(formatted_action['details'])
+
             self.add_action_details(action_details)
 
         # Items, if present, will have a definition with either an object, a list of types,

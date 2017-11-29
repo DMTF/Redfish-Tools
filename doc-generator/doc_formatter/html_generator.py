@@ -309,10 +309,7 @@ pre.code{
         if len(formatted_details['object_description']) > 0:
             formatted_object = formatted_details['object_description']
             # Add a closing } to the last row of this object.
-            close_str = '<br>' + indentation_string + '}'
-            tmp_rows = formatted_object.rsplit('<tr>', 1)
-            tmp_rows[1] = tmp_rows[1].replace('</td>', close_str + '</td>', 1)
-            formatted_object = '<tr>'.join(tmp_rows)
+            formatted_object = self._add_closing_brace(formatted_object, indentation_string)
             formatted.append(formatted_object)
 
         if not collapse_array and len(formatted_details['item_description']) > 0:
@@ -439,27 +436,35 @@ pre.code{
 
         return '\n'.join(contents) + '\n'
 
-    def format_action_parameters(self, schema_ref, prop_name, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
 
-        # if prop_name == '#ComputerSystem.Reset':
-        #     import pdb; pdb.set_trace()
         if prop_name.startswith('#'): # expected
             prop_name_parts = prop_name.split('.')
             prop_name = prop_name_parts[-1]
 
         formatted.append(self.head_four(prop_name))
+        formatted.append(self.para(prop_descr))
 
         if action_parameters:
             rows = []
+            # Add a "start object" row for this parameter:
+            rows.append(self.make_row(['{', '','','']))
             for param_name in action_parameters:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
                 rows.append(formatted_parameters.get('row'))
-            formatted.append('<table>')
-            [formatted.append(row) for row in rows]
-            formatted.append('</table>')
+
+            # Add a closing } to the last row:
+            tmp_row = rows[-1]
+            tmp_row = self._add_closing_brace(tmp_row, '')
+            rows[-1] = tmp_row
+
+            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "Target" property of the Action.'))
+
+            formatted.append(self.make_table(rows))
+
         else:
             formatted.append(self.para("(This action takes no parameters.)"))
 
@@ -776,6 +781,17 @@ pre.code{
         else:
             open_tag = '<h' + level + '>'
         return open_tag + text + '</h' + level + '>'
+
+
+    def _add_closing_brace(self, html_blob, indentation_string):
+        """ Add a closing } to the last row of this blob of rows. """
+        close_str = '<br>' + indentation_string + '}'
+        tmp_rows = html_blob.rsplit('<tr>', 1)
+        if (len(tmp_rows) == 2):
+            tmp_rows[1] = tmp_rows[1].replace('</td>', close_str + '</td>', 1)
+            html_blob = '<tr>'.join(tmp_rows)
+        return html_blob
+
 
 
     @staticmethod
