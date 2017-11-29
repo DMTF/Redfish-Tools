@@ -452,7 +452,9 @@ pre.code{
             rows = []
             # Add a "start object" row for this parameter:
             rows.append(self.make_row(['{', '','','']))
-            for param_name in action_parameters:
+            param_names = [x for x in action_parameters.keys()]
+            param_names.sort()
+            for param_name in param_names:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
                 rows.append(formatted_parameters.get('row'))
 
