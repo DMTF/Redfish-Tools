@@ -300,7 +300,7 @@ pre.code{
             prop_access += ' (null)'
 
         # If profile reqs are present, massage them:
-        profile_access = ''
+        profile_access = '&nbsp;' * 10
         if formatted_details['profile_read_req'] or formatted_details['profile_write_req']:
             mandatory = recommended = False
             # Each may be Mandatory or Recommended.

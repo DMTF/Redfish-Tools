@@ -82,7 +82,9 @@ class DocGenerator:
         for normalized_uri in files.keys():
             data = self.process_files(normalized_uri, files[normalized_uri])
             if not data:
-                warnings.warn("Unable to process files for " + normalized_uri)
+                # If we're in profile mode, this is probably normal.
+                if not self.config['profile_mode']:
+                    warnings.warn("Unable to process files for " + normalized_uri)
                 continue
             property_data[normalized_uri] = data
             doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
@@ -274,14 +276,18 @@ class DocGenerator:
         property_data['normalized_uri'] = normalized_uri
 
         min_version = False
-        if profile and profile.get(schema_name):
-            min_version = profile[schema_name].get('MinVersion')
-        if min_version:
-            if version:
-                property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
+        if profile_mode:
+            if profile and profile.get(schema_name):
+                min_version = profile[schema_name].get('MinVersion')
+                if min_version:
+                    if version:
+                        property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
+                    else:
+                        # this is unlikely
+                        property_data['name_and_version'] += ' v' + min_version + '+'
             else:
-                # this is unlikely
-                property_data['name_and_version'] += ' v' + min_version + '+'
+                # Skip schemas that aren't mentioned in the profile:
+                return {}
         elif version:
             property_data['name_and_version'] += ' ' + version
 
@@ -316,7 +322,7 @@ class DocGenerator:
 
         except KeyError:
             warnings.warn('Unable to find properties in path ' + ref['ref'] + ' from ' + filename)
-            return
+            return {}
 
         meta = self.extend_metadata(meta, properties, version, normalized_uri + '#properties/')
         meta['definitions'] = meta.get('definitions', {})

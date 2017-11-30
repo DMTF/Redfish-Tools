@@ -790,7 +790,7 @@ class DocFormatter:
                 prop_details.update(item_formatted['details'])
 
         # Read/Write requirements from profile:
-        profile = None
+        profile = {}
         if self.config['profile_mode']:
             profile_section = 'PropertyRequirements'
             if within_action:
