@@ -302,23 +302,24 @@ pre.code{
         # If profile reqs are present, massage them:
         profile_access = '&nbsp;' * 10
         if formatted_details['profile_read_req'] or formatted_details['profile_write_req']:
-            mandatory = recommended = False
-            # Each may be Mandatory or Recommended.
+            # Each may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
+            read_req = formatted_details['profile_read_req']
+            write_req = formatted_details['profile_write_req']
             if formatted_details['read_only']:
-                if formatted_details['profile_read_req']:
-                    profile_access = formatted_details['profile_read_req'] + ' (Read-only)'
-            elif formatted_details['profile_read_req'] == formatted_details['profile_write_req']:
-                profile_access = formatted_details['profile_write_req'] + ' (Read/Write)'
-            elif not formatted_details['profile_write_req']:
-                profile_access = formatted_details['profile_read_req'] + ' (Read)'
-            elif not formatted_details['profile_read_req']:
+                if read_req:
+                    profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
+            elif read_req == write_req:
+                profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
+            elif not write_req:
+                profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
+            elif not read_req:
                 warnings.warn("Profile contains a Write requirement but no Read requirement for " +
                               prop_name + ' in ' + schema_ref);
-                profile_access = formatted_details['profile_write_req'] + ' (Write)'
+                profile_access = self.nobr(self.text_map(write_req)) + ' (Write)'
             else:
                 # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-                profile_access = (formatted_details['profile_read_req'] + ' (Read)<br>' +
-                                  formatted_details['profile_write_req'] + ' (Read/Write)')
+                profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)<br>' +
+                                  self.nobr(self.text_map(write_req)) + ' (Read/Write)')
 
          # TODO: Conditional Requirements
 
@@ -784,6 +785,12 @@ pre.code{
     def make_paras(text):
         """ Split text at linebreaks and output as paragraphs """
         return '\n'.join([HtmlGenerator.para(line) for line in '\n'.split(text) if line])
+
+    @staticmethod
+    def nobr(text):
+        """ Wrap a bit of text in nobr tags. """
+        return '<nobr>' + text + '</nobr>'
+
 
     def head_one(self, text, anchor_id=None):
         """ Make a top-level heading, relative to the current formatter level """

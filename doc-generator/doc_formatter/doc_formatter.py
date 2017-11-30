@@ -1015,6 +1015,17 @@ class DocFormatter:
         return unversioned
 
 
+    @staticmethod
+    def text_map(text):
+        """Replace string for output -- used to replace strings with nicer English text"""
+
+        output_map = {
+            'IfImplemented': 'If Implemented',
+            'Conditional': 'Conditional Requirements',
+            }
+        return output_map.get(text, text)
+
+
     def compare_versions(self, version, context_version):
         """ Returns +1 if version is newer than context_version, -1 if version is older, 0 if equal """
 
