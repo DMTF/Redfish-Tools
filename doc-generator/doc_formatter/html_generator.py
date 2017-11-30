@@ -300,7 +300,7 @@ pre.code{
             prop_access += ' (null)'
 
         # If profile reqs are present, massage them:
-        profile_access = '&nbsp;' * 10
+        profile_access = ''
         if formatted_details['profile_read_req'] or formatted_details['profile_write_req']:
             # Each may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
             read_req = formatted_details['profile_read_req']
@@ -321,6 +321,20 @@ pre.code{
                 profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)<br>' +
                                   self.nobr(self.text_map(write_req)) + ' (Read/Write)')
 
+        if formatted_details['profile_mincount']:
+            mc = str(formatted_details['profile_mincount'])
+            if profile_access:
+                profile_access += ' '
+            profile_access += self.nobr("Minimum " + mc)
+
+
+        if not profile_access:
+            profile_access = '&nbsp;' * 10
+
+        descr = formatted_details['descr']
+        if formatted_details['profile_purpose']:
+            descr += ' ' + self.bold("Profile Purpose: " + formatted_details['profile_purpose'])
+
          # TODO: Conditional Requirements
 
         row = []
@@ -330,7 +344,7 @@ pre.code{
         row.append(prop_type)
         if not self.config['profile_mode']:
             row.append(prop_access)
-        row.append(formatted_details['descr'])
+        row.append(descr)
 
         formatted.append(self.make_row(row))
 

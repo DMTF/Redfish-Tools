@@ -537,7 +537,7 @@ class DocFormatter:
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
-        'profile_read_req', 'profile_write_req'
+        'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose'
         """
 
         if isinstance(prop_infos, dict):
@@ -567,7 +567,9 @@ class DocFormatter:
                   'has_action_details': False,
                   'action_details': {},
                   'profile_read_req': False,
-                  'profile_write_req': False
+                  'profile_write_req': False,
+                  'profile_mincount': False,
+                  'profile_purpose': False
                  }
 
         profile = None
@@ -613,9 +615,11 @@ class DocFormatter:
         parsed['read_only'] = details[0]['read_only']
         parsed['prop_units'] = details[0]['prop_units']
 
-        # Read/Write requirements from profile:
+        # Data from profile:
         parsed['profile_read_req'] = profile.get('ReadRequirement')
         parsed['profile_write_req'] = profile.get('WriteRequirement')
+        parsed['profile_mincount'] = profile.get('MinCount')
+        parsed['profile_purpose'] = profile.get('Purpose')
 
         for det in details:
             parsed['prop_is_object'] |= det['prop_is_object']
@@ -634,7 +638,7 @@ class DocFormatter:
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
-        'profile_read_req', 'profile_write_req'
+        'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose'
         """
         traverser = self.traverser
 
@@ -792,10 +796,14 @@ class DocFormatter:
         # Read/Write requirements from profile:
         profile = {}
         if self.config['profile_mode']:
+            prop_brief_name = prop_name
             profile_section = 'PropertyRequirements'
             if within_action:
                 profile_section = 'ActionRequirements'
-            profile = self.get_prop_profile(schema_ref, prop_name, profile_section)
+                if prop_name.startswith('#'): # expected
+                    prop_name_parts = prop_name.split('.')
+                    prop_brief_name = prop_name_parts[-1]
+            profile = self.get_prop_profile(schema_ref, prop_brief_name, profile_section)
 
 
         return {'prop_type': prop_type,
@@ -815,7 +823,9 @@ class DocFormatter:
                 'has_action_details': has_prop_actions,
                 'action_details': action_details,
                 'profile_read_req': profile.get('ReadRequirement'),
-                'profile_write_req': profile.get('WriteRequirement')
+                'profile_write_req': profile.get('WriteRequirement'),
+                'profile_mincount': profile.get('MinCount'),
+                'profile_purpose': profile.get('Purpose')
                 }
 
 
