@@ -299,10 +299,36 @@ pre.code{
         if formatted_details['nullable']:
             prop_access += ' (null)'
 
+        # If profile reqs are present, massage them:
+        profile_access = ''
+        if formatted_details['profile_read_req'] or formatted_details['profile_write_req']:
+            mandatory = recommended = False
+            # Each may be Mandatory or Recommended.
+            if formatted_details['read_only']:
+                if formatted_details['profile_read_req']:
+                    profile_access = formatted_details['profile_read_req'] + ' (Read-only)'
+            elif formatted_details['profile_read_req'] == formatted_details['profile_write_req']:
+                profile_access = formatted_details['profile_write_req'] + ' (Read/Write)'
+            elif not formatted_details['profile_write_req']:
+                profile_access = formatted_details['profile_read_req'] + ' (Read)'
+            elif not formatted_details['profile_read_req']:
+                warnings.warn("Profile contains a Write requirement but no Read requirement for " +
+                              prop_name + ' in ' + schema_ref);
+                profile_access = formatted_details['profile_write_req'] + ' (Write)'
+            else:
+                # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
+                profile_access = (formatted_details['profile_read_req'] + ' (Read)<br>' +
+                                  formatted_details['profile_write_req'] + ' (Read/Write)')
+
+         # TODO: Conditional Requirements
+
         row = []
         row.append(indentation_string + name_and_version)
+        if self.config['profile_mode']:
+            row.append(profile_access)
         row.append(prop_type)
-        row.append(prop_access)
+        if not self.config['profile_mode']:
+            row.append(prop_access)
         row.append(formatted_details['descr'])
 
         formatted.append(self.make_row(row))
@@ -595,6 +621,9 @@ pre.code{
             'escape_chars': [],
             'uri_replacements': {},
             'units_translation': self.config['units_translation'],
+            'profile': self.config['profile'],
+            'profile_mode': self.config['profile_mode'],
+            'profile_resources': self.config['profile_resources']
             }
 
         for line in intro_blob.splitlines():

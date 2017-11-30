@@ -17,7 +17,6 @@ import warnings
 class DocFormatter:
     """Generic class for schema documentation formatter"""
 
-
     def __init__(self, property_data, traverser, config, level=0):
         """Set up the markdown generator.
 
@@ -162,15 +161,16 @@ class DocFormatter:
         traverser = self.traverser
         config = self.config
         schema_supplement = config.get('schema_supplement', {})
+        profile_mode = config.get('profile_mode')
 
         schema_keys = self.documented_schemas
         schema_keys.sort()
 
 
         for schema_ref in schema_keys:
-
             details = property_data[schema_ref]
             schema_name = details['schema_name']
+            profile = config.get('profile_resources', {}).get(schema_name, {})
 
             # Look up supplemental details for this schema/version
             version = details.get('latest_version', '1')
@@ -205,6 +205,10 @@ class DocFormatter:
                 description = supplemental.get('description')
             else:
                 description = supplemental.get('schema-intro', description)
+
+            # Profile purpose overrides all:
+            if profile:
+                description = profile.get('Purpose')
 
             if description:
                 self.add_description(description)
@@ -532,7 +536,8 @@ class DocFormatter:
 
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
-        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
+        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
+        'profile_read_req', 'profile_write_req'
         """
 
         if isinstance(prop_infos, dict):
@@ -560,9 +565,17 @@ class DocFormatter:
                   'prop_details': {},
                   'has_direct_prop_details': False,
                   'has_action_details': False,
-                  'action_details': {}
+                  'action_details': {},
+                  'profile_read_req': False,
+                  'profile_write_req': False
                  }
 
+        profile = None
+        if self.config['profile_mode']:
+            profile_section = 'PropertyRequirements'
+            if within_action:
+                profile_section = 'ActionRequirements'
+            profile = self.get_prop_profile(schema_ref, prop_name, profile_section)
 
         anyof_details = [self.parse_property_info(schema_ref, prop_name, x, current_depth, within_action)
                          for x in prop_infos]
@@ -600,6 +613,10 @@ class DocFormatter:
         parsed['read_only'] = details[0]['read_only']
         parsed['prop_units'] = details[0]['prop_units']
 
+        # Read/Write requirements from profile:
+        parsed['profile_read_req'] = profile.get('ReadRequirement')
+        parsed['profile_write_req'] = profile.get('WriteRequirement')
+
         for det in details:
             parsed['prop_is_object'] |= det['prop_is_object']
             parsed['prop_is_array'] |= det['prop_is_array']
@@ -616,7 +633,8 @@ class DocFormatter:
 
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
-        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
+        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
+        'profile_read_req', 'profile_write_req'
         """
         traverser = self.traverser
 
@@ -771,6 +789,15 @@ class DocFormatter:
             if item_formatted['details']:
                 prop_details.update(item_formatted['details'])
 
+        # Read/Write requirements from profile:
+        profile = None
+        if self.config['profile_mode']:
+            profile_section = 'PropertyRequirements'
+            if within_action:
+                profile_section = 'ActionRequirements'
+            profile = self.get_prop_profile(schema_ref, prop_name, profile_section)
+
+
         return {'prop_type': prop_type,
                 'prop_units': prop_units,
                 'read_only': read_only,
@@ -786,8 +813,10 @@ class DocFormatter:
                 'prop_details': prop_details,
                 'has_direct_prop_details': has_prop_details,
                 'has_action_details': has_prop_actions,
-                'action_details': action_details
-               }
+                'action_details': action_details,
+                'profile_read_req': profile.get('ReadRequirement'),
+                'profile_write_req': profile.get('WriteRequirement')
+                }
 
 
     def process_for_idRef(self, ref):
@@ -1032,3 +1061,19 @@ class DocFormatter:
             meta['version_deprecated_explanation'] = node_meta.get('version_deprecated_explanation', '')
 
         return meta
+
+    def get_prop_profile(self, schema_ref, prop_name, section):
+        """Get profile data for the specified property, by schema_ref, prop_name, and section.
+
+        Section is 'PropertyRequirements' or 'ActionRequirements'.
+        Returns {} if no data is present."""
+
+        prop_profile = {}
+
+        if self.config['profile_resources']:
+            # Profiles use the schema name (not full ref):
+            schema_name = self.traverser.get_schema_name(schema_ref)
+            profile = self.config['profile_resources'].get(schema_name, {})
+            prop_profile = profile.get(section, {}).get(prop_name, {})
+
+        return prop_profile

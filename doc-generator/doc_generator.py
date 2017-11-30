@@ -37,6 +37,13 @@ class DocGenerator:
         self.import_from = import_from
         self.outfile = outfile
 
+        if config['profile_mode']:
+            config['profile'] = self.load_as_json(config.get('profile_doc'))
+            config['profile_resources'] = self.config.get('profile', {}).get('Resources')
+            if not config['profile_resources']:
+                warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
+                exit()
+
 
     def generate_doc(self):
         output = self.generate_docs()
@@ -254,6 +261,9 @@ class DocGenerator:
         filename = os.path.join(ref['root'], ref['filename'])
         normalized_uri = self.construct_uri_for_filename(filename)
 
+        profile_mode = self.config['profile_mode']
+        profile = self.config['profile_resources']
+
         data = self.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
         version = self.get_version_string(ref['filename'])
@@ -262,8 +272,19 @@ class DocGenerator:
         property_data['latest_version'] = version
         property_data['name_and_version'] = schema_name
         property_data['normalized_uri'] = normalized_uri
-        if version:
+
+        min_version = False
+        if profile and profile.get(schema_name):
+            min_version = profile[schema_name].get('MinVersion')
+        if min_version:
+            if version:
+                property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
+            else:
+                # this is unlikely
+                property_data['name_and_version'] += ' v' + min_version + '+'
+        elif version:
             property_data['name_and_version'] += ' ' + version
+
 
         if 'properties' not in property_data:
             property_data['properties'] = {}
@@ -431,7 +452,11 @@ def main():
         'cwd': os.getcwd(),
         'uri_replacements': {},
         'local_to_uri': {},
-        'uri_to_local': {}
+        'uri_to_local': {},
+        'profile_mode': False,
+        'profile_doc': None,
+        'profile_resources': {},
+        'profile': {}
         }
 
     help_description = 'Generate documentation for Redfish JSON schema files.\n\n'
@@ -508,6 +533,16 @@ def main():
             warnings.warn('No supplemental file specified and ' + supfile +
                           ' not found. Proceeding.')
 
+    # Check profile document, if specified
+    if args.profile_doc:
+        config['profile_mode'] = True
+        profile_doc = args.profile_doc
+        try:
+            profile = open(profile_doc, 'r', encoding="utf8")
+            config['profile_doc'] = profile_doc
+        except (OSError) as ex:
+            warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
+            exit()
 
     if 'keywords' in config['supplemental']:
         # Promote the keywords to top-level keys.
