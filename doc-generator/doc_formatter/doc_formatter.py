@@ -220,7 +220,7 @@ class DocFormatter:
 
                 properties = details['properties']
                 prop_names = [x for x in properties.keys()]
-                prop_names = self.organize_prop_names(prop_names)
+                prop_names = self.organize_prop_names(prop_names, profile)
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
@@ -468,8 +468,14 @@ class DocFormatter:
         return prop_infos
 
 
-    def organize_prop_names(self, prop_names):
+    def organize_prop_names(self, prop_names, profile={}):
         """ Strip out excluded property names, sorting the remainder """
+
+        if self.config['profile_mode'] == 'terse':
+            profile_props = [x for x in profile.get('PropertyRequirements', {}).keys()]
+            if profile.get('ActionRequirements'):
+                profile_props.append('Actions')
+            prop_names = list(set(prop_names) & set(profile_props))
 
         return self.exclude_prop_names(prop_names, self.config['excluded_properties'],
                                        self.config['excluded_by_match'])

@@ -277,7 +277,8 @@ class DocGenerator:
 
         min_version = False
         if profile_mode:
-            if profile and profile.get(schema_name):
+            schema_profile = profile.get(schema_name)
+            if profile and schema_profile:
                 min_version = profile[schema_name].get('MinVersion')
                 if min_version:
                     if version:
@@ -290,7 +291,6 @@ class DocGenerator:
                 return {}
         elif version:
             property_data['name_and_version'] += ' ' + version
-
 
         if 'properties' not in property_data:
             property_data['properties'] = {}
@@ -541,7 +541,11 @@ def main():
 
     # Check profile document, if specified
     if args.profile_doc:
-        config['profile_mode'] = True
+        if args.profile_terse:
+            config['profile_mode'] = 'terse'
+        else:
+            config['profile_mode'] = 'verbose'
+
         profile_doc = args.profile_doc
         try:
             profile = open(profile_doc, 'r', encoding="utf8")
