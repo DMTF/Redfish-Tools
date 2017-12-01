@@ -578,8 +578,10 @@ class DocFormatter:
                   'profile_purpose': False
                  }
 
-        profile = None
-        if self.config['profile_mode']:
+        # Skip profile data if prop_name is blank -- this is just an additional row of info and
+        # the "parent" row will have the profile info.
+        profile = {}
+        if self.config['profile_mode'] and prop_name:
             profile_section = 'PropertyRequirements'
             if within_action:
                 profile_section = 'ActionRequirements'
@@ -806,8 +808,10 @@ class DocFormatter:
                 prop_details.update(item_formatted['details'])
 
         # Read/Write requirements from profile:
+        # Skip profile data if prop_name is blank -- this is just an additional row of info and
+        # the "parent" row will have the profile info.
         profile = {}
-        if self.config['profile_mode']:
+        if self.config['profile_mode'] and prop_name:
             prop_brief_name = prop_name
             profile_section = 'PropertyRequirements'
             if within_action:
