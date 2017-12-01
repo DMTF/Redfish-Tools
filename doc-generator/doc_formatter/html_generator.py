@@ -145,7 +145,7 @@ pre.code{
 </style>
 """
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[]):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -158,6 +158,7 @@ pre.code{
         """
         traverser = self.traverser
         formatted = []     # The row itself
+        current_depth = len(prop_path)
         indentation_string = '&nbsp;' * 6 * current_depth
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
@@ -211,7 +212,7 @@ pre.code{
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
                                             meta['version_deprecated_explanation'], False)
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
 
         # Eliminate dups in these these properties and join with a delimiter:
@@ -496,7 +497,7 @@ pre.code{
             param_names = [x for x in action_parameters.keys()]
             param_names.sort()
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['ActionParameters'])
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } to the last row:

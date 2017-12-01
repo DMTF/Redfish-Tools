@@ -96,7 +96,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[]):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
         'row': content for the main table being generated.
@@ -113,22 +113,22 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_list_of_object_descrs(self, schema_ref, prop_items, current_depth):
+    def format_list_of_object_descrs(self, schema_ref, prop_items, prop_path):
         """Format a (possibly nested) list of embedded objects.
 
         We expect this to amount to one definition, usually for 'items' in an array."""
 
         if isinstance(prop_items, dict):
             if 'properties' in prop_items:
-                return self.format_object_descr(schema_ref, prop_items, current_depth)
+                return self.format_object_descr(schema_ref, prop_items, prop_path)
             else:
-                return self.format_non_object_descr(schema_ref, prop_items, current_depth)
+                return self.format_non_object_descr(schema_ref, prop_items, prop_path)
 
         rows = []
         details = {}
         if isinstance(prop_items, list):
             for prop_item in prop_items:
-                formatted = self.format_list_of_object_descrs(schema_ref, prop_item, current_depth)
+                formatted = self.format_list_of_object_descrs(schema_ref, prop_item, prop_path)
                 rows.extend(formatted['rows'])
                 details.update(formatted['details'])
             return ({'rows': rows, 'details': details})
@@ -228,7 +228,7 @@ class DocFormatter:
                     meta = prop_info.get('_doc_generator_meta', {})
                     prop_infos = self.extend_property_info(schema_ref, prop_info, properties.get('_doc_generator_meta'))
 
-                    formatted = self.format_property_row(schema_ref, prop_name, prop_infos)
+                    formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
                         self.add_property_row(formatted['row'])
                         if formatted['details']:
@@ -269,7 +269,7 @@ class DocFormatter:
             meta = {}
         prop_infos = frag_gen.extend_property_info(schema_ref, prop_info)
 
-        formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos)
+        formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
         if formatted:
             frag_gen.add_section('')
             frag_gen.current_version = {}
@@ -537,7 +537,7 @@ class DocFormatter:
                 self.is_documented_schema(schema_name))
 
 
-    def parse_property_info(self, schema_ref, prop_name, prop_infos, current_depth, within_action=False):
+    def parse_property_info(self, schema_ref, prop_name, prop_infos, prop_path, within_action=False):
         """Parse a list of one more more property info objects into strings for display.
 
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
@@ -548,15 +548,15 @@ class DocFormatter:
 
         if isinstance(prop_infos, dict):
             return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
-                                                    current_depth, within_action)
+                                                    prop_path, within_action)
 
         if len(prop_infos) == 1:
             prop_info = prop_infos[0]
             if isinstance(prop_info, dict):
                 return self._parse_single_property_info(schema_ref, prop_name, prop_info,
-                                                        current_depth, within_action)
+                                                        prop_path, within_action)
             else:
-                return self.parse_property_info(schema_ref, prop_name, prop_info, current_depth, within_action)
+                return self.parse_property_info(schema_ref, prop_name, prop_info, prop_path, within_action)
 
         parsed = {'prop_type': [],
                   'prop_units': False,
@@ -585,7 +585,7 @@ class DocFormatter:
                 profile_section = 'ActionRequirements'
             profile = self.get_prop_profile(schema_ref, prop_name, profile_section)
 
-        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, current_depth, within_action)
+        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path, within_action)
                          for x in prop_infos]
 
         # Remove details for anyOf props with prop_type = 'null'.
@@ -638,7 +638,7 @@ class DocFormatter:
         return parsed
 
 
-    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, current_depth, within_action=False):
+    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, prop_path, within_action=False):
         """Parse definition of a specific property into strings for display.
 
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
@@ -711,7 +711,7 @@ class DocFormatter:
 
             formatted_action_rows = []
             for param_name in action_parameters:
-                formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['ActionParameters'])
                 # Capture the enum details and merge them into the ones for the overall properties:
                 if formatted_action.get('details'):
                     has_prop_details = True
@@ -779,7 +779,7 @@ class DocFormatter:
 
         # embedded object:
         if prop_is_object:
-            object_formatted = self.format_object_descr(schema_ref, prop_info, current_depth, is_action)
+            object_formatted = self.format_object_descr(schema_ref, prop_info, prop_path, is_action)
             object_description = object_formatted['rows']
             if object_formatted['details']:
                 prop_details.update(object_formatted['details'])
@@ -787,13 +787,13 @@ class DocFormatter:
         # embedded items:
         if prop_is_array:
             if list_of_objects:
-                item_formatted = self.format_list_of_object_descrs(schema_ref, prop_items, current_depth)
+                item_formatted = self.format_list_of_object_descrs(schema_ref, prop_items, prop_path)
                 if collapse_description:
                     # remember, we set collapse_description when we made prop_items a single-element list.
                     item_list = prop_items[0].get('type')
 
             else:
-                item_formatted = self.format_non_object_descr(schema_ref, prop_item, current_depth)
+                item_formatted = self.format_non_object_descr(schema_ref, prop_item, prop_path)
 
             item_description = item_formatted['rows']
             if item_formatted['details']:
@@ -857,7 +857,7 @@ class DocFormatter:
         return prop_info
 
 
-    def format_object_descr(self, schema_ref, prop_info, current_depth=0, is_action=False):
+    def format_object_descr(self, schema_ref, prop_info, prop_path=[], is_action=False):
         """Format the properties for an embedded object."""
 
         properties = prop_info.get('properties')
@@ -893,8 +893,9 @@ class DocFormatter:
                 meta['within_action'] = is_action
                 detail_info[0]['_doc_generator_meta'] = meta
 
-                depth = current_depth + 1
-                formatted = self.format_property_row(schema_ref, prop_name, detail_info, depth)
+                new_path = prop_path.copy()
+                new_path.append(prop_name)
+                formatted = self.format_property_row(schema_ref, prop_name, detail_info, new_path)
                 if formatted:
                     output.append(formatted['row'])
                     if formatted['details']:
@@ -905,7 +906,7 @@ class DocFormatter:
         return {'rows': output, 'details': details, 'action_details': action_details}
 
 
-    def format_non_object_descr(self, schema_ref, prop_dict, current_depth=0):
+    def format_non_object_descr(self, schema_ref, prop_dict, prop_path=[]):
         """For definitions that just list simple types without a 'properties' entry"""
 
         output = []
@@ -915,8 +916,8 @@ class DocFormatter:
         prop_name = prop_dict.get('_prop_name', '')
         detail_info = self.extend_property_info(schema_ref, prop_dict)
 
-        depth = current_depth + 1
-        formatted = self.format_property_row(schema_ref, prop_name, detail_info, depth)
+        prop_path.append(prop_name)
+        formatted = self.format_property_row(schema_ref, prop_name, detail_info, prop_path)
 
         if formatted:
             output.append(formatted['row'])
