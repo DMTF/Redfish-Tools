@@ -156,6 +156,7 @@ pre.code{
 
         This may include embedded objects with their own properties.
         """
+
         traverser = self.traverser
         formatted = []     # The row itself
         current_depth = len(prop_path)
