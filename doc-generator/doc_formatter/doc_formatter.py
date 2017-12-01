@@ -583,7 +583,9 @@ class DocFormatter:
             profile_section = 'PropertyRequirements'
             if within_action:
                 profile_section = 'ActionRequirements'
-            profile = self.get_prop_profile(schema_ref, prop_name, profile_section)
+            path_to_prop = prop_path.copy()
+            path_to_prop.append(prop_name)
+            profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
         anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path, within_action)
                          for x in prop_infos]
@@ -809,7 +811,9 @@ class DocFormatter:
                 if prop_name.startswith('#'): # expected
                     prop_name_parts = prop_name.split('.')
                     prop_brief_name = prop_name_parts[-1]
-            profile = self.get_prop_profile(schema_ref, prop_brief_name, profile_section)
+            path_to_prop = prop_path.copy()
+            path_to_prop.append(prop_brief_name)
+            profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
 
         return {'prop_type': prop_type,
@@ -1090,8 +1094,8 @@ class DocFormatter:
 
         return meta
 
-    def get_prop_profile(self, schema_ref, prop_name, section):
-        """Get profile data for the specified property, by schema_ref, prop_name, and section.
+    def get_prop_profile(self, schema_ref, prop_path, section):
+        """Get profile data for the specified property, by schema_ref, prop name path, and section.
 
         Section is 'PropertyRequirements' or 'ActionRequirements'.
         Returns {} if no data is present."""
@@ -1102,6 +1106,8 @@ class DocFormatter:
             # Profiles use the schema name (not full ref):
             schema_name = self.traverser.get_schema_name(schema_ref)
             profile = self.config['profile_resources'].get(schema_name, {})
-            prop_profile = profile.get(section, {}).get(prop_name, {})
+            prop_profile = profile.get(section, {})
+            for prop_name in prop_path:
+                prop_profile = prop_profile.get(prop_name, {})
 
         return prop_profile
