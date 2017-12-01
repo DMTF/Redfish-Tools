@@ -648,7 +648,6 @@ class DocFormatter:
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose'
         """
-
         traverser = self.traverser
 
         # type may be a string or a list.
@@ -925,7 +924,6 @@ class DocFormatter:
         prop_name = prop_dict.get('_prop_name', '')
         detail_info = self.extend_property_info(schema_ref, prop_dict)
 
-        prop_path.append(prop_name)
         formatted = self.format_property_row(schema_ref, prop_name, detail_info, prop_path)
 
         if formatted:
