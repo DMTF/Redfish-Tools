@@ -226,7 +226,7 @@ class DocFormatter:
                     prop_info = properties[prop_name]
                     prop_info = self.apply_overrides(prop_info, schema_name, prop_name)
                     meta = prop_info.get('_doc_generator_meta', {})
-                    prop_infos = self.extend_property_info(schema_ref, prop_info, properties.get('_doc_generator_meta'))
+                    prop_infos = self.extend_property_info(schema_ref, prop_info, properties.get('_doc_generator_meta'), [prop_name])
 
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
@@ -289,7 +289,7 @@ class DocFormatter:
         return frag_gen.emit()
 
 
-    def extend_property_info(self, schema_ref, prop_info, context_meta=None):
+    def extend_property_info(self, schema_ref, prop_info, context_meta=None, prop_path=[]):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
         Returns an array of objects. Arrays of arrays of objects are possible but not expected.
@@ -328,7 +328,6 @@ class DocFormatter:
                             idref_info[x] = prop_info[x]
                     prop_info = idref_info
 
-        # if prop_ref and traverser.ref_to_own_schema(prop_ref):
         if prop_ref:
             ref_info = traverser.find_ref_data(prop_ref)
 
@@ -419,7 +418,7 @@ class DocFormatter:
                 prop_info = ref_info
 
                 if '$ref' in ref_info or 'anyOf' in ref_info:
-                    return self.extend_property_info(ref_info['_from_schema_ref'], ref_info, context_meta)
+                    return self.extend_property_info(ref_info['_from_schema_ref'], ref_info, context_meta, prop_path)
 
             prop_infos.append(prop_info)
 
@@ -471,14 +470,19 @@ class DocFormatter:
     def organize_prop_names(self, prop_names, profile={}):
         """ Strip out excluded property names, sorting the remainder """
 
-        # if self.config['profile_mode'] == 'terse':
-        #     profile_props = [x for x in profile.get('PropertyRequirements', {}).keys()]
-        #     if profile.get('ActionRequirements'):
-        #         profile_props.append('Actions')
-        #     prop_names = list(set(prop_names) & set(profile_props))
-
+        prop_names = self.filter_props_by_profile(prop_names, profile)
         return self.exclude_prop_names(prop_names, self.config['excluded_properties'],
                                        self.config['excluded_by_match'])
+
+
+    def filter_props_by_profile(self, prop_names, profile):
+
+        if self.config['profile_mode'] == 'terse':
+            profile_props = [x for x in profile.get('PropertyRequirements', {}).keys()]
+            if profile.get('ActionRequirements'):
+                profile_props.append('Actions')
+            prop_names = list(set(prop_names) & set(profile_props))
+        return prop_names
 
 
     def exclude_annotations(self, prop_names):
@@ -578,9 +582,9 @@ class DocFormatter:
                   'profile_purpose': False
                  }
 
+        profile = {}
         # Skip profile data if prop_name is blank -- this is just an additional row of info and
         # the "parent" row will have the profile info.
-        profile = {}
         if self.config['profile_mode'] and prop_name:
             profile_section = 'PropertyRequirements'
             if within_action:
@@ -888,6 +892,22 @@ class DocFormatter:
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
+
+
+            # TODO: probably refactor this block:
+            if self.config['profile_mode'] == 'terse':
+                if len(prop_path) and prop_path[-1] == 'Actions':
+                    profile_section = 'ActionRequirements'
+                else:
+                    profile_section = 'PropertyRequirements'
+                profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
+                prop_names = self.filter_props_by_profile(prop_names, profile)
+                filtered_properties = {}
+                for k in prop_names:
+                    filtered_properties[k] = properties[k]
+                prop_info['properties'] = properties = filtered_properties
+
+
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
 
