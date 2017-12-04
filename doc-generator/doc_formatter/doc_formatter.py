@@ -250,6 +250,7 @@ class DocFormatter:
         Used to generate documentation for schema fragments.
         """
 
+
         # If /properties is specified, expand the object and output just its contents.
         if ref.endswith('/properties'):
             ref = ref[:-len('/properties')]
@@ -259,6 +260,7 @@ class DocFormatter:
             warnings.warn("Can't generate fragment for '" + ref +
                           "': could not parse as schema URI.")
             return ''
+
 
         frag_gen = self.__class__(self.property_data, self.traverser, config, self.level)
 
