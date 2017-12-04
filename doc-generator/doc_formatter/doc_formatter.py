@@ -249,13 +249,13 @@ class DocFormatter:
         frag_gen = self.__class__(self.property_data, self.traverser, config, level=self.level)
 
         if not ref:
-            warnings.warn("Can't generate fragment for '" + path +
+            warnings.warn("Can't generate fragment for '" + ref +
                           "': could not parse as schema URI.")
             return ''
 
         prop_info = frag_gen.traverser.find_ref_data(ref)
         if not prop_info:
-            warnings.warn("Can't generate fragment for '" + path + "': could not find data.")
+            warnings.warn("Can't generate fragment for '" + ref + "': could not find data.")
             return ''
 
         schema_ref = prop_info['_from_schema_ref']
