@@ -57,6 +57,7 @@ class SchemaTraverser:
         meta = self.meta.get(schema_ref, {})
 
         elements = [x for x in path.split('/') if x]
+        element = ''
         for element in elements:
             if element in schema:
                 schema = schema[element]
