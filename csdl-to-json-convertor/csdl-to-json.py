@@ -80,6 +80,7 @@ class CSDLToJSON():
         self.internal_references = {}
         self.build_references()
         self.json_out = {}
+        self.errors = {}
         self.initialize_json_output()
 
     def cache_resource_definitions( self ):
@@ -91,7 +92,7 @@ class CSDLToJSON():
         for schema in self.resource_root.iter( ODATA_TAG_SCHEMA ):
             for child in schema:
                 if ( child.tag == ODATA_TAG_ENTITY ) or ( child.tag == ODATA_TAG_COMPLEX ):
-                    name = get_attrib( schema, "Namespace" ) + "." + get_attrib( child, "Name" )
+                    name = self.get_attrib( schema, "Namespace" ) + "." + self.get_attrib( child, "Name" )
 
                     if ( name == "Resource.v1_0_0.Resource" ) or ( name == "Resource.Item" ):
                         for prop in child:
@@ -122,8 +123,8 @@ class CSDLToJSON():
         for reference in self.root.iter( ODATA_TAG_REFERENCE ):
             for include in reference.iter( ODATA_TAG_INCLUDE ):
                 # Based on the URI and the namespace, build the expected JSON Schema reference
-                namespace = get_attrib( include, "Namespace" )
-                self.external_references[namespace] = get_attrib( reference, "Uri" ).rsplit( "/", 1 )[0] + "/" + namespace + ".json"
+                namespace = self.get_attrib( include, "Namespace" )
+                self.external_references[namespace] = self.get_attrib( reference, "Uri" ).rsplit( "/", 1 )[0] + "/" + namespace + ".json"
 
         # Need to add the unversioned Resource namespace since we copy in its base definitions
         self.external_references["Resource"] = self.resource_location + "Resource.json"
@@ -131,7 +132,7 @@ class CSDLToJSON():
         # Create the internal references
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
             # We just need the namespace for error checking when the definition is built later
-            self.internal_references[get_attrib( schema, "Namespace" )] = True
+            self.internal_references[self.get_attrib( schema, "Namespace" )] = True
 
     def initialize_json_output( self ):
         """
@@ -139,12 +140,13 @@ class CSDLToJSON():
         """
 
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
-            namespace = get_attrib( schema, "Namespace" )
+            namespace = self.get_attrib( schema, "Namespace" )
             self.json_out[namespace] = {}
             self.json_out[namespace]["$schema"] = self.redfish_schema
             self.json_out[namespace]["copyright"] = self.copyright
             self.json_out[namespace]["definitions"] = {}
             self.json_out[namespace]["title"] = "#" + namespace
+            self.errors[namespace] = False
 
     def process( self ):
         """
@@ -168,13 +170,13 @@ class CSDLToJSON():
         # Go through each namespace in the XML file
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
             # Only process the matching namespace
-            namespace = get_attrib( schema, "Namespace" )
+            namespace = self.get_attrib( schema, "Namespace" )
             if namespace == self.namespace_under_process:
                 for child in schema:
                     # Set up the top level title and $ref properties if needed
                     if child.tag == ODATA_TAG_ENTITY:
-                        base_type = get_attrib( child, "BaseType", False )
-                        name = get_attrib( child, "Name" )
+                        base_type = self.get_attrib( child, "BaseType", False )
+                        name = self.get_attrib( child, "Name" )
                         if ( base_type == "Resource.v1_0_0.Resource" ) or ( base_type == "Resource.v1_0_0.ResourceCollection" ):
                             self.json_out[self.namespace_under_process]["title"] = "#" + self.namespace_under_process + "." + name
                             self.json_out[self.namespace_under_process]["$ref"] = "#/definitions/" + name
@@ -183,9 +185,9 @@ class CSDLToJSON():
                     if ( child.tag == ODATA_TAG_ENTITY ) or ( child.tag == ODATA_TAG_COMPLEX ):
                         # Check if the definition is abstract
                         is_abstract = False
-                        if get_attrib( child, "Abstract", False ) == "true":
+                        if self.get_attrib( child, "Abstract", False ) == "true":
                             is_abstract = True
-                        if ( child.tag == ODATA_TAG_COMPLEX ) and ( self.namespace_under_process == "Resource" ) and ( get_attrib( child, "Name" ) == "Links" ):
+                        if ( child.tag == ODATA_TAG_COMPLEX ) and ( self.namespace_under_process == "Resource" ) and ( self.get_attrib( child, "Name" ) == "Links" ):
                             # Special override for the Links base definition; it needs to be standalone
                             is_abstract = False
                         if is_abstract:
@@ -209,13 +211,13 @@ class CSDLToJSON():
         # Go through each namespace in the XML file
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
             # Check if the namespace applies based on its version number
-            namespace = get_attrib( schema, "Namespace" )
+            namespace = self.get_attrib( schema, "Namespace" )
             if does_namespace_apply( namespace, self.namespace_under_process ):
                 for child in schema:
                     # Set up the top level title and $ref properties if needed
                     if child.tag == ODATA_TAG_ENTITY:
-                        base_type = get_attrib( child, "BaseType", False )
-                        name = get_attrib( child, "Name" )
+                        base_type = self.get_attrib( child, "BaseType", False )
+                        name = self.get_attrib( child, "Name" )
                         if ( base_type == "Resource.v1_0_0.Resource" ) or ( base_type == "Resource.v1_0_0.ResourceCollection" ):
                             self.json_out[self.namespace_under_process]["title"] = "#" + self.namespace_under_process + "." + name
                             self.json_out[self.namespace_under_process]["$ref"] = "#/definitions/" + name
@@ -248,7 +250,7 @@ class CSDLToJSON():
             json_def: The JSON Definitions body to populate
         """
 
-        name = get_attrib( object, "Name" )
+        name = self.get_attrib( object, "Name" )
 
         # The entities in the Resource namespace need to be processed in a special manner since it doesn't follow the Redfish model for object inheritance
         if ( self.namespace_under_process == "Resource" ) and ( object.tag == ODATA_TAG_ENTITY ):
@@ -256,11 +258,11 @@ class CSDLToJSON():
 
             # Append matching objects in the file to the anyOf list
             for schema in self.root.iter( ODATA_TAG_SCHEMA ):
-                namespace = get_attrib( schema, "Namespace" )
+                namespace = self.get_attrib( schema, "Namespace" )
                 for child in schema:
                     if child.tag == object.tag:
-                        if get_attrib( child, "BaseType", False ) == self.namespace_under_process + "." + name:
-                            json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + get_attrib( child, "Name" ) } )
+                        if self.get_attrib( child, "BaseType", False ) == self.namespace_under_process + "." + name:
+                            json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + self.get_attrib( child, "Name" ) } )
         else:
             if object.tag == ODATA_TAG_ENTITY:
                 json_def[name] = { "anyOf": [ { "$ref": self.odata_schema + "#/definitions/idRef" } ] }
@@ -270,11 +272,11 @@ class CSDLToJSON():
             # Find the oldest definition of the object
             oldest_version = None
             for schema in self.root.iter( ODATA_TAG_SCHEMA ):
-                namespace = get_attrib( schema, "Namespace" )
+                namespace = self.get_attrib( schema, "Namespace" )
                 if namespace != self.namespace_under_process:
                     for child in schema:
                         if child.tag == object.tag:
-                            if get_attrib( child, "Name" ) == name:
+                            if self.get_attrib( child, "Name" ) == name:
                                 if oldest_version == None:
                                     oldest_version = namespace
                                 else:
@@ -284,7 +286,7 @@ class CSDLToJSON():
             # Based on the oldest version, add the mapping for all namespaces
             if oldest_version != None:
                 for schema in self.root.iter( ODATA_TAG_SCHEMA ):
-                    namespace = get_attrib( schema, "Namespace" )
+                    namespace = self.get_attrib( schema, "Namespace" )
                     if namespace != self.namespace_under_process:
                         if does_namespace_apply( oldest_version, namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
@@ -292,15 +294,15 @@ class CSDLToJSON():
         # Add descriptions
         for child in object:
             if child.tag == ODATA_TAG_ANNOTATION:
-                term = get_attrib( child, "Term" )
+                term = self.get_attrib( child, "Term" )
 
                 # Object Description
                 if term == "OData.Description":
-                    json_def[name]["description"] = get_attrib( child, "String" )
+                    json_def[name]["description"] = self.get_attrib( child, "String" )
 
                 # Object Long Description
                 if term == "OData.LongDescription":
-                    json_def[name]["longDescription"] = get_attrib( child, "String" )
+                    json_def[name]["longDescription"] = self.get_attrib( child, "String" )
 
     def generate_object( self, object, json_def, name = None ):
         """
@@ -314,7 +316,7 @@ class CSDLToJSON():
 
         # If the name isn't given, pull it from the object
         if name == None:
-            name = get_attrib( object, "Name" )
+            name = self.get_attrib( object, "Name" )
 
         # Add the object to the definitions body if this is a new instance
         self.init_object_definition( name, json_def )
@@ -330,19 +332,19 @@ class CSDLToJSON():
         for child in object:
             # Process object level annotations
             if child.tag == ODATA_TAG_ANNOTATION:
-                term = get_attrib( child, "Term" )
+                term = self.get_attrib( child, "Term" )
 
                 # Object Description
                 if ( term == "OData.Description" ) and ( "description" not in json_def[name] ):
-                    json_def[name]["description"] = get_attrib( child, "String" )
+                    json_def[name]["description"] = self.get_attrib( child, "String" )
 
                 # Object Long Description
                 if ( term == "OData.LongDescription" ) and ( "longDescription" not in json_def[name] ):
-                    json_def[name]["longDescription"] = get_attrib( child, "String" )
+                    json_def[name]["longDescription"] = self.get_attrib( child, "String" )
 
                 # Additional Properties
                 if term == "OData.AdditionalProperties":
-                    if get_attrib( child, "Bool", False, "true" ) == "true":
+                    if self.get_attrib( child, "Bool", False, "true" ) == "true":
                         json_def[name]["additionalProperties"] = True
 
                 # Dynamic Property Patterns
@@ -353,11 +355,11 @@ class CSDLToJSON():
                         pattern_prop = None
                         type = None
                         for prop_val in record.iter( ODATA_TAG_PROP_VAL ):
-                            property = get_attrib( prop_val, "Property" )
+                            property = self.get_attrib( prop_val, "Property" )
                             if property == "Pattern":
-                                pattern_prop = get_attrib( prop_val, "String" )
+                                pattern_prop = self.get_attrib( prop_val, "String" )
                             if property == "Type":
-                                type = get_attrib( prop_val, "String" )
+                                type = self.get_attrib( prop_val, "String" )
 
                         # If it's properly defined, add it to the pattern properties for the object
                         if ( pattern_prop != None ) and ( type != None ):
@@ -397,7 +399,7 @@ class CSDLToJSON():
         """
 
         # Check if there is a BaseType
-        base_type = get_attrib( object, "BaseType", False, None )
+        base_type = self.get_attrib( object, "BaseType", False, None )
         if base_type == None:
             return
 
@@ -427,7 +429,7 @@ class CSDLToJSON():
         # Loop on the namespaces to find the matching type
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
             for base_object in schema.iter( object.tag ):
-                type_name = get_attrib( schema, "Namespace" ) + "." + get_attrib( base_object, "Name" )
+                type_name = self.get_attrib( schema, "Namespace" ) + "." + self.get_attrib( base_object, "Name" )
                 if type_name == base_type:
                     # Match; processs it
                     self.generate_object( base_object, json_def, name )
@@ -446,7 +448,7 @@ class CSDLToJSON():
         self.generate_object( action, json_def )
 
         # Hook it into the Actions object definition to be one of its properties
-        name = get_attrib( action, "Name" )
+        name = self.get_attrib( action, "Name" )
         self.init_object_definition( "Actions", json_def )
         action_prop = "#" + self.namespace_under_process.split( "." )[0] + "." + name
         json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
@@ -463,7 +465,7 @@ class CSDLToJSON():
         # Add the enum to the definitions body if this is a new instance
         # Unlike with objects, we don't check if the enum is already defined; this
         # is because in CSDL, you can't extend enums like you can with objects
-        name = get_attrib( enum, "Name" )
+        name = self.get_attrib( enum, "Name" )
         json_def[name] = {}
         json_def[name]["type"] = "string"
 
@@ -471,47 +473,47 @@ class CSDLToJSON():
         for child in enum:
             # Top level annotations
             if child.tag == ODATA_TAG_ANNOTATION:
-                term = get_attrib( child, "Term" )
+                term = self.get_attrib( child, "Term" )
 
                 # Enum Description
                 if term == "OData.Description":
-                    json_def[name]["description"] = get_attrib( child, "String" )
+                    json_def[name]["description"] = self.get_attrib( child, "String" )
                 # Enum Long Description
                 if term == "OData.LongDescription":
-                    json_def[name]["longDescription"] = get_attrib( child, "String" )
+                    json_def[name]["longDescription"] = self.get_attrib( child, "String" )
                 # Enum Deprecated
                 if term == "Redfish.Deprecated":
-                    json_def[name]["deprecated"] = get_attrib( child, "String" )
+                    json_def[name]["deprecated"] = self.get_attrib( child, "String" )
 
             # Enum members
             if child.tag == ODATA_TAG_MEMBER:
                 # Add to the enum list
-                member_name = get_attrib( child, "Name" )
+                member_name = self.get_attrib( child, "Name" )
                 if "enum" not in json_def[name]:
                     json_def[name]["enum"] = []
                 json_def[name]["enum"].append( member_name )
 
                 # Process the annotations of the current member
                 for annotation in child.iter( ODATA_TAG_ANNOTATION ):
-                    term = get_attrib( annotation, "Term" )
+                    term = self.get_attrib( annotation, "Term" )
 
                     # Member Description
                     if term == "OData.Description":
                         if "enumDescriptions" not in json_def[name]:
                             json_def[name]["enumDescriptions"] = {}
-                        json_def[name]["enumDescriptions"][member_name] = get_attrib( annotation, "String" )
+                        json_def[name]["enumDescriptions"][member_name] = self.get_attrib( annotation, "String" )
 
                     # Member Long Description
                     if term == "OData.LongDescription":
                         if "enumLongDescriptions" not in json_def[name]:
                             json_def[name]["enumLongDescriptions"] = {}
-                        json_def[name]["enumLongDescriptions"][member_name] = get_attrib( annotation, "String" )
+                        json_def[name]["enumLongDescriptions"][member_name] = self.get_attrib( annotation, "String" )
 
                     # Member Deprecated
                     if term == "Redfish.Deprecated":
                         if "enumDeprecated" not in json_def[name]:
                             json_def[name]["enumDeprecated"] = {}
-                        json_def[name]["enumDeprecated"][member_name] = get_attrib( annotation, "String" )
+                        json_def[name]["enumDeprecated"][member_name] = self.get_attrib( annotation, "String" )
 
     def generate_typedef( self, typedef, json_def ):
         """
@@ -525,14 +527,14 @@ class CSDLToJSON():
         # Check if this is a Redfish Enum
         for child in typedef:
             if child.tag == ODATA_TAG_ANNOTATION:
-                if get_attrib( child, "Term" ) == "Redfish.Enumeration":
+                if self.get_attrib( child, "Term" ) == "Redfish.Enumeration":
                     # Special handling for Redfish Enums
                     self.generate_redfish_enum( typedef, json_def )
                     return
 
         # It's not a Redfish Enum; no special handling needed
-        name = get_attrib( typedef, "Name" )
-        type = get_attrib( typedef, "UnderlyingType" )
+        name = self.get_attrib( typedef, "Name" )
+        type = self.get_attrib( typedef, "UnderlyingType" )
         json_def[name] = {}
 
         # Add the common type info
@@ -550,7 +552,7 @@ class CSDLToJSON():
         # Add the enum to the definitions body if this is a new instance
         # Unlike with objects, we don't check if the enum is already defined; this
         # is because in CSDL, you can't extend enums like you can with objects
-        name = get_attrib( enum, "Name" )
+        name = self.get_attrib( enum, "Name" )
         json_def[name] = {}
         json_def[name]["type"] = "string"
 
@@ -558,15 +560,15 @@ class CSDLToJSON():
         for child in enum:
             # Only annotations should be at the top level of the definition
             if child.tag == ODATA_TAG_ANNOTATION:
-                term = get_attrib( child, "Term" )
+                term = self.get_attrib( child, "Term" )
 
                 # Enum Description
                 if term == "OData.Description":
-                    json_def[name]["description"] = get_attrib( annotation, "String" )
+                    json_def[name]["description"] = self.get_attrib( annotation, "String" )
 
                 # Enum Long Description
                 if term == "OData.LongDescription":
-                    json_def[name]["longDescription"] = get_attrib( annotation, "String" )
+                    json_def[name]["longDescription"] = self.get_attrib( annotation, "String" )
 
                 # Enum Members
                 if term == "Redfish.Enumeration":
@@ -575,8 +577,8 @@ class CSDLToJSON():
                         # Get the member name first
                         member_name = None
                         for prop_val in record.iter( ODATA_TAG_PROP_VAL ):
-                            if get_attrib( prop_val, "Property" ) == "Member":
-                                member_name = get_attrib( prop_val, "String" )
+                            if self.get_attrib( prop_val, "Property" ) == "Member":
+                                member_name = self.get_attrib( prop_val, "String" )
 
                         # If we were successful in getting the member name, add it to the list and process its annotations
                         if member_name != None:
@@ -587,25 +589,25 @@ class CSDLToJSON():
 
                             # Add the annotations for the member
                             for rec_annotation in record.iter( ODATA_TAG_ANNOTATION ):
-                                rec_term = get_attrib( rec_annotation, "Term" )
+                                rec_term = self.get_attrib( rec_annotation, "Term" )
 
                                 # Member Description
                                 if rec_term == "OData.Description":
                                     if "enumDescriptions" not in json_def[name]:
                                         json_def[name]["enumDescriptions"] = {}
-                                    json_def[name]["enumDescriptions"][member_name] = get_attrib( rec_annotation, "String" )
+                                    json_def[name]["enumDescriptions"][member_name] = self.get_attrib( rec_annotation, "String" )
 
                                 # Member Long Description
                                 if rec_term == "OData.LongDescription":
                                     if "enumLongDescriptions" not in json_def[name]:
                                         json_def[name]["enumLongDescriptions"] = {}
-                                    json_def[name]["enumLongDescriptions"][member_name] = get_attrib( rec_annotation, "String" )
+                                    json_def[name]["enumLongDescriptions"][member_name] = self.get_attrib( rec_annotation, "String" )
 
                                 # Member Deprecated
                                 if rec_term == "Redfish.Deprecated":
                                     if "enumDeprecated" not in json_def[name]:
                                         json_def[name]["enumDeprecated"] = {}
-                                    json_def[name]["enumDeprecated"][member_name] = get_attrib( rec_annotation, "String" )
+                                    json_def[name]["enumDeprecated"][member_name] = self.get_attrib( rec_annotation, "String" )
 
     def init_object_definition( self, name, json_def ):
         """
@@ -638,8 +640,8 @@ class CSDLToJSON():
         """
 
         # Pull out property info
-        prop_name = get_attrib( property, "Name" )
-        prop_type = get_attrib( property, "Type" )
+        prop_name = self.get_attrib( property, "Name" )
+        prop_type = self.get_attrib( property, "Type" )
         json_obj_def["properties"][prop_name] = {}
 
         # Determine if this is an array
@@ -652,7 +654,7 @@ class CSDLToJSON():
 
         # Check for required annotations on the property
         for annotation in property.iter( ODATA_TAG_ANNOTATION ):
-            term = get_attrib( annotation, "Term" )
+            term = self.get_attrib( annotation, "Term" )
 
             if term == "Redfish.Required":
                 if "required" not in json_obj_def:
@@ -679,8 +681,8 @@ class CSDLToJSON():
         """
 
         # Pull out parameter info
-        param_name = get_attrib( parameter, "Name" )
-        param_type = get_attrib( parameter, "Type" )
+        param_name = self.get_attrib( parameter, "Name" )
+        param_type = self.get_attrib( parameter, "Type" )
         json_obj_def["parameters"][param_name] = {}
 
         # Determine if this is an array
@@ -700,8 +702,8 @@ class CSDLToJSON():
             json_obj_def: The JSON object definition to place the property
         """
 
-        name = get_attrib( object, "Name" )
-        base_type = get_attrib( object, "BaseType", False, None )
+        name = self.get_attrib( object, "Name" )
+        base_type = self.get_attrib( object, "BaseType", False, None )
 
         # If the object is the Resource or ResourceCollection object, or is derived from them, then we add the OData properties
         if ( name == "Resource" or name == "ResourceCollection" or 
@@ -728,11 +730,11 @@ class CSDLToJSON():
             is_nullable = False
         elif type_info.tag == ODATA_TAG_PARAMETER:
             is_nullable = False
-            if get_attrib( type_info, "Nullable", False, "true" ) == "false":
+            if self.get_attrib( type_info, "Nullable", False, "true" ) == "false":
                 json_type_def["requiredParameter"] = True
         else:
             is_nullable = True
-            if get_attrib( type_info, "Nullable", False, "true" ) == "false":
+            if self.get_attrib( type_info, "Nullable", False, "true" ) == "false":
                 is_nullable = False
 
         # Convert the type as needed; some types will force a format, pattern, or reference
@@ -761,19 +763,19 @@ class CSDLToJSON():
 
         # Loop through the annotations and add other definitions as needed
         for annotation in type_info.iter( ODATA_TAG_ANNOTATION ):
-            term = get_attrib( annotation, "Term" )
+            term = self.get_attrib( annotation, "Term" )
 
             # Type Description
             if term == "OData.Description":
-                json_type_def["description"] = get_attrib( annotation, "String" )
+                json_type_def["description"] = self.get_attrib( annotation, "String" )
 
             # Type Long Description
             if term == "OData.LongDescription":
-                json_type_def["longDescription"] = get_attrib( annotation, "String" )
+                json_type_def["longDescription"] = self.get_attrib( annotation, "String" )
 
             # Type Permissions
             if term == "OData.Permissions":
-                permissions = get_attrib( annotation, "EnumMember" )
+                permissions = self.get_attrib( annotation, "EnumMember" )
                 if ( permissions == "OData.Permission/Read" ) or ( permissions == "OData.Permissions/Read" ):
                     json_type_def["readonly"] = True
                 else:
@@ -781,28 +783,28 @@ class CSDLToJSON():
 
             # Type Format
             if term == "OData.IsURL":
-                if get_attrib( annotation, "Bool", False, "true" ) == "true":
+                if self.get_attrib( annotation, "Bool", False, "true" ) == "true":
                     json_type_def["format"] = "uri"
 
             # Type Units
             if term == "Measures.Unit":
-                json_type_def["units"] = get_attrib( annotation, "String" )
+                json_type_def["units"] = self.get_attrib( annotation, "String" )
 
             # Type Minimum
             if term == "Validation.Minimum":
-                json_type_def["minimum"] = int( get_attrib( annotation, "Int" ) )
+                json_type_def["minimum"] = int( self.get_attrib( annotation, "Int" ) )
 
             # Type Maximum
             if term == "Validation.Maximum":
-                json_type_def["maximum"] = int( get_attrib( annotation, "Int" ) )
+                json_type_def["maximum"] = int( self.get_attrib( annotation, "Int" ) )
 
             # Type Pattern
             if term == "Validation.Pattern":
-                json_type_def["pattern"] = get_attrib( annotation, "String" )
+                json_type_def["pattern"] = self.get_attrib( annotation, "String" )
 
             # Type Deprecated
             if term == "Redfish.Deprecated":
-                json_type_def["deprecated"] = get_attrib( annotation, "String" )
+                json_type_def["deprecated"] = self.get_attrib( annotation, "String" )
 
     def csdl_type_to_json_type( self, type, is_nullable ):
         """
@@ -893,8 +895,31 @@ class CSDLToJSON():
                         ref = "#/definitions/" + type_ref
                 else:
                     print( "-- ERROR: Could not resolve reference to \"{}\" for \"{}\"".format( namespace_ref, type ) )
+                    self.errors[self.namespace_under_process] = True
 
         return json_type, ref, pattern, format
+
+    def get_attrib( self, element, name, required = True, default = "UNKNOWN_ATTRIB" ):
+        """
+        Gets a given attribute from an ET element in a safe manner, and provides warnings
+
+        Args:
+            element: The element with the attribute
+            name: The name of the attribute
+            required: Flag indicating if the attribute is expected to be present
+            default: The value to return if not found
+
+        Returns:
+            The attribute value
+        """
+        if name in element.attrib:
+            return element.attrib[name]
+        else:
+            if required:
+                print( "-- ERROR: Missing \"{}\" attribute for tag \"{}\"".format( name, element.tag.split( "}" )[-1] ) )
+                self.errors[self.namespace_under_process] = True
+
+        return default
 
 def main( argv ):
     """
@@ -1001,10 +1026,13 @@ def main( argv ):
                 translator.process()
                 for namespace in translator.json_out:
                     out_filename = args.output + os.path.sep + namespace + ".json"
-                    if ( overwrite == True ) or is_namespace_unversioned( namespace ) or ( os.path.isfile( out_filename ) == False ):
-                        out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
-                        with open( out_filename, "w" ) as file:
-                            file.write( out_string )
+                    if translator.errors[namespace] == True:
+                        print( "-- Errors detected while generating {}; not creating file".format( out_filename ) )
+                    else:
+                        if ( overwrite == True ) or is_namespace_unversioned( namespace ) or ( os.path.isfile( out_filename ) == False ):
+                            out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
+                            with open( out_filename, "w" ) as file:
+                                file.write( out_string )
 
 def is_namespace_unversioned( namespace ):
     """
@@ -1076,27 +1104,6 @@ def get_namespace_version( namespace ):
 
     groups = re.match( NAMESPACE_VER_REGEX, namespace )
     return groups.group( 1 ), groups.group( 2 ), groups.group( 3 )
-
-def get_attrib( element, name, required = True, default = "UNKNOWN_ATTRIB" ):
-    """
-    Gets a given attribute from an ET element in a safe manner, and provides warnings
-
-    Args:
-        element: The element with the attribute
-        name: The name of the attribute
-        required: Flag indicating if the attribute is expected to be present
-        default: The value to return if not found
-
-    Returns:
-        The attribute value
-    """
-    if name in element.attrib:
-        return element.attrib[name]
-    else:
-        if required:
-            print( "-- ERROR: Missing \"{}\" attribute for tag \"{}\"".format( name, element.tag.split( "}" )[-1] ) )
-
-    return default
 
 if __name__ == '__main__':
     sys.exit( main( sys.argv ) )
