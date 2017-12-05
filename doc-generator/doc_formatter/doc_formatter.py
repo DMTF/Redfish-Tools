@@ -249,14 +249,19 @@ class DocFormatter:
 
         Used to generate documentation for schema fragments.
         """
-        frag_gen = self.__class__(self.property_data, self.traverser, config, self.level)
+
+        # If /properties is specified, expand the object and output just its contents.
+        if ref.endswith('/properties'):
+            ref = ref[:-len('/properties')]
+            config['strip_top_object'] = True
 
         if not ref:
             warnings.warn("Can't generate fragment for '" + ref +
                           "': could not parse as schema URI.")
             return ''
 
-        prop_info = None
+        frag_gen = self.__class__(self.property_data, self.traverser, config, self.level)
+
         if "://" not in ref:
             # Try to find the file locally
             try:
