@@ -500,13 +500,29 @@ class DocFormatter:
         prop_names.sort()
         return prop_names
 
-    def filter_props_by_profile(self, prop_names, profile):
+    def filter_props_by_profile(self, prop_names, profile, is_action=False):
 
         if self.config['profile_mode'] == 'terse':
-            profile_props = [x for x in profile.get('PropertyRequirements', {}).keys()]
+            if is_action:
+                profile_props = [x for x in profile.keys()]
+            else:
+                profile_props = [x for x in profile.get('PropertyRequirements', {}).keys()]
             if profile.get('ActionRequirements'):
                 profile_props.append('Actions')
-            prop_names = list(set(prop_names) & set(profile_props))
+
+            if is_action:
+                # Action properties typically start with "#SchemaName.", which is not reflected in the profile:
+                filtered = []
+                for prop in profile_props:
+                    if prop in prop_names:
+                        filtered.append(prop)
+                    else:
+                        matches = [x for x in prop_names if x.endswith('.' + prop)]
+                        if matches:
+                            filtered.append(matches[0])
+                prop_names = filtered
+            else:
+                prop_names = list(set(prop_names) & set(profile_props))
         prop_names.sort()
         return prop_names
 
@@ -922,12 +938,12 @@ class DocFormatter:
 
             # TODO: probably refactor this block:
             if self.config['profile_mode'] == 'terse':
-                if len(prop_path) and prop_path[-1] == 'Actions':
+                if len(prop_path) and prop_path[0] == 'Actions':
                     profile_section = 'ActionRequirements'
                 else:
                     profile_section = 'PropertyRequirements'
                 profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
-                prop_names = self.filter_props_by_profile(prop_names, profile)
+                prop_names = self.filter_props_by_profile(prop_names, profile, is_action)
                 filtered_properties = {}
                 for k in prop_names:
                     filtered_properties[k] = properties[k]
@@ -1158,11 +1174,12 @@ class DocFormatter:
         if self.config['profile_resources']:
             # Profiles use the schema name (not full ref):
             schema_name = self.traverser.get_schema_name(schema_ref)
-            profile = self.config['profile_resources'].get(schema_name, {})
+            prop_profile = self.config['profile_resources'].get(schema_name, {})
             if section == 'ActionRequirements':
                 if prop_path[0] == 'Actions':
                     prop_path = prop_path[1:]
-            prop_reqs = profile.get(section, {})
+            prop_reqs = prop_profile.get(section, {})
+            prop_profile = prop_reqs
 
             for prop_name in prop_path:
                 if not prop_name:
