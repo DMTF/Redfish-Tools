@@ -10,9 +10,12 @@ Brief : Contains DocFormatter class
 Initial author: Second Rise LLC.
 """
 
+import os
 import copy
 import re
 import warnings
+import sys
+from doc_gen_util import DocGenUtilities
 
 class DocFormatter:
     """Generic class for schema documentation formatter"""
@@ -250,16 +253,37 @@ class DocFormatter:
 
         Used to generate documentation for schema fragments.
         """
-        frag_gen = self.__class__(self.property_data, self.traverser, config, level=self.level)
+
+        # If /properties is specified, expand the object and output just its contents.
+        if ref.endswith('/properties'):
+            ref = ref[:-len('/properties')]
+            config['strip_top_object'] = True
 
         if not ref:
-            warnings.warn("Can't generate fragment for '" + path +
+            warnings.warn("Can't generate fragment for '" + ref +
                           "': could not parse as schema URI.")
             return ''
 
+        frag_gen = self.__class__(self.property_data, self.traverser, config, self.level)
+
+        if "://" not in ref:
+            # Try to find the file locally
+            try:
+                filepath = ref.split('#')[0]
+                localpath = os.path.abspath(filepath)
+                fragment_data = DocGenUtilities.load_as_json(localpath)
+                if fragment_data:
+                    traverser = self.traverser.copy()
+                    traverser.add_schema(filepath, fragment_data)
+                    frag_gen = self.__class__(self.property_data, traverser, config, self.level)
+            except Exception as ex:
+                # That's okay, it may still be a URI-style ref without the protocol
+                pass
+
         prop_info = frag_gen.traverser.find_ref_data(ref)
+
         if not prop_info:
-            warnings.warn("Can't generate fragment for '" + path + "': could not find data.")
+            warnings.warn("Can't generate fragment for '" + ref + "': could not find data.")
             return ''
 
         schema_ref = prop_info['_from_schema_ref']

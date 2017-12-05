@@ -159,8 +159,16 @@ pre.code{
 
         traverser = self.traverser
         formatted = []     # The row itself
+
         current_depth = len(prop_path)
-        indentation_string = '&nbsp;' * 6 * current_depth
+
+        # strip_top_object is used for fragments, to allow output of just the properties
+        # without the enclosing object:
+        if self.config.get('strip_top_object') and current_depth > 0:
+            indentation_string = '&nbsp;' * 6 * (current_depth -1)
+        else:
+            indentation_string = '&nbsp;' * 6 * current_depth
+
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
 
@@ -215,6 +223,12 @@ pre.code{
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
+
+        if self.config.get('strip_top_object') and current_depth == 0:
+            # In this case, we're done for this bit of documentation, and we just want the properties of this object.
+            formatted.append('\n'.join(formatted_details['object_description']))
+            return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
+                    'action_details':formatted_details.get('action_details')})
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {

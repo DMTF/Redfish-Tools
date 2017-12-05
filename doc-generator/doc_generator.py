@@ -13,10 +13,14 @@ suitable for use with the Slate documentation tool (https://github.com/tripit/sl
 Initial author: Second Rise LLC.
 """
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib'))
+
 import argparse
 import json
-import os
 import warnings
+from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
 import parse_supplement
 
@@ -90,7 +94,7 @@ class DocGenerator:
             doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
             latest_info = files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
-            latest_data = self.load_as_json(latest_file)
+            latest_data = DocGenUtilities.load_as_json(latest_file)
             latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
             latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
             latest_data['_schema_name'] = latest_info.get('schema_name')
@@ -128,7 +132,7 @@ class DocGenerator:
             # Get the (probably versioned) filename, and save the data:
             root, _, fname = filename.rpartition(os.sep)
 
-            data = self.load_as_json(filename)
+            data = DocGenUtilities.load_as_json(filename)
 
             schema_name = SchemaTraverser.find_schema_name(fname, data)
             if schema_name is None: continue
@@ -266,7 +270,7 @@ class DocGenerator:
         profile_mode = self.config['profile_mode']
         profile = self.config['profile_resources']
 
-        data = self.load_as_json(filename)
+        data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
         version = self.get_version_string(ref['filename'])
 
@@ -389,20 +393,6 @@ class DocGenerator:
             version = version.replace('_', '.')
         return version
 
-
-    @staticmethod
-    def load_as_json(filename):
-        """Load json data from a file, printing an error message on failure."""
-        data = {}
-        try:
-            # Parse file as json
-            jsondata = open(filename, 'r', encoding="utf8")
-            data = json.load(jsondata)
-            jsondata.close()
-        except (OSError, json.JSONDecodeError) as ex:
-            warnings.warn('Unable to read ' + filename + ': ' + str(ex))
-
-        return data
 
     @staticmethod
     def write_output(markdown, outfile):
