@@ -225,7 +225,6 @@ pre.code{
             return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
                     'action_details':formatted_details.get('action_details')})
 
-
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
             'prop_type': self.separators['inline'],
