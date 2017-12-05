@@ -42,7 +42,7 @@ class DocGenerator:
         self.outfile = outfile
 
         if config['profile_mode']:
-            config['profile'] = self.load_as_json(config.get('profile_doc'))
+            config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
             config['profile_resources'] = self.config.get('profile', {}).get('Resources')
             if not config['profile_resources']:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')

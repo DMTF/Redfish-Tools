@@ -29,7 +29,7 @@ class MarkdownGenerator(DocFormatter):
             }
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[]):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -43,6 +43,8 @@ class MarkdownGenerator(DocFormatter):
 
         traverser = self.traverser
         formatted = []     # The row itself
+
+        current_depth = len(prop_path)
 
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
@@ -106,7 +108,7 @@ class MarkdownGenerator(DocFormatter):
                                  self.escape_for_markdown(meta['version_deprecated_explanation'],
                                                           self.config['escape_chars']))
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
 
         if self.config.get('strip_top_object') and current_depth == 0:
@@ -339,7 +341,7 @@ class MarkdownGenerator(DocFormatter):
             param_names = [x for x in action_parameters.keys()]
             param_names.sort()
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['ActionParameters'])
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } row:
@@ -443,6 +445,9 @@ search: true
             'escape_chars': [],
             'uri_replacements': {},
             'units_translation': self.config['units_translation'],
+            'profile': self.config['profile'],
+            'profile_mode': self.config['profile_mode'],
+            'profile_resources': self.config['profile_resources'],
             }
 
         for line in intro_blob.splitlines():
