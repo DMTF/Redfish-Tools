@@ -1,0 +1,54 @@
+===============
+Incorporate all examples from the documentation in SampleProfileExtended.json
+
+
+===============
+Schema-level properties
+
+Repository: use this; build a schema_ref from it to index in-memory profile data.
+
+ReadRequirement, ConditionalRequirements -- may need an example of
+these & how they should appear.
+
+===============
+Property-level requirements:
+
+ReadRequirement: default is Mandatory
+WriteRequirement: default is None
+
+ConditionalRequirements
+    SubordinateToResource -- just needs to be displayed somehow, right?
+
+MinSupportValues
+
+Comparison (So many possible values!)
+
+Values
+
+    ===============
+    Comparison question for Jeff: In the Power example, PowerSupplyType has a ReadRequirement of "AnyOf".
+    That's supposed to be a Comparison, not a ReadRequirement, right?
+
+
+===============
+Action Requirements
+
+Purpose (maybe already handled?)
+
+    ===============
+    Parameter requirements
+
+
+===============
+Registry level requirements
+
+===============
+RequiredProfiles (top level): need to resolve these and merge them in.
+
+
+
+===============
+Top-level properties: include more of these in the output (intro)? Ask Jeff.
+
+===============
+Profile requirements: output them? Ask Jeff.
