@@ -354,17 +354,20 @@ class CSDLToJSON():
                         # Pull out the Pattern and Type of the dynamic property pattern
                         pattern_prop = None
                         type = None
+                        is_nullable = False
                         for prop_val in record.iter( ODATA_TAG_PROP_VAL ):
                             property = self.get_attrib( prop_val, "Property" )
                             if property == "Pattern":
                                 pattern_prop = self.get_attrib( prop_val, "String" )
                             if property == "Type":
                                 type = self.get_attrib( prop_val, "String" )
+                                if ( type == "Edm.PrimitiveType" ) or ( type == "Edm.Primitive" ):
+                                    is_nullable = True
 
                         # If it's properly defined, add it to the pattern properties for the object
                         if ( pattern_prop != None ) and ( type != None ):
                             json_def[name]["patternProperties"][pattern_prop] = {}
-                            json_type, ref, pattern, format = self.csdl_type_to_json_type( type, False )
+                            json_type, ref, pattern, format = self.csdl_type_to_json_type( type, is_nullable )
                             if ref == None:
                                 json_def[name]["patternProperties"][pattern_prop]["type"] = json_type
                             else:
