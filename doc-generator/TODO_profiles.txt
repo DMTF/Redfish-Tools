@@ -8,7 +8,7 @@ Schema-level properties
 Repository: use this; build a schema_ref from it to index in-memory profile data.
 
 ReadRequirement, ConditionalRequirements -- may need an example of
-these & how they should appear.
+these & how they should appear. Currently they are just ignored.
 
 ===============
 Property-level requirements:

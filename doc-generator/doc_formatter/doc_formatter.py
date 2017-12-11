@@ -173,7 +173,7 @@ class DocFormatter:
         for schema_ref in schema_keys:
             details = property_data[schema_ref]
             schema_name = details['schema_name']
-            profile = config.get('profile_resources', {}).get(schema_name, {})
+            profile = config.get('profile_resources', {}).get(schema_ref, {})
 
             # Look up supplemental details for this schema/version
             version = details.get('latest_version', '1')
@@ -1172,9 +1172,7 @@ class DocFormatter:
         prop_profile = {}
 
         if self.config['profile_resources']:
-            # Profiles use the schema name (not full ref):
-            schema_name = self.traverser.get_schema_name(schema_ref)
-            prop_profile = self.config['profile_resources'].get(schema_name, {})
+            prop_profile = self.config['profile_resources'].get(schema_ref, {})
             if section == 'ActionRequirements':
                 if prop_path[0] == 'Actions':
                     prop_path = prop_path[1:]

@@ -1,8 +1,8 @@
 {
     "SchemaDefinition": "RedfishInteroperabilityProfile.v1_0_0",
-    "ProfileName": "Anchovy",
+    "ProfileName": "Narwhal",
     "ProfileVersion": "1.0.2",
-    "Purpose": "This is a sample Redfish Interoperability profile.",
+    "Purpose": "This is a sample Redfish Interoperability profile for the purpose of exercising the documentation generator.",
     "OwningEntity": "Contoso",
     "ContactInfo": "pizza@contoso.com",
     "RequiredProfiles": {

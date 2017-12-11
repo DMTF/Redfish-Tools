@@ -43,10 +43,21 @@ class DocGenerator:
 
         if config['profile_mode']:
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            config['profile_resources'] = self.config.get('profile', {}).get('Resources')
-            if not config['profile_resources']:
+            profile_resources = self.config.get('profile', {}).get('Resources')
+            if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
                 exit()
+
+            # Index profile_resources by Repository & schema name
+            profile_resources_indexed = {}
+            for schema_name in profile_resources.keys():
+                profile_data = profile_resources[schema_name]
+                repository = profile_data.get('Repository', 'redfish.dmtf.org/schemas/v1')
+                normalized_uri = repository + '/' + schema_name + '.json'
+                profile_data['Schema_Name'] = schema_name
+                profile_resources_indexed[normalized_uri] = profile_data
+
+            self.config['profile_resources'] = profile_resources_indexed
 
 
     def generate_doc(self):
@@ -267,6 +278,9 @@ class DocGenerator:
         filename = os.path.join(ref['root'], ref['filename'])
         normalized_uri = self.construct_uri_for_filename(filename)
 
+        # Get the un-versioned filename for match against profile keys
+        generalized_uri = self.construct_uri_for_filename(filename.split('.v')[0]) + '.json'
+
         profile_mode = self.config['profile_mode']
         profile = self.config['profile_resources']
 
@@ -281,9 +295,9 @@ class DocGenerator:
 
         min_version = False
         if profile_mode:
-            schema_profile = profile.get(schema_name)
-            if profile and schema_profile:
-                min_version = profile[schema_name].get('MinVersion')
+            schema_profile = profile.get(generalized_uri)
+            if schema_profile:
+                min_version = schema_profile.get('MinVersion')
                 if min_version:
                     if version:
                         property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
