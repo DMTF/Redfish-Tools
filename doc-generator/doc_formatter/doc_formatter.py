@@ -83,6 +83,13 @@ class DocFormatter:
         self.this_section['action_details'].append(action_details)
 
 
+    def add_profile_conditional_details(self, conditional_details):
+        """ Add the conditional requirements for the profile (which should already be formatted) """
+        if 'profile_conditional_details' not in self.this_section:
+            self.this_section['profile_conditional_details'] = []
+        self.this_section['profile_conditional_details'].append(conditional_details)
+
+
     def add_json_payload(self, json_payload):
         """ Add a JSON payload for the current section """
         raise NotImplementedError
@@ -144,7 +151,12 @@ class DocFormatter:
 
 
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
-        """Generate a formatted Actions section parameters data"""
+        """Generate a formatted Actions section from parameters data"""
+        raise NotImplementedError
+
+
+    def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
+        """Generate a formatted Conditional Details section from profile data"""
         raise NotImplementedError
 
 
@@ -220,6 +232,7 @@ class DocFormatter:
 
             if 'properties' in details.keys():
                 prop_details = {}
+                conditional_details = {}
 
                 properties = details['properties']
                 prop_names = [x for x in properties.keys()]
@@ -238,12 +251,20 @@ class DocFormatter:
                             prop_details.update(formatted['details'])
                         if formatted['action_details']:
                             self.add_action_details(formatted['action_details'])
+                        if formatted['profile_conditional_details']:
+                            conditional_details.update(formatted['profile_conditional_details'])
 
                 if len(prop_details):
                     detail_names = [x for x in prop_details.keys()]
                     detail_names.sort()
                     for detail_name in detail_names:
                         self.add_property_details(prop_details[detail_name])
+
+                if len(conditional_details):
+                    cond_names = [x for x in conditional_details.keys()]
+                    cond_names.sort()
+                    for cond_name in cond_names:
+                        self.add_profile_conditional_details(conditional_details[cond_name])
 
         return self.output_document()
 
@@ -589,7 +610,8 @@ class DocFormatter:
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
-        'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose'
+        'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
+        'profile_conditional_req', 'profile_conditional_details'
         """
 
         if isinstance(prop_infos, dict):
@@ -621,7 +643,9 @@ class DocFormatter:
                   'profile_read_req': False,
                   'profile_write_req': False,
                   'profile_mincount': False,
-                  'profile_purpose': False
+                  'profile_purpose': False,
+                  'profile_conditional_req': False,
+                  'profile_conditional_details': {}
                  }
 
         profile = {}
@@ -676,6 +700,7 @@ class DocFormatter:
         parsed['profile_write_req'] = profile.get('WriteRequirement')
         parsed['profile_mincount'] = profile.get('MinCount')
         parsed['profile_purpose'] = profile.get('Purpose')
+        parsed['profile_conditional_req'] = profile.get('ConditionalRequirements')
 
         for det in details:
             parsed['prop_is_object'] |= det['prop_is_object']
@@ -684,6 +709,7 @@ class DocFormatter:
             parsed['prop_details'].update(det['prop_details'])
             parsed['has_action_details'] |= det['has_action_details']
             parsed['action_details'].update(det['action_details'])
+            parsed['profile_conditional_details'].update(det['profile_conditional_details'])
 
         return parsed
 
@@ -694,7 +720,8 @@ class DocFormatter:
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
-        'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose'
+        'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
+        'profile_conditional_req', 'profile_conditional_details'
         """
         traverser = self.traverser
 
@@ -710,6 +737,8 @@ class DocFormatter:
         has_prop_details = False
         has_prop_actions = False
         action_details = {}
+        profile_conditional_req = False
+        profile_conditional_details = {}
         schema_name = traverser.get_schema_name(schema_ref)
 
         # Some special treatment is required for Actions
@@ -769,6 +798,7 @@ class DocFormatter:
 
             self.add_action_details(action_details)
 
+
         # Items, if present, will have a definition with either an object, a list of types,
         # or a $ref:
         prop_item = prop_info.get('items')
@@ -807,9 +837,7 @@ class DocFormatter:
                                                                    prop_info.get('_doc_generator_meta', {}),
                                                                    anchor)
 
-
-        # Currently, Action details will be available only from the supplemental doc.
-        # We can expect a future update to get them from information in the schema JSON.
+        # Action details may be supplied as markdown in the supplemental doc.
         # TODO: remove this? Change it?
         supplemental_actions = None
         if 'supplemental' in self.config and 'action details' in self.config['supplemental']:
@@ -869,6 +897,11 @@ class DocFormatter:
             path_to_prop.append(prop_brief_name)
             profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
+            # Conditional Requirements
+            profile_conditional_req = profile.get('ConditionalRequirements')
+            if profile_conditional_req:
+                profile_conditional_details[prop_name] = self.format_conditional_details(schema_ref, prop_name,
+                                                                                         profile_conditional_req)
 
         return {'prop_type': prop_type,
                 'prop_units': prop_units,
@@ -889,7 +922,9 @@ class DocFormatter:
                 'profile_read_req': profile.get('ReadRequirement', 'Mandatory'),
                 'profile_write_req': profile.get('WriteRequirement'),
                 'profile_mincount': profile.get('MinCount'),
-                'profile_purpose': profile.get('Purpose')
+                'profile_purpose': profile.get('Purpose'),
+                'profile_conditional_req': profile_conditional_req,
+                'profile_conditional_details': profile_conditional_details
                 }
 
 

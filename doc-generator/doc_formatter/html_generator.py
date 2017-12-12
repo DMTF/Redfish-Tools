@@ -148,11 +148,12 @@ pre.code{
     def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[]):
         """Format information for a single property.
 
-        Returns an object with 'row', 'details', and 'action_details':
+        Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
 
         'row': content for the main table being generated.
         'details': content for the Property Details section.
         'action_details': content for the Actions section.
+        'profile_conditional_details': populated only in profile_mode, formatted conditional details
 
         This may include embedded objects with their own properties.
         """
@@ -228,7 +229,8 @@ pre.code{
             # In this case, we're done for this bit of documentation, and we just want the properties of this object.
             formatted.append('\n'.join(formatted_details['object_description']))
             return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
-                    'action_details':formatted_details.get('action_details')})
+                    'action_details':formatted_details.get('action_details'),
+                    'profile_conditional_details':formatted_details.get('profile_conditional_details')})
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -337,21 +339,27 @@ pre.code{
                 profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)<br>' +
                                   self.nobr(self.text_map(write_req)) + ' (Read/Write)')
 
+        descr = formatted_details['descr']
+        if formatted_details['profile_purpose']:
+            descr += '<br>' + self.bold("Profile Purpose: " + formatted_details['profile_purpose'])
+
+        # Conditional Requirements
+        cond_req = formatted_details['profile_conditional_req']
+        if cond_req:
+            anchor = schema_ref + '|conditional_reqs|' + prop_name
+            cond_req_text = 'See <a href="#' + anchor + '"> Conditional Requirements</a>, below, for more information.'
+            descr += ' ' + self.nobr(self.italic(cond_req_text))
+            profile_access += "<br>" + self.nobr(self.italic('Conditional Requirements'))
+
+        if not profile_access:
+            profile_access = '&nbsp;' * 10
+
         if formatted_details['profile_mincount']:
             mc = str(formatted_details['profile_mincount'])
             if profile_access:
                 profile_access += ' '
             profile_access += self.nobr("Minimum " + mc)
 
-
-        if not profile_access:
-            profile_access = '&nbsp;' * 10
-
-        descr = formatted_details['descr']
-        if formatted_details['profile_purpose']:
-            descr += '<br>' + self.bold("Profile Purpose: " + formatted_details['profile_purpose'])
-
-         # TODO: Conditional Requirements
 
         row = []
         row.append(indentation_string + name_and_version)
@@ -380,7 +388,8 @@ pre.code{
             formatted.append(self.make_row(desc_row))
 
         return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
-                'action_details':formatted_details.get('action_details')})
+                'action_details':formatted_details.get('action_details'),
+                'profile_conditional_details':formatted_details.get('profile_conditional_details')})
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
@@ -530,6 +539,17 @@ pre.code{
         return "\n".join(formatted)
 
 
+    def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
+        """Generate a formatted Conditional Details section from profile data"""
+        formatted = []
+        anchor = schema_ref + '|conditional_reqs|' + prop_name
+
+        formatted.append(self.head_four(prop_name, anchor))
+        formatted.append(self.para('TODO'))
+
+        return "\n".join(formatted)
+
+
     def emit(self):
         """ Output contents thus far """
 
@@ -555,6 +575,14 @@ pre.code{
                 deets.append(self.make_div('\n'.join(section['property_details']),
                                            'property-details-content'))
                 contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
+            if section.get('profile_conditional_details'):
+                conditional_details = '\n'.join(section['profile_conditional_details'])
+                deets = []
+                deets.append(self.head_three('Conditional Requirements'))
+                deets.append(self.make_div(conditional_details, 'property-details-content'))
+                contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
             if section.get('json_payload'):
                 contents.append(self.head_three('Example Response'))
                 contents.append(section['json_payload'])
