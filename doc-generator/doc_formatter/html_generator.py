@@ -349,7 +349,7 @@ pre.code{
 
         descr = formatted_details['descr']
         if formatted_details['profile_purpose']:
-            descr += ' ' + self.bold("Profile Purpose: " + formatted_details['profile_purpose'])
+            descr += '<br>' + self.bold("Profile Purpose: " + formatted_details['profile_purpose'])
 
          # TODO: Conditional Requirements
 

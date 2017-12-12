@@ -5,7 +5,7 @@ Incorporate all examples from the documentation in SampleProfileExtended.json
 ===============
 Schema-level properties
 
-Repository: use this; build a schema_ref from it to index in-memory profile data.
+X Repository: use this; build a schema_ref from it to index in-memory profile data.
 
 ReadRequirement, ConditionalRequirements -- may need an example of
 these & how they should appear. Currently they are just ignored.
@@ -13,8 +13,8 @@ these & how they should appear. Currently they are just ignored.
 ===============
 Property-level requirements:
 
-ReadRequirement: default is Mandatory
-WriteRequirement: default is None
+X ReadRequirement: default is Mandatory
+X WriteRequirement: default is None (we don't want to display this, so no need to set a value)
 
 ConditionalRequirements
     SubordinateToResource -- just needs to be displayed somehow, right?
@@ -33,11 +33,11 @@ Values
 ===============
 Action Requirements
 
-Purpose (maybe already handled?)
+X Purpose (maybe already handled?)
 
     ===============
     Parameter requirements
-
+    NEED TO CAPTURE!
 
 ===============
 Registry level requirements

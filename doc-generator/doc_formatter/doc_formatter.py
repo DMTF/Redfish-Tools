@@ -672,7 +672,7 @@ class DocFormatter:
         parsed['prop_units'] = details[0]['prop_units']
 
         # Data from profile:
-        parsed['profile_read_req'] = profile.get('ReadRequirement')
+        parsed['profile_read_req'] = profile.get('ReadRequirement', 'Mandatory')
         parsed['profile_write_req'] = profile.get('WriteRequirement')
         parsed['profile_mincount'] = profile.get('MinCount')
         parsed['profile_purpose'] = profile.get('Purpose')
@@ -886,7 +886,7 @@ class DocFormatter:
                 'has_direct_prop_details': has_prop_details,
                 'has_action_details': has_prop_actions,
                 'action_details': action_details,
-                'profile_read_req': profile.get('ReadRequirement'),
+                'profile_read_req': profile.get('ReadRequirement', 'Mandatory'),
                 'profile_write_req': profile.get('WriteRequirement'),
                 'profile_mincount': profile.get('MinCount'),
                 'profile_purpose': profile.get('Purpose')
