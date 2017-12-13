@@ -318,26 +318,7 @@ pre.code{
             prop_access += ' (null)'
 
         # If profile reqs are present, massage them:
-        profile_access = ''
-        if formatted_details['profile_read_req'] or formatted_details['profile_write_req']:
-            # Each may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
-            read_req = formatted_details['profile_read_req']
-            write_req = formatted_details['profile_write_req']
-            if formatted_details['read_only']:
-                if read_req:
-                    profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
-            elif read_req == write_req:
-                profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
-            elif not write_req:
-                profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
-            elif not read_req:
-                warnings.warn("Profile contains a Write requirement but no Read requirement for " +
-                              prop_name + ' in ' + schema_ref);
-                profile_access = self.nobr(self.text_map(write_req)) + ' (Write)'
-            else:
-                # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-                profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)<br>' +
-                                  self.nobr(self.text_map(write_req)) + ' (Read/Write)')
+        profile_access = self.format_base_profile_access(formatted_details)
 
         descr = formatted_details['descr']
         if formatted_details['profile_purpose']:
@@ -353,13 +334,6 @@ pre.code{
 
         if not profile_access:
             profile_access = '&nbsp;' * 10
-
-        if formatted_details['profile_mincount']:
-            mc = str(formatted_details['profile_mincount'])
-            if profile_access:
-                profile_access += ' '
-            profile_access += self.nobr("Minimum " + mc)
-
 
         row = []
         row.append(indentation_string + name_and_version)
@@ -539,13 +513,83 @@ pre.code{
         return "\n".join(formatted)
 
 
+    def format_base_profile_access(self, formatted_details):
+        """Massage profile read/write requirements for display"""
+
+        profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
+                                                     read_req=formatted_details.get('profile_read_req'),
+                                                     write_req=formatted_details.get('profile_write_req'),
+                                                     min_count=formatted_details.get('profile_mincount'))
+
+        return profile_access
+
+
+    def format_conditional_access(self, conditional_req):
+        """Massage conditional profile read/write requirements."""
+
+        import pdb; pdb.set_trace()
+        profile_access = self._format_profile_access(read_req=conditional_req.get('ReadRequirement'),
+                                                     write_req=conditional_req.get('WriteRequirement'),
+                                                     min_count=conditional_req.get('MinCount'))
+
+        return profile_access
+
+
+    def _format_profile_access(self, read_only=False, read_req=None, write_req=None, min_count=None):
+        """Common formatting logic for profile_access column"""
+
+        profile_access = ''
+        if not self.config['profile_mode']:
+            return profile_access
+
+        # Each requirement  may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
+        if not read_req:
+            read_req = 'Mandatory' # This is the default if nothing is specified.
+        if read_only:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
+        elif read_req == write_req:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
+        elif not write_req:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
+        else:
+            # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
+            profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)<br>' +
+                              self.nobr(self.text_map(write_req)) + ' (Read/Write)')
+
+        if min_count:
+            if profile_access:
+                profile_access += "<br>"
+            profile_access += self.nobr("Minimum " + str(min_count))
+
+        return profile_access
+
+
+
     def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
         """Generate a formatted Conditional Details section from profile data"""
         formatted = []
         anchor = schema_ref + '|conditional_reqs|' + prop_name
 
         formatted.append(self.head_four(prop_name, anchor))
-        formatted.append(self.para('TODO'))
+
+        rows = []
+
+        for creq in conditional_reqs:
+            purpose = creq.get('Purpose', '&nbsp;'*10)
+            subordinate_to = creq.get('SubordinateToResource')
+
+            req = self.format_conditional_access(creq)
+
+            if creq.get('BaseRequirement'):
+                req_desc = 'Base Requirement'
+
+            elif subordinate_to:
+                req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
+
+
+            rows.append(self.make_row([req_desc, req, purpose]))
+
+        formatted.append(self.make_table(rows, []))
 
         return "\n".join(formatted)
 

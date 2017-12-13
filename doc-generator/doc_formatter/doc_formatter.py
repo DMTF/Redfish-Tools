@@ -696,7 +696,7 @@ class DocFormatter:
         parsed['prop_units'] = details[0]['prop_units']
 
         # Data from profile:
-        parsed['profile_read_req'] = profile.get('ReadRequirement', 'Mandatory')
+        parsed['profile_read_req'] = profile.get('ReadRequirement')
         parsed['profile_write_req'] = profile.get('WriteRequirement')
         parsed['profile_mincount'] = profile.get('MinCount')
         parsed['profile_purpose'] = profile.get('Purpose')
@@ -900,6 +900,12 @@ class DocFormatter:
             # Conditional Requirements
             profile_conditional_req = profile.get('ConditionalRequirements')
             if profile_conditional_req:
+                # Add the read and write reqs, as we want to capture those as "Base Requirement":
+                req = {'BaseRequirement': True}
+                req['ReadRequirement'] = profile.get('ReadRequirement')
+                req['WriteRequirement'] = profile.get('WriteRequirement')
+                profile_conditional_req.insert(0, req)
+
                 profile_conditional_details[prop_name] = self.format_conditional_details(schema_ref, prop_name,
                                                                                          profile_conditional_req)
 
@@ -919,7 +925,7 @@ class DocFormatter:
                 'has_direct_prop_details': has_prop_details,
                 'has_action_details': has_prop_actions,
                 'action_details': action_details,
-                'profile_read_req': profile.get('ReadRequirement', 'Mandatory'),
+                'profile_read_req': profile.get('ReadRequirement'),
                 'profile_write_req': profile.get('WriteRequirement'),
                 'profile_mincount': profile.get('MinCount'),
                 'profile_purpose': profile.get('Purpose'),
