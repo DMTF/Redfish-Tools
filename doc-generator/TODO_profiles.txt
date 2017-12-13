@@ -16,12 +16,14 @@ Property-level requirements:
 X ReadRequirement: default is Mandatory
 X WriteRequirement: default is None (we don't want to display this, so no need to set a value)
 
-ConditionalRequirements
-    SubordinateToResource -- just needs to be displayed somehow, right?
+X ConditionalRequirements
+
+? Can SubordinateToResource and Compare be combined in the same
+  Conditional Req? I'm combining with "and" if it comes up.
 
 MinSupportValues
 
-Comparison (So many possible values!)
+X Comparison (So many possible values!)
 
 Values
 
