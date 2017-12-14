@@ -750,6 +750,22 @@ class DocFormatter:
         profile_comparison = False
         schema_name = traverser.get_schema_name(schema_ref)
 
+        # Get the profile if we are in profile mode.
+        # Skip profile data if prop_name is blank -- this is just an additional row of info and
+        # the "parent" row will have the profile info.
+        profile = {}
+        if self.config['profile_mode'] and prop_name:
+            prop_brief_name = prop_name
+            profile_section = 'PropertyRequirements'
+            if within_action:
+                profile_section = 'ActionRequirements'
+                if prop_name.startswith('#'): # expected
+                    prop_name_parts = prop_name.split('.')
+                    prop_brief_name = prop_name_parts[-1]
+            path_to_prop = prop_path.copy()
+            path_to_prop.append(prop_brief_name)
+            profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
+
         # Some special treatment is required for Actions
         is_action = prop_name == 'Actions'
         if within_action:
@@ -891,20 +907,7 @@ class DocFormatter:
                 prop_details.update(item_formatted['details'])
 
         # Read/Write requirements from profile:
-        # Skip profile data if prop_name is blank -- this is just an additional row of info and
-        # the "parent" row will have the profile info.
-        profile = {}
         if self.config['profile_mode'] and prop_name:
-            prop_brief_name = prop_name
-            profile_section = 'PropertyRequirements'
-            if within_action:
-                profile_section = 'ActionRequirements'
-                if prop_name.startswith('#'): # expected
-                    prop_name_parts = prop_name.split('.')
-                    prop_brief_name = prop_name_parts[-1]
-            path_to_prop = prop_path.copy()
-            path_to_prop.append(prop_brief_name)
-            profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
             # Conditional Requirements
             profile_conditional_req = profile.get('ConditionalRequirements')
