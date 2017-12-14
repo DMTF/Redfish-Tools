@@ -25,21 +25,20 @@ MinSupportValues
 
 X Comparison (So many possible values!)
 
-Values
+X Values
 
     ===============
-    Comparison question for Jeff: In the Power example, PowerSupplyType has a ReadRequirement of "AnyOf".
+?   Comparison question for Jeff: In the Power example, PowerSupplyType has a ReadRequirement of "AnyOf".
     That's supposed to be a Comparison, not a ReadRequirement, right?
 
 
 ===============
-Action Requirements
+X Action Requirements
 
 X Purpose (maybe already handled?)
 
     ===============
-    Parameter requirements
-    NEED TO CAPTURE!
+X    Parameter requirements
 
 ===============
 Registry level requirements
@@ -54,3 +53,6 @@ Top-level properties: include more of these in the output (intro)? Ask Jeff.
 
 ===============
 Profile requirements: output them? Ask Jeff.
+
+===============
+Protocol Requirements -- capture and output.

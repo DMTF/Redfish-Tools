@@ -335,6 +335,13 @@ pre.code{
         if not profile_access:
             profile_access = '&nbsp;' * 10
 
+        # Comparison
+        if formatted_details['profile_values']:
+            comparison_descr = ('Must be ' + formatted_details['profile_comparison'] + ' ('
+                                + ', '.join('"' + x + '"' for x in formatted_details['profile_values'])
+                                + ')')
+            profile_access += '<br>' + self.italic(comparison_descr)
+
         row = []
         row.append(indentation_string + name_and_version)
         if self.config['profile_mode']:

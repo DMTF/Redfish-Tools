@@ -611,7 +611,7 @@ class DocFormatter:
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
-        'profile_conditional_req', 'profile_conditional_details'
+        'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison'
         """
 
         if isinstance(prop_infos, dict):
@@ -645,7 +645,9 @@ class DocFormatter:
                   'profile_mincount': False,
                   'profile_purpose': False,
                   'profile_conditional_req': False,
-                  'profile_conditional_details': {}
+                  'profile_conditional_details': {},
+                  'profile_values': False,
+                  'profile_comparison': False
                  }
 
         profile = {}
@@ -701,6 +703,11 @@ class DocFormatter:
         parsed['profile_mincount'] = profile.get('MinCount')
         parsed['profile_purpose'] = profile.get('Purpose')
         parsed['profile_conditional_req'] = profile.get('ConditionalRequirements')
+        profile_values = profile.get('Values')
+        if profile_values:
+            profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
+            parsed['profile_values'] = profile_values
+            parsed['profile_comparison'] = profile_comparison
 
         for det in details:
             parsed['prop_is_object'] |= det['prop_is_object']
@@ -721,7 +728,7 @@ class DocFormatter:
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
-        'profile_conditional_req', 'profile_conditional_details'
+        'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison'
         """
         traverser = self.traverser
 
@@ -739,6 +746,8 @@ class DocFormatter:
         action_details = {}
         profile_conditional_req = False
         profile_conditional_details = {}
+        profile_values = False
+        profile_comparison = False
         schema_name = traverser.get_schema_name(schema_ref)
 
         # Some special treatment is required for Actions
@@ -908,6 +917,10 @@ class DocFormatter:
 
                 profile_conditional_details[prop_name] = self.format_conditional_details(schema_ref, prop_name,
                                                                                          profile_conditional_req)
+            # Comparison
+            profile_values = profile.get('Values')
+            if profile_values:
+                profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
 
         return {'prop_type': prop_type,
                 'prop_units': prop_units,
@@ -930,7 +943,9 @@ class DocFormatter:
                 'profile_mincount': profile.get('MinCount'),
                 'profile_purpose': profile.get('Purpose'),
                 'profile_conditional_req': profile_conditional_req,
-                'profile_conditional_details': profile_conditional_details
+                'profile_conditional_details': profile_conditional_details,
+                'profile_values': profile_values,
+                'profile_comparison': profile_comparison,
                 }
 
 
