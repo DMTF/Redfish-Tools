@@ -170,6 +170,11 @@ pre.code{
         else:
             indentation_string = '&nbsp;' * 6 * current_depth
 
+        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Action Details
+        # section and should dial back the indentation by one level.
+        if len(prop_path) > 1 and prop_path[0] == 'Actions':
+            indentation_string = '&nbsp;' * 6 * (current_depth -1)
+
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
 
@@ -502,7 +507,7 @@ pre.code{
             param_names = [x for x in action_parameters.keys()]
             param_names.sort()
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['ActionParameters'])
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } to the last row:
@@ -523,10 +528,14 @@ pre.code{
     def format_base_profile_access(self, formatted_details):
         """Massage profile read/write requirements for display"""
 
-        profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
-                                                     read_req=formatted_details.get('profile_read_req'),
-                                                     write_req=formatted_details.get('profile_write_req'),
-                                                     min_count=formatted_details.get('profile_mincount'))
+        if formatted_details.get('is_in_profile'):
+            profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
+                                                         read_req=formatted_details.get('profile_read_req'),
+                                                         write_req=formatted_details.get('profile_write_req'),
+                                                         min_count=formatted_details.get('profile_mincount'))
+        else:
+            profile_access = ''
+
         return profile_access
 
 

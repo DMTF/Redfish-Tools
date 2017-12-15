@@ -512,16 +512,20 @@ class DocFormatter:
         return prop_infos
 
 
-    def organize_prop_names(self, prop_names, profile={}):
+    def organize_prop_names(self, prop_names, profile=None):
         """ Strip out excluded property names, sorting the remainder """
 
-        prop_names = self.filter_props_by_profile(prop_names, profile)
+        if self.config.get('profile_mode'):
+            prop_names = self.filter_props_by_profile(prop_names, profile)
         prop_names = self.exclude_prop_names(prop_names, self.config['excluded_properties'],
                                        self.config['excluded_by_match'])
         prop_names.sort()
         return prop_names
 
     def filter_props_by_profile(self, prop_names, profile, is_action=False):
+
+        if profile is None:
+            return []
 
         if self.config['profile_mode'] == 'terse':
             if is_action:
@@ -610,7 +614,7 @@ class DocFormatter:
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
-        'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
+        'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison'
         """
 
@@ -640,17 +644,18 @@ class DocFormatter:
                   'has_direct_prop_details': False,
                   'has_action_details': False,
                   'action_details': {},
-                  'profile_read_req': False,
-                  'profile_write_req': False,
-                  'profile_mincount': False,
-                  'profile_purpose': False,
-                  'profile_conditional_req': False,
-                  'profile_conditional_details': {},
-                  'profile_values': False,
-                  'profile_comparison': False
+                  'is_in_profile': False,
+                  'profile_read_req': None,
+                  'profile_write_req': None,
+                  'profile_mincount': None,
+                  'profile_purpose': None,
+                  'profile_conditional_req': None,
+                  'profile_conditional_details': None,
+                  'profile_values': None,
+                  'profile_comparison': None
                  }
 
-        profile = {}
+        profile = None
         # Skip profile data if prop_name is blank -- this is just an additional row of info and
         # the "parent" row will have the profile info.
         if self.config['profile_mode'] and prop_name:
@@ -698,25 +703,27 @@ class DocFormatter:
         parsed['prop_units'] = details[0]['prop_units']
 
         # Data from profile:
-        parsed['profile_read_req'] = profile.get('ReadRequirement')
-        parsed['profile_write_req'] = profile.get('WriteRequirement')
-        parsed['profile_mincount'] = profile.get('MinCount')
-        parsed['profile_purpose'] = profile.get('Purpose')
-        parsed['profile_conditional_req'] = profile.get('ConditionalRequirements')
-        profile_values = profile.get('Values')
-        if profile_values:
-            profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
-            parsed['profile_values'] = profile_values
-            parsed['profile_comparison'] = profile_comparison
+        if profile is not None:
+            parsed['is_in_profile'] = True
+            parsed['profile_read_req'] = profile.get('ReadRequirement')
+            parsed['profile_write_req'] = profile.get('WriteRequirement')
+            parsed['profile_mincount'] = profile.get('MinCount')
+            parsed['profile_purpose'] = profile.get('Purpose')
+            parsed['profile_conditional_req'] = profile.get('ConditionalRequirements')
+            profile_values = profile.get('Values')
+            if profile_values:
+                profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
+                parsed['profile_values'] = profile_values
+                parsed['profile_comparison'] = profile_comparison
 
-        for det in details:
-            parsed['prop_is_object'] |= det['prop_is_object']
-            parsed['prop_is_array'] |= det['prop_is_array']
-            parsed['has_direct_prop_details'] |= det['has_direct_prop_details']
-            parsed['prop_details'].update(det['prop_details'])
-            parsed['has_action_details'] |= det['has_action_details']
-            parsed['action_details'].update(det['action_details'])
-            parsed['profile_conditional_details'].update(det['profile_conditional_details'])
+            for det in details:
+                parsed['prop_is_object'] |= det['prop_is_object']
+                parsed['prop_is_array'] |= det['prop_is_array']
+                parsed['has_direct_prop_details'] |= det['has_direct_prop_details']
+                parsed['prop_details'].update(det['prop_details'])
+                parsed['has_action_details'] |= det['has_action_details']
+                parsed['action_details'].update(det['action_details'])
+                parsed['profile_conditional_details'].update(det['profile_conditional_details'])
 
         return parsed
 
@@ -727,7 +734,7 @@ class DocFormatter:
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
-        'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
+        'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison'
         """
         traverser = self.traverser
@@ -753,7 +760,7 @@ class DocFormatter:
         # Get the profile if we are in profile mode.
         # Skip profile data if prop_name is blank -- this is just an additional row of info and
         # the "parent" row will have the profile info.
-        profile = {}
+        profile = None
         if self.config['profile_mode'] and prop_name:
             prop_brief_name = prop_name
             profile_section = 'PropertyRequirements'
@@ -907,7 +914,7 @@ class DocFormatter:
                 prop_details.update(item_formatted['details'])
 
         # Read/Write requirements from profile:
-        if self.config['profile_mode'] and prop_name:
+        if self.config['profile_mode'] and prop_name and profile is not None:
 
             # Conditional Requirements
             profile_conditional_req = profile.get('ConditionalRequirements')
@@ -925,22 +932,36 @@ class DocFormatter:
             if profile_values:
                 profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
 
-        return {'prop_type': prop_type,
-                'prop_units': prop_units,
-                'read_only': read_only,
-                'nullable': has_null,
-                'descr': descr,
-                'add_link_text': add_link_text,
-                'prop_is_object': prop_is_object,
-                'prop_is_array': prop_is_array,
-                'array_of_objects': array_of_objects,
-                'object_description': object_description,
-                'item_description': item_description,
-                'item_list': item_list,
-                'prop_details': prop_details,
-                'has_direct_prop_details': has_prop_details,
-                'has_action_details': has_prop_actions,
-                'action_details': action_details,
+        parsed_info = {'prop_type': prop_type,
+                       'prop_units': prop_units,
+                       'read_only': read_only,
+                       'nullable': has_null,
+                       'descr': descr,
+                       'add_link_text': add_link_text,
+                       'prop_is_object': prop_is_object,
+                       'prop_is_array': prop_is_array,
+                       'array_of_objects': array_of_objects,
+                       'object_description': object_description,
+                       'item_description': item_description,
+                       'item_list': item_list,
+                       'prop_details': prop_details,
+                       'has_direct_prop_details': has_prop_details,
+                       'has_action_details': has_prop_actions,
+                       'action_details': action_details,
+                       'is_in_profile': False,
+                       'profile_read_req': None,
+                       'profile_write_req': None,
+                       'profile_mincount': None,
+                       'profile_purpose': None,
+                       'profile_conditional_req': None,
+                       'profile_conditional_details': None,
+                       'profile_values': None,
+                       'profile_comparison': None
+                       }
+
+        if profile is not None:
+            parsed_info.update({
+                'is_in_profile': True,
                 'profile_read_req': profile.get('ReadRequirement'),
                 'profile_write_req': profile.get('WriteRequirement'),
                 'profile_mincount': profile.get('MinCount'),
@@ -949,7 +970,9 @@ class DocFormatter:
                 'profile_conditional_details': profile_conditional_details,
                 'profile_values': profile_values,
                 'profile_comparison': profile_comparison,
-                }
+                })
+
+        return parsed_info
 
 
     def process_for_idRef(self, ref):
@@ -1002,6 +1025,7 @@ class DocFormatter:
                 else:
                     profile_section = 'PropertyRequirements'
                 profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
+
                 prop_names = self.filter_props_by_profile(prop_names, profile, is_action)
                 filtered_properties = {}
                 for k in prop_names:
@@ -1226,22 +1250,32 @@ class DocFormatter:
         """Get profile data for the specified property, by schema_ref, prop name path, and section.
 
         Section is 'PropertyRequirements' or 'ActionRequirements'.
-        Returns {} if no data is present."""
+        Returns None if no data is present ({} is a valid data-present result)."""
 
-        prop_profile = {}
+        prop_profile = None
+        if prop_path[0] == 'Actions':
+            section = 'ActionRequirements'
 
         if self.config['profile_resources']:
-            prop_profile = self.config['profile_resources'].get(schema_ref, {})
+            prop_profile = self.config['profile_resources'].get(schema_ref, None)
+            if prop_profile is None:
+                return None
+
             if section == 'ActionRequirements':
                 if prop_path[0] == 'Actions':
                     prop_path = prop_path[1:]
-            prop_reqs = prop_profile.get(section, {})
+
+            prop_reqs = prop_profile.get(section, None)
+            if prop_reqs == None:
+                return None
             prop_profile = prop_reqs
 
             for prop_name in prop_path:
                 if not prop_name:
                     continue
-                prop_profile = prop_reqs.get(prop_name, {})
-                prop_reqs = prop_profile.get('PropertyRequirements', {})
+                prop_profile = prop_reqs.get(prop_name, None)
+                if prop_profile is None:
+                    return None
+                prop_reqs = prop_profile.get('PropertyRequirements', prop_profile.get('Parameters', {}))
 
         return prop_profile
