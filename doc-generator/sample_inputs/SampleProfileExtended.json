@@ -113,7 +113,8 @@
                     "ReadRequirement": "Recommended",
                     "ConditionalRequirements": [{
                         "SubordinateToResource": ["ComputerSystem", "EthernetInterfaceCollection"],
-                        "ReadRequirement": "Mandatory"
+                        "ReadRequirement": "Mandatory",
+                        "Purpose": "Host Name is used to match this instance to other data sources."
                     }]
                 },
                 "IPv6Addresses": {
@@ -203,7 +204,7 @@
     "Registries": {
         "Base": {
             "MinVersion": "1.0.0",
-            "Repository": "redfish.dmtf.org/registries",
+            "Repository": "http://redfish.dmtf.org/registries",
             "Messages": {
                 "Success": {},
                 "GeneralError": {},
@@ -212,7 +213,7 @@
             }
         },
         "ContosoPizzaMessages": {
-            "Repository": "contoso.com/registries",
+            "Repository": "http://contoso.com/registries",
             "ReadRequirement": "Mandatory"
         }
     }
