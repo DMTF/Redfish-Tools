@@ -637,6 +637,14 @@ pre.code{
             # something is awry if there are no properties
             if section.get('properties'):
                 contents.append(self.make_table(section['properties'], None, 'properties'))
+
+            if section.get('profile_conditional_details'):
+                conditional_details = '\n'.join(section['profile_conditional_details'])
+                deets = []
+                deets.append(self.head_three('Conditional Requirements'))
+                deets.append(self.make_div(conditional_details, 'property-details-content'))
+                contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
             if len(section.get('action_details', [])):
                 action_details = '\n'.join(section['action_details'])
                 deets = []
@@ -648,13 +656,6 @@ pre.code{
                 deets.append(self.head_three('Property Details'))
                 deets.append(self.make_div('\n'.join(section['property_details']),
                                            'property-details-content'))
-                contents.append(self.make_div('\n'.join(deets), 'property-details'))
-
-            if section.get('profile_conditional_details'):
-                conditional_details = '\n'.join(section['profile_conditional_details'])
-                deets = []
-                deets.append(self.head_three('Conditional Requirements'))
-                deets.append(self.make_div(conditional_details, 'property-details-content'))
                 contents.append(self.make_div('\n'.join(deets), 'property-details'))
 
             if section.get('json_payload'):

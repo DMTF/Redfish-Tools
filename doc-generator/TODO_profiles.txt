@@ -1,5 +1,5 @@
 ===============
-Incorporate all examples from the documentation in SampleProfileExtended.json
+X Incorporate all examples from the documentation in SampleProfileExtended.json
 
 
 ===============
@@ -28,8 +28,8 @@ X Comparison (So many possible values!)
 X Values
 
     ===============
-?   Comparison question for Jeff: In the Power example, PowerSupplyType has a ReadRequirement of "AnyOf".
-    That's supposed to be a Comparison, not a ReadRequirement, right?
+X   Comparison question for Jeff: In the Power example, PowerSupplyType has a ReadRequirement of "AnyOf".
+    That's supposed to be a Comparison, not a ReadRequirement, right? Right.
 
 
 ===============
@@ -47,12 +47,9 @@ Registry level requirements
 RequiredProfiles (top level): need to resolve these and merge them in.
 
 
-
 ===============
 Top-level properties: include more of these in the output (intro)? Ask Jeff.
 
-===============
-Profile requirements: output them? Ask Jeff.
 
 ===============
 Protocol Requirements -- capture and output.

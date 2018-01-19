@@ -420,6 +420,15 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('|     |     |     |')
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
+
+            # TODO: markdown version of this HTML-targeted snippet:
+            # if section.get('profile_conditional_details'):
+            #     conditional_details = '\n'.join(section['profile_conditional_details'])
+            #     deets = []
+            #     deets.append(self.head_three('Conditional Requirements'))
+            #     deets.append(self.make_div(conditional_details, 'property-details-content'))
+            #     contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
             if len(section.get('action_details', [])):
                 contents.append('\n' + self.head_two('Action Details'))
                 contents.append('\n\n'.join(section.get('action_details')))
