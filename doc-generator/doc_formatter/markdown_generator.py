@@ -29,7 +29,7 @@ class MarkdownGenerator(DocFormatter):
             }
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[]):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -43,6 +43,8 @@ class MarkdownGenerator(DocFormatter):
 
         traverser = self.traverser
         formatted = []     # The row itself
+
+        current_depth = len(prop_path)
 
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
@@ -106,7 +108,7 @@ class MarkdownGenerator(DocFormatter):
                                  self.escape_for_markdown(meta['version_deprecated_explanation'],
                                                           self.config['escape_chars']))
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
 
         if self.config.get('strip_top_object') and current_depth == 0:
@@ -185,13 +187,49 @@ class MarkdownGenerator(DocFormatter):
                     item_list = ', '.join(item_list)
                 prop_type += ' (' + item_list + ')'
 
-
+        prop_access = ''
         if formatted_details['read_only']:
-            prop_type += '<br><br>' + self.italic('read-only')
+            prop_access = 'read-only'
         else:
-            prop_type += '<br><br>' + self.italic('read-write')
+            prop_access = 'read-write'
         if formatted_details['nullable']:
-            prop_type += ' ' + self.italic('(null)')
+            prop_access += '<br>(null)'
+
+
+        # If profile reqs are present, massage them:
+        profile_access = ''
+        if formatted_details['profile_read_req'] or formatted_details['profile_write_req']:
+            # Each may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
+            read_req = formatted_details['profile_read_req']
+            write_req = formatted_details['profile_write_req']
+            if formatted_details['read_only']:
+                if read_req:
+                    profile_access = self.text_map(read_req) + ' (Read-only)'
+            elif read_req == write_req:
+                profile_access = self.text_map(read_req) + ' (Read/Write)'
+            elif not write_req:
+                profile_access = self.text_map(read_req) + ' (Read)'
+            elif not read_req:
+                warnings.warn("Profile contains a Write requirement but no Read requirement for " +
+                              prop_name + ' in ' + schema_ref);
+                profile_access = self.text_map(write_req) + ' (Write)'
+            else:
+                # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
+                profile_access = (self.text_map(read_req) + ' (Read)<br> ' +
+                                  self.text_map(write_req) + ' (Read/Write)')
+
+        if formatted_details['profile_mincount']:
+            mc = str(formatted_details['profile_mincount'])
+            if profile_access:
+                profile_access += ' '
+            profile_access += "Minimum " + mc
+
+        if self.config['profile_mode']:
+            if profile_access:
+                prop_type += '<br><br>' + self.italic(profile_access)
+        elif prop_access:
+            prop_type += '<br><br>' + self.italic(prop_access)
+
 
         row = []
         row.append(indentation_string + name_and_version)
@@ -339,7 +377,7 @@ class MarkdownGenerator(DocFormatter):
             param_names = [x for x in action_parameters.keys()]
             param_names.sort()
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['ActionParameters'])
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } row:
@@ -382,6 +420,15 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('|     |     |     |')
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
+
+            # TODO: markdown version of this HTML-targeted snippet:
+            # if section.get('profile_conditional_details'):
+            #     conditional_details = '\n'.join(section['profile_conditional_details'])
+            #     deets = []
+            #     deets.append(self.head_three('Conditional Requirements'))
+            #     deets.append(self.make_div(conditional_details, 'property-details-content'))
+            #     contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
             if len(section.get('action_details', [])):
                 contents.append('\n' + self.head_two('Action Details'))
                 contents.append('\n\n'.join(section.get('action_details')))
@@ -443,6 +490,9 @@ search: true
             'escape_chars': [],
             'uri_replacements': {},
             'units_translation': self.config['units_translation'],
+            'profile': self.config['profile'],
+            'profile_mode': self.config['profile_mode'],
+            'profile_resources': self.config['profile_resources'],
             }
 
         for line in intro_blob.splitlines():

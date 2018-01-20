@@ -41,6 +41,24 @@ class DocGenerator:
         self.import_from = import_from
         self.outfile = outfile
 
+        if config['profile_mode']:
+            config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
+            profile_resources = self.config.get('profile', {}).get('Resources')
+            if not profile_resources:
+                warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
+                exit()
+
+            # Index profile_resources by Repository & schema name
+            profile_resources_indexed = {}
+            for schema_name in profile_resources.keys():
+                profile_data = profile_resources[schema_name]
+                repository = profile_data.get('Repository', 'redfish.dmtf.org/schemas/v1')
+                normalized_uri = repository + '/' + schema_name + '.json'
+                profile_data['Schema_Name'] = schema_name
+                profile_resources_indexed[normalized_uri] = profile_data
+
+            self.config['profile_resources'] = profile_resources_indexed
+
 
     def generate_doc(self):
         output = self.generate_docs()
@@ -79,7 +97,9 @@ class DocGenerator:
         for normalized_uri in files.keys():
             data = self.process_files(normalized_uri, files[normalized_uri])
             if not data:
-                warnings.warn("Unable to process files for " + normalized_uri)
+                # If we're in profile mode, this is probably normal.
+                if not self.config['profile_mode']:
+                    warnings.warn("Unable to process files for " + normalized_uri)
                 continue
             property_data[normalized_uri] = data
             doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
@@ -258,6 +278,12 @@ class DocGenerator:
         filename = os.path.join(ref['root'], ref['filename'])
         normalized_uri = self.construct_uri_for_filename(filename)
 
+        # Get the un-versioned filename for match against profile keys
+        generalized_uri = self.construct_uri_for_filename(filename.split('.v')[0]) + '.json'
+
+        profile_mode = self.config['profile_mode']
+        profile = self.config['profile_resources']
+
         data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
         version = self.get_version_string(ref['filename'])
@@ -266,7 +292,22 @@ class DocGenerator:
         property_data['latest_version'] = version
         property_data['name_and_version'] = schema_name
         property_data['normalized_uri'] = normalized_uri
-        if version:
+
+        min_version = False
+        if profile_mode:
+            schema_profile = profile.get(generalized_uri)
+            if schema_profile:
+                min_version = schema_profile.get('MinVersion')
+                if min_version:
+                    if version:
+                        property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
+                    else:
+                        # this is unlikely
+                        property_data['name_and_version'] += ' v' + min_version + '+'
+            else:
+                # Skip schemas that aren't mentioned in the profile:
+                return {}
+        elif version:
             property_data['name_and_version'] += ' ' + version
 
         if 'properties' not in property_data:
@@ -299,7 +340,7 @@ class DocGenerator:
 
         except KeyError:
             warnings.warn('Unable to find properties in path ' + ref['ref'] + ' from ' + filename)
-            return
+            return {}
 
         meta = self.extend_metadata(meta, properties, version, normalized_uri + '#properties/')
         meta['definitions'] = meta.get('definitions', {})
@@ -421,7 +462,11 @@ def main():
         'cwd': os.getcwd(),
         'uri_replacements': {},
         'local_to_uri': {},
-        'uri_to_local': {}
+        'uri_to_local': {},
+        'profile_mode': False,
+        'profile_doc': None,
+        'profile_resources': {},
+        'profile': {}
         }
 
     help_description = 'Generate documentation for Redfish JSON schema files.\n\n'
@@ -445,6 +490,14 @@ def main():
                         help=('Path to the supplemental material document. '
                               'Default is usersupplement.md for user-focused documentation, '
                               'and devsupplement.md for normative documentation.'))
+    parser.add_argument('--profile', dest='profile_doc',
+                        help=('Path to a JSON profile document, for profile output'))
+    parser.add_argument('-t', '--terse', action='store_true', dest='profile_terse',
+                        help=('Terse output (meaningful only with --profile). By default,'
+                              'profile output is verbose, including all properties regardless of'
+                              'profile requirements. "Terse" output is intended for use by'
+                              'Service developers, including only the subset of properties with'
+                              'profile requirements.'))
     parser.add_argument('--escape', dest='escape_chars',
                         help=("Characters to escape (\\) in generated markdown; "
                               "e.g., --escape=@#. Use --escape=@ if strings with embedded @ "
@@ -490,6 +543,20 @@ def main():
             warnings.warn('No supplemental file specified and ' + supfile +
                           ' not found. Proceeding.')
 
+    # Check profile document, if specified
+    if args.profile_doc:
+        if args.profile_terse:
+            config['profile_mode'] = 'terse'
+        else:
+            config['profile_mode'] = 'verbose'
+
+        profile_doc = args.profile_doc
+        try:
+            profile = open(profile_doc, 'r', encoding="utf8")
+            config['profile_doc'] = profile_doc
+        except (OSError) as ex:
+            warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
+            exit()
 
     if 'keywords' in config['supplemental']:
         # Promote the keywords to top-level keys.

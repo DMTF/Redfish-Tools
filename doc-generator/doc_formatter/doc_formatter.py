@@ -20,7 +20,6 @@ from doc_gen_util import DocGenUtilities
 class DocFormatter:
     """Generic class for schema documentation formatter"""
 
-
     def __init__(self, property_data, traverser, config, level=0):
         """Set up the markdown generator.
 
@@ -84,6 +83,13 @@ class DocFormatter:
         self.this_section['action_details'].append(action_details)
 
 
+    def add_profile_conditional_details(self, conditional_details):
+        """ Add the conditional requirements for the profile (which should already be formatted) """
+        if 'profile_conditional_details' not in self.this_section:
+            self.this_section['profile_conditional_details'] = []
+        self.this_section['profile_conditional_details'].append(conditional_details)
+
+
     def add_json_payload(self, json_payload):
         """ Add a JSON payload for the current section """
         raise NotImplementedError
@@ -100,7 +106,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[]):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
         'row': content for the main table being generated.
@@ -117,22 +123,22 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_list_of_object_descrs(self, schema_ref, prop_items, current_depth):
+    def format_list_of_object_descrs(self, schema_ref, prop_items, prop_path):
         """Format a (possibly nested) list of embedded objects.
 
         We expect this to amount to one definition, usually for 'items' in an array."""
 
         if isinstance(prop_items, dict):
             if 'properties' in prop_items:
-                return self.format_object_descr(schema_ref, prop_items, current_depth)
+                return self.format_object_descr(schema_ref, prop_items, prop_path)
             else:
-                return self.format_non_object_descr(schema_ref, prop_items, current_depth)
+                return self.format_non_object_descr(schema_ref, prop_items, prop_path)
 
         rows = []
         details = {}
         if isinstance(prop_items, list):
             for prop_item in prop_items:
-                formatted = self.format_list_of_object_descrs(schema_ref, prop_item, current_depth)
+                formatted = self.format_list_of_object_descrs(schema_ref, prop_item, prop_path)
                 rows.extend(formatted['rows'])
                 details.update(formatted['details'])
             return ({'rows': rows, 'details': details})
@@ -145,7 +151,12 @@ class DocFormatter:
 
 
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
-        """Generate a formatted Actions section parameters data"""
+        """Generate a formatted Actions section from parameters data"""
+        raise NotImplementedError
+
+
+    def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
+        """Generate a formatted Conditional Details section from profile data"""
         raise NotImplementedError
 
 
@@ -165,15 +176,16 @@ class DocFormatter:
         traverser = self.traverser
         config = self.config
         schema_supplement = config.get('schema_supplement', {})
+        profile_mode = config.get('profile_mode')
 
         schema_keys = self.documented_schemas
         schema_keys.sort()
 
 
         for schema_ref in schema_keys:
-
             details = property_data[schema_ref]
             schema_name = details['schema_name']
+            profile = config.get('profile_resources', {}).get(schema_ref, {})
 
             # Look up supplemental details for this schema/version
             version = details.get('latest_version', '1')
@@ -209,6 +221,10 @@ class DocFormatter:
             else:
                 description = supplemental.get('schema-intro', description)
 
+            # Profile purpose overrides all:
+            if profile:
+                description = profile.get('Purpose')
+
             if description:
                 self.add_description(description)
 
@@ -216,10 +232,11 @@ class DocFormatter:
 
             if 'properties' in details.keys():
                 prop_details = {}
+                conditional_details = {}
 
                 properties = details['properties']
                 prop_names = [x for x in properties.keys()]
-                prop_names = self.organize_prop_names(prop_names)
+                prop_names = self.organize_prop_names(prop_names, profile)
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
@@ -227,19 +244,27 @@ class DocFormatter:
                     meta = prop_info.get('_doc_generator_meta', {})
                     prop_infos = self.extend_property_info(schema_ref, prop_info, properties.get('_doc_generator_meta'))
 
-                    formatted = self.format_property_row(schema_ref, prop_name, prop_infos)
+                    formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
                         self.add_property_row(formatted['row'])
                         if formatted['details']:
                             prop_details.update(formatted['details'])
                         if formatted['action_details']:
                             self.add_action_details(formatted['action_details'])
+                        if formatted['profile_conditional_details']:
+                            conditional_details.update(formatted['profile_conditional_details'])
 
                 if len(prop_details):
                     detail_names = [x for x in prop_details.keys()]
                     detail_names.sort()
                     for detail_name in detail_names:
                         self.add_property_details(prop_details[detail_name])
+
+                if len(conditional_details):
+                    cond_names = [x for x in conditional_details.keys()]
+                    cond_names.sort()
+                    for cond_name in cond_names:
+                        self.add_profile_conditional_details(conditional_details[cond_name])
 
         return self.output_document()
 
@@ -289,7 +314,7 @@ class DocFormatter:
             meta = {}
         prop_infos = frag_gen.extend_property_info(schema_ref, prop_info)
 
-        formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos)
+        formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
         if formatted:
             frag_gen.add_section('')
             frag_gen.current_version = {}
@@ -348,7 +373,6 @@ class DocFormatter:
                             idref_info[x] = prop_info[x]
                     prop_info = idref_info
 
-        # if prop_ref and traverser.ref_to_own_schema(prop_ref):
         if prop_ref:
             ref_info = traverser.find_ref_data(prop_ref)
 
@@ -488,11 +512,44 @@ class DocFormatter:
         return prop_infos
 
 
-    def organize_prop_names(self, prop_names):
+    def organize_prop_names(self, prop_names, profile=None):
         """ Strip out excluded property names, sorting the remainder """
 
-        return self.exclude_prop_names(prop_names, self.config['excluded_properties'],
+        if self.config.get('profile_mode'):
+            prop_names = self.filter_props_by_profile(prop_names, profile)
+        prop_names = self.exclude_prop_names(prop_names, self.config['excluded_properties'],
                                        self.config['excluded_by_match'])
+        prop_names.sort()
+        return prop_names
+
+    def filter_props_by_profile(self, prop_names, profile, is_action=False):
+
+        if profile is None:
+            return []
+
+        if self.config['profile_mode'] == 'terse':
+            if is_action:
+                profile_props = [x for x in profile.keys()]
+            else:
+                profile_props = [x for x in profile.get('PropertyRequirements', {}).keys()]
+            if profile.get('ActionRequirements'):
+                profile_props.append('Actions')
+
+            if is_action:
+                # Action properties typically start with "#SchemaName.", which is not reflected in the profile:
+                filtered = []
+                for prop in profile_props:
+                    if prop in prop_names:
+                        filtered.append(prop)
+                    else:
+                        matches = [x for x in prop_names if x.endswith('.' + prop)]
+                        if matches:
+                            filtered.append(matches[0])
+                prop_names = filtered
+            else:
+                prop_names = list(set(prop_names) & set(profile_props))
+        prop_names.sort()
+        return prop_names
 
 
     def exclude_annotations(self, prop_names):
@@ -551,25 +608,27 @@ class DocFormatter:
                 self.is_documented_schema(schema_name))
 
 
-    def parse_property_info(self, schema_ref, prop_name, prop_infos, current_depth, within_action=False):
+    def parse_property_info(self, schema_ref, prop_name, prop_infos, prop_path, within_action=False):
         """Parse a list of one more more property info objects into strings for display.
 
         Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
-        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
+        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
+        'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
+        'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison'
         """
 
         if isinstance(prop_infos, dict):
             return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
-                                                    current_depth, within_action)
+                                                    prop_path, within_action)
 
         if len(prop_infos) == 1:
             prop_info = prop_infos[0]
             if isinstance(prop_info, dict):
                 return self._parse_single_property_info(schema_ref, prop_name, prop_info,
-                                                        current_depth, within_action)
+                                                        prop_path, within_action)
             else:
-                return self.parse_property_info(schema_ref, prop_name, prop_info, current_depth, within_action)
+                return self.parse_property_info(schema_ref, prop_name, prop_info, prop_path, within_action)
 
         parsed = {'prop_type': [],
                   'prop_units': False,
@@ -584,11 +643,30 @@ class DocFormatter:
                   'prop_details': {},
                   'has_direct_prop_details': False,
                   'has_action_details': False,
-                  'action_details': {}
+                  'action_details': {},
+                  'is_in_profile': False,
+                  'profile_read_req': None,
+                  'profile_write_req': None,
+                  'profile_mincount': None,
+                  'profile_purpose': None,
+                  'profile_conditional_req': None,
+                  'profile_conditional_details': None,
+                  'profile_values': None,
+                  'profile_comparison': None
                  }
 
+        profile = None
+        # Skip profile data if prop_name is blank -- this is just an additional row of info and
+        # the "parent" row will have the profile info.
+        if self.config['profile_mode'] and prop_name:
+            profile_section = 'PropertyRequirements'
+            if within_action:
+                profile_section = 'ActionRequirements'
+            path_to_prop = prop_path.copy()
+            path_to_prop.append(prop_name)
+            profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
-        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, current_depth, within_action)
+        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path, within_action)
                          for x in prop_infos]
 
         # Remove details for anyOf props with prop_type = 'null'.
@@ -624,23 +702,40 @@ class DocFormatter:
         parsed['read_only'] = details[0]['read_only']
         parsed['prop_units'] = details[0]['prop_units']
 
-        for det in details:
-            parsed['prop_is_object'] |= det['prop_is_object']
-            parsed['prop_is_array'] |= det['prop_is_array']
-            parsed['has_direct_prop_details'] |= det['has_direct_prop_details']
-            parsed['prop_details'].update(det['prop_details'])
-            parsed['has_action_details'] |= det['has_action_details']
-            parsed['action_details'].update(det['action_details'])
+        # Data from profile:
+        if profile is not None:
+            parsed['is_in_profile'] = True
+            parsed['profile_read_req'] = profile.get('ReadRequirement')
+            parsed['profile_write_req'] = profile.get('WriteRequirement')
+            parsed['profile_mincount'] = profile.get('MinCount')
+            parsed['profile_purpose'] = profile.get('Purpose')
+            parsed['profile_conditional_req'] = profile.get('ConditionalRequirements')
+            profile_values = profile.get('Values')
+            if profile_values:
+                profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
+                parsed['profile_values'] = profile_values
+                parsed['profile_comparison'] = profile_comparison
+
+            for det in details:
+                parsed['prop_is_object'] |= det['prop_is_object']
+                parsed['prop_is_array'] |= det['prop_is_array']
+                parsed['has_direct_prop_details'] |= det['has_direct_prop_details']
+                parsed['prop_details'].update(det['prop_details'])
+                parsed['has_action_details'] |= det['has_action_details']
+                parsed['action_details'].update(det['action_details'])
+                parsed['profile_conditional_details'].update(det['profile_conditional_details'])
 
         return parsed
 
 
-    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, current_depth, within_action=False):
+    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, prop_path, within_action=False):
         """Parse definition of a specific property into strings for display.
 
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
-        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable'
+        'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
+        'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
+        'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison'
         """
         traverser = self.traverser
 
@@ -656,7 +751,27 @@ class DocFormatter:
         has_prop_details = False
         has_prop_actions = False
         action_details = {}
+        profile_conditional_req = False
+        profile_conditional_details = {}
+        profile_values = False
+        profile_comparison = False
         schema_name = traverser.get_schema_name(schema_ref)
+
+        # Get the profile if we are in profile mode.
+        # Skip profile data if prop_name is blank -- this is just an additional row of info and
+        # the "parent" row will have the profile info.
+        profile = None
+        if self.config['profile_mode'] and prop_name:
+            prop_brief_name = prop_name
+            profile_section = 'PropertyRequirements'
+            if within_action:
+                profile_section = 'ActionRequirements'
+                if prop_name.startswith('#'): # expected
+                    prop_name_parts = prop_name.split('.')
+                    prop_brief_name = prop_name_parts[-1]
+            path_to_prop = prop_path.copy()
+            path_to_prop.append(prop_brief_name)
+            profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
         # Some special treatment is required for Actions
         is_action = prop_name == 'Actions'
@@ -707,13 +822,14 @@ class DocFormatter:
 
             formatted_action_rows = []
             for param_name in action_parameters:
-                formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], [''])
                 # Capture the enum details and merge them into the ones for the overall properties:
                 if formatted_action.get('details'):
                     has_prop_details = True
                     prop_details.update(formatted_action['details'])
 
             self.add_action_details(action_details)
+
 
         # Items, if present, will have a definition with either an object, a list of types,
         # or a $ref:
@@ -753,9 +869,7 @@ class DocFormatter:
                                                                    prop_info.get('_doc_generator_meta', {}),
                                                                    anchor)
 
-
-        # Currently, Action details will be available only from the supplemental doc.
-        # We can expect a future update to get them from information in the schema JSON.
+        # Action details may be supplied as markdown in the supplemental doc.
         # TODO: remove this? Change it?
         supplemental_actions = None
         if 'supplemental' in self.config and 'action details' in self.config['supplemental']:
@@ -775,43 +889,90 @@ class DocFormatter:
 
         # embedded object:
         if prop_is_object:
-            object_formatted = self.format_object_descr(schema_ref, prop_info, current_depth, is_action)
+            new_path = prop_path.copy()
+            new_path.append(prop_name)
+            object_formatted = self.format_object_descr(schema_ref, prop_info, new_path, is_action)
             object_description = object_formatted['rows']
             if object_formatted['details']:
                 prop_details.update(object_formatted['details'])
 
         # embedded items:
         if prop_is_array:
+            new_path = prop_path.copy()
+            new_path.append(prop_name)
             if list_of_objects:
-                item_formatted = self.format_list_of_object_descrs(schema_ref, prop_items, current_depth)
+                item_formatted = self.format_list_of_object_descrs(schema_ref, prop_items, new_path)
                 if collapse_description:
                     # remember, we set collapse_description when we made prop_items a single-element list.
                     item_list = prop_items[0].get('type')
 
             else:
-                item_formatted = self.format_non_object_descr(schema_ref, prop_item, current_depth)
+                item_formatted = self.format_non_object_descr(schema_ref, prop_item, new_path)
 
             item_description = item_formatted['rows']
             if item_formatted['details']:
                 prop_details.update(item_formatted['details'])
 
-        return {'prop_type': prop_type,
-                'prop_units': prop_units,
-                'read_only': read_only,
-                'nullable': has_null,
-                'descr': descr,
-                'add_link_text': add_link_text,
-                'prop_is_object': prop_is_object,
-                'prop_is_array': prop_is_array,
-                'array_of_objects': array_of_objects,
-                'object_description': object_description,
-                'item_description': item_description,
-                'item_list': item_list,
-                'prop_details': prop_details,
-                'has_direct_prop_details': has_prop_details,
-                'has_action_details': has_prop_actions,
-                'action_details': action_details
-               }
+        # Read/Write requirements from profile:
+        if self.config['profile_mode'] and prop_name and profile is not None:
+
+            # Conditional Requirements
+            profile_conditional_req = profile.get('ConditionalRequirements')
+            if profile_conditional_req:
+                # Add the read and write reqs, as we want to capture those as "Base Requirement":
+                req = {'BaseRequirement': True}
+                req['ReadRequirement'] = profile.get('ReadRequirement')
+                req['WriteRequirement'] = profile.get('WriteRequirement')
+                profile_conditional_req.insert(0, req)
+
+                profile_conditional_details[prop_name] = self.format_conditional_details(schema_ref, prop_name,
+                                                                                         profile_conditional_req)
+            # Comparison
+            profile_values = profile.get('Values')
+            if profile_values:
+                profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
+
+        parsed_info = {'prop_type': prop_type,
+                       'prop_units': prop_units,
+                       'read_only': read_only,
+                       'nullable': has_null,
+                       'descr': descr,
+                       'add_link_text': add_link_text,
+                       'prop_is_object': prop_is_object,
+                       'prop_is_array': prop_is_array,
+                       'array_of_objects': array_of_objects,
+                       'object_description': object_description,
+                       'item_description': item_description,
+                       'item_list': item_list,
+                       'prop_details': prop_details,
+                       'has_direct_prop_details': has_prop_details,
+                       'has_action_details': has_prop_actions,
+                       'action_details': action_details,
+                       'is_in_profile': False,
+                       'profile_read_req': None,
+                       'profile_write_req': None,
+                       'profile_mincount': None,
+                       'profile_purpose': None,
+                       'profile_conditional_req': None,
+                       'profile_conditional_details': None,
+                       'profile_values': None,
+                       'profile_comparison': None
+                       }
+
+        if profile is not None:
+            parsed_info.update({
+                'is_in_profile': True,
+                'profile_read_req': profile.get('ReadRequirement'),
+                'profile_write_req': profile.get('WriteRequirement'),
+                'profile_mincount': profile.get('MinCount'),
+                'profile_purpose': profile.get('Purpose'),
+                'profile_conditional_req': profile_conditional_req,
+                'profile_conditional_details': profile_conditional_details,
+                'profile_values': profile_values,
+                'profile_comparison': profile_comparison,
+                })
+
+        return parsed_info
 
 
     def process_for_idRef(self, ref):
@@ -836,7 +997,7 @@ class DocFormatter:
         return prop_info
 
 
-    def format_object_descr(self, schema_ref, prop_info, current_depth=0, is_action=False):
+    def format_object_descr(self, schema_ref, prop_info, prop_path=[], is_action=False):
         """Format the properties for an embedded object."""
 
         properties = prop_info.get('properties')
@@ -855,6 +1016,23 @@ class DocFormatter:
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
+
+
+            # TODO: probably refactor this block:
+            if self.config['profile_mode'] == 'terse':
+                if len(prop_path) and prop_path[0] == 'Actions':
+                    profile_section = 'ActionRequirements'
+                else:
+                    profile_section = 'PropertyRequirements'
+                profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
+
+                prop_names = self.filter_props_by_profile(prop_names, profile, is_action)
+                filtered_properties = {}
+                for k in prop_names:
+                    filtered_properties[k] = properties[k]
+                prop_info['properties'] = properties = filtered_properties
+
+
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
 
@@ -872,8 +1050,9 @@ class DocFormatter:
                 meta['within_action'] = is_action
                 detail_info[0]['_doc_generator_meta'] = meta
 
-                depth = current_depth + 1
-                formatted = self.format_property_row(schema_ref, prop_name, detail_info, depth)
+                new_path = prop_path.copy()
+
+                formatted = self.format_property_row(schema_ref, prop_name, detail_info, new_path)
                 if formatted:
                     output.append(formatted['row'])
                     if formatted['details']:
@@ -884,7 +1063,7 @@ class DocFormatter:
         return {'rows': output, 'details': details, 'action_details': action_details}
 
 
-    def format_non_object_descr(self, schema_ref, prop_dict, current_depth=0):
+    def format_non_object_descr(self, schema_ref, prop_dict, prop_path=[]):
         """For definitions that just list simple types without a 'properties' entry"""
 
         output = []
@@ -894,8 +1073,7 @@ class DocFormatter:
         prop_name = prop_dict.get('_prop_name', '')
         detail_info = self.extend_property_info(schema_ref, prop_dict)
 
-        depth = current_depth + 1
-        formatted = self.format_property_row(schema_ref, prop_name, detail_info, depth)
+        formatted = self.format_property_row(schema_ref, prop_name, detail_info, prop_path)
 
         if formatted:
             output.append(formatted['row'])
@@ -1010,6 +1188,17 @@ class DocFormatter:
         return unversioned
 
 
+    @staticmethod
+    def text_map(text):
+        """Replace string for output -- used to replace strings with nicer English text"""
+
+        output_map = {
+            'IfImplemented': 'If Implemented',
+            'Conditional': 'Conditional Requirements',
+            }
+        return output_map.get(text, text)
+
+
     def compare_versions(self, version, context_version):
         """ Returns +1 if version is newer than context_version, -1 if version is older, 0 if equal """
 
@@ -1056,3 +1245,37 @@ class DocFormatter:
             meta['version_deprecated_explanation'] = node_meta.get('version_deprecated_explanation', '')
 
         return meta
+
+    def get_prop_profile(self, schema_ref, prop_path, section):
+        """Get profile data for the specified property, by schema_ref, prop name path, and section.
+
+        Section is 'PropertyRequirements' or 'ActionRequirements'.
+        Returns None if no data is present ({} is a valid data-present result)."""
+
+        prop_profile = None
+        if prop_path[0] == 'Actions':
+            section = 'ActionRequirements'
+
+        if self.config['profile_resources']:
+            prop_profile = self.config['profile_resources'].get(schema_ref, None)
+            if prop_profile is None:
+                return None
+
+            if section == 'ActionRequirements':
+                if prop_path[0] == 'Actions':
+                    prop_path = prop_path[1:]
+
+            prop_reqs = prop_profile.get(section, None)
+            if prop_reqs == None:
+                return None
+            prop_profile = prop_reqs
+
+            for prop_name in prop_path:
+                if not prop_name:
+                    continue
+                prop_profile = prop_reqs.get(prop_name, None)
+                if prop_profile is None:
+                    return None
+                prop_reqs = prop_profile.get('PropertyRequirements', prop_profile.get('Parameters', {}))
+
+        return prop_profile

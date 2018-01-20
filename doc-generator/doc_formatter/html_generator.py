@@ -145,25 +145,36 @@ pre.code{
 </style>
 """
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[]):
         """Format information for a single property.
 
-        Returns an object with 'row', 'details', and 'action_details':
+        Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
 
         'row': content for the main table being generated.
         'details': content for the Property Details section.
         'action_details': content for the Actions section.
+        'profile_conditional_details': populated only in profile_mode, formatted conditional details
 
         This may include embedded objects with their own properties.
         """
+
         traverser = self.traverser
         formatted = []     # The row itself
+
+        current_depth = len(prop_path)
+
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
         if self.config.get('strip_top_object') and current_depth > 0:
             indentation_string = '&nbsp;' * 6 * (current_depth -1)
         else:
             indentation_string = '&nbsp;' * 6 * current_depth
+
+        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Action Details
+        # section and should dial back the indentation by one level.
+        if len(prop_path) > 1 and prop_path[0] == 'Actions':
+            indentation_string = '&nbsp;' * 6 * (current_depth -1)
+
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
 
@@ -216,14 +227,15 @@ pre.code{
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
                                             meta['version_deprecated_explanation'], False)
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
 
         if self.config.get('strip_top_object') and current_depth == 0:
             # In this case, we're done for this bit of documentation, and we just want the properties of this object.
             formatted.append('\n'.join(formatted_details['object_description']))
             return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
-                    'action_details':formatted_details.get('action_details')})
+                    'action_details':formatted_details.get('action_details'),
+                    'profile_conditional_details':formatted_details.get('profile_conditional_details')})
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -310,11 +322,39 @@ pre.code{
         if formatted_details['nullable']:
             prop_access += ' (null)'
 
+        # If profile reqs are present, massage them:
+        profile_access = self.format_base_profile_access(formatted_details)
+
+        descr = formatted_details['descr']
+        if formatted_details['profile_purpose']:
+            descr += '<br>' + self.bold("Profile Purpose: " + formatted_details['profile_purpose'])
+
+        # Conditional Requirements
+        cond_req = formatted_details['profile_conditional_req']
+        if cond_req:
+            anchor = schema_ref + '|conditional_reqs|' + prop_name
+            cond_req_text = 'See <a href="#' + anchor + '"> Conditional Requirements</a>, below, for more information.'
+            descr += ' ' + self.nobr(self.italic(cond_req_text))
+            profile_access += "<br>" + self.nobr(self.italic('Conditional Requirements'))
+
+        if not profile_access:
+            profile_access = '&nbsp;' * 10
+
+        # Comparison
+        if formatted_details['profile_values']:
+            comparison_descr = ('Must be ' + formatted_details['profile_comparison'] + ' ('
+                                + ', '.join('"' + x + '"' for x in formatted_details['profile_values'])
+                                + ')')
+            profile_access += '<br>' + self.italic(comparison_descr)
+
         row = []
         row.append(indentation_string + name_and_version)
+        if self.config['profile_mode']:
+            row.append(profile_access)
         row.append(prop_type)
-        row.append(prop_access)
-        row.append(formatted_details['descr'])
+        if not self.config['profile_mode']:
+            row.append(prop_access)
+        row.append(descr)
 
         formatted.append(self.make_row(row))
 
@@ -334,7 +374,8 @@ pre.code{
             formatted.append(self.make_row(desc_row))
 
         return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
-                'action_details':formatted_details.get('action_details')})
+                'action_details':formatted_details.get('action_details'),
+                'profile_conditional_details':formatted_details.get('profile_conditional_details')})
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
@@ -466,7 +507,7 @@ pre.code{
             param_names = [x for x in action_parameters.keys()]
             param_names.sort()
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } to the last row:
@@ -484,6 +525,105 @@ pre.code{
         return "\n".join(formatted)
 
 
+    def format_base_profile_access(self, formatted_details):
+        """Massage profile read/write requirements for display"""
+
+        if formatted_details.get('is_in_profile'):
+            profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
+                                                         read_req=formatted_details.get('profile_read_req'),
+                                                         write_req=formatted_details.get('profile_write_req'),
+                                                         min_count=formatted_details.get('profile_mincount'))
+        else:
+            profile_access = ''
+
+        return profile_access
+
+
+    def format_conditional_access(self, conditional_req):
+        """Massage conditional profile read/write requirements."""
+
+        profile_access = self._format_profile_access(read_req=conditional_req.get('ReadRequirement'),
+                                                     write_req=conditional_req.get('WriteRequirement'),
+                                                     min_count=conditional_req.get('MinCount'))
+        return profile_access
+
+
+    def _format_profile_access(self, read_only=False, read_req=None, write_req=None, min_count=None):
+        """Common formatting logic for profile_access column"""
+
+        profile_access = ''
+        if not self.config['profile_mode']:
+            return profile_access
+
+        # Each requirement  may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
+        if not read_req:
+            read_req = 'Mandatory' # This is the default if nothing is specified.
+        if read_only:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
+        elif read_req == write_req:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
+        elif not write_req:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
+        else:
+            # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
+            profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)<br>' +
+                              self.nobr(self.text_map(write_req)) + ' (Read/Write)')
+
+        if min_count:
+            if profile_access:
+                profile_access += "<br>"
+            profile_access += self.nobr("Minimum " + str(min_count))
+
+        return profile_access
+
+
+
+    def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
+        """Generate a formatted Conditional Details section from profile data"""
+        formatted = []
+        anchor = schema_ref + '|conditional_reqs|' + prop_name
+
+        formatted.append(self.head_four(prop_name, anchor))
+
+        rows = []
+
+        for creq in conditional_reqs:
+            req_desc = ''
+            purpose = creq.get('Purpose', '&nbsp;'*10)
+            subordinate_to = creq.get('SubordinateToResource')
+            compare_property = creq.get('CompareProperty')
+            req = self.format_conditional_access(creq)
+
+            if creq.get('BaseRequirement'):
+                req_desc = 'Base Requirement'
+
+            elif subordinate_to:
+                req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
+
+            if compare_property:
+                comparison = creq.get('Comparison')
+                if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
+                    comparison += ' to'
+
+                compare_values = creq.get('CompareValues')
+                if compare_values:
+                    compare_values = ', '.join('"' + x + '"' for x in compare_values)
+
+                if req_desc:
+                    req_desc += ' and '
+                req_desc += '"' + compare_property + '"' + ' is ' + comparison
+
+                if compare_values:
+                    req_desc += ' ' + compare_values
+
+
+            rows.append(self.make_row([req_desc, req, purpose]))
+
+        formatted.append(self.make_table(rows, []))
+
+        return "\n".join(formatted)
+
+
     def emit(self):
         """ Output contents thus far """
 
@@ -497,6 +637,14 @@ pre.code{
             # something is awry if there are no properties
             if section.get('properties'):
                 contents.append(self.make_table(section['properties'], None, 'properties'))
+
+            if section.get('profile_conditional_details'):
+                conditional_details = '\n'.join(section['profile_conditional_details'])
+                deets = []
+                deets.append(self.head_three('Conditional Requirements'))
+                deets.append(self.make_div(conditional_details, 'property-details-content'))
+                contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
             if len(section.get('action_details', [])):
                 action_details = '\n'.join(section['action_details'])
                 deets = []
@@ -509,6 +657,7 @@ pre.code{
                 deets.append(self.make_div('\n'.join(section['property_details']),
                                            'property-details-content'))
                 contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
             if section.get('json_payload'):
                 contents.append(self.head_three('Example Response'))
                 contents.append(section['json_payload'])
@@ -606,6 +755,9 @@ pre.code{
             'escape_chars': [],
             'uri_replacements': {},
             'units_translation': self.config['units_translation'],
+            'profile': self.config['profile'],
+            'profile_mode': self.config['profile_mode'],
+            'profile_resources': self.config['profile_resources']
             }
 
         for line in intro_blob.splitlines():
@@ -766,6 +918,12 @@ pre.code{
     def make_paras(text):
         """ Split text at linebreaks and output as paragraphs """
         return '\n'.join([HtmlGenerator.para(line) for line in '\n'.split(text) if line])
+
+    @staticmethod
+    def nobr(text):
+        """ Wrap a bit of text in nobr tags. """
+        return '<nobr>' + text + '</nobr>'
+
 
     def head_one(self, text, anchor_id=None):
         """ Make a top-level heading, relative to the current formatter level """
