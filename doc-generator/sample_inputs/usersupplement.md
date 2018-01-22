@@ -5,6 +5,7 @@ This document is an example of a usersupplement.md document, which contains conf
 The supplement is split into several major sections, noted by first-level headings. All are optional, and the order of sections doesn't matter. Sections may include first-level headings (you will almost certainly want one in the Introduction); only exact matches for the following are detected as section delimiters:
 
 - Schema URI Mapping
+- Profile URI Mapping
 - Keyword Configuration
 - Description Overrides
 - Units Translation
@@ -26,6 +27,18 @@ The doc generator will use the local files when specified and otherwise
 follow the full URI, including data from remote files if possible.
 
 ## Local-repo: redfish.dmtf.org/schemas/v1 ./json-schema
+
+
+# Profile URI Mapping
+
+Meaningful only for profile-mode output, and probably only if the
+profile specifies RequiredProfiles.
+
+Map schema URIs to local files. You may omit the protocol (e.g., https://) from the URI.
+The doc generator will use the local files when specified and otherwise
+follow the full URI, including data from remote files if possible.
+
+## Local-repo: redfish.dmtf.org/profiles ../Redfish-Tools/doc-generator/sample_inputs
 
 
 # Keyword Configuration
