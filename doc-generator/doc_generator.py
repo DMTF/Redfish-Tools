@@ -43,7 +43,17 @@ class DocGenerator:
 
         if config['profile_mode']:
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            profile_resources = self.config.get('profile', {}).get('Resources')
+            profile_resources = {}
+            if 'RequiredProfiles' in config['profile']:
+                for req_profile_name in config['profile']['RequiredProfiles'].keys():
+                    req_profile_info = config['profile']['RequiredProfiles'][req_profile_name]
+                    req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
+                    req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
+
+                    # TODO: download profile
+
+            profile_resources.update(self.config.get('profile', {}).get('Resources', {}))
+
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
                 exit()
@@ -593,6 +603,12 @@ def main():
 
     if 'uri_to_local' in config['supplemental']:
         config['uri_to_local'] = config['supplemental']['uri_to_local']
+
+    if 'profile_local_to_uri' in config['supplemental']:
+        config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
+
+    if 'profile_uri_to_local' in config['supplemental']:
+        config['profile_uri_to_local'] = config['supplemental']['profile_uri_to_local']
 
     if 'enum_deprecations' in config['supplemental']:
         config['enum_deprecations'] = config['supplemental']['enum_deprecations']
