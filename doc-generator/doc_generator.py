@@ -71,7 +71,6 @@ class DocGenerator:
                         profile_resources = self.merge_dicts(profile_resources, req_profile_data.get('Resources', {}))
 
             profile_resources = self.merge_dicts(profile_resources, self.config.get('profile', {}).get('Resources', {}))
-            import pdb; pdb.set_trace()
 
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
