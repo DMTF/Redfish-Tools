@@ -470,6 +470,7 @@ class DocFormatter:
         elif prop_anyof:
             skip_null = len([x for x in prop_anyof if '$ref' in x])
             sans_null = [x for x in prop_anyof if x.get('type') != 'null']
+            is_nullable = skip_null and [x for x in prop_anyof if x.get('type') == 'null']
 
             # This is a special case for references to multiple versions of the same object.
             if len(sans_null) > 1:
@@ -505,6 +506,14 @@ class DocFormatter:
                             elt[x] = prop_info[x]
                 elt = self.extend_property_info(schema_ref, elt, context_meta)
                 prop_infos.extend(elt)
+
+            # If this is a nullable property (based on {type: 'null'} object AnyOf), add 'null' to the type.
+            if is_nullable:
+                prop_infos[0]['nullable'] = True
+                if prop_infos[0].get('type'):
+                    prop_infos[0]['type'] = [prop_infos[0]['type'], 'null']
+                else:
+                    prop_infos[0]['type'] = 'null'
 
         else:
             prop_infos.append(prop_info)
