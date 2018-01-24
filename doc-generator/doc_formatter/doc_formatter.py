@@ -470,6 +470,7 @@ class DocFormatter:
         elif prop_anyof:
             skip_null = len([x for x in prop_anyof if '$ref' in x])
             sans_null = [x for x in prop_anyof if x.get('type') != 'null']
+            is_nullable = skip_null and [x for x in prop_anyof if x.get('type') == 'null']
 
             # This is a special case for references to multiple versions of the same object.
             if len(sans_null) > 1:
@@ -505,6 +506,14 @@ class DocFormatter:
                             elt[x] = prop_info[x]
                 elt = self.extend_property_info(schema_ref, elt, context_meta)
                 prop_infos.extend(elt)
+
+            # If this is a nullable property (based on {type: 'null'} object AnyOf), add 'null' to the type.
+            if is_nullable:
+                prop_infos[0]['nullable'] = True
+                if prop_infos[0].get('type'):
+                    prop_infos[0]['type'] = [prop_infos[0]['type'], 'null']
+                else:
+                    prop_infos[0]['type'] = 'null'
 
         else:
             prop_infos.append(prop_info)
@@ -822,7 +831,40 @@ class DocFormatter:
 
             formatted_action_rows = []
             for param_name in action_parameters:
+                # TODO: capture required and recommended parameter values for action parameters in profile mode.
+                # Example with ParameterValues and RecommendedValues:
+                # {
+                #     "Parameters": {
+                #         "ResetType": {
+                #             "ReadRequirement": "Mandatory",
+                #             "RecommendedValues": [
+                #                 "GracefulShutdown",
+                #                 "GracefulRestart",
+                #                 "ForceRestart",
+                #                 "PushPowerButton"
+                #             ],
+                #             "ParameterValues": [
+                #                 "ForceOff",
+                #                 "PowerCycle",
+                #                 "On"
+                #             ]
+                #         }
+                #     },
+                #     "Purpose": "Ability to reset the system is a core requirement of most users.",
+                #     "ReadRequirement": "Mandatory"
+                # }
+
                 formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], [''])
+
+                profile_mode = self.config.get('profile_mode')
+                if profile_mode:
+                    profile_for_param = profile.get('Parameters', {}).get(param_name)
+                    # if profile_for_param:
+                    #     required_values = profile_for_param.get('ParameterValues', [])
+                    #     recommended_values = profile_for_param.get('RecommendedValues', [])
+
+                    #     import pdb; pdb.set_trace()
+
                 # Capture the enum details and merge them into the ones for the overall properties:
                 if formatted_action.get('details'):
                     has_prop_details = True

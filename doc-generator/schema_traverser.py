@@ -11,10 +11,8 @@ Brief : Provides utilities for resolving references in a set of Redfish json sch
 Initial author: Second Rise LLC.
 """
 
-import urllib.request
-import json
 import warnings
-
+from doc_gen_util import DocGenUtilities
 
 # Format user warnings simply
 def simple_warning_format(message, category, filename, lineno, file=None, line=None):
@@ -27,14 +25,16 @@ warnings.formatwarning = simple_warning_format
 class SchemaTraverser:
     """Provides methods for traversing Redfish schemas (imported from JSON into objects). """
 
-    def __init__(self, schema_data, meta_data):
+    def __init__(self, schema_data, meta_data, uri_to_local):
         """Set up the SchemaTraverser.
 
         schema_data: dict of normalized_schema_uri: json_data
         meta_data: metadata (versioning) by schema and property
+        uri_to_local: dict of normalized URI: local path
         """
         self.schemas = schema_data
         self.meta = meta_data
+        self.uri_to_local = uri_to_local
         self.remote_schemas = {} # dict of uri:json_data retrieved dynamically
 
 
@@ -199,19 +199,24 @@ class SchemaTraverser:
         if schema_data:
             return schema_data
 
-        try:
-            if '://' not in uri or not uri.lower().startswith('http'):
-                uri = 'http://' + uri
-            f = urllib.request.urlopen(uri)
-            schema_string = f.read().decode('utf-8')
-            schema_data = json.loads(schema_string)
-            if schema_data:
-                schema_data['_schema_name'] = self.find_schema_name(uri, schema_data)
-                self.remote_schemas[uri] = schema_data
-                return schema_data
+        # Do we have a mapping for this remote URI to a local path?
+        if '://' in uri:
+            protocol, uri_part = uri.split('://')
+        else:
+            uri_part = uri
+        for partial_uri in self.uri_to_local.keys():
+            if uri_part.startswith(partial_uri):
+                local_uri = self.uri_to_local[partial_uri] + uri_part[len(partial_uri):]
+                schema_data = DocGenUtilities.load_as_json(local_uri)
+                # This will fall through to getting the schema remotely if this fails. Correct?
+                if schema_data:
+                    return schema_data
 
-        except Exception as ex:
-            warnings.warn("Unable to retrieve schema from '" + uri + "': " + str(ex))
+        schema_data = DocGenUtilities.http_load_as_json(uri)
+        if schema_data:
+            schema_data['_schema_name'] = self.find_schema_name(uri, schema_data)
+            self.remote_schemas[uri] = schema_data
+            return schema_data
 
         return None
 

@@ -43,7 +43,35 @@ class DocGenerator:
 
         if config['profile_mode']:
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            profile_resources = self.config.get('profile', {}).get('Resources')
+            profile_resources = {}
+            if 'RequiredProfiles' in config['profile']:
+                for req_profile_name in config['profile']['RequiredProfiles'].keys():
+                    req_profile_info = config['profile']['RequiredProfiles'][req_profile_name]
+                    req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
+                    req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
+                    version_string = 'v' + req_profile_minversion.replace('.', '_')
+
+                    # Retrieve profile
+                    # TODO: verify approach and refactor
+                    req_profile_uri = '/'.join([req_profile_repo, req_profile_name]) + '.' + version_string + '.json'
+                    if '://' in req_profile_uri:
+                        protocol, uri_part = req_profile_uri.split('://')
+                    else:
+                        uri_part = uri
+                    for partial_uri in self.config['profile_uri_to_local'].keys():
+                        if uri_part.startswith(partial_uri):
+                            local_uri = self.config['profile_uri_to_local'][partial_uri] + uri_part[len(partial_uri):]
+                            req_profile_data = DocGenUtilities.load_as_json(local_uri)
+                            break
+
+                    if not req_profile_data:
+                        req_profile_data = DocGenUtilities.http_load_as_json(req_profile_uri)
+
+                    if req_profile_data:
+                        profile_resources.update(req_profile_data.get('Resources', {}))
+
+            profile_resources.update(self.config.get('profile', {}).get('Resources', {}))
+
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
                 exit()
@@ -111,7 +139,7 @@ class DocGenerator:
             latest_data['_schema_name'] = latest_info.get('schema_name')
             schema_data[normalized_uri] = latest_data
 
-        traverser = SchemaTraverser(schema_data, doc_generator_meta)
+        traverser = SchemaTraverser(schema_data, doc_generator_meta, self.config['uri_to_local'])
 
         # Generate output
         if self.config['output_format'] == 'markdown':
@@ -593,6 +621,12 @@ def main():
 
     if 'uri_to_local' in config['supplemental']:
         config['uri_to_local'] = config['supplemental']['uri_to_local']
+
+    if 'profile_local_to_uri' in config['supplemental']:
+        config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
+
+    if 'profile_uri_to_local' in config['supplemental']:
+        config['profile_uri_to_local'] = config['supplemental']['profile_uri_to_local']
 
     if 'enum_deprecations' in config['supplemental']:
         config['enum_deprecations'] = config['supplemental']['enum_deprecations']

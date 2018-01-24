@@ -12,6 +12,7 @@ Brief: Utility method(s) needed by multiple doc generator classes.
 Initial author: Second Rise LLC.
 """
 
+import urllib.request
 import json
 import warnings
 
@@ -31,3 +32,19 @@ class DocGenUtilities:
             warnings.warn('Unable to read ' + filename + ': ' + str(ex))
 
         return data
+
+
+    @staticmethod
+    def http_load_as_json(uri):
+        """Load a URI and convert from JSON"""
+        try:
+            if '://' not in uri or not uri.lower().startswith('http'):
+                uri = 'http://' + uri
+            f = urllib.request.urlopen(uri)
+            json_string = f.read().decode('utf-8')
+            json_data = json.loads(json_string)
+            return json_data
+
+        except Exception as ex:
+            warnings.warn("Unable to retrieve schema from '" + uri + "': " + str(ex))
+            return None
