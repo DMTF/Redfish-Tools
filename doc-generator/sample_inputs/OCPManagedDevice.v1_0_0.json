@@ -108,7 +108,7 @@
 					"ConditionalRequirements": [{
 						"SubordinateToResource": ["Manager", "EthernetInterfaceCollection"],
 						"ReadRequirement": "Mandatory",
-						"WriteRequirement": "Mandatory"						
+						"WriteRequirement": "Mandatory"
 					}]
 				},
 				"IPv4Addresses": {
@@ -148,7 +148,7 @@
 				},
 				"StaticNameServers": {
 					"ReadRequirement": "Recommended"
-				},
+				}
 			}
 		},
 		"ManagerAccount": {},

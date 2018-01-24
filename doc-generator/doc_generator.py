@@ -52,8 +52,23 @@ class DocGenerator:
                     version_string = 'v' + req_profile_minversion.replace('.', '_')
 
                     # Retrieve profile
+                    # TODO: verify approach and refactor
                     req_profile_uri = '/'.join([req_profile_repo, req_profile_name]) + '.' + version_string + '.json'
-                    print(req_profile_uri)
+                    if '://' in req_profile_uri:
+                        protocol, uri_part = req_profile_uri.split('://')
+                    else:
+                        uri_part = uri
+                    for partial_uri in self.config['profile_uri_to_local'].keys():
+                        if uri_part.startswith(partial_uri):
+                            local_uri = self.config['profile_uri_to_local'][partial_uri] + uri_part[len(partial_uri):]
+                            req_profile_data = DocGenUtilities.load_as_json(local_uri)
+                            break
+
+                    if not req_profile_data:
+                        req_profile_data = DocGenUtilities.http_load_as_json(req_profile_uri)
+
+                    if req_profile_data:
+                        profile_resources.update(req_profile_data.get('Resources', {}))
 
             profile_resources.update(self.config.get('profile', {}).get('Resources', {}))
 
