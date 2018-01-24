@@ -68,9 +68,10 @@ class DocGenerator:
                         req_profile_data = DocGenUtilities.http_load_as_json(req_profile_uri)
 
                     if req_profile_data:
-                        profile_resources.update(req_profile_data.get('Resources', {}))
+                        profile_resources = self.merge_dicts(profile_resources, req_profile_data.get('Resources', {}))
 
-            profile_resources.update(self.config.get('profile', {}).get('Resources', {}))
+            profile_resources = self.merge_dicts(profile_resources, self.config.get('profile', {}).get('Resources', {}))
+            import pdb; pdb.set_trace()
 
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
@@ -91,6 +92,30 @@ class DocGenerator:
     def generate_doc(self):
         output = self.generate_docs()
         self.write_output(output, self.outfile)
+
+
+    def merge_dicts(self, dict1, dict2):
+        """ Merge two dictionaries recursively. Returns the merged result. """
+        return self._merge_dicts(dict1.copy(), dict2.copy())
+
+
+    def _merge_dicts(self, dict1, dict2):
+        """ Merge two dictionaries recursively. Modifies input. Returns the merged result.
+        For this pattern and others:
+           https://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge
+        """
+
+        # merge elements that appear in both dictionaries:
+        for k, v in dict1.items():
+            if k in dict2:
+                if isinstance(v, dict) and isinstance(dict2[k], dict):
+                    dict2[k] = self._merge_dicts(v, dict2[k])
+                else:
+                    dict2[k] = v
+
+        dict2.update(dict1)
+        return dict2
+
 
     @staticmethod
     def get_files(text_input):
