@@ -29,12 +29,6 @@ add_toc, boolean. Default false. Add a Table of Contents (relevant for HTML outp
 
 Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output.
 
-# Description Overrides
-
-Note: markdown is allowed in description overrides, but HTML markup is not; it will be escaped.
-
-* Status: See  [The Status Object](#status_description), above.
-
 # Units Translation
 
 String-replacement for "units" values. Case-sensitive. Any units not matched will be output as-is.
