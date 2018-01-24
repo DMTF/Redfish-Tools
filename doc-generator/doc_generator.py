@@ -49,8 +49,11 @@ class DocGenerator:
                     req_profile_info = config['profile']['RequiredProfiles'][req_profile_name]
                     req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
                     req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
+                    version_string = 'v' + req_profile_minversion.replace('.', '_')
 
-                    # TODO: download profile
+                    # Retrieve profile
+                    req_profile_uri = '/'.join([req_profile_repo, req_profile_name]) + '.' + version_string + '.json'
+                    print(req_profile_uri)
 
             profile_resources.update(self.config.get('profile', {}).get('Resources', {}))
 
@@ -121,7 +124,7 @@ class DocGenerator:
             latest_data['_schema_name'] = latest_info.get('schema_name')
             schema_data[normalized_uri] = latest_data
 
-        traverser = SchemaTraverser(schema_data, doc_generator_meta)
+        traverser = SchemaTraverser(schema_data, doc_generator_meta, self.config['uri_to_local'])
 
         # Generate output
         if self.config['output_format'] == 'markdown':

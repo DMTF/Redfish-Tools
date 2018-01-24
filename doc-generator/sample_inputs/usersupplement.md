@@ -27,6 +27,7 @@ The doc generator will use the local files when specified and otherwise
 follow the full URI, including data from remote files if possible.
 
 ## Local-repo: redfish.dmtf.org/schemas/v1 ./json-schema
+## Local-repo: redfish.dmtf.org/schemas/swordfish ./profiles
 
 
 # Profile URI Mapping
