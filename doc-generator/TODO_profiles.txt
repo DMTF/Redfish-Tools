@@ -44,7 +44,10 @@ X    Parameter requirements
 Registry level requirements
 
 ===============
-RequiredProfiles (top level): need to resolve these and merge them in.
+X RequiredProfiles (top level): need to resolve these and merge them in.
+
+Maybe done! I assume I can pull in the RequiredProfile(s) and
+overwrite with current profile. Method of resolving may need work.
 
 
 ===============
