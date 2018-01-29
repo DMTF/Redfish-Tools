@@ -46,29 +46,9 @@ class DocGenerator:
             profile_resources = {}
             if 'RequiredProfiles' in config['profile']:
                 for req_profile_name in config['profile']['RequiredProfiles'].keys():
-                    req_profile_info = config['profile']['RequiredProfiles'][req_profile_name]
-                    req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
-                    req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
-                    version_string = 'v' + req_profile_minversion.replace('.', '_')
-
-                    # Retrieve profile
-                    # TODO: verify approach and refactor
-                    req_profile_uri = '/'.join([req_profile_repo, req_profile_name]) + '.' + version_string + '.json'
-                    if '://' in req_profile_uri:
-                        protocol, uri_part = req_profile_uri.split('://')
-                    else:
-                        uri_part = uri
-                    for partial_uri in self.config['profile_uri_to_local'].keys():
-                        if uri_part.startswith(partial_uri):
-                            local_uri = self.config['profile_uri_to_local'][partial_uri] + uri_part[len(partial_uri):]
-                            req_profile_data = DocGenUtilities.load_as_json(local_uri)
-                            break
-
-                    if not req_profile_data:
-                        req_profile_data = DocGenUtilities.http_load_as_json(req_profile_uri)
-
-                    if req_profile_data:
-                        profile_resources = self.merge_dicts(profile_resources, req_profile_data.get('Resources', {}))
+                    profile_resources = self.merge_required_profile(
+                        profile_resources, req_profile_name,
+                        config['profile']['RequiredProfiles'][req_profile_name])
 
             profile_resources = self.merge_dicts(profile_resources, self.config.get('profile', {}).get('Resources', {}))
 
@@ -91,6 +71,40 @@ class DocGenerator:
     def generate_doc(self):
         output = self.generate_docs()
         self.write_output(output, self.outfile)
+
+
+    def merge_required_profile(self, profile_resources, req_profile_name, req_profile_info):
+        """ Merge a required profile into profile_resources (a dict). May result in recursive calls. """
+
+        req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
+        req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
+        version_string = 'v' + req_profile_minversion.replace('.', '_')
+
+        # Retrieve profile
+        # TODO: verify approach
+        req_profile_uri = '/'.join([req_profile_repo, req_profile_name]) + '.' + version_string + '.json'
+        if '://' in req_profile_uri:
+            protocol, uri_part = req_profile_uri.split('://')
+        else:
+            uri_part = uri
+        for partial_uri in self.config['profile_uri_to_local'].keys():
+            if uri_part.startswith(partial_uri):
+                local_uri = self.config['profile_uri_to_local'][partial_uri] + uri_part[len(partial_uri):]
+                req_profile_data = DocGenUtilities.load_as_json(local_uri)
+                break
+
+        if not req_profile_data:
+            req_profile_data = DocGenUtilities.http_load_as_json(req_profile_uri)
+
+        if req_profile_data:
+            if 'RequiredProfiles' in req_profile_data:
+                for req_profile_name in req_profile_data['RequiredProfiles'].keys():
+                    profile_resources = self.merge_required_profile(
+                        profile_resources, req_profile_name, req_profile_data['RequiredProfiles'][req_profile_name])
+
+            profile_resources = self.merge_dicts(profile_resources, req_profile_data.get('Resources', {}))
+
+        return profile_resources
 
 
     def merge_dicts(self, dict1, dict2):
