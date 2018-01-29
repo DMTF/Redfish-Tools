@@ -79,6 +79,7 @@ class DocGenerator:
         req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
         req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
         version_string = 'v' + req_profile_minversion.replace('.', '_')
+        req_profile_data = None
 
         # Retrieve profile
         # TODO: verify approach
@@ -86,7 +87,7 @@ class DocGenerator:
         if '://' in req_profile_uri:
             protocol, uri_part = req_profile_uri.split('://')
         else:
-            uri_part = uri
+            uri_part = req_profile_uri
         for partial_uri in self.config['profile_uri_to_local'].keys():
             if uri_part.startswith(partial_uri):
                 local_uri = self.config['profile_uri_to_local'][partial_uri] + uri_part[len(partial_uri):]

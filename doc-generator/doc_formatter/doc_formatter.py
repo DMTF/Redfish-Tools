@@ -118,7 +118,7 @@ class DocFormatter:
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None):
+                                supplemental_details, meta, anchor=None, profile=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
         raise NotImplementedError
 
@@ -830,40 +830,16 @@ class DocFormatter:
             action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
 
             formatted_action_rows = []
+
             for param_name in action_parameters:
-                # TODO: capture required and recommended parameter values for action parameters in profile mode.
-                # Example with ParameterValues and RecommendedValues:
-                # {
-                #     "Parameters": {
-                #         "ResetType": {
-                #             "ReadRequirement": "Mandatory",
-                #             "RecommendedValues": [
-                #                 "GracefulShutdown",
-                #                 "GracefulRestart",
-                #                 "ForceRestart",
-                #                 "PushPowerButton"
-                #             ],
-                #             "ParameterValues": [
-                #                 "ForceOff",
-                #                 "PowerCycle",
-                #                 "On"
-                #             ]
-                #         }
-                #     },
-                #     "Purpose": "Ability to reset the system is a core requirement of most users.",
-                #     "ReadRequirement": "Mandatory"
-                # }
+                if prop_name.startswith('#'):
+                    [skip, action_name] = prop_name.rsplit('.', 1)
+                else:
+                    action_name = prop_name
 
-                formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], [''])
-
-                profile_mode = self.config.get('profile_mode')
-                if profile_mode:
-                    profile_for_param = profile.get('Parameters', {}).get(param_name)
-                    # if profile_for_param:
-                    #     required_values = profile_for_param.get('ParameterValues', [])
-                    #     recommended_values = profile_for_param.get('RecommendedValues', [])
-
-                    #     import pdb; pdb.set_trace()
+                new_path = prop_path.copy()
+                new_path.append(action_name)
+                formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], new_path)
 
                 # Capture the enum details and merge them into the ones for the overall properties:
                 if formatted_action.get('details'):
@@ -905,11 +881,12 @@ class DocFormatter:
             else:
                 prop_enum_details = prop_info.get('enumDescriptions')
             anchor = schema_ref + '|details|' + prop_name
+
             prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
                                                                    prop_enum, prop_enum_details,
                                                                    supplemental_details,
                                                                    prop_info.get('_doc_generator_meta', {}),
-                                                                   anchor)
+                                                                   anchor, profile)
 
         # Action details may be supplied as markdown in the supplemental doc.
         # TODO: remove this? Change it?
