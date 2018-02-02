@@ -1,7 +1,7 @@
 {
 	"SchemaDefinition": "RedfishInteroperabilityProfile.v1_0_0",
 	"ProfileName": "OCPBasicServer",
-	"ProfileVersion": "0.95",
+	"ProfileVersion": "0.95.0a",
 	"Purpose": "A baseline interoperability profile for typical scale-out 1P/2P servers",
 	"OwningEntity": "Open Compute Project",
 	"ContactInfo": "redfish@opencompute.org",
@@ -14,7 +14,7 @@
 		"Chassis": {
 			"MinVersion": "1.0.0",
 			"PropertyRequirements": {
-				"Links:": {
+				"Links": {
 					"PropertyRequirements": {
 						"ComputerSystems": {}
 					}
@@ -155,16 +155,6 @@
 						"AddressOrigin": {},
 						"Gateway": {}
 					}
-				},
-				"IPv6AddressPolicyTable": {},
-				"IPv6StaticAddresses": {},
-				"IPv6Addresses": {
-					"PropertyRequirements": {
-						"Address": {},
-						"PrefixLength": {},
-						"AddressOrigin": {},
-						"AddressState": {}
-					}
 				}
 			}
 		},
@@ -226,7 +216,7 @@
 				"Redundancy": {
 					"ReadRequirement": "IfImplemented",
 					"PropertyRequirements": {
-						"MemerId": {},
+						"MemberId": {},
 						"RedundancySet": {},
 						"Mode": {},
 						"Status": {},

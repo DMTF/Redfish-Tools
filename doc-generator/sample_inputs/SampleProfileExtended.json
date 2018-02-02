@@ -75,7 +75,8 @@
                         "CompareValues": ["Physical", "Composed"],
                         "ReadRequirement": "Mandatory",
                         "WriteRequirement": "Mandatory"
-                    }]
+                    }],
+                    "MinSupportValues": ["Lit", "Off"]
                 }
             },
             "ActionRequirements": {

@@ -13,8 +13,17 @@ Initial author: Second Rise LLC.
 import copy
 import html
 import markdown
+import warnings
 from . import DocFormatter
 from . import ToCParser
+
+# Format user warnings simply
+def simple_warning_format(message, category, filename, lineno, file=None, line=None):
+    """ a basic format for warnings from this program """
+    return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
+
+warnings.formatwarning = simple_warning_format
+
 
 class HtmlGenerator(DocFormatter):
     """Provides methods for generating markdown from Redfish schemas. """
@@ -290,7 +299,10 @@ pre.code{
                 text_descr = 'See Property Details, below, for more information about this property.'
 
 
-            formatted_details['descr'] += '<br>' + self.italic(text_descr)
+            if formatted_details['descr']:
+                formatted_details['descr'] += '<br>' + self.italic(text_descr)
+            else:
+                formatted_details['descr'] = self.italic(text_descr)
 
         # If this is an Action with details, add a note to the description:
         if formatted_details['has_action_details']:
@@ -379,7 +391,7 @@ pre.code{
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None):
+                                supplemental_details, meta, anchor=None, profile=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
@@ -387,6 +399,37 @@ pre.code{
 
         parent_version = meta.get('version')
         enum_meta = meta.get('enum', {})
+
+        # Are we in profile mode? If so, consult the profile passed in for this property.
+        # For Action Parameters, look for ParameterValues/RecommendedValues; for
+        # Property enums, look for MinSupportValues/RecommendedValues.
+        profile_mode = self.config.get('profile_mode')
+        if profile_mode:
+            profile_values = []
+            profile_min_support_values = []
+            profile_parameter_values = []
+            profile_recommended_values = []
+            profile_all_values = []
+
+        if profile_mode and profile:
+            profile_values = profile.get('Values', [])
+            profile_min_support_values = profile.get('MinSupportValues', [])
+            profile_parameter_values = profile.get('ParameterValues', [])
+            profile_recommended_values = profile.get('RecommendedValues', [])
+
+            profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
+                                  + profile_recommended_values)
+
+            if profile_mode == 'terse':
+                if profile_all_values:
+                    filtered_enums = [x for x in profile_all_values if x in enum]
+                    if len(filtered_enums) < len(profile_all_values):
+                        warnings.warn('Profile specified value(s) for ' + prop_name + ' that is not present in schema: '
+                                      + ','.join([x for x in profile_all_values if x not in enum]))
+                    enum = filtered_enums
+
+        # if we didn't find any profile reqs, behave as if in non-profile-mode:
+        profile_mode = profile_mode and profile_all_values
 
         if prop_description:
             contents.append(self.para(prop_description))
@@ -400,9 +443,13 @@ pre.code{
             contents.append(self.markdown_to_html(supplemental_details))
 
         if enum_details:
-            header_row = self.make_header_row([prop_type, 'Description'])
+            headings = [prop_type, 'Description']
+            if profile_mode:
+                headings.append('Profile Specifies')
+            header_row = self.make_header_row(headings)
             table_rows = []
             enum.sort()
+
             for enum_item in enum:
                 enum_name = html.escape(enum_item, False)
                 enum_item_meta = enum_meta.get(enum_item, {})
@@ -435,11 +482,28 @@ pre.code{
                         descr += ' ' + self.italic(deprecated_descr)
                     else:
                         descr = self.italic(deprecated_descr)
-                table_rows.append(self.make_row([enum_name, descr]))
+                cells = [enum_name, descr]
+
+                if profile_mode:
+                    if enum_name in profile_values:
+                        cells.append('Required')
+                    elif enum_name in profile_min_support_values:
+                        cells.append('Required')
+                    elif enum_name in profile_parameter_values:
+                        cells.append('Required')
+                    elif enum_name in profile_recommended_values:
+                        cells.append('Recommended')
+                    else:
+                        cells.append('')
+
+                table_rows.append(self.make_row(cells))
             contents.append(self.make_table(table_rows, [header_row], 'enum enum-details'))
 
         elif enum:
-            header_row = self.make_header_row([prop_type])
+            headings = [prop_type]
+            if profile_mode:
+                headings.append('Profile Specifies')
+            header_row = self.make_header_row(headings)
             table_rows = []
             enum.sort()
             for enum_item in enum:
@@ -468,7 +532,20 @@ pre.code{
                     if enum_item_meta.get('version_deprecated_explanation'):
                         enum_name += '<br>' + self.italic(html.escape(enum_item_meta['version_deprecated_explanation'], False))
 
-                table_rows.append(self.make_row([enum_name]))
+                cells = [enum_name]
+                if profile_mode:
+                    if enum_name in profile_values:
+                        cells.append('Required')
+                    elif enum_name in profile_min_support_values:
+                        cells.append('Required')
+                    elif enum_name in profile_parameter_values:
+                        cells.append('Required')
+                    elif enum_name in profile_recommended_values:
+                        cells.append('Recommended')
+                    else:
+                        cells.append('')
+
+                table_rows.append(self.make_row(cells))
             contents.append(self.make_table(table_rows, [header_row], 'enum'))
 
         return '\n'.join(contents) + '\n'
