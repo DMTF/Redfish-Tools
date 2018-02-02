@@ -810,10 +810,13 @@ class DocFormatter:
         prop_units = prop_info.get('units')
 
         read_only = prop_info.get('readonly')
-        if self.config['normative'] and 'longDescription' in prop_info:
-            descr = prop_info.get('longDescription', '')
-        else:
-            descr = prop_info.get('description', '')
+
+        descr = None
+        if self.config['profile_mode'] != 'terse':
+            if self.config['normative'] and 'longDescription' in prop_info:
+                descr = prop_info.get('longDescription', '')
+            else:
+                descr = prop_info.get('description', '')
 
         if descr is None:
             descr = ''
