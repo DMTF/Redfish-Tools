@@ -233,8 +233,8 @@ class CSDLToJSON():
 
                     # Process EnumType definitions if defined in versioned namespaces
                     if child.tag == ODATA_TAG_ENUM:
-                        if is_namespace_unversioned( namespace ) == False:
-                            self.generate_enum( child, self.json_out[self.namespace_under_process]["definitions"] )
+                        #if is_namespace_unversioned( namespace ) == False:
+                        self.generate_enum( child, self.json_out[self.namespace_under_process]["definitions"] )
 
                     # Process TypeDefinition definitions if the defined in versioned namespaces
                     if child.tag == ODATA_TAG_TYPE_DEF:
@@ -714,7 +714,7 @@ class CSDLToJSON():
             json_obj_def["properties"]["@odata.context"] = { "$ref": self.odata_schema + "#/definitions/context" }
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             json_obj_def["properties"]["@odata.type"] = { "$ref": self.odata_schema + "#/definitions/type" }
-            json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
+            #json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
 
     def add_type_info( self, type_info, type, is_array, json_type_def ):
         """
