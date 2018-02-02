@@ -299,7 +299,10 @@ pre.code{
                 text_descr = 'See Property Details, below, for more information about this property.'
 
 
-            formatted_details['descr'] += '<br>' + self.italic(text_descr)
+            if formatted_details['descr']:
+                formatted_details['descr'] += '<br>' + self.italic(text_descr)
+            else:
+                formatted_details['descr'] = self.italic(text_descr)
 
         # If this is an Action with details, add a note to the description:
         if formatted_details['has_action_details']:
