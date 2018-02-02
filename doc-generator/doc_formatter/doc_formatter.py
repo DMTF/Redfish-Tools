@@ -1036,8 +1036,6 @@ class DocFormatter:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
 
-
-            # TODO: probably refactor this block:
             if self.config['profile_mode'] == 'terse':
                 if len(prop_path) and prop_path[0] == 'Actions':
                     profile_section = 'ActionRequirements'
