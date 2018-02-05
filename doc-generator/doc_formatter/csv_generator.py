@@ -104,7 +104,15 @@ class CsvGenerator(DocFormatter):
         else:
             nullable = 'No'
 
-        min_val = max_val = enumerations = pattern = 'TODO'
+        p_i = prop_info[0]
+        min_val = p_i.get('minimum', '')
+        max_val = p_i.get('maximum', '')
+        pattern = ''
+
+        pattern = formatted_details.get('pattern')
+
+        enumerations = 'TODO'
+
         schema_name = self.schema_name
         version = self.schema_version
 
