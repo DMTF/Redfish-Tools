@@ -38,12 +38,26 @@ class SchemaTraverser:
         self.remote_schemas = {} # dict of uri:json_data retrieved dynamically
 
 
+    def copy(self):
+        """Create a traverser with equivalent state to this one's"""
+        schema_data = self.schemas.copy()
+        meta_data = self.meta.copy()
+        return SchemaTraverser(schema_data, meta_data)
+
+
+    def add_schema(self, uri, data):
+        """Add the specified schema data to self.schemas. Fails if uri is already present"""
+        if not self.schemas.get(uri):
+            self.schemas[uri] = data
+        else:
+            warnings.warn("Not overwriting traverser's schema data for " + uri)
+
+
     def find_ref_data(self, ref):
         """Find data identified by ref within self.schemas."""
 
         if '#' not in ref:
             return None
-
         schema_ref, path = self.get_schema_ref_and_path(ref)
         if self.ref_to_own_schema(ref):
             schema = self.schemas.get(schema_ref, None)
@@ -58,6 +72,7 @@ class SchemaTraverser:
         meta = self.meta.get(schema_ref, {})
 
         elements = [x for x in path.split('/') if x]
+        element = ''
         for element in elements:
             if element in schema:
                 schema = schema[element]

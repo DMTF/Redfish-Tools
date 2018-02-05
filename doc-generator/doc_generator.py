@@ -13,10 +13,14 @@ suitable for use with the Slate documentation tool (https://github.com/tripit/sl
 Initial author: Second Rise LLC.
 """
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib'))
+
 import argparse
 import json
-import os
 import warnings
+from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
 import parse_supplement
 
@@ -73,15 +77,18 @@ class DocGenerator:
         doc_generator_meta = {}
 
         for normalized_uri in files.keys():
-            property_data[normalized_uri] = self.process_files(normalized_uri, files[normalized_uri])
+            data = self.process_files(normalized_uri, files[normalized_uri])
+            if not data:
+                warnings.warn("Unable to process files for " + normalized_uri)
+                continue
+            property_data[normalized_uri] = data
             doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
             latest_info = files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
-            latest_data = self.load_as_json(latest_file)
+            latest_data = DocGenUtilities.load_as_json(latest_file)
             latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
             latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
             latest_data['_schema_name'] = latest_info.get('schema_name')
-
             schema_data[normalized_uri] = latest_data
 
         traverser = SchemaTraverser(schema_data, doc_generator_meta)
@@ -109,7 +116,7 @@ class DocGenerator:
         _is_versioned_schema, _is_collection_of}.
         """
 
-        file_list = files.copy()
+        file_list = [os.path.abspath(filename) for filename in files]
         grouped_files = {}
         all_schemas = {}
         missing_files = []
@@ -119,7 +126,7 @@ class DocGenerator:
             # Get the (probably versioned) filename, and save the data:
             root, _, fname = filename.rpartition(os.sep)
 
-            data = self.load_as_json(filename)
+            data = DocGenUtilities.load_as_json(filename)
 
             schema_name = SchemaTraverser.find_schema_name(fname, data)
             if schema_name is None: continue
@@ -162,7 +169,7 @@ class DocGenerator:
                             continue
                         ref_fn = refpath_uri.split('/')[-1]
                         # Skip files that are not present.
-                        ref_filename = os.path.join(root, ref_fn)
+                        ref_filename = os.path.abspath(os.path.join(root, ref_fn))
                         if ref_filename in file_list:
                             ref_files.append({'root': root,
                                               'filename': ref_fn,
@@ -191,7 +198,7 @@ class DocGenerator:
 
                 ref_fn = refpath_uri.split('/')[-1]
                 # Skip files that are not present.
-                ref_filename = os.path.join(root, ref_fn)
+                ref_filename = os.path.abspath(os.path.join(root, ref_fn))
                 if ref_filename in file_list:
                     ref_files.append({'root': root,
                                       'filename': ref_fn,
@@ -225,7 +232,12 @@ class DocGenerator:
                 processed_files.append(ref_filename)
 
         if len(missing_files):
-            warnings.warn("Some referenced files were missing: " + ' '.join(missing_files))
+            numfiles = len(missing_files)
+            if numfiles <= 10:
+                missing_files_list = '\n   '.join(missing_files)
+            else:
+                missing_files_list = '\n   '.join(missing_files[0:9]) + "\n   and " + str(numfiles - 10) + " more."
+            warnings.warn(str(numfiles) + " referenced files were missing: \n   " + missing_files_list)
 
         return grouped_files, all_schemas
 
@@ -249,7 +261,7 @@ class DocGenerator:
         filename = os.path.join(ref['root'], ref['filename'])
         normalized_uri = self.construct_uri_for_filename(filename)
 
-        data = self.load_as_json(filename)
+        data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
         version = self.get_version_string(ref['filename'])
 
@@ -359,20 +371,6 @@ class DocGenerator:
 
 
     @staticmethod
-    def load_as_json(filename):
-        """Load json data from a file, printing an error message on failure."""
-        data = {}
-        try:
-            # Parse file as json
-            jsondata = open(filename, 'r', encoding="utf8")
-            data = json.load(jsondata)
-            jsondata.close()
-        except (OSError, json.JSONDecodeError) as ex:
-            warnings.warn('Unable to read ' + filename + ': ' + str(ex))
-
-        return data
-
-    @staticmethod
     def write_output(markdown, outfile):
         """Write output to a file."""
 
@@ -388,7 +386,8 @@ class DocGenerator:
         if local_to_uri:
             for local_path in local_to_uri.keys():
                 if fname.startswith(local_path):
-                    return fname.replace(local_path, local_to_uri[local_path])
+                    fname = fname.replace(local_path, local_to_uri[local_path])
+                    return fname.replace(os.sep, '/')
 
         return fname
 
@@ -461,7 +460,7 @@ def main():
     if len(args.import_from):
         import_from = args.import_from
     else:
-        import_from = [config.get('cwd') + '/json-schema']
+        import_from = [ os.path.join(config.get('cwd'), 'json-schema') ]
 
     # Determine outfile and verify that it is writeable:
     outfile_name = args.outfile
