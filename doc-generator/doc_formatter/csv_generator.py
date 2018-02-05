@@ -111,7 +111,9 @@ class CsvGenerator(DocFormatter):
 
         pattern = formatted_details.get('pattern')
 
-        enumerations = 'TODO'
+        enumerations = ''
+        if 'enum' in p_i:
+            enumerations = ', '.join(p_i['enum'])
 
         schema_name = self.schema_name
         version = self.schema_version
