@@ -251,7 +251,7 @@ class DocFormatter:
                             prop_details.update(formatted['details'])
                         if formatted['action_details']:
                             self.add_action_details(formatted['action_details'])
-                        if formatted['profile_conditional_details']:
+                        if formatted.get('profile_conditional_details'):
                             conditional_details.update(formatted['profile_conditional_details'])
 
                 if len(prop_details):
@@ -620,11 +620,12 @@ class DocFormatter:
     def parse_property_info(self, schema_ref, prop_name, prop_infos, prop_path, within_action=False):
         """Parse a list of one more more property info objects into strings for display.
 
-        Returns a dict of 'prop_type', 'read_only', descr', 'prop_is_object',
+        Returns a dict of 'prop_type', 'read_only', 'descr', 'prop_is_object',
         'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
-        'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison'
+        'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
+        'pattern'
         """
 
         if isinstance(prop_infos, dict):
@@ -653,6 +654,7 @@ class DocFormatter:
                   'has_direct_prop_details': False,
                   'has_action_details': False,
                   'action_details': {},
+                  'pattern': [],
                   'is_in_profile': False,
                   'profile_read_req': None,
                   'profile_write_req': None,
@@ -691,7 +693,7 @@ class DocFormatter:
 
 
         # Uniquify these properties and save as lists:
-        props_to_combine = ['prop_type', 'descr', 'object_description', 'item_description']
+        props_to_combine = ['prop_type', 'descr', 'object_description', 'item_description', 'pattern']
 
         for property_name in props_to_combine:
             property_values = []
@@ -704,8 +706,10 @@ class DocFormatter:
                     val = det[property_name]
                     if val and val not in property_values:
                         property_values.append(val)
-
             parsed[property_name] = property_values
+
+        # Restore the pattern to a single string:
+        parsed['pattern'] = '\n'.join(parsed['pattern'])
 
         # read_only and units should be the same for all
         parsed['read_only'] = details[0]['read_only']
@@ -744,7 +748,8 @@ class DocFormatter:
         'prop_is_object', 'prop_is_array', 'object_description', 'prop_details', 'item_description',
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
-        'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison'
+        'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
+        'normative_descr', 'non_normative_descr', pattern
         """
         traverser = self.traverser
 
@@ -818,8 +823,14 @@ class DocFormatter:
             else:
                 descr = prop_info.get('description', '')
 
-        if descr is None:
-            descr = ''
+        normative_descr = prop_info.get('longDescription', '')
+        non_normative_descr = prop_info.get('description', '')
+        pattern = prop_info.get('pattern')
+
+        if self.config['normative'] and normative_descr:
+            descr = normative_descr
+        else:
+            descr = non_normative_descr
 
         add_link_text = prop_info.get('add_link_text', '')
 
@@ -970,6 +981,9 @@ class DocFormatter:
                        'has_direct_prop_details': has_prop_details,
                        'has_action_details': has_prop_actions,
                        'action_details': action_details,
+                       'normative_descr': normative_descr,
+                       'non_normative_descr': non_normative_descr,
+                       'pattern': pattern,
                        'is_in_profile': False,
                        'profile_read_req': None,
                        'profile_write_req': None,
