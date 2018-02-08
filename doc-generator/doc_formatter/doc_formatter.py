@@ -729,6 +729,8 @@ class DocFormatter:
         prop_item = prop_info.get('items')
         list_of_objects = False
         collapse_description = False
+
+        # TODO: this is roughly where we need to fix_92
         if isinstance(prop_item, dict):
             if 'type' in prop_item and 'properties' not in prop_item:
                 prop_items = [prop_item]
