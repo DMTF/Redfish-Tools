@@ -388,7 +388,7 @@ pre.code{
                     if enum_item_meta.get('version_deprecated_explanation'):
                         deprecated_descr = html.escape(enum_item_meta['version_deprecated_explanation'], False)
 
-                descr = html.escape(enum_details.get(enum_item), False)
+                descr = html.escape(enum_details.get(enum_item, ''), False)
                 if deprecated_descr:
                     if descr:
                         descr += ' ' + self.italic(deprecated_descr)
