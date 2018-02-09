@@ -323,7 +323,11 @@ class CsvGenerator(DocFormatter):
 
     def add_section(self, text, link_id=False):
         """ Rather than a top-level heading, for CSV we set the first column (schema name) """
-        self.schema_name, self.schema_version = text.split(' ')
+        if ' ' in text:
+            self.schema_name, self.schema_version = text.split(' ')
+        else:
+            self.schema_name = text
+            self.schema_version = ''
         self.this_section = {}
 
     def add_description(self, text):
