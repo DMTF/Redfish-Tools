@@ -54,7 +54,7 @@ class DocFormatter:
 
         self.separators = {
             'inline': ', ',
-            'linebreak': '<br>'
+            'linebreak': '\n'
             }
 
         # Properties to carry through from parent when a ref is extended:
@@ -118,7 +118,7 @@ class DocFormatter:
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None, profile=None):
+                                supplemental_details, meta, anchor=None, profile={}):
         """Generate a formatted table of enum information for inclusion in Property Details."""
         raise NotImplementedError
 
@@ -155,9 +155,103 @@ class DocFormatter:
         raise NotImplementedError
 
 
+    def format_base_profile_access(self, formatted_details):
+        """Massage profile read/write requirements for display"""
+
+        if formatted_details.get('is_in_profile'):
+            profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
+                                                         read_req=formatted_details.get('profile_read_req'),
+                                                         write_req=formatted_details.get('profile_write_req'),
+                                                         min_count=formatted_details.get('profile_mincount'))
+        else:
+            profile_access = ''
+
+        return profile_access
+
+
+    def format_conditional_access(self, conditional_req):
+        """Massage conditional profile read/write requirements."""
+
+        profile_access = self._format_profile_access(read_req=conditional_req.get('ReadRequirement'),
+                                                     write_req=conditional_req.get('WriteRequirement'),
+                                                     min_count=conditional_req.get('MinCount'))
+        return profile_access
+
+
+    def _format_profile_access(self, read_only=False, read_req=None, write_req=None, min_count=None):
+        """Common formatting logic for profile_access column"""
+
+        profile_access = ''
+        if not self.config['profile_mode']:
+            return profile_access
+
+        # Each requirement  may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
+        if not read_req:
+            read_req = 'Mandatory' # This is the default if nothing is specified.
+        if read_only:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
+        elif read_req == write_req:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
+        elif not write_req:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
+        else:
+            # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
+            profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)' + self.br() +
+                              self.nobr(self.text_map(write_req)) + ' (Read/Write)')
+
+        if min_count:
+            if profile_access:
+                profile_access += self.br()
+            profile_access += self.nobr("Minimum " + str(min_count))
+
+        return profile_access
+
+
+
     def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
         """Generate a formatted Conditional Details section from profile data"""
-        raise NotImplementedError
+        formatted = []
+        anchor = schema_ref + '|conditional_reqs|' + prop_name
+
+        formatted.append(self.head_four(prop_name, anchor))
+
+        rows = []
+
+        for creq in conditional_reqs:
+            req_desc = ''
+            purpose = creq.get('Purpose', '&nbsp;'*10)
+            subordinate_to = creq.get('SubordinateToResource')
+            compare_property = creq.get('CompareProperty')
+            req = self.format_conditional_access(creq)
+
+            if creq.get('BaseRequirement'):
+                req_desc = 'Base Requirement'
+
+            elif subordinate_to:
+                req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
+
+            if compare_property:
+                comparison = creq.get('Comparison')
+                if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
+                    comparison += ' to'
+
+                compare_values = creq.get('CompareValues')
+                if compare_values:
+                    compare_values = ', '.join('"' + x + '"' for x in compare_values)
+
+                if req_desc:
+                    req_desc += ' and '
+                req_desc += '"' + compare_property + '"' + ' is ' + comparison
+
+                if compare_values:
+                    req_desc += ' ' + compare_values
+
+
+            rows.append(self.make_row([req_desc, req, purpose]))
+
+        formatted.append(self.make_table(rows, []))
+
+        return "\n".join(formatted)
 
 
     def output_document(self):
@@ -1117,7 +1211,6 @@ class DocFormatter:
         return {'rows': output, 'details': details, 'action_details': action_details}
 
 
-
     def link_to_own_schema(self, schema_ref, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links. """
         schema_name = self.traverser.get_schema_name(schema_ref)
@@ -1188,49 +1281,6 @@ class DocFormatter:
             prop_info['units'] = units_trans
 
         return prop_info
-
-
-    @staticmethod
-    def truncate_version(version_string, num_parts):
-        """Truncate the version string to at least the specified number of parts.
-
-        Maintains additional part(s) if non-zero.
-        """
-
-        parts = version_string.split('.')
-        keep = []
-        for part in parts:
-            if len(keep) < num_parts:
-                keep.append(part)
-            elif part != '0':
-                keep.append(part)
-            else:
-                break
-
-        return '.'.join(keep)
-
-
-    @staticmethod
-    def make_unversioned_ref(this_ref):
-        """Get the un-versioned string based on a (possibly versioned) ref"""
-
-        unversioned = None
-        pattern = re.compile(r'(.+)\.([^\.]+)\.json#(.+)')
-        match = pattern.fullmatch(this_ref)
-        if match:
-            unversioned = match.group(1) + '.json#' + match.group(3)
-        return unversioned
-
-
-    @staticmethod
-    def text_map(text):
-        """Replace string for output -- used to replace strings with nicer English text"""
-
-        output_map = {
-            'IfImplemented': 'If Implemented',
-            'Conditional': 'Conditional Requirements',
-            }
-        return output_map.get(text, text)
 
 
     def compare_versions(self, version, context_version):
@@ -1313,3 +1363,81 @@ class DocFormatter:
                 prop_reqs = prop_profile.get('PropertyRequirements', prop_profile.get('Parameters', {}))
 
         return prop_profile
+
+    @staticmethod
+    def truncate_version(version_string, num_parts):
+        """Truncate the version string to at least the specified number of parts.
+
+        Maintains additional part(s) if non-zero.
+        """
+
+        parts = version_string.split('.')
+        keep = []
+        for part in parts:
+            if len(keep) < num_parts:
+                keep.append(part)
+            elif part != '0':
+                keep.append(part)
+            else:
+                break
+
+        return '.'.join(keep)
+
+
+    @staticmethod
+    def make_unversioned_ref(this_ref):
+        """Get the un-versioned string based on a (possibly versioned) ref"""
+
+        unversioned = None
+        pattern = re.compile(r'(.+)\.([^\.]+)\.json#(.+)')
+        match = pattern.fullmatch(this_ref)
+        if match:
+            unversioned = match.group(1) + '.json#' + match.group(3)
+        return unversioned
+
+
+    @staticmethod
+    def text_map(text):
+        """Replace string for output -- used to replace strings with nicer English text"""
+
+        output_map = {
+            'IfImplemented': 'If Implemented',
+            'Conditional': 'Conditional Requirements',
+            }
+        return output_map.get(text, text)
+
+
+    # Override the following when the output format supports better formatting.
+    @staticmethod
+    def para(text):
+        """ Format text as a paragraph """
+        return text
+
+    @staticmethod
+    def make_paras(text):
+        """ Split text at linebreaks and output as paragraphs """
+        return text
+
+    @staticmethod
+    def br():
+        """ Return a linebreak if in-cell linebreaks are supported. Assume they are not by default. """
+        return ' '
+
+    @staticmethod
+    def nobr(text):
+        """ Wrap a bit of text in nobr tags. """
+        return text
+
+    @staticmethod
+    def nbsp():
+        """ A non-breaking space """
+        return ' '
+
+    def make_row(self, cells):
+        raise NotImplementedError
+
+    def make_header_row(self, cells):
+        raise NotImplementedError
+
+    def make_table(self, rows, header_rows=None, css_class=None):
+        raise NotImplementedError

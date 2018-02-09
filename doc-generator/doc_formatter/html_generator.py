@@ -408,13 +408,8 @@ pre.code{
         # Property enums, look for MinSupportValues/RecommendedValues.
         profile_mode = self.config.get('profile_mode')
         if profile_mode:
-            profile_values = []
-            profile_min_support_values = []
-            profile_parameter_values = []
-            profile_recommended_values = []
-            profile_all_values = []
-
-        if profile_mode and profile:
+            if profile is None:
+                profile = {}
             profile_values = profile.get('Values', [])
             profile_min_support_values = profile.get('MinSupportValues', [])
             profile_parameter_values = profile.get('ParameterValues', [])
@@ -601,105 +596,6 @@ pre.code{
 
         else:
             formatted.append(self.para("(This action takes no parameters.)"))
-
-        return "\n".join(formatted)
-
-
-    def format_base_profile_access(self, formatted_details):
-        """Massage profile read/write requirements for display"""
-
-        if formatted_details.get('is_in_profile'):
-            profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
-                                                         read_req=formatted_details.get('profile_read_req'),
-                                                         write_req=formatted_details.get('profile_write_req'),
-                                                         min_count=formatted_details.get('profile_mincount'))
-        else:
-            profile_access = ''
-
-        return profile_access
-
-
-    def format_conditional_access(self, conditional_req):
-        """Massage conditional profile read/write requirements."""
-
-        profile_access = self._format_profile_access(read_req=conditional_req.get('ReadRequirement'),
-                                                     write_req=conditional_req.get('WriteRequirement'),
-                                                     min_count=conditional_req.get('MinCount'))
-        return profile_access
-
-
-    def _format_profile_access(self, read_only=False, read_req=None, write_req=None, min_count=None):
-        """Common formatting logic for profile_access column"""
-
-        profile_access = ''
-        if not self.config['profile_mode']:
-            return profile_access
-
-        # Each requirement  may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
-        if not read_req:
-            read_req = 'Mandatory' # This is the default if nothing is specified.
-        if read_only:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
-        elif read_req == write_req:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
-        elif not write_req:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
-        else:
-            # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-            profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)<br>' +
-                              self.nobr(self.text_map(write_req)) + ' (Read/Write)')
-
-        if min_count:
-            if profile_access:
-                profile_access += "<br>"
-            profile_access += self.nobr("Minimum " + str(min_count))
-
-        return profile_access
-
-
-
-    def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
-        """Generate a formatted Conditional Details section from profile data"""
-        formatted = []
-        anchor = schema_ref + '|conditional_reqs|' + prop_name
-
-        formatted.append(self.head_four(prop_name, anchor))
-
-        rows = []
-
-        for creq in conditional_reqs:
-            req_desc = ''
-            purpose = creq.get('Purpose', '&nbsp;'*10)
-            subordinate_to = creq.get('SubordinateToResource')
-            compare_property = creq.get('CompareProperty')
-            req = self.format_conditional_access(creq)
-
-            if creq.get('BaseRequirement'):
-                req_desc = 'Base Requirement'
-
-            elif subordinate_to:
-                req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
-
-            if compare_property:
-                comparison = creq.get('Comparison')
-                if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
-                    comparison += ' to'
-
-                compare_values = creq.get('CompareValues')
-                if compare_values:
-                    compare_values = ', '.join('"' + x + '"' for x in compare_values)
-
-                if req_desc:
-                    req_desc += ' and '
-                req_desc += '"' + compare_property + '"' + ' is ' + comparison
-
-                if compare_values:
-                    req_desc += ' ' + compare_values
-
-
-            rows.append(self.make_row([req_desc, req, purpose]))
-
-        formatted.append(self.make_table(rows, []))
 
         return "\n".join(formatted)
 
@@ -962,20 +858,17 @@ pre.code{
         div.append('</div>')
         return '\n'.join(div)
 
-    @staticmethod
-    def make_row(cells):
+    def make_row(self, cells):
         """ Make an HTML row """
         row = ''.join(['<td>' + cell + '</td>' for cell in cells])
         return '<tr>' + row + '</tr>'
 
-    @staticmethod
-    def make_header_row(cells):
+    def make_header_row(self, cells):
         """ Make an HTML row, using table header markup """
         row = ''.join(['<th>' + cell + '</th>' for cell in cells])
         return '<tr>' + row + '</tr>'
 
-    @staticmethod
-    def make_table(rows, header_rows=None, css_class=None):
+    def make_table(self, rows, header_rows=None, css_class=None):
         """ Make an HTML table from the provided rows, which should be HTML markup """
         if header_rows:
             head = '<thead>\n' + '\n'.join(header_rows) + '\n</thead>\n'
@@ -1000,9 +893,18 @@ pre.code{
         return '\n'.join([HtmlGenerator.para(line) for line in '\n'.split(text) if line])
 
     @staticmethod
+    def br():
+        return '<br>'
+
+    @staticmethod
     def nobr(text):
         """ Wrap a bit of text in nobr tags. """
         return '<nobr>' + text + '</nobr>'
+
+    @staticmethod
+    def nbsp():
+        """ A non-breaking space """
+        return '&nbsp;'
 
 
     def head_one(self, text, anchor_id=None):

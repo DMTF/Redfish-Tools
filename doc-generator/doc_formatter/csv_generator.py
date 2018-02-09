@@ -127,7 +127,7 @@ class CsvGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None, profile=None):
+                                supplemental_details, meta, anchor=None, profile={}):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         # TODO: use profile when in profile_mode
