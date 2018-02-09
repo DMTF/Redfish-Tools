@@ -169,9 +169,16 @@ class MarkdownGenerator(DocFormatter):
                     collapse_array = True
                     name_and_version += ' [ ]'
 
+
+        if formatted_details['descr'] is None:
+            formatted_details['descr'] = ''
+
+        if formatted_details['profile_purpose']:
+            if formatted_details['descr']:
+                formatted_details['descr'] += ' '
+            formatted_details['descr'] += self.bold(formatted_details['profile_purpose'])
+
         if formatted_details['add_link_text']:
-            if formatted_details['descr'] is None:
-                formatted_details['descr'] = ''
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
             formatted_details['descr'] += formatted_details['add_link_text']
@@ -214,32 +221,7 @@ class MarkdownGenerator(DocFormatter):
             prop_access += '<br>(null)'
 
         # If profile reqs are present, massage them:
-        profile_access = ''
-        if formatted_details['profile_read_req'] or formatted_details['profile_write_req']:
-            # Each may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
-            read_req = formatted_details['profile_read_req']
-            write_req = formatted_details['profile_write_req']
-            if formatted_details['read_only']:
-                if read_req:
-                    profile_access = self.text_map(read_req) + ' (Read-only)'
-            elif read_req == write_req:
-                profile_access = self.text_map(read_req) + ' (Read/Write)'
-            elif not write_req:
-                profile_access = self.text_map(read_req) + ' (Read)'
-            elif not read_req:
-                warnings.warn("Profile contains a Write requirement but no Read requirement for " +
-                              prop_name + ' in ' + schema_ref);
-                profile_access = self.text_map(write_req) + ' (Write)'
-            else:
-                # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-                profile_access = (self.text_map(read_req) + ' (Read)<br> ' +
-                                  self.text_map(write_req) + ' (Read/Write)')
-
-        if formatted_details['profile_mincount']:
-            mc = str(formatted_details['profile_mincount'])
-            if profile_access:
-                profile_access += ' '
-            profile_access += "Minimum " + mc
+        profile_access = self.format_base_profile_access(formatted_details)
 
         if self.config['profile_mode']:
             if profile_access:
