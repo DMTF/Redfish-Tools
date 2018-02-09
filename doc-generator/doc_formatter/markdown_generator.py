@@ -688,7 +688,7 @@ search: true
         return header
 
     def _make_separator_row(self, num):
-        return self.make_row(['---' * num])
+        return self.make_row(['---' for x in range(0, num)])
 
 
     def make_table(self, rows, header_rows=None, css_class=None):
@@ -696,5 +696,5 @@ search: true
             # Get the number of cells from the first row.
             firstrow = rows[0]
             numcells = firstrow.count(' | ') + 1
-            header_rows = [self.make_header_row(['   ' * numcells])]
+            header_rows = [self.make_header_row(['   ' for x in range(0, numcells)])]
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])

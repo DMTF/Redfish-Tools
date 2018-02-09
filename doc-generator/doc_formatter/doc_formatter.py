@@ -219,7 +219,7 @@ class DocFormatter:
 
         for creq in conditional_reqs:
             req_desc = ''
-            purpose = creq.get('Purpose', '&nbsp;'*10)
+            purpose = creq.get('Purpose', self.nbsp()*10)
             subordinate_to = creq.get('SubordinateToResource')
             compare_property = creq.get('CompareProperty')
             req = self.format_conditional_access(creq)
@@ -235,7 +235,7 @@ class DocFormatter:
                 if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
                     comparison += ' to'
 
-                compare_values = creq.get('CompareValues')
+                compare_values = creq.get('CompareValues') or creq.get('Values') # Which is right?
                 if compare_values:
                     compare_values = ', '.join('"' + x + '"' for x in compare_values)
 
@@ -249,7 +249,7 @@ class DocFormatter:
 
             rows.append(self.make_row([req_desc, req, purpose]))
 
-        formatted.append(self.make_table(rows, []))
+        formatted.append(self.make_table(rows))
 
         return "\n".join(formatted)
 
