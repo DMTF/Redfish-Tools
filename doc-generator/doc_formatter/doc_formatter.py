@@ -207,7 +207,6 @@ class DocFormatter:
         return profile_access
 
 
-
     def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
         """Generate a formatted Conditional Details section from profile data"""
         formatted = []

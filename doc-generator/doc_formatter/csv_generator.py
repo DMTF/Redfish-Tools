@@ -30,21 +30,41 @@ class CsvGenerator(DocFormatter):
         self.output = io.StringIO()
         self.writer = csv.writer(self.output)
         self.schema_name = self.schema_version = ''
-        headings = [
-            'Schema Name',
-            'Schema Version',
-            'Property Name (chain)',
-            'Type',
-            'Permissions',
-            'Nullable',
-            'Description',
-            'Normative Description',
-            'Units',
-            'Minimum Value',
-            'Maximum Value',
-            'Enumerations',
-            'Pattern',
-            '']
+
+        if self.config.get('profile_mode'):
+            headings = [
+                'Schema Name',
+                'Schema Version',
+                'Property Name (chain)',
+                'Read/Write Requirement',
+                'Conditional Requirement',
+                'Purpose',
+                'Type',
+                'Nullable',
+                'Description',
+                'Normative Description',
+                'Units',
+                'Minimum Value',
+                'Maximum Value',
+                'Enumerations',
+                'Pattern',
+                '']
+        else:
+            headings = [
+                'Schema Name',
+                'Schema Version',
+                'Property Name (chain)',
+                'Type',
+                'Permissions',
+                'Nullable',
+                'Description',
+                'Normative Description',
+                'Units',
+                'Minimum Value',
+                'Maximum Value',
+                'Enumerations',
+                'Pattern',
+                '']
         self.writer.writerow(headings)
 
 
@@ -92,6 +112,15 @@ class CsvGenerator(DocFormatter):
         prop_type = formatted_details['prop_type']
         prop_units = formatted_details['prop_units']
 
+        profile_mode = self.config.get('profile_mode')
+        if profile_mode:
+            profile_access = self.format_base_profile_access(formatted_details)
+            profile_purpose = formatted_details['profile_purpose']
+            profile_cond_req = ''
+            cond_details = formatted_details.get('profile_conditional_details')
+            if cond_details:
+                profile_cond_req = cond_details.get(prop_name, '')
+
         long_description = formatted_details['normative_descr']
         description = formatted_details['non_normative_descr']
 
@@ -118,8 +147,13 @@ class CsvGenerator(DocFormatter):
         schema_name = self.schema_name
         version = self.schema_version
 
-        row = [schema_name, version, prop_name, prop_type, permissions, nullable,
-               description, long_description, prop_units, min_val, max_val, enumerations, pattern]
+        if profile_mode:
+            row = [schema_name, version, prop_name, profile_access, profile_cond_req, profile_purpose,
+                   prop_type, nullable,
+                   description, long_description, prop_units, min_val, max_val, enumerations, pattern]
+        else:
+            row = [schema_name, version, prop_name, prop_type, permissions, nullable,
+                   description, long_description, prop_units, min_val, max_val, enumerations, pattern]
         rows = [row]
         for nextrow in nextrows:
             rows.append(nextrow)
@@ -130,7 +164,6 @@ class CsvGenerator(DocFormatter):
                                 supplemental_details, meta, anchor=None, profile={}):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
-        # TODO: use profile when in profile_mode
         contents = []
         contents.append(self.head_three(prop_name + ':'))
 
@@ -241,33 +274,6 @@ class CsvGenerator(DocFormatter):
         return self.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
 
 
-    def emit(self):
-        """ Output contents thus far """
-
-        contents = []
-
-        for section in self.sections:
-            contents.append(section.get('heading'))
-            if section.get('description'):
-                contents.append(section['description'])
-            if section.get('json_payload'):
-                contents.append(section['json_payload'])
-            # something is awry if there are no properties, but ...
-            if section.get('properties'):
-                contents.append('|     |     |     |')
-                contents.append('| --- | --- | --- |')
-                contents.append('\n'.join(section['properties']))
-            if section.get('property_details'):
-                contents.append('\n' + self.head_two('Property Details'))
-                contents.append('\n'.join(section['property_details']))
-            if len(section.get('action_details', [])):
-                contents.append('\n' + self.head_two('Actions'))
-                contents.append('\n\n'.join(section.get('action_details')))
-
-        self.sections = []
-        return '\n'.join(contents)
-
-
     def output_document(self):
         """Return full contents of document"""
 
@@ -321,10 +327,51 @@ class CsvGenerator(DocFormatter):
         return '\n'.join(intro)
 
 
+    def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
+        """Generate a formatted Conditional Details section from profile data"""
+        formatted = []
+
+        for creq in conditional_reqs:
+            req_desc = ''
+            purpose = creq.get('Purpose', '')
+            subordinate_to = creq.get('SubordinateToResource', '')
+            compare_property = creq.get('CompareProperty', '')
+            req = self.format_conditional_access(creq)
+
+            if creq.get('BaseRequirement'):
+                req_desc = 'Base Requirement'
+
+            elif subordinate_to:
+                req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
+
+            if compare_property:
+                comparison = creq.get('Comparison')
+                if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
+                    comparison += ' to'
+
+                compare_values = creq.get('CompareValues') or creq.get('Values') # Which is right?
+                if compare_values:
+                    compare_values = ', '.join('"' + x + '"' for x in compare_values)
+
+                if req_desc:
+                    req_desc += ' and '
+                req_desc += '"' + compare_property + '"' + ' is ' + comparison
+
+                if compare_values:
+                    req_desc += ' ' + compare_values
+
+            req_string = req_desc + ': ' + req
+            if purpose:
+                req_string += ' (' + purpose + ')'
+            formatted.append(req_string)
+
+        return "\n".join(formatted)
+
+
     def add_section(self, text, link_id=False):
         """ Rather than a top-level heading, for CSV we set the first column (schema name) """
         if ' ' in text:
-            self.schema_name, self.schema_version = text.split(' ')
+            self.schema_name, self.schema_version = text.split(' ', 1)
         else:
             self.schema_name = text
             self.schema_version = ''
@@ -352,22 +399,22 @@ class CsvGenerator(DocFormatter):
         self.this_section['property_details'].append(formatted_details)
 
 
-    def head_one(self, text):
+    def head_one(self, text, anchor=None):
         """Add a top-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
         return add_level + '# ' + text + "\n"
 
-    def head_two(self, text):
+    def head_two(self, text, anchor=None):
         """Add a second-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
         return add_level + '## ' + text + "\n"
 
-    def head_three(self, text):
+    def head_three(self, text, anchor=None):
         """Add a third-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
         return add_level + '### ' + text + "\n"
 
-    def head_four(self, text):
+    def head_four(self, text, anchor=None):
         """Add a fourth-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
         return add_level + '##### ' + text + "\n"
