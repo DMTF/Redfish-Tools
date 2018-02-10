@@ -685,6 +685,10 @@ class DocFormatter:
     def skip_schema(self, schema_name):
         """ True if this schema should be skipped in the output """
 
+        if self.config.get('profile_mode'):
+            if schema_name in self.config.get('profile', {}).get('Resources', {}):
+                return False
+
         if schema_name in self.config['excluded_schemas']:
             return True
         for pattern in self.config['excluded_schemas_by_match']:

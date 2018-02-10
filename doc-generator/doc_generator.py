@@ -349,7 +349,10 @@ class DocGenerator:
         normalized_uri = self.construct_uri_for_filename(filename)
 
         # Get the un-versioned filename for match against profile keys
-        generalized_uri = self.construct_uri_for_filename(filename.split('.v')[0]) + '.json'
+        if '.v' in filename:
+            generalized_uri = self.construct_uri_for_filename(filename.split('.v')[0]) + '.json'
+        else:
+            generalized_uri = self.construct_uri_for_filename(filename)
 
         profile_mode = self.config['profile_mode']
         profile = self.config['profile_resources']
