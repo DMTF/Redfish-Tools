@@ -37,6 +37,7 @@ class CsvGenerator(DocFormatter):
                 'Schema Version',
                 'Property Name (chain)',
                 'Read/Write Requirement',
+                'Minimum Count',
                 'Conditional Requirement',
                 'Purpose',
                 'Type',
@@ -116,6 +117,7 @@ class CsvGenerator(DocFormatter):
         if profile_mode:
             profile_access = self.format_base_profile_access(formatted_details)
             profile_purpose = formatted_details['profile_purpose']
+            profile_min_count = formatted_details.get('profile_mincount', '')
             profile_cond_req = ''
             cond_details = formatted_details.get('profile_conditional_details')
             if cond_details:
@@ -148,7 +150,8 @@ class CsvGenerator(DocFormatter):
         version = self.schema_version
 
         if profile_mode:
-            row = [schema_name, version, prop_name, profile_access, profile_cond_req, profile_purpose,
+            row = [schema_name, version, prop_name, profile_access, profile_min_count,
+                   profile_cond_req, profile_purpose,
                    prop_type, nullable,
                    description, long_description, prop_units, min_val, max_val, enumerations, pattern]
         else:
@@ -261,6 +264,20 @@ class CsvGenerator(DocFormatter):
             contents.append(example)
 
         return '\n'.join(contents) + '\n'
+
+
+    def format_base_profile_access(self, formatted_details):
+        """Massage profile read/write requirements for display. Override parent, omitting min_count. """
+
+        if formatted_details.get('is_in_profile'):
+            profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
+                                                         read_req=formatted_details.get('profile_read_req'),
+                                                         write_req=formatted_details.get('profile_write_req'),
+                                                         min_count=None)
+        else:
+            profile_access = ''
+
+        return profile_access
 
 
     def link_to_own_schema(self, schema_ref, schema_full_uri):
