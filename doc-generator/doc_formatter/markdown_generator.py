@@ -29,7 +29,7 @@ class MarkdownGenerator(DocFormatter):
             }
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0, in_array=False):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -43,6 +43,9 @@ class MarkdownGenerator(DocFormatter):
 
         traverser = self.traverser
         formatted = []     # The row itself
+
+        if in_array:
+            current_depth = current_depth -1
 
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
@@ -109,6 +112,10 @@ class MarkdownGenerator(DocFormatter):
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
                                                      meta.get('within_action'))
 
+        if formatted_details.get('promote_me'):
+            return({'row': '\n'.join(formatted_details['item_description']), 'details':formatted_details['prop_details'],
+                    'action_details':formatted_details.get('action_details')})
+
         if self.config.get('strip_top_object') and current_depth == 0:
             # In this case, we're done for this bit of documentation, and we just want the properties of this object.
             formatted.append('\n'.join(formatted_details['object_description']))
@@ -150,6 +157,9 @@ class MarkdownGenerator(DocFormatter):
                 else:
                     collapse_array = True
                     name_and_version += ' [ ]'
+        elif in_array:
+            name_and_version += ' [ ]'
+
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
@@ -177,6 +187,9 @@ class MarkdownGenerator(DocFormatter):
 
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
+
+        if in_array:
+            prop_type = 'array (' + prop_type + ')'
 
         if collapse_array:
             item_list = formatted_details['item_list']
