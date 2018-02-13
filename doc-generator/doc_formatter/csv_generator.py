@@ -69,7 +69,7 @@ class CsvGenerator(DocFormatter):
         self.writer.writerow(headings)
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -87,7 +87,7 @@ class CsvGenerator(DocFormatter):
         nextrows = []
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth)
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
