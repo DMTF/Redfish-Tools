@@ -100,7 +100,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0, in_array=False):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
         'row': content for the main table being generated.
@@ -728,7 +728,10 @@ class DocFormatter:
         # or a $ref:
         prop_item = prop_info.get('items')
         list_of_objects = False
+        list_of_simple_type = False # For references to simple types
         collapse_description = False
+        promote_me = False # Special case to replace enclosing array with combined array/simple-type
+
         if isinstance(prop_item, dict):
             if 'type' in prop_item and 'properties' not in prop_item:
                 prop_items = [prop_item]
@@ -737,7 +740,11 @@ class DocFormatter:
                 prop_items = self.extend_property_info(schema_ref, prop_item, prop_info.get('_doc_generator_meta'))
                 array_of_objects = True
 
-            list_of_objects = True
+                if len(prop_items) == 1:
+                    if 'type' in prop_items[0] and 'properties' not in prop_items[0]:
+                        list_of_simple_type = True
+
+            list_of_objects = not list_of_simple_type
 
         # Enumerations go into Property Details
         prop_enum = prop_info.get('enum')
@@ -797,9 +804,26 @@ class DocFormatter:
                     # remember, we set collapse_description when we made prop_items a single-element list.
                     item_list = prop_items[0].get('type')
 
+            elif list_of_simple_type:
+                # We want to combine the array and its item(s) into a single row. Create a combined
+                # prop_item to make it work.
+                combined_prop_item = prop_items[0]
+                combined_prop_item['_prop_name'] = prop_name
+                combined_prop_item['readonly'] = prop_info.get('readonly', False)
+                if self.config['normative'] and 'longDescription' in combined_prop_item:
+                    descr = descr + ' ' + prop_items[0]['longDescription']
+                    combined_prop_item['longDescription'] = descr
+                else:
+                    if prop_items[0].get('description'):
+                        descr = descr + ' ' + prop_items[0]['description']
+                    combined_prop_item['description'] = descr
+
+                item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, current_depth, True)
+
             else:
                 item_formatted = self.format_non_object_descr(schema_ref, prop_item, current_depth)
 
+            promote_me = item_formatted.get('promote_me', False)
             item_description = item_formatted['rows']
             if item_formatted['details']:
                 prop_details.update(item_formatted['details'])
@@ -819,7 +843,8 @@ class DocFormatter:
                 'prop_details': prop_details,
                 'has_direct_prop_details': has_prop_details,
                 'has_action_details': has_prop_actions,
-                'action_details': action_details
+                'action_details': action_details,
+                'promote_me': promote_me
                }
 
 
@@ -893,7 +918,7 @@ class DocFormatter:
         return {'rows': output, 'details': details, 'action_details': action_details}
 
 
-    def format_non_object_descr(self, schema_ref, prop_dict, current_depth=0):
+    def format_non_object_descr(self, schema_ref, prop_dict, current_depth=0, in_array=False):
         """For definitions that just list simple types without a 'properties' entry"""
 
         output = []
@@ -904,14 +929,14 @@ class DocFormatter:
         detail_info = self.extend_property_info(schema_ref, prop_dict)
 
         depth = current_depth + 1
-        formatted = self.format_property_row(schema_ref, prop_name, detail_info, depth)
+        formatted = self.format_property_row(schema_ref, prop_name, detail_info, depth, in_array)
 
         if formatted:
             output.append(formatted['row'])
             details = formatted.get('details', {})
             action_details = formatted.get('action_details', {})
 
-        return {'rows': output, 'details': details, 'action_details': action_details}
+        return {'rows': output, 'details': details, 'action_details': action_details, 'promote_me': True}
 
 
 
