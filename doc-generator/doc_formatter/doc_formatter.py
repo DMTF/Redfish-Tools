@@ -1057,7 +1057,7 @@ class DocFormatter:
                         descr = descr + ' ' + prop_items[0]['description']
                     combined_prop_item['description'] = descr
 
-                item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, current_depth, True)
+                item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, new_path, True)
 
             else:
                 item_formatted = self.format_non_object_descr(schema_ref, prop_item, new_path)
@@ -1230,7 +1230,6 @@ class DocFormatter:
         detail_info = self.extend_property_info(schema_ref, prop_dict)
 
         formatted = self.format_property_row(schema_ref, prop_name, detail_info, prop_path, in_array)
-        depth = current_depth + 1
 
         if formatted:
             output.append(formatted['row'])
