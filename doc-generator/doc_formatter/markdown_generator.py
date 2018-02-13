@@ -38,11 +38,7 @@ class MarkdownGenerator(DocFormatter):
             }
 
 
-<<<<<<< HEAD
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[]):
-=======
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0, in_array=False):
->>>>>>> master
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
@@ -58,12 +54,9 @@ class MarkdownGenerator(DocFormatter):
         traverser = self.traverser
         formatted = []     # The row itself
 
-<<<<<<< HEAD
         current_depth = len(prop_path)
-=======
         if in_array:
             current_depth = current_depth -1
->>>>>>> master
 
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
