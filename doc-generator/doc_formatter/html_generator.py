@@ -145,7 +145,7 @@ pre.code{
 </style>
 """
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0):
+    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0, in_array=False):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':
@@ -158,6 +158,10 @@ pre.code{
         """
         traverser = self.traverser
         formatted = []     # The row itself
+
+        if in_array:
+            current_depth = current_depth -1
+
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
         if self.config.get('strip_top_object') and current_depth > 0:
@@ -219,6 +223,11 @@ pre.code{
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
                                                      meta.get('within_action'))
 
+        if formatted_details.get('promote_me'):
+            return({'row': '\n'.join(formatted_details['item_description']), 'details':formatted_details['prop_details'],
+                    'action_details':formatted_details.get('action_details')})
+
+
         if self.config.get('strip_top_object') and current_depth == 0:
             # In this case, we're done for this bit of documentation, and we just want the properties of this object.
             formatted.append('\n'.join(formatted_details['object_description']))
@@ -259,6 +268,8 @@ pre.code{
                 else:
                     collapse_array = True
                     name_and_version += ' [ ] '
+        elif in_array:
+            name_and_version += ' [ ] '
 
         name_and_version = '<nobr>' + name_and_version  + '</nobr>'
 
@@ -294,6 +305,9 @@ pre.code{
             prop_type += '<br>(enum)'
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
+
+        if in_array:
+            prop_type = 'array (' + prop_type + ')'
 
         if collapse_array:
             item_list = formatted_details['item_list']
