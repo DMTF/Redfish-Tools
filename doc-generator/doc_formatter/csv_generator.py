@@ -144,6 +144,7 @@ class CsvGenerator(DocFormatter):
 
         enumerations = ''
         if 'enum' in p_i:
+            p_i['enum'].sort()
             enumerations = ', '.join(p_i['enum'])
 
         schema_name = self.schema_name
@@ -167,86 +168,8 @@ class CsvGenerator(DocFormatter):
                                 supplemental_details, meta, anchor=None, profile={}):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
-        contents = []
-        contents.append(self.head_three(prop_name + ':'))
-
-        parent_version = meta.get('version')
-        enum_meta = meta.get('enum', {})
-
-        if prop_description:
-            contents.append(self.para(self.escape_for_markdown(prop_description, self.config['escape_chars'])))
-
-        if isinstance(prop_type, list):
-            prop_type = ', '.join(prop_type)
-
-        if supplemental_details:
-            contents.append('\n' + supplemental_details + '\n')
-
-        if enum_details:
-            contents.append('| ' + prop_type + ' | Description |')
-            contents.append('| --- | --- |')
-            enum.sort()
-            for enum_item in enum:
-                enum_name = enum_item
-                enum_item_meta = enum_meta.get(enum_item, {})
-                version_display = None
-                deprecated_descr = None
-                if 'version' in enum_item_meta:
-                    version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
-                        version_display = self.truncate_version(version, 2) + '+'
-                if version_display:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
-                    else:
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
-                else:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
-                descr = enum_details.get(enum_item, '')
-                if deprecated_descr:
-                    if descr:
-                        descr += ' ' + self.italic(deprecated_descr)
-                    else:
-                        descr = self.italic(deprecated_descr)
-                contents.append('| ' + enum_name + ' | ' + descr + ' |')
-
-        elif enum:
-            contents.append('| ' + prop_type + ' |')
-            contents.append('| --- |')
-            for enum_item in enum:
-                enum_name = enum_item
-                enum_item_meta = enum_meta.get(enum_item, {})
-                version_display = None
-
-                if 'version' in enum_item_meta:
-                    version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
-                        version_display = self.truncate_version(version, 2) + '+'
-                if version_display:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
-                    else:
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
-                else:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            enum_name += ' ' + self.italic(enum_item_meta['version_deprecated_explanation'])
-
-                contents.append('| ' + enum_name + ' | ')
-
-        return '\n'.join(contents) + '\n'
+        # Property details are not included in CSV output.
+        return ''
 
 
     def format_action_details(self, prop_name, action_details):
@@ -254,16 +177,8 @@ class CsvGenerator(DocFormatter):
 
         Currently, Actions details are entirely derived from the supplemental documentation."""
 
-        contents = []
-        contents.append(self.head_three(action_details.get('action_name', prop_name)))
-        if action_details.get('text'):
-            contents.append(action_details.get('text'))
-        if action_details.get('example'):
-            example = '```json\n' + action_details['example'] + '\n```\n'
-            contents.append('Example Action POST:\n')
-            contents.append(example)
-
-        return '\n'.join(contents) + '\n'
+        # Action details are not included in CSV output.
+        return ''
 
 
     def format_base_profile_access(self, formatted_details):
