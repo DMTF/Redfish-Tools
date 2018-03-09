@@ -198,12 +198,12 @@ class CsvGenerator(DocFormatter):
     def link_to_own_schema(self, schema_ref, schema_full_uri):
         """Format a reference to a schema."""
         result = super().link_to_own_schema(schema_ref, schema_full_uri)
-        return self.italic(result)
+        return result
 
 
     def link_to_outside_schema(self, schema_full_uri):
         """Format a reference to a schema_uri, which should be a valid URI"""
-        return self.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
+        return '['+ schema_full_uri + '](' + schema_full_uri + ')'
 
 
     def output_document(self):
@@ -212,51 +212,6 @@ class CsvGenerator(DocFormatter):
         result = self.output.getvalue()
         self.output.close()
         return result
-
-
-    def process_intro(self, intro_blob):
-        """ Process the intro text, generating and inserting any schema fragments """
-        parts = []
-        intro = []
-        part_text = []
-
-        fragment_config = {
-            'output_format': 'markdown',
-            'normative': self.config['normative'],
-            'cwd': self.config['cwd'],
-            'schema_supplement': {},
-            'supplemental': {},
-            'excluded_annotations': [],
-            'excluded_annotations_by_match': [],
-            'excluded_properties': [],
-            'excluded_by_match': [],
-            'excluded_schemas': [],
-            'excluded_schemas_by_match': [],
-            'escape_chars': [],
-            'uri_replacements': {},
-            'units_translation': self.config['units_translation'],
-            }
-
-        for line in intro_blob.splitlines():
-            if line.startswith('#include_fragment'):
-                if len(part_text):
-                    parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
-                    part_text = []
-                    fragment_id = line[17:].strip()
-                    fragment_content = self.generate_fragment_doc(fragment_id, fragment_config)
-                    parts.append({'type': 'fragment', 'content': fragment_content})
-            else:
-                part_text.append(line)
-
-        if len(part_text):
-            parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
-
-        for part in parts:
-            if part['type'] == 'markdown':
-                intro.append(part['content'])
-            elif part['type'] == 'fragment':
-                intro.append(part['content'])
-        return '\n'.join(intro)
 
 
     def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
@@ -354,21 +309,3 @@ class CsvGenerator(DocFormatter):
     def para(self, text):
         """Add a paragraph of text. Doesn't actually test for paragraph breaks within text"""
         return "\n" + text + "\n"
-
-    @staticmethod
-    def escape_for_markdown(text, chars):
-        """Escape selected characters in text to prevent auto-formatting in markdown."""
-        for char in chars:
-            text = text.replace(char, '\\' + char)
-        return text
-
-    @staticmethod
-    def bold(text):
-        """Apply bold to text"""
-        return '**' + text + '**'
-
-
-    @staticmethod
-    def italic(text):
-        """Apply italic to text"""
-        return '*' + text + '*'
