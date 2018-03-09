@@ -12,7 +12,7 @@ Ensure that the machine running the tool has a python 3 install.
 
 Example: `python3 csdl-to-json.py --input <CSDL-Dir> --output <JSON-Dir> --config <Config-File>`
 
-The tool will process all files found in the folder specified by the *input* argument.  It will convert the contents of the files to create JSON Schema files and save them to the folder specified by the *output* argument; the [Operation section](#operation) section describes this process in more detail.  There are some control parameters that are read in from the JSON file specified by the *config* argument; the [Config File section](#config-file) describes the contents of the file.
+The tool will process all files found in the folder specified by the *input* argument.  It will convert the contents of the files to create JSON Schema files and save them to the folder specified by the *output* argument; the [Operation section](#operation) describes this process in more detail.  There are some control parameters that are read in from the JSON file specified by the *config* argument; the [Config File section](#config-file) describes the contents of the file.
 
 ### Options
 
