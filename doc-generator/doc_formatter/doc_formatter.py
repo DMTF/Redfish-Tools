@@ -697,23 +697,6 @@ class DocFormatter:
         return False
 
 
-    # TODO: we may not use this. Find out and either remove it or document it better:
-    def always_expand_schema(self, schema_name):
-        """ Optional special case for schemas that lack top-level $ref;
-
-        If expand_defs_from_non_output_schemas is true, expand properties that are in schemas that are present
-        but won't be output in the documentation."""
-
-        if not self.config['expand_defs_from_non_output_schemas']:
-            return False;
-
-        if self.skip_schema(schema_name):
-            return False
-        return (self.traverser.is_known_schema(schema_name) and not
-                self.traverser.is_collection_of(schema_name) and not
-                self.is_documented_schema(schema_name))
-
-
     def parse_property_info(self, schema_ref, prop_name, prop_infos, prop_path, within_action=False):
         """Parse a list of one more more property info objects into strings for display.
 
@@ -1007,7 +990,7 @@ class DocFormatter:
                                                                    anchor, profile)
 
         # Action details may be supplied as markdown in the supplemental doc.
-        # TODO: remove this? Change it?
+        # Possibly we should be phasing this out.
         supplemental_actions = None
         if 'supplemental' in self.config and 'action details' in self.config['supplemental']:
             action_config = self.config['supplemental']['action details']

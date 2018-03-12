@@ -431,17 +431,6 @@ pre.code{
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
 
-            if profile_mode == 'terse':
-                if profile_all_values:
-                    filtered_enums = [x for x in profile_all_values if x in enum]
-                    if len(filtered_enums) < len(profile_all_values):
-                        warnings.warn('Profile specified value(s) for ' + prop_name + ' that is not present in schema: '
-                                      + ','.join([x for x in profile_all_values if x not in enum]))
-                    enum = filtered_enums
-
-        # if we didn't find any profile reqs, behave as if in non-profile-mode:
-        profile_mode = profile_mode and profile_all_values
-
         if prop_description:
             contents.append(self.para(prop_description))
 

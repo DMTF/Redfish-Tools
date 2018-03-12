@@ -205,7 +205,7 @@
     "Registries": {
         "Base": {
             "MinVersion": "1.0.0",
-            "Repository": "http://redfish.dmtf.org/registries",
+            "Repository": "http://redfish.dmtf.org/schemas/registries",
             "Messages": {
                 "Success": {},
                 "GeneralError": {},

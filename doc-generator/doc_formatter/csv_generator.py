@@ -144,6 +144,7 @@ class CsvGenerator(DocFormatter):
 
         enumerations = ''
         if 'enum' in p_i:
+            p_i['enum'].sort()
             enumerations = ', '.join(p_i['enum'])
 
         schema_name = self.schema_name
@@ -167,86 +168,8 @@ class CsvGenerator(DocFormatter):
                                 supplemental_details, meta, anchor=None, profile={}):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
-        contents = []
-        contents.append(self.head_three(prop_name + ':'))
-
-        parent_version = meta.get('version')
-        enum_meta = meta.get('enum', {})
-
-        if prop_description:
-            contents.append(self.para(self.escape_for_markdown(prop_description, self.config['escape_chars'])))
-
-        if isinstance(prop_type, list):
-            prop_type = ', '.join(prop_type)
-
-        if supplemental_details:
-            contents.append('\n' + supplemental_details + '\n')
-
-        if enum_details:
-            contents.append('| ' + prop_type + ' | Description |')
-            contents.append('| --- | --- |')
-            enum.sort()
-            for enum_item in enum:
-                enum_name = enum_item
-                enum_item_meta = enum_meta.get(enum_item, {})
-                version_display = None
-                deprecated_descr = None
-                if 'version' in enum_item_meta:
-                    version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
-                        version_display = self.truncate_version(version, 2) + '+'
-                if version_display:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
-                    else:
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
-                else:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
-                descr = enum_details.get(enum_item, '')
-                if deprecated_descr:
-                    if descr:
-                        descr += ' ' + self.italic(deprecated_descr)
-                    else:
-                        descr = self.italic(deprecated_descr)
-                contents.append('| ' + enum_name + ' | ' + descr + ' |')
-
-        elif enum:
-            contents.append('| ' + prop_type + ' |')
-            contents.append('| --- |')
-            for enum_item in enum:
-                enum_name = enum_item
-                enum_item_meta = enum_meta.get(enum_item, {})
-                version_display = None
-
-                if 'version' in enum_item_meta:
-                    version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
-                        version_display = self.truncate_version(version, 2) + '+'
-                if version_display:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = enum_item_meta['version_deprecated_explanation']
-                    else:
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
-                else:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            enum_name += ' ' + self.italic(enum_item_meta['version_deprecated_explanation'])
-
-                contents.append('| ' + enum_name + ' | ')
-
-        return '\n'.join(contents) + '\n'
+        # Property details are not included in CSV output.
+        return ''
 
 
     def format_action_details(self, prop_name, action_details):
@@ -254,16 +177,8 @@ class CsvGenerator(DocFormatter):
 
         Currently, Actions details are entirely derived from the supplemental documentation."""
 
-        contents = []
-        contents.append(self.head_three(action_details.get('action_name', prop_name)))
-        if action_details.get('text'):
-            contents.append(action_details.get('text'))
-        if action_details.get('example'):
-            example = '```json\n' + action_details['example'] + '\n```\n'
-            contents.append('Example Action POST:\n')
-            contents.append(example)
-
-        return '\n'.join(contents) + '\n'
+        # Action details are not included in CSV output.
+        return ''
 
 
     def format_base_profile_access(self, formatted_details):
@@ -283,12 +198,12 @@ class CsvGenerator(DocFormatter):
     def link_to_own_schema(self, schema_ref, schema_full_uri):
         """Format a reference to a schema."""
         result = super().link_to_own_schema(schema_ref, schema_full_uri)
-        return self.italic(result)
+        return result
 
 
     def link_to_outside_schema(self, schema_full_uri):
         """Format a reference to a schema_uri, which should be a valid URI"""
-        return self.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
+        return '['+ schema_full_uri + '](' + schema_full_uri + ')'
 
 
     def output_document(self):
@@ -297,51 +212,6 @@ class CsvGenerator(DocFormatter):
         result = self.output.getvalue()
         self.output.close()
         return result
-
-
-    def process_intro(self, intro_blob):
-        """ Process the intro text, generating and inserting any schema fragments """
-        parts = []
-        intro = []
-        part_text = []
-
-        fragment_config = {
-            'output_format': 'markdown',
-            'normative': self.config['normative'],
-            'cwd': self.config['cwd'],
-            'schema_supplement': {},
-            'supplemental': {},
-            'excluded_annotations': [],
-            'excluded_annotations_by_match': [],
-            'excluded_properties': [],
-            'excluded_by_match': [],
-            'excluded_schemas': [],
-            'excluded_schemas_by_match': [],
-            'escape_chars': [],
-            'uri_replacements': {},
-            'units_translation': self.config['units_translation'],
-            }
-
-        for line in intro_blob.splitlines():
-            if line.startswith('#include_fragment'):
-                if len(part_text):
-                    parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
-                    part_text = []
-                    fragment_id = line[17:].strip()
-                    fragment_content = self.generate_fragment_doc(fragment_id, fragment_config)
-                    parts.append({'type': 'fragment', 'content': fragment_content})
-            else:
-                part_text.append(line)
-
-        if len(part_text):
-            parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
-
-        for part in parts:
-            if part['type'] == 'markdown':
-                intro.append(part['content'])
-            elif part['type'] == 'fragment':
-                intro.append(part['content'])
-        return '\n'.join(intro)
 
 
     def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
@@ -439,21 +309,3 @@ class CsvGenerator(DocFormatter):
     def para(self, text):
         """Add a paragraph of text. Doesn't actually test for paragraph breaks within text"""
         return "\n" + text + "\n"
-
-    @staticmethod
-    def escape_for_markdown(text, chars):
-        """Escape selected characters in text to prevent auto-formatting in markdown."""
-        for char in chars:
-            text = text.replace(char, '\\' + char)
-        return text
-
-    @staticmethod
-    def bold(text):
-        """Apply bold to text"""
-        return '**' + text + '**'
-
-
-    @staticmethod
-    def italic(text):
-        """Apply italic to text"""
-        return '*' + text + '*'
