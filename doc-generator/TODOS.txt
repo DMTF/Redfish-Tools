@@ -1,0 +1,18 @@
+
+1) Verify how we're getting the locations for "Required Profiles."
+   Currently, the URI is built based on the repo, profile name, and
+   version string (which we coerce to v1.0.0 format). (And we look for
+   a partial URL override to get a local file.) Jeff indicated that it
+   would be desirable to look at what's available at the specified URI
+   or local directory and choose the latest version of the profile,
+   provided it meets the Minimum Version requirement.
+
+   This would require that we allow directory indexing of the profiles
+   at their ultimate location, or that there's an API for getting the
+   available versions.
+
+
+
+A) Before Actions were established in the json schemas, we supported
+   including Action Details in the supplemental document. Should we
+   remove that support now?

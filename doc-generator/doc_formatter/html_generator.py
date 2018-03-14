@@ -32,6 +32,7 @@ class HtmlGenerator(DocFormatter):
     def __init__(self, property_data, traverser, config, level=0):
         super(HtmlGenerator, self).__init__(property_data, traverser, config, level)
         self.sections = []
+        self.registry_sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '<br>'
@@ -641,6 +642,20 @@ pre.code{
                 contents.append(section['json_payload'])
 
         self.sections = []
+
+        for section in self.registry_sections:
+            contents.append(section.get('heading'))
+            if section.get('description'):
+                contents.append(self.para(section['description']))
+            if section.get('messages'):
+                contents.append(self.head_three('Messages'))
+                message_rows = [self.make_row(x) for x in section['messages']]
+                header_cells = ['', 'Requirement']
+                if self.config.get('profile_mode') != 'terse':
+                    header_cells.append('Description')
+                header_row = self.make_row(header_cells)
+                contents.append(self.make_table(message_rows, [header_row], 'messages'))
+
         contents = '\n'.join(contents)
         return contents
 
@@ -807,6 +822,40 @@ pre.code{
     def add_property_details(self, formatted_details):
         """Add a chunk of property details information for the current section/schema."""
         self.this_section['property_details'].append(formatted_details)
+
+
+    def add_registry_reqs(self, registry_reqs):
+        """Add registry messages. registry_reqs includes profile annotations."""
+
+        terse_mode = self.config.get('profile_mode') == 'terse'
+
+        reg_names = [x for x in registry_reqs.keys()]
+        reg_names.sort()
+        for reg_name in reg_names:
+            reg = registry_reqs[reg_name]
+            this_section = {
+                'head': reg_name,
+                'description': reg.get('Description', ''),
+                'messages': []
+                }
+            heading = reg_name + ' Registry v' + reg['minversion']  + '+'
+            if reg.get('current_release', reg['minversion']) != reg['minversion']:
+                heading += ' (current release: v' + reg['current_release'] + ')'
+
+            this_section['heading'] = self.head_two(heading)
+
+            msgs = reg.get('Messages', [])
+
+            for msg in msgs:
+                this_msg = msgs[msg]
+                if terse_mode and not this_msg.get('profile_requirement'):
+                    continue
+                msg_row = [msg, this_msg.get('profile_requirement', '')]
+                if not terse_mode:
+                    msg_row.append(this_msg.get('Description', ''))
+                this_section['messages'].append(msg_row)
+
+            self.registry_sections.append(this_section)
 
 
     def link_to_own_schema(self, schema_ref, schema_uri):

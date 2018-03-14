@@ -106,6 +106,11 @@ class DocFormatter:
         raise NotImplementedError
 
 
+    def add_registry_reqs(self, registry_reqs):
+        """Add registry messages. registry_reqs includes profile annotations."""
+        raise NotImplementedError
+
+
     def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
@@ -274,7 +279,6 @@ class DocFormatter:
         schema_keys = self.documented_schemas
         schema_keys.sort()
 
-
         for schema_ref in schema_keys:
             details = property_data[schema_ref]
             schema_name = details['schema_name']
@@ -358,6 +362,12 @@ class DocFormatter:
                     cond_names.sort()
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
+
+        if self.config.get('profile_mode'):
+            # Add registry messages, if in profile.
+            registry_reqs = config.get('profile').get('registries_annotated', {})
+            if registry_reqs:
+                self.add_registry_reqs(registry_reqs)
 
         return self.output_document()
 

@@ -17,6 +17,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib'))
 
+import re
 import argparse
 import json
 import warnings
@@ -44,11 +45,19 @@ class DocGenerator:
         if config['profile_mode']:
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
             profile_resources = {}
+
             if 'RequiredProfiles' in config['profile']:
                 for req_profile_name in config['profile']['RequiredProfiles'].keys():
                     profile_resources = self.merge_required_profile(
                         profile_resources, req_profile_name,
                         config['profile']['RequiredProfiles'][req_profile_name])
+
+            if 'Registries' in config['profile']:
+                config['profile']['registries_annotated'] = {}
+                for registry_name in config['profile']['Registries'].keys():
+                    registry_summary = self.process_registry(registry_name,
+                                                             config['profile']['Registries'][registry_name])
+                    config['profile']['registries_annotated'][registry_name] = registry_summary
 
             profile_resources = self.merge_dicts(profile_resources, self.config.get('profile', {}).get('Resources', {}))
 
@@ -71,6 +80,72 @@ class DocGenerator:
     def generate_doc(self):
         output = self.generate_docs()
         self.write_output(output, self.outfile)
+
+
+    def process_registry(self, reg_name, registry_profile):
+        """ Given registry requirements from a profile, retrieve the registry data and produce
+        a summary based on the profile's requirements.
+        """
+        registry_reqs = { 'name' : reg_name }
+
+        # Retrieve registry
+        reg_repo = registry_profile.get('Repository')
+        reg_minversion = registry_profile.get('MinVersion', '1.0.0')
+        registry_reqs['minversion'] = reg_minversion
+
+        minversion_parts = re.findall('(\d+)', reg_minversion)
+        reg_uri = None
+        repo_links = DocGenUtilities.html_get_links(reg_repo)
+        if repo_links:
+            candidate = None
+            candidate_strength = 0
+            for rl in repo_links:
+                if rl.startswith(reg_repo) and reg_name in rl and rl.endswith('.json'):
+                    parts = rl[0:-5].rsplit(reg_name, 1)
+                    if len(parts) == 2:
+                        suffix = parts[1]
+                        version_parts = re.findall('(\d+)', suffix)
+                        # Major version must match; minor.errata must be >=.
+                        if version_parts[0] != minversion_parts[0]:
+                            continue
+                        if version_parts[1] > minversion_parts[1]:
+                            strength = self.version_index(version_parts)
+                            if strength > candidate_strength:
+                                candidate_strength = strength
+                                candidate = rl
+                            continue
+                        if version_parts[1] == minversion_parts[1]:
+                            if len(version_parts) == 3 and len(minversion_parts) == 3:
+                                if version_parts[2] >= minversion_parts[2]:
+                                    strength = self.version_index(version_parts)
+                                    if strength > candidate_strength:
+                                        candidate_strength = strength
+                                        candidate = rl
+                            elif len(version_parts) == 2:
+                                strength = self.version_index(version_parts)
+                                if strength > candidate_strength:
+                                    candidate_strength = strength
+                                    candidate = rl
+            if candidate:
+                reg_uri = candidate
+
+        else:
+            # Build URI from reg_repo, name, and minversion:
+            reg_uri = '/'.join([reg_repo, reg_name]) + '.v' + reg_minversion
+
+        # Generate data based on profile
+        registry_data = DocGenUtilities.http_load_as_json(reg_uri)
+        if registry_data:
+            registry_reqs['current_release'] = registry_data['RegistryVersion']
+            registry_reqs.update(registry_data)
+            for msg in registry_profile['Messages']:
+                if msg in registry_reqs['Messages']:
+                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get('Requirement', 'Mandatory')
+                else:
+                    warnings.warn("Profile specifies requirement for nonexistent Registry Message: " +
+                                  reg_name + " " + msg)
+
+        return registry_reqs
 
 
     def merge_required_profile(self, profile_resources, req_profile_name, req_profile_info):
@@ -515,6 +590,17 @@ class DocGenerator:
 
         return ref
 
+
+    @staticmethod
+    def version_index(parts):
+        """ Create a numeric index representing the "size" of a multipart version """
+
+        idx = 0
+        multiplier = 100
+        for part in parts:
+            idx = idx + (multiplier * int(part))
+            multiplier = multiplier/10
+        return idx
 
 
 def main():
