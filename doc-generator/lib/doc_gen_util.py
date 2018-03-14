@@ -41,7 +41,7 @@ class DocGenUtilities:
     def http_load_as_json(uri):
         """Load a URI and convert from JSON"""
         try:
-            if '://' not in uri or not uri.lower().startswith('http'):
+            if '://' not in uri:
                 uri = 'http://' + uri
             f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
             json_string = f.read().decode('utf-8')
@@ -57,7 +57,7 @@ class DocGenUtilities:
     def http_load(uri):
         """ Load URI and return response """
         try:
-            if '://' not in uri or not uri.lower().startswith('http'):
+            if '://' not in uri:
                 uri = 'http://' + uri
             f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
             return f.read().decode('utf-8')

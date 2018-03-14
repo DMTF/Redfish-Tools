@@ -33,7 +33,6 @@ def simple_warning_format(message, category, filename, lineno, file=None, line=N
 
 warnings.formatwarning = simple_warning_format
 
-
 class DocGenerator:
     """Redfish Documentation Generator class. Provides 'generate_docs' method."""
 
@@ -92,16 +91,50 @@ class DocGenerator:
         reg_repo = registry_profile.get('Repository')
         reg_minversion = registry_profile.get('MinVersion', '1.0.0')
         registry_reqs['minversion'] = reg_minversion
+        reg_uri = self.get_versioned_uri(reg_name, reg_repo, reg_minversion)
 
-        minversion_parts = re.findall('(\d+)', reg_minversion)
-        reg_uri = None
-        repo_links = DocGenUtilities.html_get_links(reg_repo)
+        # Generate data based on profile
+        registry_data = DocGenUtilities.http_load_as_json(reg_uri)
+        if registry_data:
+            registry_reqs['current_release'] = registry_data['RegistryVersion']
+            registry_reqs.update(registry_data)
+            for msg in registry_profile['Messages']:
+                if msg in registry_reqs['Messages']:
+                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get('Requirement', 'Mandatory')
+                else:
+                    warnings.warn("Profile specifies requirement for nonexistent Registry Message: " +
+                                  reg_name + " " + msg)
+
+        return registry_reqs
+
+
+    def get_versioned_uri(self, base_name, repo, min_version):
+        """ Get a versioned URI for the base_name schema.
+        Parameters:
+         base_name   -- Base name of the schema, e.g., "Resource"
+         repo        -- URI of the the repo where the schema is expected to be found.
+         min_version -- Minimum acceptable version.
+
+        If a matching URI is found among links at the repo address, it will be returned.
+        If not, a URI will be composed based on repo, base_name, and version. (This
+        may succeed if the repo does not provide a directory index.)
+
+        Versions must match on the major version, with minor.errata equal to or greater than
+        what is specified in min_version.
+        """
+
+        versioned_uri = None
+        repo_links = DocGenUtilities.html_get_links(repo)
+
         if repo_links:
+            minversion_parts = re.findall('(\d+)', min_version)
+
             candidate = None
             candidate_strength = 0
             for rl in repo_links:
-                if rl.startswith(reg_repo) and reg_name in rl and rl.endswith('.json'):
-                    parts = rl[0:-5].rsplit(reg_name, 1)
+                base = base_name + '.'
+                if rl.startswith(repo) and base in rl and rl.endswith('.json'):
+                    parts = rl[0:-5].rsplit(base, 1)
                     if len(parts) == 2:
                         suffix = parts[1]
                         version_parts = re.findall('(\d+)', suffix)
@@ -127,25 +160,13 @@ class DocGenerator:
                                     candidate_strength = strength
                                     candidate = rl
             if candidate:
-                reg_uri = candidate
+                versioned_uri = candidate
 
         else:
-            # Build URI from reg_repo, name, and minversion:
-            reg_uri = '/'.join([reg_repo, reg_name]) + '.v' + reg_minversion
+            # Build URI from repo, name, and minversion:
+            versioned_uri = '/'.join([repo, base_name]) + '.v' + min_version
 
-        # Generate data based on profile
-        registry_data = DocGenUtilities.http_load_as_json(reg_uri)
-        if registry_data:
-            registry_reqs['current_release'] = registry_data['RegistryVersion']
-            registry_reqs.update(registry_data)
-            for msg in registry_profile['Messages']:
-                if msg in registry_reqs['Messages']:
-                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get('Requirement', 'Mandatory')
-                else:
-                    warnings.warn("Profile specifies requirement for nonexistent Registry Message: " +
-                                  reg_name + " " + msg)
-
-        return registry_reqs
+        return versioned_uri
 
 
     def merge_required_profile(self, profile_resources, req_profile_name, req_profile_info):
