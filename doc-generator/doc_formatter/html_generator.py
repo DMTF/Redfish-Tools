@@ -844,9 +844,11 @@ pre.code{
 
             this_section['heading'] = self.head_two(heading)
 
-            msgs = reg.get('Messages', [])
+            msgs = reg.get('Messages', {})
+            msg_keys = [x for x in msgs.keys()]
+            msg_keys.sort()
 
-            for msg in msgs:
+            for msg in msg_keys:
                 this_msg = msgs[msg]
                 if terse_mode and not this_msg.get('profile_requirement'):
                     continue
