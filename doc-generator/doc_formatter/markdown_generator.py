@@ -539,6 +539,7 @@ class MarkdownGenerator(DocFormatter):
         # Profile output may include registry sections
         for section in self.registry_sections:
             contents.append(section.get('heading'))
+            contents.append(section.get('requirement'))
             if section.get('description'):
                 contents.append(self.para(section['description']))
             if section.get('messages'):
@@ -685,6 +686,7 @@ search: true
                 heading += ' (current release: v' + reg['current_release'] + ')'
 
             this_section['heading'] = self.head_one(heading)
+            this_section['requirement'] = 'Requirement: ' + reg.get('profile_requirement', '')
 
             msgs = reg.get('Messages', {})
             msg_keys = [x for x in msgs.keys()]

@@ -91,6 +91,7 @@ class DocGenerator:
         reg_repo = registry_profile.get('Repository')
         reg_minversion = registry_profile.get('MinVersion', '1.0.0')
         registry_reqs['minversion'] = reg_minversion
+        registry_reqs['profile_requirement'] = registry_profile.get('ReadRequirement', 'Mandatory')
         reg_uri = self.get_versioned_uri(reg_name, reg_repo, reg_minversion)
 
         if not reg_uri:
@@ -103,9 +104,10 @@ class DocGenerator:
         if registry_data:
             registry_reqs['current_release'] = registry_data['RegistryVersion']
             registry_reqs.update(registry_data)
+
             for msg in registry_profile['Messages']:
                 if msg in registry_reqs['Messages']:
-                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get('Requirement', 'Mandatory')
+                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get('ReadRequirement', 'Mandatory')
                 else:
                     warnings.warn("Profile specifies requirement for nonexistent Registry Message: " +
                                   reg_name + " " + msg)
