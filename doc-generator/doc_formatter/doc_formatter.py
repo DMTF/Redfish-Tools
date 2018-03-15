@@ -229,7 +229,8 @@ class DocFormatter:
             req = self.format_conditional_access(creq)
 
             if creq.get('BaseRequirement'):
-                req_desc = 'Base Requirement'
+                # Don't output the base requirement
+                continue
 
             elif subordinate_to:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
