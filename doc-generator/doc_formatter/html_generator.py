@@ -643,6 +643,7 @@ pre.code{
 
         self.sections = []
 
+        # Profile output may include registry sections
         for section in self.registry_sections:
             contents.append(section.get('heading'))
             if section.get('description'):

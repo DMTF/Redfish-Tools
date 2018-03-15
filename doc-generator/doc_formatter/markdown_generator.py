@@ -32,6 +32,7 @@ class MarkdownGenerator(DocFormatter):
     def __init__(self, property_data, traverser, config, level=0):
         super(MarkdownGenerator, self).__init__(property_data, traverser, config, level)
         self.sections = []
+        self.registry_sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '\n'
@@ -534,6 +535,22 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('\n'.join(section['property_details']))
 
         self.sections = []
+
+        # Profile output may include registry sections
+        for section in self.registry_sections:
+            contents.append(section.get('heading'))
+            if section.get('description'):
+                contents.append(self.para(section['description']))
+            if section.get('messages'):
+                contents.append(self.head_two('Messages'))
+                message_rows = [self.make_row(x) for x in section['messages']]
+                header_cells = ['', 'Requirement']
+                if self.config.get('profile_mode') != 'terse':
+                    header_cells.append('Description')
+                header_row = self.make_row(header_cells)
+                contents.append(self.make_table(message_rows, [header_row], 'messages'))
+                contents.append('\n')
+
         return '\n'.join(contents)
 
 
@@ -649,6 +666,43 @@ search: true
         self.this_section['property_details'].append(formatted_details)
 
 
+    def add_registry_reqs(self, registry_reqs):
+        """Add registry messages. registry_reqs includes profile annotations."""
+
+        terse_mode = self.config.get('profile_mode') == 'terse'
+
+        reg_names = [x for x in registry_reqs.keys()]
+        reg_names.sort()
+        for reg_name in reg_names:
+            reg = registry_reqs[reg_name]
+            this_section = {
+                'head': reg_name,
+                'description': reg.get('Description', ''),
+                'messages': []
+                }
+            heading = reg_name + ' Registry v' + reg['minversion']  + '+'
+            if reg.get('current_release', reg['minversion']) != reg['minversion']:
+                heading += ' (current release: v' + reg['current_release'] + ')'
+
+            this_section['heading'] = self.head_one(heading)
+
+            msgs = reg.get('Messages', {})
+            msg_keys = [x for x in msgs.keys()]
+            msg_keys.sort()
+
+            for msg in msg_keys:
+                this_msg = msgs[msg]
+                if terse_mode and not this_msg.get('profile_requirement'):
+                    continue
+                msg_row = [msg, this_msg.get('profile_requirement', '')]
+                if not terse_mode:
+                    msg_row.append(this_msg.get('Description', ''))
+                this_section['messages'].append(msg_row)
+
+            self.registry_sections.append(this_section)
+
+
+
     def head_one(self, text, anchor_id=None):
         """Add a top-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
@@ -706,9 +760,13 @@ search: true
 
 
     def make_table(self, rows, header_rows=None, css_class=None):
+
+        # Get the number of cells from the first row.
+        firstrow = rows[0]
+        numcells = firstrow.count(' | ') + 1
         if not header_rows:
-            # Get the number of cells from the first row.
-            firstrow = rows[0]
-            numcells = firstrow.count(' | ') + 1
-            header_rows = [self.make_header_row(['   ' for x in range(0, numcells)])]
+            header_rows = self.make_header_row(['   ' for x in range(0, numcells)])
+        else:
+            header_rows.append(self._make_separator_row(numcells))
+
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
