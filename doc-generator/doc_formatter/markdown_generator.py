@@ -752,9 +752,9 @@ search: true
         return row
 
     def make_header_row(self, cells):
-        header = self.make_row(cells)
-        header += "\n"
-        header += self._make_separator_row(len(cells))
+        header = []
+        header.append(self.make_row(cells))
+        header.append(self._make_separator_row(len(cells)))
         return header
 
     def _make_separator_row(self, num):

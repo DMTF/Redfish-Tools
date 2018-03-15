@@ -207,6 +207,7 @@ class DocFormatter:
         if min_count:
             if profile_access:
                 profile_access += self.br()
+
             profile_access += self.nobr("Minimum " + str(min_count))
 
         return profile_access
@@ -220,7 +221,6 @@ class DocFormatter:
         formatted.append(self.head_four(prop_name, anchor))
 
         rows = []
-
         for creq in conditional_reqs:
             req_desc = ''
             purpose = creq.get('Purpose', self.nbsp()*10)
