@@ -718,7 +718,6 @@ class DocFormatter:
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
         'pattern'
         """
-
         if isinstance(prop_infos, dict):
             return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
                                                     prop_path, within_action)

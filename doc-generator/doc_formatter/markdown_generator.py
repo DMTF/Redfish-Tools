@@ -178,8 +178,6 @@ class MarkdownGenerator(DocFormatter):
         elif in_array:
             name_and_version += ' [ ]'
 
-
-
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
 
@@ -187,7 +185,6 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
             formatted_details['descr'] += self.bold(formatted_details['profile_purpose'])
-
 
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
@@ -449,7 +446,7 @@ class MarkdownGenerator(DocFormatter):
             param_names = [x for x in action_parameters.keys()]
             param_names.sort()
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['ActionParameters'])
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } row:
