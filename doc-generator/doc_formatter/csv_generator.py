@@ -36,7 +36,8 @@ class CsvGenerator(DocFormatter):
                 'Schema Name',
                 'Schema Version',
                 'Property Name (chain)',
-                'Read/Write Requirement',
+                'Read Requirement',
+                'Write Requirement',
                 'Minimum Count',
                 'Conditional Requirement',
                 'Purpose',
@@ -115,7 +116,9 @@ class CsvGenerator(DocFormatter):
 
         profile_mode = self.config.get('profile_mode')
         if profile_mode:
-            profile_access = self.format_base_profile_access(formatted_details)
+            # profile_access = self.format_base_profile_access(formatted_details)
+            profile_read_req = formatted_details.get('profile_read_req', '')
+            profile_write_req = formatted_details.get('profile_write_req', '')
             profile_purpose = formatted_details['profile_purpose']
             profile_min_count = formatted_details.get('profile_mincount', '')
             profile_cond_req = ''
@@ -151,7 +154,7 @@ class CsvGenerator(DocFormatter):
         version = self.schema_version
 
         if profile_mode:
-            row = [schema_name, version, prop_name, profile_access, profile_min_count,
+            row = [schema_name, version, prop_name, profile_read_req, profile_write_req, profile_min_count,
                    profile_cond_req, profile_purpose,
                    prop_type, nullable,
                    description, long_description, prop_units, min_val, max_val, enumerations, pattern]
@@ -226,7 +229,8 @@ class CsvGenerator(DocFormatter):
             req = self.format_conditional_access(creq)
 
             if creq.get('BaseRequirement'):
-                req_desc = 'Base Requirement'
+                # Don't output the base requirement
+                continue
 
             elif subordinate_to:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
@@ -285,6 +289,10 @@ class CsvGenerator(DocFormatter):
         """Add a chunk of property details information for the current section/schema."""
         self.this_section['property_details'].append(formatted_details)
 
+
+    def add_registry_reqs(self, registry_reqs):
+        """ CSV output doesn't include registry requirements. """
+        pass
 
     def head_one(self, text, anchor=None):
         """Add a top-level heading, relative to the generator's level"""

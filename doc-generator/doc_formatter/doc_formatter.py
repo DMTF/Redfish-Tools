@@ -106,6 +106,11 @@ class DocFormatter:
         raise NotImplementedError
 
 
+    def add_registry_reqs(self, registry_reqs):
+        """Add registry messages. registry_reqs includes profile annotations."""
+        raise NotImplementedError
+
+
     def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
@@ -202,6 +207,7 @@ class DocFormatter:
         if min_count:
             if profile_access:
                 profile_access += self.br()
+
             profile_access += self.nobr("Minimum " + str(min_count))
 
         return profile_access
@@ -215,7 +221,6 @@ class DocFormatter:
         formatted.append(self.head_four(prop_name, anchor))
 
         rows = []
-
         for creq in conditional_reqs:
             req_desc = ''
             purpose = creq.get('Purpose', self.nbsp()*10)
@@ -224,7 +229,8 @@ class DocFormatter:
             req = self.format_conditional_access(creq)
 
             if creq.get('BaseRequirement'):
-                req_desc = 'Base Requirement'
+                # Don't output the base requirement
+                continue
 
             elif subordinate_to:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
@@ -273,7 +279,6 @@ class DocFormatter:
 
         schema_keys = self.documented_schemas
         schema_keys.sort()
-
 
         for schema_ref in schema_keys:
             details = property_data[schema_ref]
@@ -358,6 +363,12 @@ class DocFormatter:
                     cond_names.sort()
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
+
+        if self.config.get('profile_mode'):
+            # Add registry messages, if in profile.
+            registry_reqs = config.get('profile').get('registries_annotated', {})
+            if registry_reqs:
+                self.add_registry_reqs(registry_reqs)
 
         return self.output_document()
 
@@ -624,8 +635,8 @@ class DocFormatter:
         prop_names.sort()
         return prop_names
 
-    def filter_props_by_profile(self, prop_names, profile, is_action=False):
 
+    def filter_props_by_profile(self, prop_names, profile, is_action=False):
         if profile is None:
             return []
 
@@ -707,7 +718,6 @@ class DocFormatter:
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
         'pattern'
         """
-
         if isinstance(prop_infos, dict):
             return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
                                                     prop_path, within_action)
@@ -798,7 +808,7 @@ class DocFormatter:
         # Data from profile:
         if profile is not None:
             parsed['is_in_profile'] = True
-            parsed['profile_read_req'] = profile.get('ReadRequirement')
+            parsed['profile_read_req'] = profile.get('ReadRequirement', 'Mandatory')
             parsed['profile_write_req'] = profile.get('WriteRequirement')
             parsed['profile_mincount'] = profile.get('MinCount')
             parsed['profile_purpose'] = profile.get('Purpose')
@@ -1103,7 +1113,7 @@ class DocFormatter:
         if profile is not None:
             parsed_info.update({
                 'is_in_profile': True,
-                'profile_read_req': profile.get('ReadRequirement'),
+                'profile_read_req': profile.get('ReadRequirement', 'Mandatory'),
                 'profile_write_req': profile.get('WriteRequirement'),
                 'profile_mincount': profile.get('MinCount'),
                 'profile_purpose': profile.get('Purpose'),

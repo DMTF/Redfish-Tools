@@ -17,6 +17,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib'))
 
+import re
 import argparse
 import json
 import warnings
@@ -32,7 +33,6 @@ def simple_warning_format(message, category, filename, lineno, file=None, line=N
 
 warnings.formatwarning = simple_warning_format
 
-
 class DocGenerator:
     """Redfish Documentation Generator class. Provides 'generate_docs' method."""
 
@@ -44,11 +44,19 @@ class DocGenerator:
         if config['profile_mode']:
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
             profile_resources = {}
+
             if 'RequiredProfiles' in config['profile']:
                 for req_profile_name in config['profile']['RequiredProfiles'].keys():
                     profile_resources = self.merge_required_profile(
                         profile_resources, req_profile_name,
                         config['profile']['RequiredProfiles'][req_profile_name])
+
+            if 'Registries' in config['profile']:
+                config['profile']['registries_annotated'] = {}
+                for registry_name in config['profile']['Registries'].keys():
+                    registry_summary = self.process_registry(registry_name,
+                                                             config['profile']['Registries'][registry_name])
+                    config['profile']['registries_annotated'][registry_name] = registry_summary
 
             profile_resources = self.merge_dicts(profile_resources, self.config.get('profile', {}).get('Resources', {}))
 
@@ -73,28 +81,145 @@ class DocGenerator:
         self.write_output(output, self.outfile)
 
 
+    def process_registry(self, reg_name, registry_profile):
+        """ Given registry requirements from a profile, retrieve the registry data and produce
+        a summary based on the profile's requirements.
+        """
+        registry_reqs = { 'name' : reg_name }
+
+        # Retrieve registry
+        reg_repo = registry_profile.get('Repository')
+        reg_minversion = registry_profile.get('MinVersion', '1.0.0')
+        registry_reqs['minversion'] = reg_minversion
+        registry_reqs['profile_requirement'] = registry_profile.get('ReadRequirement', 'Mandatory')
+        reg_uri = self.get_versioned_uri(reg_name, reg_repo, reg_minversion)
+
+        if not reg_uri:
+            warnings.warn("Unable to find registry file for " + reg_repo + ", " + reg_name +
+                          ", minimum version " + reg_minversion)
+            return registry_reqs
+
+        # Generate data based on profile
+        registry_data = DocGenUtilities.http_load_as_json(reg_uri)
+        if registry_data:
+            registry_reqs['current_release'] = registry_data['RegistryVersion']
+            registry_reqs.update(registry_data)
+
+            for msg in registry_profile['Messages']:
+                if msg in registry_reqs['Messages']:
+                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get('ReadRequirement', 'Mandatory')
+                else:
+                    warnings.warn("Profile specifies requirement for nonexistent Registry Message: " +
+                                  reg_name + " " + msg)
+
+        return registry_reqs
+
+
+    def get_versioned_uri(self, base_name, repo, min_version, is_local_file=False):
+        """ Get a versioned URI for the base_name schema.
+        Parameters:
+         base_name     -- Base name of the schema, e.g., "Resource"
+         repo          -- URI of the the repo where the schema is expected to be found.
+         min_version   -- Minimum acceptable version.
+         is_local_file -- Find file on local system.
+
+        If a matching URI is found among links at the repo address, it will be returned.
+        If not, a URI will be composed based on repo, base_name, and version. (This
+        may succeed if the repo does not provide a directory index.)
+
+        Versions must match on the major version, with minor.errata equal to or greater than
+        what is specified in min_version.
+        """
+
+        versioned_uri = None
+
+        if is_local_file:
+            repo_links = DocGenUtilities.local_get_links(repo)
+        else:
+            repo_links = DocGenUtilities.html_get_links(repo)
+
+        if repo_links:
+            minversion_parts = re.findall('(\d+)', min_version)
+
+            candidate = None
+            candidate_strength = 0
+            for rl in repo_links:
+                base = base_name + '.'
+                if rl.startswith(repo) and base in rl and rl.endswith('.json'):
+                    parts = rl[0:-5].rsplit(base, 1)
+                    if len(parts) == 2:
+                        suffix = parts[1]
+                        version_parts = re.findall('(\d+)', suffix)
+                        # Major version must match; minor.errata must be >=.
+                        if version_parts[0] != minversion_parts[0]:
+                            continue
+                        if version_parts[1] > minversion_parts[1]:
+                            strength = self.version_index(version_parts)
+                            if strength > candidate_strength:
+                                candidate_strength = strength
+                                candidate = rl
+                            continue
+                        if version_parts[1] == minversion_parts[1]:
+                            if len(version_parts) == 3 and len(minversion_parts) == 3:
+                                if version_parts[2] >= minversion_parts[2]:
+                                    strength = self.version_index(version_parts)
+                                    if strength > candidate_strength:
+                                        candidate_strength = strength
+                                        candidate = rl
+                            elif len(version_parts) == 2:
+                                strength = self.version_index(version_parts)
+                                if strength > candidate_strength:
+                                    candidate_strength = strength
+                                    candidate = rl
+            if candidate:
+                versioned_uri = candidate
+
+        elif is_local_file:
+            # Build URI from repo, name, and minversion:
+            versioned_uri = '/'.join([repo, base_name]) + '.v' + min_version + '.json'
+
+        return versioned_uri
+
+
     def merge_required_profile(self, profile_resources, req_profile_name, req_profile_info):
         """ Merge a required profile into profile_resources (a dict). May result in recursive calls. """
 
         req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
         req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
-        version_string = 'v' + req_profile_minversion.replace('.', '_')
+        version_string = req_profile_minversion.replace('.', '_')
         req_profile_data = None
 
-        # Retrieve profile
-        # TODO: verify approach
-        req_profile_uri = '/'.join([req_profile_repo, req_profile_name]) + '.' + version_string + '.json'
-        if '://' in req_profile_uri:
-            protocol, uri_part = req_profile_uri.split('://')
-        else:
-            uri_part = req_profile_uri
+        # Retrieve profile.
+        # req_profile_repo will be a fully-qualified URI. It may be overridden by
+        # uri-to-local mapping.
+        base_uri = '/'.join([req_profile_repo, req_profile_name])
+        if '://' in base_uri:                                  # This is expected.
+            protocol, base_uri = base_uri.split('://')
+
+        is_local_file = False
         for partial_uri in self.config['profile_uri_to_local'].keys():
-            if uri_part.startswith(partial_uri):
-                local_uri = self.config['profile_uri_to_local'][partial_uri] + uri_part[len(partial_uri):]
-                req_profile_data = DocGenUtilities.load_as_json(local_uri)
+            if base_uri.startswith(partial_uri):
+                local_path = self.config['profile_uri_to_local'][partial_uri]
+                if partial_uri.endswith(req_profile_name):
+                    req_profile_repo = local_path[0:-len(req_profile_name)]
+                    pass
+                else:
+                    req_profile_repo = local_path
+                is_local_file = True
                 break
 
-        if not req_profile_data:
+        req_profile_uri = self.get_versioned_uri(req_profile_name, req_profile_repo,
+                                                 version_string, is_local_file)
+
+        if not req_profile_uri:
+            warnings.warn("Unable to find Profile for " + req_profile_repo + ", " +
+                          req_profile_name + ", minimum version: " + req_profile_minversion)
+            return profile_resources
+
+
+        if is_local_file:
+            req_profile_data = DocGenUtilities.load_as_json(req_profile_uri)
+        else:
             req_profile_data = DocGenUtilities.http_load_as_json(req_profile_uri)
 
         if req_profile_data:
@@ -515,6 +640,17 @@ class DocGenerator:
 
         return ref
 
+
+    @staticmethod
+    def version_index(parts):
+        """ Create a numeric index representing the "size" of a multipart version """
+
+        idx = 0
+        multiplier = 100
+        for part in parts:
+            idx = idx + (multiplier * int(part))
+            multiplier = multiplier/10
+        return idx
 
 
 def main():

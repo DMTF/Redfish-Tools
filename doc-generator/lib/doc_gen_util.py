@@ -14,10 +14,14 @@ Initial author: Second Rise LLC.
 
 import urllib.request
 import json
+import os
+import re
 import warnings
 
 class DocGenUtilities:
     """ Redfish Documentation Generator Utilities. """
+
+    timeout = 2 # Seconds for HTTP timeout
 
     @staticmethod
     def load_as_json(filename):
@@ -38,13 +42,62 @@ class DocGenUtilities:
     def http_load_as_json(uri):
         """Load a URI and convert from JSON"""
         try:
-            if '://' not in uri or not uri.lower().startswith('http'):
+            if '://' not in uri:
                 uri = 'http://' + uri
-            f = urllib.request.urlopen(uri)
+            f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
             json_string = f.read().decode('utf-8')
             json_data = json.loads(json_string)
             return json_data
 
         except Exception as ex:
-            warnings.warn("Unable to retrieve schema from '" + uri + "': " + str(ex))
+            warnings.warn("Unable to retrieve data from '" + uri + "': " + str(ex))
             return None
+
+
+    @staticmethod
+    def http_load(uri):
+        """ Load URI and return response """
+        try:
+            if '://' not in uri:
+                uri = 'http://' + uri
+            f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
+            return f.read().decode('utf-8')
+
+        except Exception as ex:
+            warnings.warn("Unable to retrieve data from '" + uri + "': " + str(ex))
+            return None
+
+
+    @staticmethod
+    def html_get_links(uri):
+        """ Get the links from an HTML page at a URI """
+        content = DocGenUtilities.http_load(uri)
+        links = []
+
+        if content:
+            urlinfo = urllib.parse.urlparse(uri)
+            urlpath = ''.join([urlinfo.scheme, '://', urlinfo.hostname])
+
+            m = re.findall('href="([^"]+)"', content)
+            for href in m:
+                if re.match('\s+://', href):
+                    links.append(m)
+                elif href.startswith('/'):
+                    links.append(''.join([urlpath, href]))
+                else:
+                    if uri.endswith('/'):
+                        links.append(''.join([uri, href]))
+                    else:
+                        links.append('/'.join([uri, href]))
+
+        return links
+
+
+    @staticmethod
+    def local_get_links(path):
+        """ Get the file names with full paths at path """
+        path = os.path.abspath(path)
+        filenames = os.listdir(path)
+
+        filenames = [os.path.join(path, x) for x in filenames]
+        return filenames
