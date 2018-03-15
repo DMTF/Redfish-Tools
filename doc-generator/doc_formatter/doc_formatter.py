@@ -635,8 +635,8 @@ class DocFormatter:
         prop_names.sort()
         return prop_names
 
-    def filter_props_by_profile(self, prop_names, profile, is_action=False):
 
+    def filter_props_by_profile(self, prop_names, profile, is_action=False):
         if profile is None:
             return []
 
@@ -809,7 +809,7 @@ class DocFormatter:
         # Data from profile:
         if profile is not None:
             parsed['is_in_profile'] = True
-            parsed['profile_read_req'] = profile.get('ReadRequirement')
+            parsed['profile_read_req'] = profile.get('ReadRequirement', 'Mandatory')
             parsed['profile_write_req'] = profile.get('WriteRequirement')
             parsed['profile_mincount'] = profile.get('MinCount')
             parsed['profile_purpose'] = profile.get('Purpose')
@@ -1114,7 +1114,7 @@ class DocFormatter:
         if profile is not None:
             parsed_info.update({
                 'is_in_profile': True,
-                'profile_read_req': profile.get('ReadRequirement'),
+                'profile_read_req': profile.get('ReadRequirement', 'Mandatory'),
                 'profile_write_req': profile.get('WriteRequirement'),
                 'profile_mincount': profile.get('MinCount'),
                 'profile_purpose': profile.get('Purpose'),
