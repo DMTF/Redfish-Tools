@@ -286,6 +286,10 @@ class CsvGenerator(DocFormatter):
         self.this_section['property_details'].append(formatted_details)
 
 
+    def add_registry_reqs(self, registry_reqs):
+        """ CSV output doesn't include registry requirements. """
+        pass
+
     def head_one(self, text, anchor=None):
         """Add a top-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
