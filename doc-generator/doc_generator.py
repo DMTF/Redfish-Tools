@@ -164,7 +164,7 @@ class DocGenerator:
 
         else:
             # Build URI from repo, name, and minversion:
-            versioned_uri = '/'.join([repo, base_name]) + '.v' + min_version
+            versioned_uri = '/'.join([repo, base_name]) + '.v' + min_version + '.json'
 
         return versioned_uri
 
@@ -174,16 +174,24 @@ class DocGenerator:
 
         req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
         req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
-        version_string = 'v' + req_profile_minversion.replace('.', '_')
+        version_string = req_profile_minversion.replace('.', '_')
         req_profile_data = None
 
         # Retrieve profile
         # TODO: verify approach
-        req_profile_uri = '/'.join([req_profile_repo, req_profile_name]) + '.' + version_string + '.json'
+        # req_profile_uri = '/'.join([req_profile_repo, req_profile_name]) + '.' + version_string + '.json'
+        # if '://' in req_profile_uri:
+        #     protocol, uri_part = req_profile_uri.split('://')
+        # else:
+        #     uri_part = req_profile_uri
+
+        req_profile_uri = self.get_versioned_uri(req_profile_name, req_profile_repo,
+                                                 version_string)
         if '://' in req_profile_uri:
             protocol, uri_part = req_profile_uri.split('://')
         else:
             uri_part = req_profile_uri
+
         for partial_uri in self.config['profile_uri_to_local'].keys():
             if uri_part.startswith(partial_uri):
                 local_uri = self.config['profile_uri_to_local'][partial_uri] + uri_part[len(partial_uri):]
