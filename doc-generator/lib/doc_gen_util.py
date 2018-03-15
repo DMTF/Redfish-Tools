@@ -14,6 +14,7 @@ Initial author: Second Rise LLC.
 
 import urllib.request
 import json
+import os
 import re
 import warnings
 
@@ -90,3 +91,13 @@ class DocGenUtilities:
                         links.append('/'.join([uri, href]))
 
         return links
+
+
+    @staticmethod
+    def local_get_links(path):
+        """ Get the file names with full paths at path """
+        path = os.path.abspath(path)
+        filenames = os.listdir(path)
+
+        filenames = [os.path.join(path, x) for x in filenames]
+        return filenames
