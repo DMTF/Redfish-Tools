@@ -1231,6 +1231,7 @@ class DocFormatter:
 
         return {'rows': output, 'details': details, 'action_details': action_details, 'promote_me': True}
 
+
     def link_to_own_schema(self, schema_ref, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links. """
         schema_name = self.traverser.get_schema_name(schema_ref)
