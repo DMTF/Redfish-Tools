@@ -1,6 +1,6 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/LICENSE.md
 
 """
@@ -17,6 +17,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib'))
 
+import re
 import argparse
 import json
 import warnings
@@ -32,7 +33,6 @@ def simple_warning_format(message, category, filename, lineno, file=None, line=N
 
 warnings.formatwarning = simple_warning_format
 
-
 class DocGenerator:
     """Redfish Documentation Generator class. Provides 'generate_docs' method."""
 
@@ -41,10 +41,220 @@ class DocGenerator:
         self.import_from = import_from
         self.outfile = outfile
 
+        if config['profile_mode']:
+            config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
+            profile_resources = {}
+
+            if 'RequiredProfiles' in config['profile']:
+                for req_profile_name in config['profile']['RequiredProfiles'].keys():
+                    profile_resources = self.merge_required_profile(
+                        profile_resources, req_profile_name,
+                        config['profile']['RequiredProfiles'][req_profile_name])
+
+            if 'Registries' in config['profile']:
+                config['profile']['registries_annotated'] = {}
+                for registry_name in config['profile']['Registries'].keys():
+                    registry_summary = self.process_registry(registry_name,
+                                                             config['profile']['Registries'][registry_name])
+                    config['profile']['registries_annotated'][registry_name] = registry_summary
+
+            profile_resources = self.merge_dicts(profile_resources, self.config.get('profile', {}).get('Resources', {}))
+
+            if not profile_resources:
+                warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
+                exit()
+
+            # Index profile_resources by Repository & schema name
+            profile_resources_indexed = {}
+            for schema_name in profile_resources.keys():
+                profile_data = profile_resources[schema_name]
+                repository = profile_data.get('Repository', 'redfish.dmtf.org/schemas/v1')
+                normalized_uri = repository + '/' + schema_name + '.json'
+                profile_data['Schema_Name'] = schema_name
+                profile_resources_indexed[normalized_uri] = profile_data
+
+            self.config['profile_resources'] = profile_resources_indexed
+
 
     def generate_doc(self):
         output = self.generate_docs()
         self.write_output(output, self.outfile)
+
+
+    def process_registry(self, reg_name, registry_profile):
+        """ Given registry requirements from a profile, retrieve the registry data and produce
+        a summary based on the profile's requirements.
+        """
+        registry_reqs = { 'name' : reg_name }
+
+        # Retrieve registry
+        reg_repo = registry_profile.get('Repository')
+        reg_minversion = registry_profile.get('MinVersion', '1.0.0')
+        registry_reqs['minversion'] = reg_minversion
+        registry_reqs['profile_requirement'] = registry_profile.get('ReadRequirement', 'Mandatory')
+        reg_uri = self.get_versioned_uri(reg_name, reg_repo, reg_minversion)
+
+        if not reg_uri:
+            warnings.warn("Unable to find registry file for " + reg_repo + ", " + reg_name +
+                          ", minimum version " + reg_minversion)
+            return registry_reqs
+
+        # Generate data based on profile
+        registry_data = DocGenUtilities.http_load_as_json(reg_uri)
+        if registry_data:
+            registry_reqs['current_release'] = registry_data['RegistryVersion']
+            registry_reqs.update(registry_data)
+
+            for msg in registry_profile['Messages']:
+                if msg in registry_reqs['Messages']:
+                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get('ReadRequirement', 'Mandatory')
+                else:
+                    warnings.warn("Profile specifies requirement for nonexistent Registry Message: " +
+                                  reg_name + " " + msg)
+
+        return registry_reqs
+
+
+    def get_versioned_uri(self, base_name, repo, min_version, is_local_file=False):
+        """ Get a versioned URI for the base_name schema.
+        Parameters:
+         base_name     -- Base name of the schema, e.g., "Resource"
+         repo          -- URI of the the repo where the schema is expected to be found.
+         min_version   -- Minimum acceptable version.
+         is_local_file -- Find file on local system.
+
+        If a matching URI is found among links at the repo address, it will be returned.
+        If not, a URI will be composed based on repo, base_name, and version. (This
+        may succeed if the repo does not provide a directory index.)
+
+        Versions must match on the major version, with minor.errata equal to or greater than
+        what is specified in min_version.
+        """
+
+        versioned_uri = None
+
+        if is_local_file:
+            repo_links = DocGenUtilities.local_get_links(repo)
+        else:
+            repo_links = DocGenUtilities.html_get_links(repo)
+
+        if repo_links:
+            minversion_parts = re.findall('(\d+)', min_version)
+
+            candidate = None
+            candidate_strength = 0
+            for rl in repo_links:
+                base = base_name + '.'
+                if rl.startswith(repo) and base in rl and rl.endswith('.json'):
+                    parts = rl[0:-5].rsplit(base, 1)
+                    if len(parts) == 2:
+                        suffix = parts[1]
+                        version_parts = re.findall('(\d+)', suffix)
+                        # Major version must match; minor.errata must be >=.
+                        if version_parts[0] != minversion_parts[0]:
+                            continue
+                        if version_parts[1] > minversion_parts[1]:
+                            strength = self.version_index(version_parts)
+                            if strength > candidate_strength:
+                                candidate_strength = strength
+                                candidate = rl
+                            continue
+                        if version_parts[1] == minversion_parts[1]:
+                            if len(version_parts) == 3 and len(minversion_parts) == 3:
+                                if version_parts[2] >= minversion_parts[2]:
+                                    strength = self.version_index(version_parts)
+                                    if strength > candidate_strength:
+                                        candidate_strength = strength
+                                        candidate = rl
+                            elif len(version_parts) == 2:
+                                strength = self.version_index(version_parts)
+                                if strength > candidate_strength:
+                                    candidate_strength = strength
+                                    candidate = rl
+            if candidate:
+                versioned_uri = candidate
+
+        elif is_local_file:
+            # Build URI from repo, name, and minversion:
+            versioned_uri = '/'.join([repo, base_name]) + '.v' + min_version + '.json'
+
+        return versioned_uri
+
+
+    def merge_required_profile(self, profile_resources, req_profile_name, req_profile_info):
+        """ Merge a required profile into profile_resources (a dict). May result in recursive calls. """
+
+        req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
+        req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
+        version_string = req_profile_minversion.replace('.', '_')
+        req_profile_data = None
+
+        # Retrieve profile.
+        # req_profile_repo will be a fully-qualified URI. It may be overridden by
+        # uri-to-local mapping.
+        base_uri = '/'.join([req_profile_repo, req_profile_name])
+        if '://' in base_uri:                                  # This is expected.
+            protocol, base_uri = base_uri.split('://')
+
+        is_local_file = False
+        for partial_uri in self.config['profile_uri_to_local'].keys():
+            if base_uri.startswith(partial_uri):
+                local_path = self.config['profile_uri_to_local'][partial_uri]
+                if partial_uri.endswith(req_profile_name):
+                    req_profile_repo = local_path[0:-len(req_profile_name)]
+                    pass
+                else:
+                    req_profile_repo = local_path
+                is_local_file = True
+                break
+
+        req_profile_uri = self.get_versioned_uri(req_profile_name, req_profile_repo,
+                                                 version_string, is_local_file)
+
+        if not req_profile_uri:
+            warnings.warn("Unable to find Profile for " + req_profile_repo + ", " +
+                          req_profile_name + ", minimum version: " + req_profile_minversion)
+            return profile_resources
+
+
+        if is_local_file:
+            req_profile_data = DocGenUtilities.load_as_json(req_profile_uri)
+        else:
+            req_profile_data = DocGenUtilities.http_load_as_json(req_profile_uri)
+
+        if req_profile_data:
+            if 'RequiredProfiles' in req_profile_data:
+                for req_profile_name in req_profile_data['RequiredProfiles'].keys():
+                    profile_resources = self.merge_required_profile(
+                        profile_resources, req_profile_name, req_profile_data['RequiredProfiles'][req_profile_name])
+
+            profile_resources = self.merge_dicts(profile_resources, req_profile_data.get('Resources', {}))
+
+        return profile_resources
+
+
+    def merge_dicts(self, dict1, dict2):
+        """ Merge two dictionaries recursively. Returns the merged result. """
+        return self._merge_dicts(dict1.copy(), dict2.copy())
+
+
+    def _merge_dicts(self, dict1, dict2):
+        """ Merge two dictionaries recursively. Modifies input. Returns the merged result.
+        For this pattern and others:
+           https://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge
+        """
+
+        # merge elements that appear in both dictionaries:
+        for k, v in dict1.items():
+            if k in dict2:
+                if isinstance(v, dict) and isinstance(dict2[k], dict):
+                    dict2[k] = self._merge_dicts(v, dict2[k])
+                else:
+                    dict2[k] = v
+
+        dict2.update(dict1)
+        return dict2
+
 
     @staticmethod
     def get_files(text_input):
@@ -79,7 +289,9 @@ class DocGenerator:
         for normalized_uri in files.keys():
             data = self.process_files(normalized_uri, files[normalized_uri])
             if not data:
-                warnings.warn("Unable to process files for " + normalized_uri)
+                # If we're in profile mode, this is probably normal.
+                if not self.config['profile_mode']:
+                    warnings.warn("Unable to process files for " + normalized_uri)
                 continue
             property_data[normalized_uri] = data
             doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
@@ -91,7 +303,7 @@ class DocGenerator:
             latest_data['_schema_name'] = latest_info.get('schema_name')
             schema_data[normalized_uri] = latest_data
 
-        traverser = SchemaTraverser(schema_data, doc_generator_meta)
+        traverser = SchemaTraverser(schema_data, doc_generator_meta, self.config['uri_to_local'])
 
         # Generate output
         if self.config['output_format'] == 'markdown':
@@ -100,6 +312,9 @@ class DocGenerator:
         elif self.config['output_format'] == 'html':
             from doc_formatter import HtmlGenerator
             generator = HtmlGenerator(property_data, traverser, self.config, level)
+        elif self.config['output_format'] == 'csv':
+            from doc_formatter import CsvGenerator
+            generator = CsvGenerator(property_data, traverser, self.config, level)
 
         return generator.generate_output()
 
@@ -258,6 +473,15 @@ class DocGenerator:
         filename = os.path.join(ref['root'], ref['filename'])
         normalized_uri = self.construct_uri_for_filename(filename)
 
+        # Get the un-versioned filename for match against profile keys
+        if '.v' in filename:
+            generalized_uri = self.construct_uri_for_filename(filename.split('.v')[0]) + '.json'
+        else:
+            generalized_uri = self.construct_uri_for_filename(filename)
+
+        profile_mode = self.config['profile_mode']
+        profile = self.config['profile_resources']
+
         data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
         version = self.get_version_string(ref['filename'])
@@ -266,7 +490,22 @@ class DocGenerator:
         property_data['latest_version'] = version
         property_data['name_and_version'] = schema_name
         property_data['normalized_uri'] = normalized_uri
-        if version:
+
+        min_version = False
+        if profile_mode:
+            schema_profile = profile.get(generalized_uri)
+            if schema_profile:
+                min_version = schema_profile.get('MinVersion')
+                if min_version:
+                    if version:
+                        property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
+                    else:
+                        # this is unlikely
+                        property_data['name_and_version'] += ' v' + min_version + '+'
+            else:
+                # Skip schemas that aren't mentioned in the profile:
+                return {}
+        elif version:
             property_data['name_and_version'] += ' ' + version
 
         if 'properties' not in property_data:
@@ -299,7 +538,7 @@ class DocGenerator:
 
         except KeyError:
             warnings.warn('Unable to find properties in path ' + ref['ref'] + ' from ' + filename)
-            return
+            return {}
 
         meta = self.extend_metadata(meta, properties, version, normalized_uri + '#properties/')
         meta['definitions'] = meta.get('definitions', {})
@@ -402,6 +641,17 @@ class DocGenerator:
         return ref
 
 
+    @staticmethod
+    def version_index(parts):
+        """ Create a numeric index representing the "size" of a multipart version """
+
+        idx = 0
+        multiplier = 100
+        for part in parts:
+            idx = idx + (multiplier * int(part))
+            multiplier = multiplier/10
+        return idx
+
 
 def main():
     """Parse and validate arguments, then process data and produce markdown output."""
@@ -421,7 +671,11 @@ def main():
         'cwd': os.getcwd(),
         'uri_replacements': {},
         'local_to_uri': {},
-        'uri_to_local': {}
+        'uri_to_local': {},
+        'profile_mode': False,
+        'profile_doc': None,
+        'profile_resources': {},
+        'profile': {}
         }
 
     help_description = 'Generate documentation for Redfish JSON schema files.\n\n'
@@ -437,14 +691,22 @@ def main():
     parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False,
                         help='Produce normative (developer-focused) output')
     parser.add_argument('--format', dest='format', default='markdown',
-                        choices=['markdown', 'html'], help='Output format')
+                        choices=['markdown', 'html', 'csv'], help='Output format')
     parser.add_argument('--out', dest='outfile', default='output.md',
                         help=('Output file (default depends on output format: '
-                              'output.md for markdown, index.html for html)'))
+                              'output.md for markdown, index.html for html, output.csv for csv)'))
     parser.add_argument('--sup', dest='supfile',
                         help=('Path to the supplemental material document. '
                               'Default is usersupplement.md for user-focused documentation, '
                               'and devsupplement.md for normative documentation.'))
+    parser.add_argument('--profile', dest='profile_doc',
+                        help=('Path to a JSON profile document, for profile output'))
+    parser.add_argument('-t', '--terse', action='store_true', dest='profile_terse',
+                        help=('Terse output (meaningful only with --profile). By default,'
+                              'profile output is verbose, including all properties regardless of'
+                              'profile requirements. "Terse" output is intended for use by'
+                              'Service developers, including only the subset of properties with'
+                              'profile requirements.'))
     parser.add_argument('--escape', dest='escape_chars',
                         help=("Characters to escape (\\) in generated markdown; "
                               "e.g., --escape=@#. Use --escape=@ if strings with embedded @ "
@@ -464,6 +726,8 @@ def main():
     if outfile_name == 'output.md':
         if config['output_format'] == 'html':
             outfile_name = 'index.html'
+        if config['output_format'] == 'csv':
+            outfile_name = 'output.csv'
 
     try:
         outfile = open(outfile_name, 'w', encoding="utf8")
@@ -490,6 +754,20 @@ def main():
             warnings.warn('No supplemental file specified and ' + supfile +
                           ' not found. Proceeding.')
 
+    # Check profile document, if specified
+    if args.profile_doc:
+        if args.profile_terse:
+            config['profile_mode'] = 'terse'
+        else:
+            config['profile_mode'] = 'verbose'
+
+        profile_doc = args.profile_doc
+        try:
+            profile = open(profile_doc, 'r', encoding="utf8")
+            config['profile_doc'] = profile_doc
+        except (OSError) as ex:
+            warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
+            exit()
 
     if 'keywords' in config['supplemental']:
         # Promote the keywords to top-level keys.
@@ -526,6 +804,12 @@ def main():
 
     if 'uri_to_local' in config['supplemental']:
         config['uri_to_local'] = config['supplemental']['uri_to_local']
+
+    if 'profile_local_to_uri' in config['supplemental']:
+        config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
+
+    if 'profile_uri_to_local' in config['supplemental']:
+        config['profile_uri_to_local'] = config['supplemental']['profile_uri_to_local']
 
     if 'enum_deprecations' in config['supplemental']:
         config['enum_deprecations'] = config['supplemental']['enum_deprecations']

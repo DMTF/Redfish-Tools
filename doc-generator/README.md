@@ -33,17 +33,16 @@ referenced data from local files, or to attempt to retrieve it over the
 internet. See "The Supplemental File," below.
 
 ```
-usage: doc_generator.py [-h] [-n] [--format {markdown,html}] [--out
-OUTFILE]
-                        [--sup SUPFILE] [--escape ESCAPE_CHARS]
-                        [import_from]
+usage: doc_generator.py [-h] [-n] [--format {markdown,html}] [--out OUTFILE]
+                        [--sup SUPFILE] [--profile PROFILE_DOC] [-t]
+                        [--escape ESCAPE_CHARS]
+                        [import_from [import_from ...]]
 
 Generate documentation for Redfish JSON schema files.
 
 positional arguments:
-  import_from           Name of a file or directory to process
-  (wildcards are
-                        acceptable). Default: json-schema
+  import_from           Name of a file or directory to process (wildcards are
+                        acceptable).Default: json-schema
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -52,16 +51,20 @@ optional arguments:
                         Output format
   --out OUTFILE         Output file (default depends on output format:
                         output.md for markdown, index.html for html)
-  --sup SUPFILE         Path to the supplemental material
-                        document. Default is
-                        usersupplement.md for user-focused
-                        documentation, and
+  --sup SUPFILE         Path to the supplemental material document. Default is
+                        usersupplement.md for user-focused documentation, and
                         devsupplement.md for normative documentation.
+  --profile PROFILE_DOC
+                        Path to a JSON profile document, for profile output
+  -t, --terse           Terse output (meaningful only with --profile). By
+                        default,profile output is verbose, including all
+                        properties regardless ofprofile requirements. "Terse"
+                        output is intended for use byService developers,
+                        including only the subset of properties withprofile
+                        requirements.
   --escape ESCAPE_CHARS
-                        Characters to escape (\) in generated
-                        markdown; e.g.,
-                        --escape=@#. Use --escape=@ if strings with
-                        embedded @
+                        Characters to escape (\) in generated markdown; e.g.,
+                        --escape=@#. Use --escape=@ if strings with embedded @
                         are being converted to mailto links.
 
 Example:

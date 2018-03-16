@@ -35,6 +35,7 @@ def parse_file(filehandle):
         '# Schema Documentation',  # list of search/replace patterns for links
         '# Description Overrides', # list of property name:description to substitute throughout the doc
         '# Schema URI Mapping',    # map URI(s) to local repo(s)
+        '# Profile URI Mapping',   # map URI(s) for profiles to local repo(s)
         '# Enum Deprecations',     # Version and description info for deprecated enums
         '# Units Translation',     # String-replace mapping for unit abbreviations
         ]
@@ -89,6 +90,13 @@ def parse_file(filehandle):
     else:
         warnings.warn("Schema URI Mapping not found in supplemental document. " +
                       "Output is likely to be incomplete.\n\n")
+
+    if 'Profile URI Mapping' in parsed:
+        parsed['profile_local_to_uri'], parsed['profile_uri_to_local'] = parse_uri_mapping(
+            parsed['Profile URI Mapping'])
+        if not parsed.get('profile_uri_to_local'):
+            warnings.warn("Profile URI Mapping found in supplemental document didn't provide any mappings. " +
+                          "Output is likely to be incomplete.\n\n")
 
     if 'Enum Deprecations' in parsed:
         parsed['enum_deprecations'] = parse_enum_deprecations(parsed['Enum Deprecations'])

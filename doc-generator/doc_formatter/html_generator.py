@@ -13,8 +13,17 @@ Initial author: Second Rise LLC.
 import copy
 import html
 import markdown
+import warnings
 from . import DocFormatter
 from . import ToCParser
+
+# Format user warnings simply
+def simple_warning_format(message, category, filename, lineno, file=None, line=None):
+    """ a basic format for warnings from this program """
+    return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
+
+warnings.formatwarning = simple_warning_format
+
 
 class HtmlGenerator(DocFormatter):
     """Provides methods for generating markdown from Redfish schemas. """
@@ -23,6 +32,7 @@ class HtmlGenerator(DocFormatter):
     def __init__(self, property_data, traverser, config, level=0):
         super(HtmlGenerator, self).__init__(property_data, traverser, config, level)
         self.sections = []
+        self.registry_sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '<br>'
@@ -145,19 +155,23 @@ pre.code{
 </style>
 """
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0, in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
         """Format information for a single property.
 
-        Returns an object with 'row', 'details', and 'action_details':
+        Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
 
         'row': content for the main table being generated.
         'details': content for the Property Details section.
         'action_details': content for the Actions section.
+        'profile_conditional_details': populated only in profile_mode, formatted conditional details
 
         This may include embedded objects with their own properties.
         """
+
         traverser = self.traverser
         formatted = []     # The row itself
+
+        current_depth = len(prop_path)
 
         if in_array:
             current_depth = current_depth -1
@@ -168,6 +182,12 @@ pre.code{
             indentation_string = '&nbsp;' * 6 * (current_depth -1)
         else:
             indentation_string = '&nbsp;' * 6 * current_depth
+
+        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Action Details
+        # section and should dial back the indentation by one level.
+        if len(prop_path) > 1 and prop_path[0] == 'Actions':
+            indentation_string = '&nbsp;' * 6 * (current_depth -1)
+
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
 
@@ -220,7 +240,7 @@ pre.code{
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
                                             meta['version_deprecated_explanation'], False)
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
 
         if formatted_details.get('promote_me'):
@@ -232,7 +252,8 @@ pre.code{
             # In this case, we're done for this bit of documentation, and we just want the properties of this object.
             formatted.append('\n'.join(formatted_details['object_description']))
             return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
-                    'action_details':formatted_details.get('action_details')})
+                    'action_details':formatted_details.get('action_details'),
+                    'profile_conditional_details':formatted_details.get('profile_conditional_details')})
 
         # Eliminate dups in these these properties and join with a delimiter:
         props = {
@@ -273,6 +294,9 @@ pre.code{
 
         name_and_version = '<nobr>' + name_and_version  + '</nobr>'
 
+        if formatted_details['descr'] is None:
+            formatted_details['descr'] = ''
+
         formatted_details['descr'] = self.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
 
         if formatted_details['add_link_text']:
@@ -289,7 +313,10 @@ pre.code{
                 text_descr = 'See Property Details, below, for more information about this property.'
 
 
-            formatted_details['descr'] += '<br>' + self.italic(text_descr)
+            if formatted_details['descr']:
+                formatted_details['descr'] += '<br>' + self.italic(text_descr)
+            else:
+                formatted_details['descr'] = self.italic(text_descr)
 
         # If this is an Action with details, add a note to the description:
         if formatted_details['has_action_details']:
@@ -324,11 +351,39 @@ pre.code{
         if formatted_details['nullable']:
             prop_access += ' (null)'
 
+        # If profile reqs are present, massage them:
+        profile_access = self.format_base_profile_access(formatted_details)
+
+        descr = formatted_details['descr']
+        if formatted_details['profile_purpose']:
+            descr += '<br>' + self.bold("Profile Purpose: " + formatted_details['profile_purpose'])
+
+        # Conditional Requirements
+        cond_req = formatted_details['profile_conditional_req']
+        if cond_req:
+            anchor = schema_ref + '|conditional_reqs|' + prop_name
+            cond_req_text = 'See <a href="#' + anchor + '"> Conditional Requirements</a>, below, for more information.'
+            descr += ' ' + self.nobr(self.italic(cond_req_text))
+            profile_access += "<br>" + self.nobr(self.italic('Conditional Requirements'))
+
+        if not profile_access:
+            profile_access = '&nbsp;' * 10
+
+        # Comparison
+        if formatted_details['profile_values']:
+            comparison_descr = ('Must be ' + formatted_details['profile_comparison'] + ' ('
+                                + ', '.join('"' + x + '"' for x in formatted_details['profile_values'])
+                                + ')')
+            profile_access += '<br>' + self.italic(comparison_descr)
+
         row = []
         row.append(indentation_string + name_and_version)
+        if self.config['profile_mode']:
+            row.append(profile_access)
         row.append(prop_type)
-        row.append(prop_access)
-        row.append(formatted_details['descr'])
+        if not self.config['profile_mode']:
+            row.append(prop_access)
+        row.append(descr)
 
         formatted.append(self.make_row(row))
 
@@ -348,11 +403,12 @@ pre.code{
             formatted.append(self.make_row(desc_row))
 
         return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
-                'action_details':formatted_details.get('action_details')})
+                'action_details':formatted_details.get('action_details'),
+                'profile_conditional_details':formatted_details.get('profile_conditional_details')})
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None):
+                                supplemental_details, meta, anchor=None, profile=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
@@ -360,6 +416,21 @@ pre.code{
 
         parent_version = meta.get('version')
         enum_meta = meta.get('enum', {})
+
+        # Are we in profile mode? If so, consult the profile passed in for this property.
+        # For Action Parameters, look for ParameterValues/RecommendedValues; for
+        # Property enums, look for MinSupportValues/RecommendedValues.
+        profile_mode = self.config.get('profile_mode')
+        if profile_mode:
+            if profile is None:
+                profile = {}
+            profile_values = profile.get('Values', [])
+            profile_min_support_values = profile.get('MinSupportValues', [])
+            profile_parameter_values = profile.get('ParameterValues', [])
+            profile_recommended_values = profile.get('RecommendedValues', [])
+
+            profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
+                                  + profile_recommended_values)
 
         if prop_description:
             contents.append(self.para(prop_description))
@@ -373,9 +444,13 @@ pre.code{
             contents.append(self.markdown_to_html(supplemental_details))
 
         if enum_details:
-            header_row = self.make_header_row([prop_type, 'Description'])
+            headings = [prop_type, 'Description']
+            if profile_mode:
+                headings.append('Profile Specifies')
+            header_row = self.make_header_row(headings)
             table_rows = []
             enum.sort()
+
             for enum_item in enum:
                 enum_name = html.escape(enum_item, False)
                 enum_item_meta = enum_meta.get(enum_item, {})
@@ -408,11 +483,28 @@ pre.code{
                         descr += ' ' + self.italic(deprecated_descr)
                     else:
                         descr = self.italic(deprecated_descr)
-                table_rows.append(self.make_row([enum_name, descr]))
+                cells = [enum_name, descr]
+
+                if profile_mode:
+                    if enum_name in profile_values:
+                        cells.append('Required')
+                    elif enum_name in profile_min_support_values:
+                        cells.append('Required')
+                    elif enum_name in profile_parameter_values:
+                        cells.append('Required')
+                    elif enum_name in profile_recommended_values:
+                        cells.append('Recommended')
+                    else:
+                        cells.append('')
+
+                table_rows.append(self.make_row(cells))
             contents.append(self.make_table(table_rows, [header_row], 'enum enum-details'))
 
         elif enum:
-            header_row = self.make_header_row([prop_type])
+            headings = [prop_type]
+            if profile_mode:
+                headings.append('Profile Specifies')
+            header_row = self.make_header_row(headings)
             table_rows = []
             enum.sort()
             for enum_item in enum:
@@ -441,7 +533,20 @@ pre.code{
                     if enum_item_meta.get('version_deprecated_explanation'):
                         enum_name += '<br>' + self.italic(html.escape(enum_item_meta['version_deprecated_explanation'], False))
 
-                table_rows.append(self.make_row([enum_name]))
+                cells = [enum_name]
+                if profile_mode:
+                    if enum_name in profile_values:
+                        cells.append('Required')
+                    elif enum_name in profile_min_support_values:
+                        cells.append('Required')
+                    elif enum_name in profile_parameter_values:
+                        cells.append('Required')
+                    elif enum_name in profile_recommended_values:
+                        cells.append('Recommended')
+                    else:
+                        cells.append('')
+
+                table_rows.append(self.make_row(cells))
             contents.append(self.make_table(table_rows, [header_row], 'enum'))
 
         return '\n'.join(contents) + '\n'
@@ -480,7 +585,7 @@ pre.code{
             param_names = [x for x in action_parameters.keys()]
             param_names.sort()
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } to the last row:
@@ -511,6 +616,14 @@ pre.code{
             # something is awry if there are no properties
             if section.get('properties'):
                 contents.append(self.make_table(section['properties'], None, 'properties'))
+
+            if section.get('profile_conditional_details'):
+                conditional_details = '\n'.join(section['profile_conditional_details'])
+                deets = []
+                deets.append(self.head_three('Conditional Requirements'))
+                deets.append(self.make_div(conditional_details, 'property-details-content'))
+                contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
             if len(section.get('action_details', [])):
                 action_details = '\n'.join(section['action_details'])
                 deets = []
@@ -523,11 +636,28 @@ pre.code{
                 deets.append(self.make_div('\n'.join(section['property_details']),
                                            'property-details-content'))
                 contents.append(self.make_div('\n'.join(deets), 'property-details'))
+
             if section.get('json_payload'):
                 contents.append(self.head_three('Example Response'))
                 contents.append(section['json_payload'])
 
         self.sections = []
+
+        # Profile output may include registry sections
+        for section in self.registry_sections:
+            contents.append(section.get('heading'))
+            contents.append(section.get('requirement'))
+            if section.get('description'):
+                contents.append(self.para(section['description']))
+            if section.get('messages'):
+                contents.append(self.head_three('Messages'))
+                message_rows = [self.make_row(x) for x in section['messages']]
+                header_cells = ['', 'Requirement']
+                if self.config.get('profile_mode') != 'terse':
+                    header_cells.append('Description')
+                header_row = self.make_row(header_cells)
+                contents.append(self.make_table(message_rows, [header_row], 'messages'))
+
         contents = '\n'.join(contents)
         return contents
 
@@ -620,6 +750,9 @@ pre.code{
             'escape_chars': [],
             'uri_replacements': {},
             'units_translation': self.config['units_translation'],
+            'profile': self.config['profile'],
+            'profile_mode': self.config['profile_mode'],
+            'profile_resources': self.config['profile_resources']
             }
 
         for line in intro_blob.splitlines():
@@ -693,6 +826,43 @@ pre.code{
         self.this_section['property_details'].append(formatted_details)
 
 
+    def add_registry_reqs(self, registry_reqs):
+        """Add registry messages. registry_reqs includes profile annotations."""
+
+        terse_mode = self.config.get('profile_mode') == 'terse'
+
+        reg_names = [x for x in registry_reqs.keys()]
+        reg_names.sort()
+        for reg_name in reg_names:
+            reg = registry_reqs[reg_name]
+            this_section = {
+                'head': reg_name,
+                'description': reg.get('Description', ''),
+                'messages': []
+                }
+            heading = reg_name + ' Registry v' + reg['minversion']  + '+'
+            if reg.get('current_release', reg['minversion']) != reg['minversion']:
+                heading += ' (current release: v' + reg['current_release'] + ')'
+
+            this_section['heading'] = self.head_two(heading)
+            this_section['requirement'] = 'Requirement: ' + reg.get('profile_requirement', '')
+
+            msgs = reg.get('Messages', {})
+            msg_keys = [x for x in msgs.keys()]
+            msg_keys.sort()
+
+            for msg in msg_keys:
+                this_msg = msgs[msg]
+                if terse_mode and not this_msg.get('profile_requirement'):
+                    continue
+                msg_row = [msg, this_msg.get('profile_requirement', '')]
+                if not terse_mode:
+                    msg_row.append(this_msg.get('Description', ''))
+                this_section['messages'].append(msg_row)
+
+            self.registry_sections.append(this_section)
+
+
     def link_to_own_schema(self, schema_ref, schema_uri):
         """ Provide a link to schema_ref, preferring an in-document link to the schema_uri. """
         schema_name = self.traverser.get_schema_name(schema_ref)
@@ -744,20 +914,17 @@ pre.code{
         div.append('</div>')
         return '\n'.join(div)
 
-    @staticmethod
-    def make_row(cells):
+    def make_row(self, cells):
         """ Make an HTML row """
         row = ''.join(['<td>' + cell + '</td>' for cell in cells])
         return '<tr>' + row + '</tr>'
 
-    @staticmethod
-    def make_header_row(cells):
+    def make_header_row(self, cells):
         """ Make an HTML row, using table header markup """
         row = ''.join(['<th>' + cell + '</th>' for cell in cells])
         return '<tr>' + row + '</tr>'
 
-    @staticmethod
-    def make_table(rows, header_rows=None, css_class=None):
+    def make_table(self, rows, header_rows=None, css_class=None):
         """ Make an HTML table from the provided rows, which should be HTML markup """
         if header_rows:
             head = '<thead>\n' + '\n'.join(header_rows) + '\n</thead>\n'
@@ -780,6 +947,21 @@ pre.code{
     def make_paras(text):
         """ Split text at linebreaks and output as paragraphs """
         return '\n'.join([HtmlGenerator.para(line) for line in '\n'.split(text) if line])
+
+    @staticmethod
+    def br():
+        return '<br>'
+
+    @staticmethod
+    def nobr(text):
+        """ Wrap a bit of text in nobr tags. """
+        return '<nobr>' + text + '</nobr>'
+
+    @staticmethod
+    def nbsp():
+        """ A non-breaking space """
+        return '&nbsp;'
+
 
     def head_one(self, text, anchor_id=None):
         """ Make a top-level heading, relative to the current formatter level """

@@ -11,7 +11,16 @@ Initial author: Second Rise LLC.
 """
 
 import copy
+import warnings
 from . import DocFormatter
+
+# Format user warnings simply
+def simple_warning_format(message, category, filename, lineno, file=None, line=None):
+    """ a basic format for warnings from this program """
+    return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
+
+warnings.formatwarning = simple_warning_format
+
 
 class MarkdownGenerator(DocFormatter):
     """Provides methods for generating markdown from Redfish schemas.
@@ -23,20 +32,22 @@ class MarkdownGenerator(DocFormatter):
     def __init__(self, property_data, traverser, config, level=0):
         super(MarkdownGenerator, self).__init__(property_data, traverser, config, level)
         self.sections = []
+        self.registry_sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '\n'
             }
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, current_depth=0, in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
         """Format information for a single property.
 
-        Returns an object with 'row', 'details', and 'action_details':
+        Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
 
         'row': content for the main table being generated.
         'details': content for the Property Details section.
         'action_details': content for the Actions section.
+        'profile_conditional_details': populated only in profile_mode, formatted conditional details
 
         This may include embedded objects with their own properties.
         """
@@ -44,6 +55,7 @@ class MarkdownGenerator(DocFormatter):
         traverser = self.traverser
         formatted = []     # The row itself
 
+        current_depth = len(prop_path)
         if in_array:
             current_depth = current_depth -1
 
@@ -53,6 +65,11 @@ class MarkdownGenerator(DocFormatter):
             indentation_string = '&nbsp;' * 6 * (current_depth -1)
         else:
             indentation_string = '&nbsp;' * 6 * current_depth
+
+        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Action Details
+        # section and should dial back the indentation by one level.
+        if len(prop_path) > 1 and prop_path[0] == 'Actions':
+            indentation_string = '&nbsp;' * 6 * (current_depth -1)
 
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
@@ -109,7 +126,7 @@ class MarkdownGenerator(DocFormatter):
                                  self.escape_for_markdown(meta['version_deprecated_explanation'],
                                                           self.config['escape_chars']))
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, current_depth,
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
 
         if formatted_details.get('promote_me'):
@@ -120,7 +137,8 @@ class MarkdownGenerator(DocFormatter):
             # In this case, we're done for this bit of documentation, and we just want the properties of this object.
             formatted.append('\n'.join(formatted_details['object_description']))
             return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
-                    'action_details':formatted_details.get('action_details')})
+                    'action_details':formatted_details.get('action_details'),
+                    'profile_conditional_details': formatted_details.get('profile_conditional_details')})
 
 
         # Eliminate dups in these these properties and join with a delimiter:
@@ -160,6 +178,21 @@ class MarkdownGenerator(DocFormatter):
         elif in_array:
             name_and_version += ' [ ]'
 
+        if formatted_details['descr'] is None:
+            formatted_details['descr'] = ''
+
+        if formatted_details['profile_purpose']:
+            if formatted_details['descr']:
+                formatted_details['descr'] += ' '
+            formatted_details['descr'] += self.bold(formatted_details['profile_purpose'])
+
+        if formatted_details['descr'] is None:
+            formatted_details['descr'] = ''
+
+        if formatted_details['profile_purpose']:
+            if formatted_details['descr']:
+                formatted_details['descr'] += ' '
+            formatted_details['descr'] += self.bold(formatted_details['profile_purpose'])
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
@@ -198,13 +231,23 @@ class MarkdownGenerator(DocFormatter):
                     item_list = ', '.join(item_list)
                 prop_type += ' (' + item_list + ')'
 
-
+        prop_access = ''
         if formatted_details['read_only']:
-            prop_type += '<br><br>' + self.italic('read-only')
+            prop_access = 'read-only'
         else:
-            prop_type += '<br><br>' + self.italic('read-write')
+            prop_access = 'read-write'
         if formatted_details['nullable']:
-            prop_type += ' ' + self.italic('(null)')
+            prop_access += '<br>(null)'
+
+        # If profile reqs are present, massage them:
+        profile_access = self.format_base_profile_access(formatted_details)
+
+        if self.config['profile_mode']:
+            if profile_access:
+                prop_type += '<br><br>' + self.italic(profile_access)
+        elif prop_access:
+            prop_type += '<br><br>' + self.italic(prop_access)
+
 
         row = []
         row.append(indentation_string + name_and_version)
@@ -225,11 +268,12 @@ class MarkdownGenerator(DocFormatter):
                 formatted.append('| ' + indentation_string + '] |   |   |')
 
         return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
-                'action_details':formatted_details.get('action_details')})
+                'action_details':formatted_details.get('action_details'),
+                'profile_conditional_details': formatted_details.get('profile_conditional_details')})
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None):
+                                supplemental_details, meta, anchor=None, profile=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
@@ -237,6 +281,22 @@ class MarkdownGenerator(DocFormatter):
 
         parent_version = meta.get('version')
         enum_meta = meta.get('enum', {})
+
+        # Are we in profile mode? If so, consult the profile passed in for this property.
+        # For Action Parameters, look for ParameterValues/RecommendedValues; for
+        # Property enums, look for MinSupportValues/RecommendedValues.
+        profile_mode = self.config.get('profile_mode')
+        if profile_mode:
+            if profile is None:
+                profile = {}
+
+            profile_values = profile.get('Values', [])
+            profile_min_support_values = profile.get('MinSupportValues', [])
+            profile_parameter_values = profile.get('ParameterValues', [])
+            profile_recommended_values = profile.get('RecommendedValues', [])
+
+            profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
+                                  + profile_recommended_values)
 
         if prop_description:
             contents.append(self.para(self.escape_for_markdown(prop_description, self.config['escape_chars'])))
@@ -248,8 +308,12 @@ class MarkdownGenerator(DocFormatter):
             contents.append('\n' + supplemental_details + '\n')
 
         if enum_details:
-            contents.append('| ' + prop_type + ' | Description |')
-            contents.append('| --- | --- |')
+            if profile_mode:
+                contents.append('| ' + prop_type + ' | Description | Profile Specifies |')
+                contents.append('| --- | --- | --- |')
+            else:
+                contents.append('| ' + prop_type + ' | Description |')
+                contents.append('| --- | --- |')
             enum.sort()
             for enum_item in enum:
                 enum_name = enum_item
@@ -280,11 +344,28 @@ class MarkdownGenerator(DocFormatter):
                         descr += ' ' + self.italic(deprecated_descr)
                     else:
                         descr = self.italic(deprecated_descr)
-                contents.append('| ' + enum_name + ' | ' + descr + ' |')
+
+                if profile_mode:
+                    profile_spec = ''
+                    if enum_name in profile_values:
+                        profile_spec = 'Required'
+                    elif enum_name in profile_min_support_values:
+                        profile_spec = 'Required'
+                    elif enum_name in profile_parameter_values:
+                        profile_spec = 'Required'
+                    elif enum_name in profile_recommended_values:
+                        profile_spec = 'Recommended'
+                    contents.append('| ' + enum_name + ' | ' + descr + ' | ' + profile_spec + ' |')
+                else:
+                    contents.append('| ' + enum_name + ' | ' + descr + ' |')
 
         elif enum:
-            contents.append('| ' + prop_type + ' |')
-            contents.append('| --- |')
+            if profile_mode:
+                contents.append('| ' + prop_type + ' | Profile Specifies |')
+                contents.append('| --- | --- |')
+            else:
+                contents.append('| ' + prop_type + ' |')
+                contents.append('| --- |')
             for enum_item in enum:
                 enum_name = enum_item
                 enum_item_meta = enum_meta.get(enum_item, {})
@@ -309,7 +390,20 @@ class MarkdownGenerator(DocFormatter):
                         if enum_item_meta.get('version_deprecated_explanation'):
                             enum_name += ' ' + self.italic(enum_item_meta['version_deprecated_explanation'])
 
-                contents.append('| ' + enum_name + ' | ')
+                if profile_mode:
+                    profile_spec = ''
+                    if enum_name in profile_values:
+                        profile_spec = 'Required'
+                    elif enum_name in profile_min_support_values:
+                        profile_spec = 'Required'
+                    elif enum_name in profile_parameter_values:
+                        profile_spec = 'Required'
+                    elif enum_name in profile_recommended_values:
+                        profile_spec = 'Recommended'
+
+                    contents.append('| ' + enum_name + ' | ' + profile_spec + ' |')
+                else:
+                    contents.append('| ' + enum_name + ' | ')
 
         return '\n'.join(contents) + '\n'
 
@@ -352,7 +446,7 @@ class MarkdownGenerator(DocFormatter):
             param_names = [x for x in action_parameters.keys()]
             param_names.sort()
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], 1)
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } row:
@@ -366,6 +460,35 @@ class MarkdownGenerator(DocFormatter):
             formatted.append(self.para("(This action takes no parameters.)"))
 
         return "\n".join(formatted)
+
+
+    def _format_profile_access(self, read_only=False, read_req=None, write_req=None, min_count=None):
+        """Common formatting logic for profile_access column"""
+
+        profile_access = ''
+        if not self.config['profile_mode']:
+            return profile_access
+
+        # Each requirement  may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
+        if not read_req:
+            read_req = 'Mandatory' # This is the default if nothing is specified.
+        if read_only:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
+        elif read_req == write_req:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
+        elif not write_req:
+            profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
+        else:
+            # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
+            profile_access = (self.nobr(self.text_map(read_req)) + ' (Read),' +
+                              self.nobr(self.text_map(write_req)) + ' (Read/Write)')
+
+        if min_count:
+            if profile_access:
+                profile_access += ", "
+            profile_access += self.nobr("Minimum " + str(min_count))
+
+        return profile_access
 
 
     def link_to_own_schema(self, schema_ref, schema_full_uri):
@@ -395,6 +518,12 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('|     |     |     |')
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
+
+            if section.get('profile_conditional_details'):
+                conditional_details = '\n'.join(section['profile_conditional_details'])
+                contents.append('\n' + self.head_two('Conditional Requirements'))
+                contents.append(conditional_details)
+
             if len(section.get('action_details', [])):
                 contents.append('\n' + self.head_two('Action Details'))
                 contents.append('\n\n'.join(section.get('action_details')))
@@ -403,6 +532,23 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('\n'.join(section['property_details']))
 
         self.sections = []
+
+        # Profile output may include registry sections
+        for section in self.registry_sections:
+            contents.append(section.get('heading'))
+            contents.append(section.get('requirement'))
+            if section.get('description'):
+                contents.append(self.para(section['description']))
+            if section.get('messages'):
+                contents.append(self.head_two('Messages'))
+                message_rows = [self.make_row(x) for x in section['messages']]
+                header_cells = ['', 'Requirement']
+                if self.config.get('profile_mode') != 'terse':
+                    header_cells.append('Description')
+                header_row = self.make_row(header_cells)
+                contents.append(self.make_table(message_rows, [header_row], 'messages'))
+                contents.append('\n')
+
         return '\n'.join(contents)
 
 
@@ -456,6 +602,9 @@ search: true
             'escape_chars': [],
             'uri_replacements': {},
             'units_translation': self.config['units_translation'],
+            'profile': self.config['profile'],
+            'profile_mode': self.config['profile_mode'],
+            'profile_resources': self.config['profile_resources'],
             }
 
         for line in intro_blob.splitlines():
@@ -515,22 +664,60 @@ search: true
         self.this_section['property_details'].append(formatted_details)
 
 
-    def head_one(self, text):
+    def add_registry_reqs(self, registry_reqs):
+        """Add registry messages. registry_reqs includes profile annotations."""
+
+        terse_mode = self.config.get('profile_mode') == 'terse'
+
+        reg_names = [x for x in registry_reqs.keys()]
+        reg_names.sort()
+        for reg_name in reg_names:
+            reg = registry_reqs[reg_name]
+            this_section = {
+                'head': reg_name,
+                'description': reg.get('Description', ''),
+                'messages': []
+                }
+            heading = reg_name + ' Registry v' + reg['minversion']  + '+'
+            if reg.get('current_release', reg['minversion']) != reg['minversion']:
+                heading += ' (current release: v' + reg['current_release'] + ')'
+
+            this_section['heading'] = self.head_one(heading)
+            this_section['requirement'] = 'Requirement: ' + reg.get('profile_requirement', '')
+
+            msgs = reg.get('Messages', {})
+            msg_keys = [x for x in msgs.keys()]
+            msg_keys.sort()
+
+            for msg in msg_keys:
+                this_msg = msgs[msg]
+                if terse_mode and not this_msg.get('profile_requirement'):
+                    continue
+                msg_row = [msg, this_msg.get('profile_requirement', '')]
+                if not terse_mode:
+                    msg_row.append(this_msg.get('Description', ''))
+                this_section['messages'].append(msg_row)
+
+            self.registry_sections.append(this_section)
+
+
+
+    def head_one(self, text, anchor_id=None):
         """Add a top-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
         return add_level + '# ' + text + "\n"
 
-    def head_two(self, text):
+    def head_two(self, text, anchor_id=None):
         """Add a second-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
         return add_level + '## ' + text + "\n"
 
-    def head_three(self, text):
+    def head_three(self, text, anchor_id=None):
         """Add a third-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
         return add_level + '### ' + text + "\n"
 
-    def head_four(self, text):
+    def head_four(self, text, anchor_id=None):
         """Add a fourth-level heading, relative to the generator's level"""
         add_level = '' + '#' * self.level
         return add_level + '##### ' + text + "\n"
@@ -551,8 +738,34 @@ search: true
         """Apply bold to text"""
         return '**' + text + '**'
 
-
     @staticmethod
     def italic(text):
         """Apply italic to text"""
         return '*' + text + '*'
+
+
+    def make_row(self, cells):
+        row = '| ' + ' | '.join(cells) + ' |'
+        return row
+
+    def make_header_row(self, cells):
+        header = []
+        header.append(self.make_row(cells))
+        header.append(self._make_separator_row(len(cells)))
+        return header
+
+    def _make_separator_row(self, num):
+        return self.make_row(['---' for x in range(0, num)])
+
+
+    def make_table(self, rows, header_rows=None, css_class=None):
+
+        # Get the number of cells from the first row.
+        firstrow = rows[0]
+        numcells = firstrow.count(' | ') + 1
+        if not header_rows:
+            header_rows = self.make_header_row(['   ' for x in range(0, numcells)])
+        else:
+            header_rows.append(self._make_separator_row(numcells))
+
+        return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
