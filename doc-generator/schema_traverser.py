@@ -42,7 +42,8 @@ class SchemaTraverser:
         """Create a traverser with equivalent state to this one's"""
         schema_data = self.schemas.copy()
         meta_data = self.meta.copy()
-        return SchemaTraverser(schema_data, meta_data)
+        uri_to_local = self.uri_to_local.copy()
+        return SchemaTraverser(schema_data, meta_data, uri_to_local)
 
 
     def add_schema(self, uri, data):
