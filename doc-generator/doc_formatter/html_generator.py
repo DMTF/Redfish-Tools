@@ -593,7 +593,7 @@ pre.code{
             tmp_row = self._add_closing_brace(tmp_row, '')
             rows[-1] = tmp_row
 
-            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "Target" property of the Action.'))
+            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
 
             formatted.append(self.make_table(rows))
 

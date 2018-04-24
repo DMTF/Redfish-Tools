@@ -452,7 +452,7 @@ class MarkdownGenerator(DocFormatter):
             # Add a closing } row:
             rows.append('| ' + ' | '.join(['}', ' ',' ',' ']) + ' |')
 
-            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "Target" property of the Action.'))
+            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
 
             formatted.append('\n'.join(rows))
 
