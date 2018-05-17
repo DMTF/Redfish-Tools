@@ -10,17 +10,18 @@ class TestSchemaTraverser(unittest.TestCase):
 
     def setUp(self):
         """Build a SchemaTraverser with a limited schema"""
-        self.schemaTraverser = schema_traverser.SchemaTraverser('http://redfish.dmtf.org/schemas/v1/',
-                                                                simple_schema)
+        self.schemaTraverser = schema_traverser.SchemaTraverser(simple_schema, {}, {})
 
     def test_find_ref_data(self):
         ref_data = self.schemaTraverser.find_ref_data('Resource#/definitions/Oem')
-        self.assertEqual(ref_data, {
-            '_from_schema_name': 'Resource',
+        expected_vals = {
+            '_from_schema_ref': 'Resource',
             "type": "object",
             "description": "Oem extension object.",
             "longDescription": "This object represents the Oem properties.  All values for resources described by this schema shall comply to the requirements as described in the Redfish specification.",
-            })
+            }
+        for key in expected_vals.keys():
+            self.assertEqual(ref_data[key], expected_vals[key])
 
 
     def test_find_bad_ref_returns_None(self):
