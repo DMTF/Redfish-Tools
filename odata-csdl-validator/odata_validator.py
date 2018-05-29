@@ -6013,7 +6013,4 @@ def main():
     print("No errors in MetaData")
 
 if __name__ == "__main__":
-    #try:
-        main()
-    #except:
-    #    sys.exit(1)
+    main()
