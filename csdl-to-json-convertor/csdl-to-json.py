@@ -24,7 +24,7 @@ import xml.etree.ElementTree as ET
 # Default configurations
 CONFIG_DEF_COPYRIGHT = "Copyright 2014-2018 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
 CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_4_0.json"
-CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_2.json"
+CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json"
 CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 
@@ -646,7 +646,7 @@ class CSDLToJSON():
             json_def[name]["additionalProperties"] = False
             json_def[name]["patternProperties"] = {}
             json_def[name]["patternProperties"][PATTERN_PROP_REGEX] = {}
-            json_def[name]["patternProperties"][PATTERN_PROP_REGEX]["type"] = [ "array", "boolean", "number", "null", "object", "string" ]
+            json_def[name]["patternProperties"][PATTERN_PROP_REGEX]["type"] = [ "array", "boolean", "integer", "number", "null", "object", "string" ]
             json_def[name]["patternProperties"][PATTERN_PROP_REGEX]["description"] = "This property shall specify a valid odata or Redfish property."
             json_def[name]["properties"] = {}
 
@@ -732,6 +732,18 @@ class CSDLToJSON():
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             json_obj_def["properties"]["@odata.type"] = { "$ref": self.odata_schema + "#/definitions/type" }
             json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
+            if "required" not in json_obj_def:
+                json_obj_def["required"] = []
+            if "@odata.id" not in json_obj_def["required"]:
+                json_obj_def["required"].append( "@odata.id" )
+            if "@odata.type" not in json_obj_def["required"]:
+                json_obj_def["required"].append( "@odata.type" )
+            if "@odata.context" not in json_obj_def["required"]:
+                json_obj_def["required"].append( "@odata.context" )
+
+        # Add Members@odata.nextLink for objects that inherit from ResourceCollection
+        if base_type == "Resource.v1_0_0.ResourceCollection":
+            json_obj_def["properties"]["Members@odata.nextLink"] = { "$ref": self.odata_schema + "#/definitions/nextLink" }
 
     def add_type_info( self, type_info, type, is_array, json_type_def ):
         """
@@ -850,7 +862,12 @@ class CSDLToJSON():
 
         # Perform the mapping based off the type
         if ( ( type == "Edm.SByte" ) or ( type == "Edm.Int16" ) or ( type == "Edm.Int32" ) or
-             ( type == "Edm.Int64" ) or ( type == "Edm.Decimal" ) ):
+             ( type == "Edm.Int64" ) ):
+            if is_nullable:
+                json_type = [ "integer", "null" ]
+            else:
+                json_type = "integer"
+        elif type == "Edm.Decimal":
             if is_nullable:
                 json_type = [ "number", "null" ]
             else:
