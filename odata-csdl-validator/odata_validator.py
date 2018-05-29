@@ -5749,7 +5749,10 @@ class DynamicExpression(Element):
             if len(set(type_names)) > 1:
                 raise SchemaError("children are different types")
 
-            self.type = 'Collection(' + type_names[0] + ')'
+            if isinstance( type_names[0], str ):
+                self.type = 'Collection(' + type_names[0] + ')'
+            else:
+                self.type = 'Collection(' + type_names[0].name + ')'
 
         elif self.name == 'IsOf':
             _, type_name = is_collection(self.target_type)
@@ -6010,7 +6013,7 @@ def main():
     print("No errors in MetaData")
 
 if __name__ == "__main__":
-    try:
+    #try:
         main()
-    except:
-        sys.exit(1)
+    #except:
+    #    sys.exit(1)
