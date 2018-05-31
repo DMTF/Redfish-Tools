@@ -2145,7 +2145,7 @@ class Property(Element):
                     raise SchemaError("Scale facet {} is not a non-negative integer".format(
                         self.scale))
 
-        if self.precision != None:
+        if (self.precision != None) and (self.scale != None):
             if self.scale > self.precision:
                 raise SchemaError("Scale facet {} > Precision facet {}".format(self.scale,
                                                                                self.precision))
