@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 
 # Default configurations
 CONFIG_DEF_COPYRIGHT = "Copyright 2014-2018 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
-CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_4_0.json"
+CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_5_0.json"
 CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json"
 CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
@@ -48,6 +48,8 @@ ODATA_TAG_PARAMETER = "{http://docs.oasis-open.org/odata/ns/edm}Parameter"
 ODATA_TAG_MEMBER = "{http://docs.oasis-open.org/odata/ns/edm}Member"
 ODATA_TAG_RECORD = "{http://docs.oasis-open.org/odata/ns/edm}Record"
 ODATA_TAG_PROP_VAL = "{http://docs.oasis-open.org/odata/ns/edm}PropertyValue"
+ODATA_TAG_COLLECTION = "{http://docs.oasis-open.org/odata/ns/edm}Collection"
+ODATA_TAG_STRING = "{http://docs.oasis-open.org/odata/ns/edm}String"
 
 class CSDLToJSON():
     """
@@ -320,6 +322,35 @@ class CSDLToJSON():
                 # Object Long Description
                 if term == "OData.LongDescription":
                     json_def[name]["longDescription"] = self.get_attrib( child, "String" )
+
+                # Capabilities
+                if term.startswith( "Capabilities." ):
+                    for record in child.iter( ODATA_TAG_RECORD ):
+                        for prop_val in record.iter( ODATA_TAG_PROP_VAL ):
+                            property = self.get_attrib( prop_val, "Property" )
+                            value = self.get_attrib( prop_val, "Bool" )
+
+                            # Convert the value from a string
+                            if value == "true":
+                                value = True
+                            else:
+                                value = False
+
+                            # Assign the value based on the type of term being processed
+                            if property == "Insertable":
+                                json_def[name]["insertable"] = value
+                            elif property == "Updatable":
+                                json_def[name]["updatable"] = value
+                            elif property == "Deletable":
+                                json_def[name]["deletable"] = value
+
+                # URIs
+                if term == "Redfish.Uris":
+                    for collection in child.iter( ODATA_TAG_COLLECTION ):
+                        for string in collection.iter( ODATA_TAG_STRING ):
+                            if "uris" not in json_def[name]:
+                                json_def[name]["uris"] = []
+                            json_def[name]["uris"].append( string.text )
 
     def generate_object( self, object, json_def, name = None ):
         """
