@@ -147,7 +147,7 @@ class CsvGenerator(DocFormatter):
 
         enumerations = ''
         if 'enum' in p_i:
-            p_i['enum'].sort()
+            p_i['enum'].sort(key=str.lower)
             enumerations = ', '.join(p_i['enum'])
 
         schema_name = self.schema_name

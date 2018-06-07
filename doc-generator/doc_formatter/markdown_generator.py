@@ -314,7 +314,7 @@ class MarkdownGenerator(DocFormatter):
             else:
                 contents.append('| ' + prop_type + ' | Description |')
                 contents.append('| --- | --- |')
-            enum.sort()
+            enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = enum_item
                 enum_item_meta = enum_meta.get(enum_item, {})
@@ -444,7 +444,7 @@ class MarkdownGenerator(DocFormatter):
             # Add a "start object" row for this parameter:
             rows.append('| ' + ' | '.join(['{', ' ',' ',' ']) + ' |')
             param_names = [x for x in action_parameters.keys()]
-            param_names.sort()
+            param_names.sort(key=str.lower)
             for param_name in param_names:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
                 rows.append(formatted_parameters.get('row'))
@@ -670,7 +670,7 @@ search: true
         terse_mode = self.config.get('profile_mode') == 'terse'
 
         reg_names = [x for x in registry_reqs.keys()]
-        reg_names.sort()
+        reg_names.sort(key=str.lower)
         for reg_name in reg_names:
             reg = registry_reqs[reg_name]
             this_section = {
@@ -687,7 +687,7 @@ search: true
 
             msgs = reg.get('Messages', {})
             msg_keys = [x for x in msgs.keys()]
-            msg_keys.sort()
+            msg_keys.sort(key=str.lower)
 
             for msg in msg_keys:
                 this_msg = msgs[msg]
