@@ -278,7 +278,7 @@ class DocFormatter:
         profile_mode = config.get('profile_mode')
 
         schema_keys = self.documented_schemas
-        schema_keys.sort()
+        schema_keys.sort(key=str.lower)
 
         for schema_ref in schema_keys:
             details = property_data[schema_ref]
@@ -354,13 +354,13 @@ class DocFormatter:
 
                 if len(prop_details):
                     detail_names = [x for x in prop_details.keys()]
-                    detail_names.sort()
+                    detail_names.sort(key=str.lower)
                     for detail_name in detail_names:
                         self.add_property_details(prop_details[detail_name])
 
                 if len(conditional_details):
                     cond_names = [x for x in conditional_details.keys()]
-                    cond_names.sort()
+                    cond_names.sort(key=str.lower)
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
 
@@ -428,7 +428,7 @@ class DocFormatter:
                 prop_details = {}
                 prop_details.update(formatted['details'])
                 detail_names = [x for x in prop_details.keys()]
-                detail_names.sort()
+                detail_names.sort(key=str.lower)
                 for detail_name in detail_names:
                     frag_gen.add_property_details(prop_details[detail_name])
 
@@ -632,7 +632,7 @@ class DocFormatter:
             prop_names = self.filter_props_by_profile(prop_names, profile)
         prop_names = self.exclude_prop_names(prop_names, self.config['excluded_properties'],
                                        self.config['excluded_by_match'])
-        prop_names.sort()
+        prop_names.sort(key=str.lower)
         return prop_names
 
 
@@ -661,7 +661,7 @@ class DocFormatter:
                 prop_names = filtered
             else:
                 prop_names = list(set(prop_names) & set(profile_props))
-        prop_names.sort()
+        prop_names.sort(key=str.lower)
         return prop_names
 
 
@@ -689,7 +689,7 @@ class DocFormatter:
             if not excluded:
                 included_prop_names.append(prop_name)
 
-        included_prop_names.sort()
+        included_prop_names.sort(key=str.lower)
         return included_prop_names
 
 
