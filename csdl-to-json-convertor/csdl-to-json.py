@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Copyright Notice:
-# Copyright 2017 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/LICENSE.md
+# Copyright 2017-2018 Distributed Management Task Force, Inc. All rights reserved.
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
 CSDL to JSON Schema
@@ -22,15 +22,15 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 # Default configurations
-CONFIG_DEF_COPYRIGHT = "Copyright 2014-2017 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
-CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_3_0.json"
-CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_1.json"
+CONFIG_DEF_COPYRIGHT = "Copyright 2014-2018 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
+CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_4_0.json"
+CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_2.json"
 CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 
 # Regex strings
 NAMESPACE_VER_REGEX = "^[a-zA-Z0-9]+\.v([0-9]+)_([0-9]+)_([0-9]+)$"
-PATTERN_PROP_REGEX = "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message|Privileges)\\.[a-zA-Z_][a-zA-Z0-9_.]+$"
+PATTERN_PROP_REGEX = "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_.]+$"
 
 # OData markup strings
 ODATA_TAG_REFERENCE = "{http://docs.oasis-open.org/odata/ns/edmx}Reference"
@@ -203,6 +203,14 @@ class CSDLToJSON():
                     if child.tag == ODATA_TAG_TYPE_DEF:
                         self.generate_typedef( child, self.json_out[self.namespace_under_process]["definitions"] )
 
+                    # Process top level annotations
+                    if child.tag == ODATA_TAG_ANNOTATION:
+                        term = self.get_attrib( child, "Term" )
+
+                        # Owning Entity
+                        if term == "Redfish.OwningEntity":
+                            self.json_out[self.namespace_under_process]["owningEntity"] = self.get_attrib( child, "String" )
+
     def process_versioned_namespace( self ):
         """
         Adds the definitions to the JSON output for a versioned namespace
@@ -240,6 +248,15 @@ class CSDLToJSON():
                     if child.tag == ODATA_TAG_TYPE_DEF:
                         if is_namespace_unversioned( namespace ) == False:
                             self.generate_typedef( child, self.json_out[self.namespace_under_process]["definitions"] )
+
+                    # Process top level annotations
+                    if child.tag == ODATA_TAG_ANNOTATION:
+                        term = self.get_attrib( child, "Term" )
+
+                        # Owning Entity
+                        if term == "Redfish.OwningEntity":
+                            self.json_out[self.namespace_under_process]["owningEntity"] = self.get_attrib( child, "String" )
+
 
     def generate_abstract_object( self, object, json_def ):
         """
@@ -714,7 +731,7 @@ class CSDLToJSON():
             json_obj_def["properties"]["@odata.context"] = { "$ref": self.odata_schema + "#/definitions/context" }
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             json_obj_def["properties"]["@odata.type"] = { "$ref": self.odata_schema + "#/definitions/type" }
-            #json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
+            json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
 
     def add_type_info( self, type_info, type, is_array, json_type_def ):
         """

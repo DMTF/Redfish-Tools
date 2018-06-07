@@ -1,6 +1,6 @@
 # CSDL to JSON Converter
 
-Copyright 2017 Distributed Management Task Force, Inc. All rights reserved.
+Copyright 2017-2018 Distributed Management Task Force, Inc. All rights reserved.
 
 ## About
 

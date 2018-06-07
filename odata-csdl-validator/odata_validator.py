@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Copyright Notice:
 # Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
 CSDL Validator version 0.1
@@ -2145,7 +2145,7 @@ class Property(Element):
                     raise SchemaError("Scale facet {} is not a non-negative integer".format(
                         self.scale))
 
-        if self.precision != None:
+        if (self.precision != None) and (self.scale != None):
             if self.scale > self.precision:
                 raise SchemaError("Scale facet {} > Precision facet {}".format(self.scale,
                                                                                self.precision))
@@ -5749,7 +5749,10 @@ class DynamicExpression(Element):
             if len(set(type_names)) > 1:
                 raise SchemaError("children are different types")
 
-            self.type = 'Collection(' + type_names[0] + ')'
+            if isinstance( type_names[0], str ):
+                self.type = 'Collection(' + type_names[0] + ')'
+            else:
+                self.type = 'Collection(' + type_names[0].name + ')'
 
         elif self.name == 'IsOf':
             _, type_name = is_collection(self.target_type)
@@ -6010,7 +6013,4 @@ def main():
     print("No errors in MetaData")
 
 if __name__ == "__main__":
-    try:
-        main()
-    except:
-        sys.exit(1)
+    main()

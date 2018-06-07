@@ -1,7 +1,7 @@
 {
-    "Copyright": "Copyright 2014-2017 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
-    "RedfishSchema": "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_3_0.json",
-    "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_1.json",
+    "Copyright": "Copyright 2014-2018 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "RedfishSchema": "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_4_0.json",
+    "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_2.json",
     "Location": "http://redfish.dmtf.org/schemas/v1/",
     "ResourceLocation": "http://redfish.dmtf.org/schemas/v1/"
 }
