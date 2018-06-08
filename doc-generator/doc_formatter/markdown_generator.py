@@ -564,9 +564,6 @@ class MarkdownGenerator(DocFormatter):
 
         prelude = "---\ntitle: " + doc_title + """
 
-language tabs:
-  - shell
-
 search: true
 ---
 """
