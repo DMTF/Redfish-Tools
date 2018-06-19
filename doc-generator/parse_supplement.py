@@ -203,16 +203,13 @@ def parse_uri_mapping(markdown_blob):
 
 
 def parse_title_from_introduction(markdown_blob):
-    """If the intro begins with a top-level heading, return its contents"""
+    """If the intro contains a top-level heading, return its contents"""
 
     lines = markdown_blob.splitlines()
     for line in lines:
         if line.startswith('# '):
             line = line.strip('# ')
             return line
-        # We only take the first line, so if we find a non-h1, just skip it:
-        elif line.strip():
-            return ''
 
 
 def parse_excluded_properties(markdown_blob):
