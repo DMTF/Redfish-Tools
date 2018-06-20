@@ -13,10 +13,7 @@ suitable for use with the Slate documentation tool (https://github.com/tripit/sl
 Initial author: Second Rise LLC.
 """
 
-import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib'))
-
 import re
 import argparse
 import json
