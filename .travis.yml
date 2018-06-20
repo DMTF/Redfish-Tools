@@ -5,7 +5,7 @@ python:
 install: true
 env:
  - TEST_DIR=doc-generator
- - TEST_DIR=csdl-to-json-converter
+ - TEST_DIR=csdl-to-json-convertor
 before_script:
  - pushd $TEST_DIR && source .travis/before_script
 script:
