@@ -5,5 +5,9 @@ python:
 install: true
 env:
  - TEST_DIR=doc-generator
+before_script:
+ - cd $TEST_DIR && .travis/before_script
 script:
- - cd $TEST_DIR && ./travis_tests
+ - cd $TEST_DIR && ./script
+after_script:
+ - cd $TEST_DIR && .travis/after_script
