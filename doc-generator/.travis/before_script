@@ -1,3 +1,3 @@
 #!/bin/bash
-export PYTHONPATH=doc_generator/lib
+export PYTHONPATH=./lib
 pip install -r requirements.txt
