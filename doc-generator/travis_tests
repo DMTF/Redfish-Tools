@@ -1,3 +1,5 @@
 #!/bin/bash
 pip install -r requirements.txt
-PYTHONPATH=doc-generator/lib && pytest
+export PYTHONPATH=doc-generator/lib
+pytest
+unset PYTHONPATH
