@@ -2,11 +2,8 @@ language: python
 python:
  - "3.5"
  - "3.6"
-install:
- - pushd doc-generator && pip install -r requirements.txt && popd
+install: true
 env:
- - PYTHONPATH=doc-generator/lib
+ - TEST_DIR=doc-generator
 script:
- - pytest
-# Example of how we might limit tests to a tool:
-# if git diff --name-only HEAD^ | grep "doc-generator/"; then PYTHONPATH=doc-generator/lib && pushd doc-generator && pytest && popd; fi
+ - cd $TEST_DIR && ./setup_tests && pytest

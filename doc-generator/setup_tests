@@ -1,0 +1,3 @@
+#!/bin/bash
+PYTHONPATH=doc-generator/lib
+pip install -r requirements.txt
