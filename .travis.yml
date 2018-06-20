@@ -6,8 +6,8 @@ install: true
 env:
  - TEST_DIR=doc-generator
 before_script:
- - cd $TEST_DIR && .travis/before_script
+ - pushd $TEST_DIR && .travis/before_script
 script:
- - cd $TEST_DIR && ./script
+ - .travis/script
 after_script:
- - cd $TEST_DIR && .travis/after_script
+ - .travis/after_script && popd
