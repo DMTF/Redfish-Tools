@@ -6,4 +6,4 @@ install: true
 env:
  - TEST_DIR=doc-generator
 script:
- - cd $TEST_DIR && ./setup_tests && pytest
+ - cd $TEST_DIR && ./travis_tests
