@@ -187,7 +187,7 @@ class DocFormatter:
         """Common formatting logic for profile_access column"""
 
         profile_access = ''
-        if not self.config['profile_mode']:
+        if not self.config.get('profile_mode'):
             return profile_access
 
         # Each requirement  may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
@@ -302,7 +302,7 @@ class DocFormatter:
             self.current_version = {}
 
             # Normative docs prefer longDescription to description
-            if config['normative'] and 'longDescription' in definitions[schema_name]:
+            if config.get('normative') and 'longDescription' in definitions[schema_name]:
                 description = definitions[schema_name].get('longDescription')
             else:
                 description = definitions[schema_name].get('description')
@@ -640,7 +640,7 @@ class DocFormatter:
         if profile is None:
             return []
 
-        if self.config['profile_mode'] == 'terse':
+        if self.config.get('profile_mode') == 'terse':
             if is_action:
                 profile_props = [x for x in profile.keys()]
             else:
@@ -668,8 +668,8 @@ class DocFormatter:
     def exclude_annotations(self, prop_names):
         """ Strip out excluded annotations, sorting the remainder """
 
-        return self.exclude_prop_names(prop_names, self.config['excluded_annotations'],
-                                       self.config['excluded_annotations_by_match'])
+        return self.exclude_prop_names(prop_names, self.config.get('excluded_annotations', []),
+                                       self.config.get('excluded_annotations_by_match', []))
 
 
     def exclude_prop_names(self, prop_names, props_to_exclude, props_to_exclude_by_match):
@@ -700,9 +700,9 @@ class DocFormatter:
             if schema_name in self.config.get('profile', {}).get('Resources', {}):
                 return False
 
-        if schema_name in self.config['excluded_schemas']:
+        if schema_name in self.config.get('excluded_schemas', []):
             return True
-        for pattern in self.config['excluded_schemas_by_match']:
+        for pattern in self.config.get('excluded_schemas_by_match', []):
             if pattern in schema_name:
                 return True
         return False
@@ -759,7 +759,7 @@ class DocFormatter:
         profile = None
         # Skip profile data if prop_name is blank -- this is just an additional row of info and
         # the "parent" row will have the profile info.
-        if self.config['profile_mode'] and prop_name:
+        if self.config.get('profile_mode') and prop_name:
             profile_section = 'PropertyRequirements'
             if within_action:
                 profile_section = 'ActionRequirements'
@@ -865,7 +865,7 @@ class DocFormatter:
         # Skip profile data if prop_name is blank -- this is just an additional row of info and
         # the "parent" row will have the profile info.
         profile = None
-        if self.config['profile_mode'] and prop_name:
+        if self.config.get('profile_mode') and prop_name:
             prop_brief_name = prop_name
             profile_section = 'PropertyRequirements'
             if within_action:
@@ -907,8 +907,8 @@ class DocFormatter:
         read_only = prop_info.get('readonly')
 
         descr = None
-        if self.config['profile_mode'] != 'terse':
-            if self.config['normative'] and 'longDescription' in prop_info:
+        if self.config.get('profile_mode') != 'terse':
+            if self.config.get('normative') and 'longDescription' in prop_info:
                 descr = prop_info.get('longDescription', '')
             else:
                 descr = prop_info.get('description', '')
@@ -917,7 +917,7 @@ class DocFormatter:
         non_normative_descr = prop_info.get('description', '')
         pattern = prop_info.get('pattern')
 
-        if self.config['normative'] and normative_descr:
+        if self.config.get('normative') and normative_descr:
             descr = normative_descr
         else:
             descr = non_normative_descr
@@ -987,7 +987,7 @@ class DocFormatter:
         if prop_enum or supplemental_details:
             has_prop_details = True
 
-            if self.config['normative'] and 'enumLongDescriptions' in prop_info:
+            if self.config.get('normative') and 'enumLongDescriptions' in prop_info:
                 prop_enum_details = prop_info.get('enumLongDescriptions')
             else:
                 prop_enum_details = prop_info.get('enumDescriptions')
@@ -1042,7 +1042,7 @@ class DocFormatter:
                 combined_prop_item = prop_items[0]
                 combined_prop_item['_prop_name'] = prop_name
                 combined_prop_item['readonly'] = prop_info.get('readonly', False)
-                if self.config['normative'] and 'longDescription' in combined_prop_item:
+                if self.config.get('normative') and 'longDescription' in combined_prop_item:
                     descr = descr + ' ' + prop_items[0]['longDescription']
                     combined_prop_item['longDescription'] = descr
                 else:
@@ -1061,7 +1061,7 @@ class DocFormatter:
                 prop_details.update(item_formatted['details'])
 
         # Read/Write requirements from profile:
-        if self.config['profile_mode'] and prop_name and profile is not None:
+        if self.config.get('profile_mode') and prop_name and profile is not None:
 
             # Conditional Requirements
             profile_conditional_req = profile.get('ConditionalRequirements')
@@ -1168,7 +1168,7 @@ class DocFormatter:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
 
-            if self.config['profile_mode'] == 'terse':
+            if self.config.get('profile_mode') == 'terse':
                 if len(prop_path) and prop_path[0] == 'Actions':
                     profile_section = 'ActionRequirements'
                 else:
@@ -1297,7 +1297,7 @@ class DocFormatter:
         if prop_name in self.config.get('property_description_overrides', {}):
             prop_info['description'] = prop_info['longDescription'] = self.config['property_description_overrides'][prop_name]
 
-        units_trans = self.config['units_translation'].get(prop_info.get('units'))
+        units_trans = self.config.get('units_translation', {}).get(prop_info.get('units'))
         if units_trans:
             prop_info['units'] = units_trans
 
@@ -1361,7 +1361,7 @@ class DocFormatter:
         if prop_path[0] == 'Actions':
             section = 'ActionRequirements'
 
-        if self.config['profile_resources']:
+        if self.config.get('profile_resources'):
             prop_profile = self.config['profile_resources'].get(schema_ref, None)
             if prop_profile is None:
                 return None

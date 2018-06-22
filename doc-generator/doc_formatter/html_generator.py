@@ -378,10 +378,10 @@ pre.code{
 
         row = []
         row.append(indentation_string + name_and_version)
-        if self.config['profile_mode']:
+        if self.config.get('profile_mode'):
             row.append(profile_access)
         row.append(prop_type)
-        if not self.config['profile_mode']:
+        if not self.config.get('profile_mode'):
             row.append(prop_access)
         row.append(descr)
 
@@ -666,7 +666,7 @@ pre.code{
         """Return full contents of document"""
 
 
-        supplemental = self.config['supplemental']
+        supplemental = self.config.get('supplemental', {})
         body = ''
 
         intro = supplemental.get('Introduction')
@@ -749,10 +749,10 @@ pre.code{
             'excluded_schemas_by_match': [],
             'escape_chars': [],
             'uri_replacements': {},
-            'units_translation': self.config['units_translation'],
+            'units_translation': self.config.get('units_translation'),
             'profile': self.config['profile'],
-            'profile_mode': self.config['profile_mode'],
-            'profile_resources': self.config['profile_resources']
+            'profile_mode': self.config.get('profile_mode'),
+            'profile_resources': self.config.get('profile_resources', {})
             }
 
         for line in intro_blob.splitlines():
