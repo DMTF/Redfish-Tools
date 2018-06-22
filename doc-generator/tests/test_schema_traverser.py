@@ -3,7 +3,7 @@
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 import unittest
-from .context import schema_traverser
+import schema_traverser
 from .simple_schema import simple_schema
 
 class TestSchemaTraverser(unittest.TestCase):
@@ -42,11 +42,3 @@ class TestSchemaTraverser(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-"""
-
-
-
-
-
-"""
