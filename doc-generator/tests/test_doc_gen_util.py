@@ -22,15 +22,16 @@ def test_load_as_json_file_not_good_warns():
         data = DocGenUtilities.load_as_json("tests/samples/json/badjson.json")
         assert data == {}
 
+
 @patch('urllib.request')
 def test_html_get_links(mockRequest):
     sampleFile = open("tests/samples/schema_index_sample.html", 'rb')
     expected_links = ['http://www.dmtf.org/standards/redfish',
-                      'https://bother.mock/schemas/AccountService.v1_3_0.json',
-                      'https://bother.mock/schemas/AccountService_v1.xml',
-                      'https://bother.mock/schemas/ActionInfo.v1_0_3.json',
-                      'https://bother.mock/schemas/ActionInfo_v1.xml']
+                      'https://testing.mock/schemas/AccountService.v1_3_0.json',
+                      'https://testing.mock/schemas/AccountService_v1.xml',
+                      'https://testing.mock/schemas/ActionInfo.v1_0_3.json',
+                      'https://testing.mock/schemas/ActionInfo_v1.xml']
     mockRequest.urlopen.return_value = sampleFile
-    links = DocGenUtilities.html_get_links("https://bother.mock/foo.html");
+    links = DocGenUtilities.html_get_links("https://testing.mock/foo.html");
     links.sort()
     assert links == expected_links
