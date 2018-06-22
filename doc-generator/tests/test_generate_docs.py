@@ -20,7 +20,7 @@ cases = {
     # each "case" directory will have subdirectories "input", with json schemas,
     # and "expected_output," with md and HTML samples.
     'NetworkPort': 'simple',
-    }
+}
 
 @pytest.mark.filterwarnings("ignore:Unable to read")
 @pytest.mark.filterwarnings("ignore:Unable to find data")
@@ -28,25 +28,26 @@ cases = {
 @patch('urllib.request') # patch request so we don't make HTTP requests.
 def test_all_cases(mockRequest):
     for name, dirname in cases.items():
-        dirpath = os.path.join(testcase_path, dirname)
+        dirpath = os.path.abspath(os.path.join(testcase_path, dirname))
+        input_dir = os.path.join(dirpath, 'input')
 
         # HTML output
         expected_output = open(os.path.join(dirpath, 'expected_output', 'index.html')).read().strip()
-        config = {'uri_to_local':
-         {'redfish.dmtf.org/schemas/v1': '/Users/afarrell/Work/SecondRise/DMTF/Redfish-Tools/doc-generator/tests/samples/generate_docs_cases/simple/input'},
-         'expand_defs_from_non_output_schemas': False,
-         'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
-         'profile_resources': {},
-         'units_translation': {},
-         'excluded_annotations_by_match': ['@odata.count', '@odata.navigationLink'],
-         'excluded_schemas': [],
-         'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
-         'uri_replacements': {},
-         'local_to_uri': {'/Users/afarrell/Work/SecondRise/DMTF/Redfish-Tools/doc-generator/tests/samples/generate_docs_cases/simple/input': 'redfish.dmtf.org/schemas/v1'},
-         'profile': {},
-         'escape_chars': [],
-         'output_format': 'html',
-         }
+        config = {
+            'uri_to_local': {'redfish.dmtf.org/schemas/v1': input_dir},
+            'expand_defs_from_non_output_schemas': False,
+            'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
+            'profile_resources': {},
+            'units_translation': {},
+            'excluded_annotations_by_match': ['@odata.count', '@odata.navigationLink'],
+            'excluded_schemas': [],
+            'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
+            'uri_replacements': {},
+            'local_to_uri': { input_dir : 'redfish.dmtf.org/schemas/v1'},
+            'profile': {},
+            'escape_chars': [],
+            'output_format': 'html',
+        }
 
         docGen = DocGenerator([ dirpath ], '/dev/null', config)
         output = docGen.generate_docs()
