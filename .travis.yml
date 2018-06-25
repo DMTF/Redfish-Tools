@@ -1,3 +1,17 @@
+# Configuration for Travis-CI to automatically run tests.
+# Since the Redfish-Tools repository contains several independent tools,
+# most of the directives are in separate scripts rather than here.
+#
+# The idea is that each tool that wants automated tests will include a
+# .travis directory containing before_script, script, and
+# after_script. Add a TEST_DIR to the "env" part of this file to hook in
+# your tests. This file just specifies to move into the tool's directory,
+# run the scripts, and move back out.
+#
+# There is an implicit assumption that all the tools/tests are in python.
+# Conveniently, that is the case today. More ingenuity may be required to
+# include tests for non-python tools.
+#
 language: python
 python:
  - "3.5"
