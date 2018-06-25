@@ -20,56 +20,63 @@ testcase_path = os.path.join('tests', 'samples', 'generate_docs_cases')
 cases = {
     # each "case" directory will have subdirectories "input", with json schemas,
     # and "expected_output," with md and HTML samples.
-    'NetworkPort': 'simple',
+    'integer': 'Integer Support',
+    'general': 'Example from NetworkPort',
 }
 
-@pytest.mark.filterwarnings("ignore:Unable to read")
-@pytest.mark.filterwarnings("ignore:Unable to find data")
-@pytest.mark.filterwarnings("ignore:Unable to retrieve data")
+base_config = {
+    'expand_defs_from_non_output_schemas': False,
+    'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
+    'profile_resources': {},
+    'units_translation': {},
+    'excluded_annotations_by_match': ['@odata.count', '@odata.navigationLink'],
+    'excluded_schemas': [],
+    'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
+    'uri_replacements': {},
+
+    'profile': {},
+    'escape_chars': [],
+}
+
+
 @patch('urllib.request') # patch request so we don't make HTTP requests.
-def test_all_cases(mockRequest):
+def test_html_output(mockRequest):
 
-    base_config = {
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'html'
 
-        'expand_defs_from_non_output_schemas': False,
-        'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
-        'profile_resources': {},
-        'units_translation': {},
-        'excluded_annotations_by_match': ['@odata.count', '@odata.navigationLink'],
-        'excluded_schemas': [],
-        'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
-        'uri_replacements': {},
-
-        'profile': {},
-        'escape_chars': [],
-    }
-
-    html_config = copy.deepcopy(base_config)
-    html_config['output_format'] = 'html'
-
-    markdown_config = copy.deepcopy(base_config)
-    markdown_config['output_format'] = 'markdown'
-
-    for name, dirname in cases.items():
+    for dirname, name in cases.items():
         dirpath = os.path.abspath(os.path.join(testcase_path, dirname))
         input_dir = os.path.join(dirpath, 'input')
 
-        html_config['uri_to_local'] = markdown_config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
-        html_config['local_to_uri'] = markdown_config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+        config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+        config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
-        # HTML output
         expected_output = open(os.path.join(dirpath, 'expected_output', 'index.html')).read().strip()
 
-        docGen = DocGenerator([ dirpath ], '/dev/null', html_config)
+        docGen = DocGenerator([ dirpath ], '/dev/null', config)
         output = docGen.generate_docs()
         output = output.strip()
 
         assert output == expected_output
 
-        # markdown output
+
+@patch('urllib.request') # patch request so we don't make HTTP requests.
+def test_markdown_output(mockRequest):
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    for dirname, name in cases.items():
+        dirpath = os.path.abspath(os.path.join(testcase_path, dirname))
+        input_dir = os.path.join(dirpath, 'input')
+
+        config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+        config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
         expected_output = open(os.path.join(dirpath, 'expected_output', 'output.md')).read().strip()
 
-        docGen = DocGenerator([ dirpath ], '/dev/null', markdown_config)
+        docGen = DocGenerator([ dirpath ], '/dev/null', config)
         output = docGen.generate_docs()
         output = output.strip()
 
