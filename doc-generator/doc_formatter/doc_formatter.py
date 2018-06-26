@@ -935,8 +935,6 @@ class DocFormatter:
         pattern = prop_info.get('pattern')
         required = prop_info.get('required', [])
         required_on_create = prop_info.get('requiredOnCreate', [])
-        if required:
-            print(prop_name +  'has required: '  + ', '.join(required)) # DEBUG
 
         if self.config.get('normative') and normative_descr:
             descr = normative_descr
