@@ -20,8 +20,9 @@ testcase_path = os.path.join('tests', 'samples', 'generate_docs_cases')
 cases = {
     # each "case" directory will have subdirectories "input", with json schemas,
     # and "expected_output," with md and HTML samples.
-    'integer': 'Integer Support',
-    'general': 'Example from NetworkPort',
+    # 'integer': 'Integer Support',
+    'required': 'required and requiredOnCreate',
+    # 'general': 'Example from NetworkPort',
 }
 
 base_config = {
