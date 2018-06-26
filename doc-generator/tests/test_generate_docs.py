@@ -40,7 +40,7 @@ base_config = {
 }
 
 
-@patch('urllib.request') # patch request so we don't make HTTP requests.
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_html_output(mockRequest):
 
     config = copy.deepcopy(base_config)
@@ -62,7 +62,7 @@ def test_html_output(mockRequest):
         assert output == expected_output, "Failed on: " + name
 
 
-@patch('urllib.request') # patch request so we don't make HTTP requests.
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_markdown_output(mockRequest):
 
     config = copy.deepcopy(base_config)

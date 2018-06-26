@@ -58,7 +58,7 @@ class DocFormatter:
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'readonly']
+        self.parent_props = ['description', 'longDescription', 'readonly', 'prop_required', 'prop_required_on_create']
 
 
     def emit(self):
@@ -307,6 +307,9 @@ class DocFormatter:
             else:
                 description = definitions[schema_name].get('description')
 
+            required = definitions[schema_name].get('required', [])
+            required_on_create = definitions[schema_name].get('requiredOnCreate', [])
+
             # Override with supplemental schema description, if provided
             # If there is a supplemental Description or Schema-Intro, it replaces
             # the description in the schema. If both are present, the Description
@@ -339,6 +342,12 @@ class DocFormatter:
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
                     prop_info = self.apply_overrides(prop_info, schema_name, prop_name)
+
+                    prop_info['prop_required'] = prop_name in required
+                    prop_info['prop_required_on_create'] = prop_name in required_on_create
+                    prop_info['parent_requires'] = required
+                    prop_info['parent_requires_on_create'] = required_on_create
+
                     meta = prop_info.get('_doc_generator_meta', {})
                     prop_infos = self.extend_property_info(schema_ref, prop_info, properties.get('_doc_generator_meta'))
 
@@ -716,7 +725,7 @@ class DocFormatter:
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
-        'pattern'
+        'pattern', 'prop_required', 'prop_required_on_create'
         """
         if isinstance(prop_infos, dict):
             return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
@@ -745,6 +754,8 @@ class DocFormatter:
                   'has_action_details': False,
                   'action_details': {},
                   'pattern': [],
+                  'prop_required': False,
+                  'prop_required_on_create': False,
                   'is_in_profile': False,
                   'profile_read_req': None,
                   'profile_write_req': None,
@@ -804,6 +815,9 @@ class DocFormatter:
         # read_only and units should be the same for all
         parsed['read_only'] = details[0]['read_only']
         parsed['prop_units'] = details[0]['prop_units']
+        # TODO: also same for all?
+        parsed['prop_required'] = details[0]['prop_required']
+        parsed['prop_required_on_create'] = details[0]['prop_required_on_create']
 
         # Data from profile:
         if profile is not None:
@@ -839,7 +853,7 @@ class DocFormatter:
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
-        'normative_descr', 'non_normative_descr', pattern
+        'normative_descr', 'non_normative_descr', 'pattern', 'prop_required', 'prop_required_on_create'
         """
         traverser = self.traverser
 
@@ -906,6 +920,9 @@ class DocFormatter:
 
         read_only = prop_info.get('readonly')
 
+        prop_required = prop_info.get('prop_required')
+        prop_required_on_create = prop_info.get('prop_required_on_create')
+
         descr = None
         if self.config.get('profile_mode') != 'terse':
             if self.config.get('normative') and 'longDescription' in prop_info:
@@ -916,6 +933,10 @@ class DocFormatter:
         normative_descr = prop_info.get('longDescription', '')
         non_normative_descr = prop_info.get('description', '')
         pattern = prop_info.get('pattern')
+        required = prop_info.get('required', [])
+        required_on_create = prop_info.get('requiredOnCreate', [])
+        if required:
+            print(prop_name +  'has required: '  + ', '.join(required)) # DEBUG
 
         if self.config.get('normative') and normative_descr:
             descr = normative_descr
@@ -1021,6 +1042,10 @@ class DocFormatter:
         if prop_is_object:
             new_path = prop_path.copy()
             new_path.append(prop_name)
+
+            prop_info['parent_requires'] = required
+            prop_info['parent_requires_on_create'] = required_on_create
+
             object_formatted = self.format_object_descr(schema_ref, prop_info, new_path, is_action)
             object_description = object_formatted['rows']
             if object_formatted['details']:
@@ -1098,6 +1123,8 @@ class DocFormatter:
                        'promote_me': promote_me,
                        'normative_descr': normative_descr,
                        'non_normative_descr': non_normative_descr,
+                       'prop_required': prop_required,
+                       'prop_required_on_create': prop_required_on_create,
                        'pattern': pattern,
                        'is_in_profile': False,
                        'profile_read_req': None,
@@ -1164,6 +1191,12 @@ class DocFormatter:
         # _from_schema_ref
         schema_ref = prop_info.get('_from_schema_ref', schema_ref)
 
+        required = prop_info.get('required', [])
+        required_on_create = prop_info.get('requiredOnCreate', [])
+
+        parent_requires = prop_info.get('parent_requires', [])
+        parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
+
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
@@ -1188,6 +1221,8 @@ class DocFormatter:
             for prop_name in prop_names:
                 meta = {}
                 base_detail_info = properties[prop_name]
+                base_detail_info['prop_required'] = prop_name in parent_requires
+                base_detail_info['prop_required_on_create'] = prop_name in parent_requires_on_create
                 detail_info = self.extend_property_info(schema_ref, base_detail_info, context_meta)
                 meta = detail_info[0].get('_doc_generator_meta', {})
                 meta = self.merge_metadata(prop_name, meta, context_meta)

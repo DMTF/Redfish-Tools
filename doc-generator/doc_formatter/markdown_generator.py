@@ -236,6 +236,12 @@ class MarkdownGenerator(DocFormatter):
             prop_access = 'read-only'
         else:
             prop_access = 'read-write'
+
+        if formatted_details['prop_required_on_create']:
+            prop_access += ' required on create'
+        elif formatted_details['prop_required']:
+            prop_access += ' required'
+
         if formatted_details['nullable']:
             prop_access += '<br>(null)'
 

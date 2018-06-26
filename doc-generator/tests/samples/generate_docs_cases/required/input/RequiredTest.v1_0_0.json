@@ -103,32 +103,6 @@
                 },
                 "Status": {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status"
-                },
-                "TimeoutAction": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/WatchdogTimeoutActions"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "description": "This property indicates the action to perform when the Watchdog Timer reaches its timeout value.",
-                    "longDescription": "This property shall contain the action to perform upon the  expiration of the Watchdog Timer.",
-                    "readonly": false
-                },
-                "WarningAction": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/definitions/WatchdogWarningActions"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "description": "This property indicates the action to perform when the Watchdog Timer is close (typically 3-10 seconds) to reaching its timeout value.",
-                    "longDescription": "This property shall contain the action to perform prior to the expiration of the Watchdog Timer. This action typically occurs 3-10 seconds prior to the timeout value, but the exact timing is dependent on the implementation.",
-                    "readonly": false
                 }
             },
             "required": [

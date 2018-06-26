@@ -39,7 +39,7 @@ A Network Device Function represents a logical interface exposed by the network 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**WWNSource** | string<br>(enum)<br><br>*read-write<br>(null)* | The configuration source of the WWNs for this connection (WWPN and WWNN). *See WWNSource in Property Details, below, for the possible values of this property.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**WWPN** | string<br><br>*read-write<br>(null)* | This is the currently configured WWPN address of the network device function (physical function). |
 | } |   |   |
-| **Id** | string<br><br>*read-only* | Uniquely identifies the resource within the collection of like resources. |
+| **Id** | string<br><br>*read-only required* | Uniquely identifies the resource within the collection of like resources. |
 | **iSCSIBoot** { | object<br><br>*read-write<br>(null)* | iSCSI Boot. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**AuthenticationMethod** | string<br>(enum)<br><br>*read-write<br>(null)* | The iSCSI boot authentication method for this network device function. *See AuthenticationMethod in Property Details, below, for the possible values of this property.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CHAPSecret** | string<br><br>*read-write<br>(null)* | The shared secret for CHAP authentication. |
@@ -70,7 +70,7 @@ A Network Device Function represents a logical interface exposed by the network 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**TargetInfoViaDHCP** | boolean<br><br>*read-write<br>(null)* | Whether the iSCSI boot target name, LUN, IP address, and netmask should be obtained from DHCP. |
 | } |   |   |
 | **MaxVirtualFunctions** | number<br><br>*read-only<br>(null)* | The number of virtual functions (VFs) that are available for this Network Device Function. |
-| **Name** | string<br><br>*read-only* | The name of the resource or array element. |
+| **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 | **NetDevFuncCapabilities** *(v1.0.2+)* [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | Capabilities of this network device function. *See NetDevFuncCapabilities in Property Details, below, for the possible values of this property.* |
 | **NetDevFuncType** *(v1.0.2+)* | string<br>(enum)<br><br>*read-write<br>(null)* | The configured capability of this network device function. *See NetDevFuncType in Property Details, below, for the possible values of this property.* |
 | **Oem** {} | object<br><br>*read-write* | This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections. See the *Resource* schema for details on this property. |
@@ -178,9 +178,9 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 | **EEEEnabled** | boolean<br><br>*read-write<br>(null)* | Whether IEEE 802.3az Energy Efficient Ethernet (EEE) is enabled for this network port. |
 | **FlowControlConfiguration** | string<br>(enum)<br><br>*read-write<br>(null)* | The locally configured 802.3x flow control setting for this network port. *See FlowControlConfiguration in Property Details, below, for the possible values of this property.* |
 | **FlowControlStatus** | string<br>(enum)<br><br>*read-only<br>(null)* | The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only). *See FlowControlStatus in Property Details, below, for the possible values of this property.* |
-| **Id** | string<br><br>*read-only* | Uniquely identifies the resource within the collection of like resources. |
+| **Id** | string<br><br>*read-only required* | Uniquely identifies the resource within the collection of like resources. |
 | **LinkStatus** | string<br>(enum)<br><br>*read-only<br>(null)* | The status of the link between this port and its link partner. *See LinkStatus in Property Details, below, for the possible values of this property.* |
-| **Name** | string<br><br>*read-only* | The name of the resource or array element. |
+| **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 | **NetDevFuncMaxBWAlloc** [ { | array<br><br>*read-write* | The array of maximum bandwidth allocation percentages for the Network Device Functions associated with this port. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**MaxBWAllocPercent** | number<br><br>*read-write<br>(null)* | The maximum bandwidth allocation percentage allocated to the corresponding network device function instance. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**NetworkDeviceFunction** { | object<br><br>*read-only* | Contains the members of this collection. See the *NetworkDeviceFunction* schema for details on this property. |

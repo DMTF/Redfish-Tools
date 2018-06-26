@@ -348,6 +348,11 @@ pre.code{
         else:
             prop_access = '<nobr>read-write</nobr>'
 
+        if formatted_details['prop_required_on_create']:
+            prop_access += ' <nobr>required on create</nobr>'
+        elif formatted_details['prop_required']:
+            prop_access += ' <nobr>required</nobr>'
+
         if formatted_details['nullable']:
             prop_access += ' (null)'
 
