@@ -20,9 +20,9 @@ testcase_path = os.path.join('tests', 'samples', 'generate_docs_cases')
 cases = {
     # each "case" directory will have subdirectories "input", with json schemas,
     # and "expected_output," with md and HTML samples.
-    # 'integer': 'Integer Support',
+    'integer': 'Integer Support',
     'required': 'required and requiredOnCreate',
-    # 'general': 'Example from NetworkPort',
+    'general': 'Example from NetworkPort',
 }
 
 base_config = {
@@ -59,7 +59,7 @@ def test_html_output(mockRequest):
         output = docGen.generate_docs()
         output = output.strip()
 
-        assert output == expected_output
+        assert output == expected_output, "Failed on: " + name
 
 
 @patch('urllib.request') # patch request so we don't make HTTP requests.
@@ -81,4 +81,4 @@ def test_markdown_output(mockRequest):
         output = docGen.generate_docs()
         output = output.strip()
 
-        assert output == expected_output
+        assert output == expected_output, "Failed on: " + name
