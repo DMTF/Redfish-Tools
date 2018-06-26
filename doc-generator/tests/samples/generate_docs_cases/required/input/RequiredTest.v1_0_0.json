@@ -41,6 +41,11 @@
                     "description": "This is the type of log entry.",
                     "longDescription": "This property shall represent the type of LogEntry.  If the resource represents an IPMI SEL log entry, the value shall be SEL.  If the resource represents an Event log, the value shall be Event.  If the resource represents an OEM log format, the value shall be Oem.",
                     "readonly": true
+                },
+                "HostWatchdogTimer": {
+                    "$ref": "#/definitions/WatchdogTimer",
+                    "description": "This object describes the Host Watchdog Timer functionality for this system.",
+                    "longDescription": "This object shall contain properties which describe the host watchdog timer functionality for this ComputerSystem."
                 }
             },
             "required": [
@@ -65,6 +70,72 @@
                 "SEL": "Contains a legacy IPMI System Event Log (SEL) entry."
             },
             "type": "string"
+        },
+        "WatchdogTimer": {
+            "additionalProperties": false,
+            "description": "This type describes the Host Watchdog Timer functionality for this system.",
+            "longDescription": "This type shall contain properties which describe the host watchdog timer functionality for this ComputerSystem.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message|Privileges)\\.[a-zA-Z_][a-zA-Z0-9_.]+$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "FunctionEnabled": {
+                    "description": "This indicates if the Host Watchdog Timer functionality has been enabled. Additional host-based software is necessary to activate the timer function.",
+                    "longDescription": "The value of this property shall indicate whether the host watchdog timer functionality has been enabled or not.  This property indicates only that the functionality is enabled or disabled by the user, and updates to this property shall not initiate a watchdog timer countdown.",
+                    "readonly": false,
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "Oem": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem"
+                },
+                "Status": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status"
+                },
+                "TimeoutAction": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/WatchdogTimeoutActions"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "This property indicates the action to perform when the Watchdog Timer reaches its timeout value.",
+                    "longDescription": "This property shall contain the action to perform upon the  expiration of the Watchdog Timer.",
+                    "readonly": false
+                },
+                "WarningAction": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/WatchdogWarningActions"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "This property indicates the action to perform when the Watchdog Timer is close (typically 3-10 seconds) to reaching its timeout value.",
+                    "longDescription": "This property shall contain the action to perform prior to the expiration of the Watchdog Timer. This action typically occurs 3-10 seconds prior to the timeout value, but the exact timing is dependent on the implementation.",
+                    "readonly": false
+                }
+            },
+            "required": [
+                "FunctionEnabled",
+                "TimeoutAction"
+            ],
+            "type": "object"
         }
     },
     "title": "#RequiredTest.v1_0_0.RequiredTest"
