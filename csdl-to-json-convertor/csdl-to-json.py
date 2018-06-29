@@ -196,6 +196,7 @@ class CSDLToJSON():
                             self.generate_abstract_object( child, self.json_out[self.namespace_under_process]["definitions"] )
                         else:
                             self.generate_object( child, self.json_out[self.namespace_under_process]["definitions"] )
+                        self.generate_capabilities( child, self.json_out[self.namespace_under_process]["definitions"] )
 
                     # Process EnumType definitions if defined in versioned namespaces
                     if child.tag == ODATA_TAG_ENUM:
@@ -259,6 +260,50 @@ class CSDLToJSON():
                         if term == "Redfish.OwningEntity":
                             self.json_out[self.namespace_under_process]["owningEntity"] = self.get_attrib( child, "String" )
 
+    def generate_capabilities( self, object, json_def ):
+        """
+        Processes the capabilities of an object definition
+
+        Args:
+            object: The EntityType or ComplexType to process
+            json_def: The JSON Definitions body to populate
+        """
+
+        name = self.get_attrib( object, "Name" )
+
+        # Add the capabilities
+        for child in object:
+            if child.tag == ODATA_TAG_ANNOTATION:
+                term = self.get_attrib( child, "Term" )
+
+                # Capabilities
+                if term.startswith( "Capabilities." ):
+                    for record in child.iter( ODATA_TAG_RECORD ):
+                        for prop_val in record.iter( ODATA_TAG_PROP_VAL ):
+                            property = self.get_attrib( prop_val, "Property" )
+                            value = self.get_attrib( prop_val, "Bool" )
+
+                            # Convert the value from a string
+                            if value == "true":
+                                value = True
+                            else:
+                                value = False
+
+                            # Assign the value based on the type of term being processed
+                            if property == "Insertable":
+                                json_def[name]["insertable"] = value
+                            elif property == "Updatable":
+                                json_def[name]["updatable"] = value
+                            elif property == "Deletable":
+                                json_def[name]["deletable"] = value
+
+                # URIs
+                if term == "Redfish.Uris":
+                    for collection in child.iter( ODATA_TAG_COLLECTION ):
+                        for string in collection.iter( ODATA_TAG_STRING ):
+                            if "uris" not in json_def[name]:
+                                json_def[name]["uris"] = []
+                            json_def[name]["uris"].append( string.text )
 
     def generate_abstract_object( self, object, json_def ):
         """
@@ -322,35 +367,6 @@ class CSDLToJSON():
                 # Object Long Description
                 if term == "OData.LongDescription":
                     json_def[name]["longDescription"] = self.get_attrib( child, "String" )
-
-                # Capabilities
-                if term.startswith( "Capabilities." ):
-                    for record in child.iter( ODATA_TAG_RECORD ):
-                        for prop_val in record.iter( ODATA_TAG_PROP_VAL ):
-                            property = self.get_attrib( prop_val, "Property" )
-                            value = self.get_attrib( prop_val, "Bool" )
-
-                            # Convert the value from a string
-                            if value == "true":
-                                value = True
-                            else:
-                                value = False
-
-                            # Assign the value based on the type of term being processed
-                            if property == "Insertable":
-                                json_def[name]["insertable"] = value
-                            elif property == "Updatable":
-                                json_def[name]["updatable"] = value
-                            elif property == "Deletable":
-                                json_def[name]["deletable"] = value
-
-                # URIs
-                if term == "Redfish.Uris":
-                    for collection in child.iter( ODATA_TAG_COLLECTION ):
-                        for string in collection.iter( ODATA_TAG_STRING ):
-                            if "uris" not in json_def[name]:
-                                json_def[name]["uris"] = []
-                            json_def[name]["uris"].append( string.text )
 
     def generate_object( self, object, json_def, name = None ):
         """
