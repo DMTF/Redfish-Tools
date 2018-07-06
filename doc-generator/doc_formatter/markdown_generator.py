@@ -95,7 +95,7 @@ class MarkdownGenerator(DocFormatter):
 
         if prop_name:
             name_and_version = self.bold(self.escape_for_markdown(prop_name,
-                                                                  self.config['escape_chars']))
+                                                                  self.config.get('escape_chars', [])))
         else:
             name_and_version = ''
 
@@ -116,7 +116,7 @@ class MarkdownGenerator(DocFormatter):
                 name_and_version += ' ' + self.italic('(v' + version_display +
                                                       ', deprecated v' + deprecated_display +  ')')
                 deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
-                                    self.escape_for_markdown(meta['version_deprecated_explanation'], self.config['escape_chars']))
+                                    self.escape_for_markdown(meta['version_deprecated_explanation'], self.config.get('escape_chars', [])))
             else:
                 name_and_version += ' ' + self.italic('(v' + version_display + ')')
         elif 'version_deprecated' in meta:
@@ -124,7 +124,7 @@ class MarkdownGenerator(DocFormatter):
             name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
             deprecated_descr =  ("Deprecated v" + deprecated_display + '+. ' +
                                  self.escape_for_markdown(meta['version_deprecated_explanation'],
-                                                          self.config['escape_chars']))
+                                                          self.config.get('escape_chars', [])))
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
@@ -236,13 +236,19 @@ class MarkdownGenerator(DocFormatter):
             prop_access = 'read-only'
         else:
             prop_access = 'read-write'
+
+        if formatted_details['prop_required_on_create']:
+            prop_access += ' required on create'
+        elif formatted_details['prop_required']:
+            prop_access += ' required'
+
         if formatted_details['nullable']:
             prop_access += '<br>(null)'
 
         # If profile reqs are present, massage them:
         profile_access = self.format_base_profile_access(formatted_details)
 
-        if self.config['profile_mode']:
+        if self.config.get('profile_mode'):
             if profile_access:
                 prop_type += '<br><br>' + self.italic(profile_access)
         elif prop_access:
@@ -299,7 +305,7 @@ class MarkdownGenerator(DocFormatter):
                                   + profile_recommended_values)
 
         if prop_description:
-            contents.append(self.para(self.escape_for_markdown(prop_description, self.config['escape_chars'])))
+            contents.append(self.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
 
         if isinstance(prop_type, list):
             prop_type = ', '.join(prop_type)
@@ -555,7 +561,7 @@ class MarkdownGenerator(DocFormatter):
     def output_document(self):
         """Return full contents of document"""
         body = self.emit()
-        supplemental = self.config['supplemental']
+        supplemental = self.config.get('supplemental', {})
 
         if 'Title' in supplemental:
             doc_title = supplemental['Title']

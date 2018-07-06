@@ -13,10 +13,7 @@ suitable for use with the Slate documentation tool (https://github.com/tripit/sl
 Initial author: Second Rise LLC.
 """
 
-import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lib'))
-
 import re
 import argparse
 import json
@@ -41,7 +38,7 @@ class DocGenerator:
         self.import_from = import_from
         self.outfile = outfile
 
-        if config['profile_mode']:
+        if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
             profile_resources = {}
 
@@ -259,7 +256,6 @@ class DocGenerator:
     @staticmethod
     def get_files(text_input):
         """From text input (command line or parsed from file), create a list of files. """
-
         files_to_process = []
         for file_to_import in text_input:
             if os.path.isdir(file_to_import):
@@ -479,8 +475,8 @@ class DocGenerator:
         else:
             generalized_uri = self.construct_uri_for_filename(filename)
 
-        profile_mode = self.config['profile_mode']
-        profile = self.config['profile_resources']
+        profile_mode = self.config.get('profile_mode')
+        profile = self.config.get('profile_resources', {})
 
         data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
@@ -829,4 +825,5 @@ def main():
     doc_generator = DocGenerator(import_from, outfile, config)
     doc_generator.generate_doc()
 
-main()
+if __name__ == "__main__":
+    main()
