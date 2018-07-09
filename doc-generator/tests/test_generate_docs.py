@@ -8,6 +8,9 @@ File: test_generate_docs.py
 Brief: These are nearly full-process integration tests (albeit without network calls).
 The DocGenerator.generate_docs method produces a block of documentation (a string).
 Each test here illustrates what should be output based on a specific set of JSON inputs.
+
+These tests will likely need to be updated frequently, as they expect an exact match on a
+complete output document for a small schema set.
 """
 
 import os
