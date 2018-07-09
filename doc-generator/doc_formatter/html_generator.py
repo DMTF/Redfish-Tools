@@ -343,10 +343,12 @@ pre.code{
                     item_list = ', '.join([html.escape(x) for x in item_list])
                 prop_type += '<br>(' + item_list + ')'
 
-        if formatted_details['read_only']:
-            prop_access = '<nobr>read-only</nobr>'
-        else:
-            prop_access = '<nobr>read-write</nobr>'
+        prop_access = ''
+        if not formatted_details['prop_is_object']:
+            if formatted_details['read_only']:
+                prop_access = '<nobr>read-only</nobr>'
+            else:
+                prop_access = '<nobr>read-write</nobr>'
 
         if formatted_details['prop_required_on_create']:
             prop_access += ' <nobr>required on create</nobr>'

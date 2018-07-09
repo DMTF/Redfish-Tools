@@ -232,10 +232,11 @@ class MarkdownGenerator(DocFormatter):
                 prop_type += ' (' + item_list + ')'
 
         prop_access = ''
-        if formatted_details['read_only']:
-            prop_access = 'read-only'
-        else:
-            prop_access = 'read-write'
+        if not formatted_details['prop_is_object']:
+            if formatted_details['read_only']:
+                prop_access = 'read-only'
+            else:
+                prop_access = 'read-write'
 
         if formatted_details['prop_required_on_create']:
             prop_access += ' required on create'
