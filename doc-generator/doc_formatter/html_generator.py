@@ -397,17 +397,23 @@ pre.code{
         if len(formatted_details['object_description']) > 0:
             formatted_object = formatted_details['object_description']
             # Add a closing } to the last row of this object.
-            formatted_object = self._add_closing_brace(formatted_object, indentation_string)
+            formatted_object = self._add_closing_brace(formatted_object, indentation_string, '}')
             formatted.append(formatted_object)
 
         if not collapse_array and len(formatted_details['item_description']) > 0:
-            formatted.append(formatted_details['item_description'])
-            desc_row = [''] * len(row)
+            formatted_array = formatted_details['item_description']
+            # Add closing }] or ] to the last row of this array:
             if formatted_details['array_of_objects']:
-                desc_row[0] = indentation_string + '} ]'
+                formatted_array = self._add_closing_brace(formatted_array, indentation_string, '} ]')
             else:
-                desc_row[0] = indentation_string + ']'
-            formatted.append(self.make_row(desc_row))
+                formatted_array = self._add_closing_brace(formatted_array, indentation_string, ']')
+            formatted.append(formatted_array)
+            # desc_row = [''] * len(row)
+            # if formatted_details['array_of_objects']:
+            #     desc_row[0] = indentation_string + '} ]'
+            # else:
+            #     desc_row[0] = indentation_string + ']'
+            # formatted.append(self.make_row(desc_row))
 
         return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
                 'action_details':formatted_details.get('action_details'),
@@ -597,7 +603,7 @@ pre.code{
 
             # Add a closing } to the last row:
             tmp_row = rows[-1]
-            tmp_row = self._add_closing_brace(tmp_row, '')
+            tmp_row = self._add_closing_brace(tmp_row, '', '}')
             rows[-1] = tmp_row
 
             formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
@@ -999,9 +1005,9 @@ pre.code{
         return open_tag + text + '</h' + level + '>'
 
 
-    def _add_closing_brace(self, html_blob, indentation_string):
+    def _add_closing_brace(self, html_blob, indentation_string, brace_string):
         """ Add a closing } to the last row of this blob of rows. """
-        close_str = '<br>' + indentation_string + '}'
+        close_str = '<br>' + indentation_string + brace_string
         tmp_rows = html_blob.rsplit('<tr>', 1)
         if (len(tmp_rows) == 2):
             tmp_rows[1] = tmp_rows[1].replace('</td>', close_str + '</td>', 1)
