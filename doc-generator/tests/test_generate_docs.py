@@ -8,6 +8,9 @@ File: test_generate_docs.py
 Brief: These are nearly full-process integration tests (albeit without network calls).
 The DocGenerator.generate_docs method produces a block of documentation (a string).
 Each test here illustrates what should be output based on a specific set of JSON inputs.
+
+These tests will likely need to be updated frequently, as they expect an exact match on a
+complete output document for a small schema set.
 """
 
 import os
@@ -82,3 +85,27 @@ def test_markdown_output(mockRequest):
         output = output.strip()
 
         assert output == expected_output, "Failed on: " + name
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_normative_html_output(mockRequest):
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'html'
+    config['normative'] = True
+
+    dirname = 'normative'
+    name = 'Normative'
+
+    dirpath = os.path.abspath(os.path.join(testcase_path, dirname))
+    input_dir = os.path.join(dirpath, 'input')
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    expected_output = open(os.path.join(dirpath, 'expected_output', 'index.html')).read().strip()
+
+    docGen = DocGenerator([ dirpath ], '/dev/null', config)
+    output = docGen.generate_docs()
+    output = output.strip()
+
+    assert output == expected_output, "Failed on: " + name

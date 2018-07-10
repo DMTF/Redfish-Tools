@@ -58,7 +58,7 @@ class DocFormatter:
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'readonly', 'prop_required', 'prop_required_on_create']
+        self.parent_props = ['description', 'longDescription', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create']
 
 
     def emit(self):
@@ -522,6 +522,7 @@ class DocFormatter:
                 if ref_info.get('type') == 'object':
                     ref_description = ref_info.get('description')
                     ref_longDescription = ref_info.get('longDescription')
+                    ref_pattern = ref_info.get('pattern')
                     link_detail = ''
                     append_ref = ''
 
@@ -558,6 +559,7 @@ class DocFormatter:
                             'readonly': ref_info.get('readonly'),
                             'description': ref_description,
                             'longDescription': ref_longDescription,
+                            'pattern': ref_pattern,
                             'add_link_text': append_ref
                             }
 
@@ -940,6 +942,9 @@ class DocFormatter:
             descr = normative_descr
         else:
             descr = non_normative_descr
+
+        if self.config.get('normative') and pattern:
+            descr = descr + ' Pattern: ' + pattern
 
         add_link_text = prop_info.get('add_link_text', '')
 
