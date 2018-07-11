@@ -109,3 +109,30 @@ def test_normative_html_output(mockRequest):
     output = output.strip()
 
     assert output == expected_output, "Failed on: " + name
+    
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_csv_output(mockRequest):
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'csv'
+
+    dirname = 'general'
+    name = 'CSV'
+
+    dirpath = os.path.abspath(os.path.join(testcase_path, dirname))
+    input_dir = os.path.join(dirpath, 'input')
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    expected_output = open(os.path.join(dirpath, 'expected_output', 'output.csv'), newline=None).read().strip()
+
+    docGen = DocGenerator([ dirpath ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # "Universal newline" mode replaced '\r\n' with '\n' in the expected output.
+    output = output.replace('\r\n', '\n').strip()
+
+    assert output == expected_output, "Failed on: " + name
+
