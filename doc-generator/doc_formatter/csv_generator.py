@@ -58,6 +58,7 @@ class CsvGenerator(DocFormatter):
                 'Property Name (chain)',
                 'Type',
                 'Permissions',
+                'Required',
                 'Nullable',
                 'Description',
                 'Normative Description',
@@ -138,6 +139,12 @@ class CsvGenerator(DocFormatter):
         else:
             nullable = 'No'
 
+        required = ''
+        if formatted_details['prop_required_on_create']:
+            required = 'required on create'
+        elif formatted_details['prop_required']:
+            required = 'required'
+
         p_i = prop_info[0]
         min_val = p_i.get('minimum', '')
         max_val = p_i.get('maximum', '')
@@ -159,7 +166,7 @@ class CsvGenerator(DocFormatter):
                    prop_type, nullable,
                    description, long_description, prop_units, min_val, max_val, enumerations, pattern]
         else:
-            row = [schema_name, version, prop_name, prop_type, permissions, nullable,
+            row = [schema_name, version, prop_name, prop_type, permissions, required, nullable,
                    description, long_description, prop_units, min_val, max_val, enumerations, pattern]
         rows = [row]
         for nextrow in nextrows:
