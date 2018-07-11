@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/lucidmeetings/Redfish-Tools.svg?branch=travis_setup)](https://travis-ci.org/lucidmeetings/Redfish-Tools)
+[![Build Status](https://travis-ci.org/DMTF/Redfish-Tools.svg?branch=travis_setup)](https://travis-ci.org/DMTF/Redfish-Tools)
 <p align="center">
   <img src="http://redfish.dmtf.org/sites/all/themes/dmtf2015/images/dmtf-redfish-logo.png" alt="DMTF Redfish" width=180>
 </p>
