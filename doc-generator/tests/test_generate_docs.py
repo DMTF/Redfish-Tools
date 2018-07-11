@@ -109,7 +109,7 @@ def test_normative_html_output(mockRequest):
     output = output.strip()
 
     assert output == expected_output, "Failed on: " + name
-
+    
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_csv_output(mockRequest):
@@ -135,3 +135,4 @@ def test_csv_output(mockRequest):
     output = output.replace('\r\n', '\n').strip()
 
     assert output == expected_output, "Failed on: " + name
+
