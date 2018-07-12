@@ -37,6 +37,7 @@ class DocGenerator:
         self.config = config
         self.import_from = import_from
         self.outfile = outfile
+        self.property_data = {} # This is an object property for ease of testing.
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
@@ -279,7 +280,7 @@ class DocGenerator:
         files_to_process = self.get_files(self.import_from)
         files, schema_data = self.group_files(files_to_process)
 
-        property_data = {}
+        self.property_data = {}
         doc_generator_meta = {}
 
         for normalized_uri in files.keys():
@@ -289,8 +290,8 @@ class DocGenerator:
                 if not self.config['profile_mode']:
                     warnings.warn("Unable to process files for " + normalized_uri)
                 continue
-            property_data[normalized_uri] = data
-            doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
+            self.property_data[normalized_uri] = data
+            doc_generator_meta[normalized_uri] = self.property_data[normalized_uri]['doc_generator_meta']
             latest_info = files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
             latest_data = DocGenUtilities.load_as_json(latest_file)
@@ -304,13 +305,13 @@ class DocGenerator:
         # Generate output
         if self.config['output_format'] == 'markdown':
             from doc_formatter import MarkdownGenerator
-            generator = MarkdownGenerator(property_data, traverser, self.config, level)
+            generator = MarkdownGenerator(self.property_data, traverser, self.config, level)
         elif self.config['output_format'] == 'html':
             from doc_formatter import HtmlGenerator
-            generator = HtmlGenerator(property_data, traverser, self.config, level)
+            generator = HtmlGenerator(self.property_data, traverser, self.config, level)
         elif self.config['output_format'] == 'csv':
             from doc_formatter import CsvGenerator
-            generator = CsvGenerator(property_data, traverser, self.config, level)
+            generator = CsvGenerator(self.property_data, traverser, self.config, level)
 
         return generator.generate_output()
 
