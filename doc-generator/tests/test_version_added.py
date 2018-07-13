@@ -13,6 +13,7 @@ import copy
 from unittest.mock import patch
 import pytest
 from doc_generator import DocGenerator
+from .discrepancy_list import DiscrepancyList
 
 testcase_path = os.path.join('tests', 'samples')
 
@@ -31,7 +32,6 @@ base_config = {
 
     'output_format': 'markdown',
 }
-
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_version_added_metadata(mockRequest):
@@ -80,12 +80,12 @@ def test_version_added_metadata(mockRequest):
 
     meta = docGen.property_data['redfish.dmtf.org/schemas/v1/AccountService.json']['doc_generator_meta']
 
-    discrepancies = []
+    discrepancies = DiscrepancyList()
     for name, data in expected_versions.items():
         if name == 'version': continue
         _version_compare(meta, name, data, discrepancies, [])
 
-    assert len(discrepancies) == 0, '\n'.join(discrepancies)
+    assert [] == discrepancies
 
 
 def _version_compare(meta, name, data, discrepancies, context):
@@ -121,7 +121,7 @@ def test_version_added_output(mockRequest):
     expected_version_strings = ['**ActiveDirectory** *(v1.3+)*', '**AccountProviderType** *(v1.3+)*', '**Authentication** *(v1.3+)*',
                                 '**LDAPService** *(v1.3+)*', '**RemoteRoleMapping** *(v1.3+)*', '**ServiceAddresses** *(v1.3+)*',
                                 '**ServiceEnabled** *(v1.3+)*', '**LDAP** *(v1.3+)*', '**LocalAccountAuth** *(v1.3+)*',
-                                # '**PrivilegeMap** *(v1.1+)*', '**Actions** *(v1.2+)*'
+                                '**PrivilegeMap** *(v1.1+)*', '**Actions** *(v1.2+)*'
                                 ]
 
 
@@ -130,10 +130,10 @@ def test_version_added_output(mockRequest):
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
-    discrepancies = []
+    discrepancies = DiscrepancyList()
 
     for expected in expected_version_strings:
         if expected not in output:
             discrepancies.append('"' + expected + '" not found')
 
-    assert len(discrepancies) == 0, '\n'.join(discrepancies)
+    assert [] == discrepancies
