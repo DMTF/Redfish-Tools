@@ -494,9 +494,9 @@ class DocFormatter:
 
             else:
                 ref_info = self.apply_overrides(ref_info)
-                meta = ref_info.get('_doc_generator_meta')
-                if not meta:
-                    meta = {}
+                prop_meta = prop_info.get('_doc_generator_meta', {})
+                ref_meta = ref_info.get('_doc_generator_meta', {})
+                meta = self.merge_full_metadata(prop_meta, ref_meta)
                 node_name = traverser.get_node_from_ref(prop_ref)
                 meta = self.merge_metadata(node_name, meta, context_meta)
 
@@ -577,8 +577,11 @@ class DocFormatter:
                         ref_info[x] = prop_info[x]
                 prop_info = ref_info
 
-                if '$ref' in ref_info or 'anyOf' in ref_info:
-                    return self.extend_property_info(ref_info['_from_schema_ref'], ref_info, context_meta)
+                # override metadata with merged metadata from above.
+                prop_info['_doc_generator_meta'] = meta
+
+                if '$ref' in prop_info or 'anyOf' in prop_info:
+                        return self.extend_property_info(prop_info['_from_schema_ref'], prop_info, context_meta)
 
             prop_infos.append(prop_info)
 
@@ -1353,9 +1356,9 @@ class DocFormatter:
             # versions are expected to have three parts
             for i in range(3):
                 if version_parts[i] > context_parts[i]:
-                    return +1
-                if version_parts[i] < context_parts[i]:
                     return 1
+                if version_parts[i] < context_parts[i]:
+                    return -1
             return 0
 
     def merge_metadata(self, node_name, meta, context_meta):
@@ -1363,31 +1366,56 @@ class DocFormatter:
 
         context_meta contains version info for the parent, plus embedded version info for node_name
         (and its siblings). We want:
+        * (MAYBE) If meta['node_name'] and context_meta['node_name'] both exist, use the older version. For example,
+          this can occur when an object was initially defined inline and later moved to the definitions section
+          of a schema and included by reference. Presumably definitions could move in the other direction as well!
+          We want the version of the first appearance of this property in the schema.
         * If context_meta['node_name']['version'] is newer than meta['version'], use the newer version.
           (implication is that this property was added to the parent after it was already defined elsewhere.)
         For deprecations, it's even less likely differing versions will make sense, but we generally want the
         older version.
         """
         node_meta = context_meta.get(node_name, {})
-
-        if ('version' in meta) and ('version' in node_meta):
-            compare = self.compare_versions(meta['version'], node_meta['version'])
-            if compare > 0:
-                # node_meta is newer; use that.
-                meta['version'] = node_meta['version']
-        elif 'version' in node_meta:
-            meta['version'] = node_meta['version']
-
-        if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
-            compare = self.compare_versions(meta['version_deprecated'], node_meta['version_deprecated'])
-            if compare < 0:
-                # node_meta is older, use that:
-                meta['version_deprecated'] = node_meta['version_deprecated']
-        elif 'version_deprecated' in node_meta:
-            meta['version_deprecated'] = node_meta['version_deprecated']
-            meta['version_deprecated_explanation'] = node_meta.get('version_deprecated_explanation', '')
+        meta = self.merge_full_metadata(meta, node_meta)
 
         return meta
+
+
+    def merge_full_metadata(self, meta_a, meta_b):
+        """ Recursively merge two metadata structures.
+        We want to capture the earlier of version and version_deprecated values for all nodes. """
+
+        meta1 = copy.deepcopy(meta_a)
+        meta2 = copy.deepcopy(meta_b)
+
+        if ('version' in meta1) and ('version' in meta2):
+            compare = self.compare_versions(meta1['version'], meta2['version'])
+            # We want the "first seen" entry, so use the older one.
+            if compare > 0:
+                meta1['version'] = meta2['version']
+        elif 'version' in meta2:
+            meta1['version'] = meta2['version']
+
+        if ('version_deprecated' in meta1) and ('version_deprecated' in meta2):
+            compare = self.compare_versions(meta1['version_deprecated'], meta2['version_deprecated'])
+            if compare > 0:
+                # meta2 is older, use that:
+                meta1['version_deprecated'] = meta2['version_deprecated']
+        elif 'version_deprecated' in meta2:
+            meta1['version_deprecated'] = meta2['version_deprecated']
+            meta1['version_deprecated_explanation'] = meta2.get('version_deprecated_explanation', '')
+
+        for key, val in meta1.items():
+            if isinstance(val, dict):
+                if meta2.get(key):
+                    meta1[key] = self.merge_full_metadata(meta1[key], meta2[key])
+        for key, val in meta2.items():
+            if isinstance(val, dict):
+                # Just pick up the missed items.
+                if not meta1.get(key):
+                    meta1[key] = meta2[key]
+        return meta1
+
 
     def get_prop_profile(self, schema_ref, prop_path, section):
         """Get profile data for the specified property, by schema_ref, prop name path, and section.

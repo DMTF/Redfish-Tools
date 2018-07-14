@@ -11,8 +11,8 @@ A Network Device Function represents a logical interface exposed by the network 
 
 |     |     |     |
 | --- | --- | --- |
-| **@odata.etag** | string<br><br>*read-only* | The current ETag of the resource. |
-| **Actions** *(v1.1.1+)* {} | object | The available actions for this resource. |
+| **@odata.etag** *(v1.2.1+)* | string<br><br>*read-only* | The current ETag of the resource. |
+| **Actions** *(v1.1+)* {} | object | The available actions for this resource. |
 | **AssignablePhysicalPorts** [ { | array<br><br>*read-only* | The array of physical port references that this network device function may be assigned to. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |
 | } ] |   |   |
