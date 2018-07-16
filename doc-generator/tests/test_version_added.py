@@ -152,7 +152,7 @@ def test_version_added_output_Chassis(mockRequest):
     config = copy.deepcopy(base_config)
     input_dir = os.path.abspath(os.path.join(testcase_path, 'version_added', 'Chassis'))
 
-    expected_version_strings = ['| **Actions** |', '| **Links** |',  # string to match property without version
+    expected_version_strings = ['| **Actions** { |', '| **Links** { |',  # string to match property without version
                                 '**PowerState** *(v1.0.1+)*'  ]
 
 
