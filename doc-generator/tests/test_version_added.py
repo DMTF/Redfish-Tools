@@ -68,9 +68,9 @@ def test_version_added_metadata(mockRequest):
                                                  },
                          'AccountService': { 'LDAP': { 'version': '1.3.0' },
                                              'LocalAccountAuth': { 'version': '1.3.0' },
-                                             'AccountLockoutThreshold': {},
+                                             'AccountLockoutThreshold': { },
                                              'PrivilegeMap': { 'version': '1.1.0'},
-                                             'Actions': { 'version': '1.2.0' },
+                                             'Actions': { 'version': '1.2.0' }
                                              },
                          }
         }
@@ -101,9 +101,9 @@ def _version_compare(meta, name, data, discrepancies, context):
         discrepancies.append(' > '.join(context) + ' not found in metadata')
 
     else:
-        if data.get('version', '(none)') != key_meta.get('version', '(none)'):
+        if data.get('version', '1.0.0') != key_meta.get('version', '1.0.0'):
             discrepancies.append(' > '.join(context) + ' version is "' + key_meta.get('version', '(none)') + '", expected "'
-                                 + data.get('version', '(none)') + '"')
+                                 + data.get('version', '1.0.0') + '"')
 
         for childname, childdata in data.items():
             if childname == 'version': continue

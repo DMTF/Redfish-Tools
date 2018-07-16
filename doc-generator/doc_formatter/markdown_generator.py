@@ -109,7 +109,7 @@ class MarkdownGenerator(DocFormatter):
         if not self.current_version.get(current_depth):
             self.current_version[current_depth] = meta.get('version')
 
-        if 'version' in meta:
+        if meta.get('version', '1.0.0') != '1.0.0':
             version_display = self.truncate_version(meta['version'], 2) + '+'
             if 'version_deprecated' in meta:
                 deprecated_display = self.truncate_version(meta['version_deprecated'], 2)

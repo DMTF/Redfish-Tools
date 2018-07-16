@@ -221,7 +221,7 @@ pre.code{
         if not self.current_version.get(current_depth):
             self.current_version[current_depth] = meta.get('version')
 
-        if 'version' in meta:
+        if meta.get('version', '1.0.0') != '1.0.0':
             version_text = html.escape(meta['version'], False)
             version_display = self.truncate_version(version_text, 2) + '+'
             if 'version_deprecated' in meta:

@@ -509,10 +509,7 @@ class DocGenerator:
             property_data['properties'] = {}
         meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
 
-        if version == '1.0.0':
-            version = None
-
-        if (not version) and (schema_ref in property_data):
+        if (version == '1.0.0') and (schema_ref in property_data):
             warnings.warn('Check', schema_ref, 'for version problems.',
                           'Are there two files with either version 1.0.0 or no version?')
 
@@ -557,7 +554,7 @@ class DocGenerator:
                     meta[prop_name]['version'] = version
             if 'deprecated' in props:
                 if 'version_deprecated' not in meta[prop_name]:
-                    if not version:
+                    if not version or version == '1.0.0':
                         warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
                     else:
                         meta[prop_name]['version_deprecated'] = version
