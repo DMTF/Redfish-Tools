@@ -35,10 +35,13 @@ base_config = {
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_version_added_metadata(mockRequest):
-    """ Verify metadata contains expected version_added info. """
+    """ Verify metadata contains expected version_added info.
+    Note that there is an additional step, after generating this metadata, for generating metadata
+    within property data ... so possibly this test should be replaced.
+    """
 
     config = copy.deepcopy(base_config)
-    input_dir = os.path.abspath(os.path.join(testcase_path, 'version_added'))
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'version_added', 'AccountService'))
 
     # This is a partial list of versions that should be detected.
     expected_versions = {
@@ -110,19 +113,47 @@ def _version_compare(meta, name, data, discrepancies, context):
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_version_added_output(mockRequest):
+def test_version_added_output_AccountService(mockRequest):
     """ Verify markdown output contains expected version_added info.
     This means pulling the correct version strings from the metadata
     """
 
     config = copy.deepcopy(base_config)
-    input_dir = os.path.abspath(os.path.join(testcase_path, 'version_added'))
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'version_added', 'AccountService'))
 
     expected_version_strings = ['**ActiveDirectory** *(v1.3+)*', '**AccountProviderType** *(v1.3+)*', '**Authentication** *(v1.3+)*',
                                 '**LDAPService** *(v1.3+)*', '**RemoteRoleMapping** *(v1.3+)*', '**ServiceAddresses** *(v1.3+)*',
                                 '**ServiceEnabled** *(v1.3+)*', '**LDAP** *(v1.3+)*', '**LocalAccountAuth** *(v1.3+)*',
                                 '**PrivilegeMap** *(v1.1+)*', '**Actions** *(v1.2+)*'
                                 ]
+
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+    discrepancies = DiscrepancyList()
+
+    for expected in expected_version_strings:
+        if expected not in output:
+            discrepancies.append('"' + expected + '" not found')
+
+    assert [] == discrepancies
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_version_added_output_Chassis(mockRequest):
+    """ Verify markdown output contains expected version_added info.
+    This means pulling the correct version strings from the metadata.
+    The Chassis example gave us some distinct scenarios.
+    """
+
+    config = copy.deepcopy(base_config)
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'version_added', 'Chassis'))
+
+    expected_version_strings = ['| **Actions** |', '| **Links** |',  # string to match property without version
+                                '**PowerState** *(v1.0.1+)*'  ]
 
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
