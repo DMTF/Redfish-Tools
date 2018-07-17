@@ -495,8 +495,12 @@ class DocFormatter:
             else:
                 ref_info = self.apply_overrides(ref_info)
                 prop_meta = prop_info.get('_doc_generator_meta', {})
-                ref_meta = ref_info.get('_doc_generator_meta', {})
-                meta = self.merge_full_metadata(prop_meta, ref_meta)
+                # Update version info from the ref, provided that it is within the same schema.
+                if ref_info.get('_from_schema_ref') == schema_ref:
+                    ref_meta = ref_info.get('_doc_generator_meta', {})
+                    meta = self.merge_full_metadata(prop_meta, ref_meta)
+                else:
+                    meta = prop_meta
                 node_name = traverser.get_node_from_ref(prop_ref)
                 meta = self.merge_metadata(node_name, meta, context_meta)
 
