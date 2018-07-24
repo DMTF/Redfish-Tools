@@ -305,15 +305,15 @@ class DocGenerator:
         # Generate output
         if self.config['output_format'] == 'markdown':
             from doc_formatter import MarkdownGenerator
-            generator = MarkdownGenerator(self.property_data, traverser, self.config, level)
+            self.generator = MarkdownGenerator(self.property_data, traverser, self.config, level)
         elif self.config['output_format'] == 'html':
             from doc_formatter import HtmlGenerator
-            generator = HtmlGenerator(self.property_data, traverser, self.config, level)
+            self.generator = HtmlGenerator(self.property_data, traverser, self.config, level)
         elif self.config['output_format'] == 'csv':
             from doc_formatter import CsvGenerator
-            generator = CsvGenerator(self.property_data, traverser, self.config, level)
+            self.generator = CsvGenerator(self.property_data, traverser, self.config, level)
 
-        return generator.generate_output()
+        return self.generator.generate_output()
 
 
     def group_files(self, files):

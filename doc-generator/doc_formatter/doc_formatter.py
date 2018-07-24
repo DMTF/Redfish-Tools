@@ -564,7 +564,8 @@ class DocFormatter:
                                 link_detail = ('Link to another ' + prop_name + ' resource.')
 
                             else:
-                                if self.is_documented_schema(from_schema_ref):
+                                wants_common_objects = self.config.get('wants_common_objects')
+                                if self.is_documented_schema(from_schema_ref) or not wants_common_objects:
                                     append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                   ' schema for details on this property.')
                                 else:

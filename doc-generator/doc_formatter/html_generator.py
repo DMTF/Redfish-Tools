@@ -678,7 +678,6 @@ pre.code{
     def output_document(self):
         """Return full contents of document"""
 
-
         supplemental = self.config.get('supplemental', {})
         body = ''
 
