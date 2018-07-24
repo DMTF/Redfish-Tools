@@ -699,6 +699,14 @@ pre.code{
             else:
                 body = toc + body
 
+        common_properties = self.generate_common_properties()
+        if '# Common Objects' in body:
+            body = body.replace('# Common Objects', common_properties, 1)
+        else:
+            if common_properties:
+                warnings.warn('Supplemental file lacks "# Common Objects" marker. Common object properties were found but will be omitted.')
+
+
         if 'Title' in supplemental:
             doc_title = supplemental['Title']
         else:

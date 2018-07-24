@@ -562,6 +562,8 @@ class MarkdownGenerator(DocFormatter):
     def output_document(self):
         """Return full contents of document"""
         body = self.emit()
+        common_properties = self.generate_common_properties()
+
         supplemental = self.config.get('supplemental', {})
 
         if 'Title' in supplemental:
@@ -578,7 +580,13 @@ search: true
         intro = supplemental.get('Introduction')
         if intro:
             intro = self.process_intro(intro)
+            if '# Common Objects' in intro:
+                intro = intro.replace('# Common Objects', common_properties, 1)
+            else:
+                if common_properties:
+                    warnings.warn('Supplemental file lacks "# Common Objects" marker. Common object properties were found but will be omitted.')
             prelude += '\n' + intro + '\n'
+
         contents = [prelude, body]
         if 'Postscript' in supplemental:
             contents.append('\n' + supplemental['Postscript'])

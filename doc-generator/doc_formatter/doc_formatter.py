@@ -447,6 +447,12 @@ class DocFormatter:
         return frag_gen.emit()
 
 
+    def generate_common_properties(self):
+        """ Generate output for common object properties """
+        # TODO
+        return ''
+
+
     def extend_property_info(self, schema_ref, prop_info, context_meta=None):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
@@ -1454,6 +1460,7 @@ class DocFormatter:
                 prop_reqs = prop_profile.get('PropertyRequirements', prop_profile.get('Parameters', {}))
 
         return prop_profile
+
 
     @staticmethod
     def truncate_version(version_string, num_parts):
