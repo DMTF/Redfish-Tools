@@ -28,6 +28,7 @@ class DocFormatter:
         config: configuration dict
         """
         self.property_data = property_data
+        self.common_properties = {}
         self.traverser = traverser
         self.config = config
         self.level = level
@@ -528,6 +529,8 @@ class DocFormatter:
                         if idref_info:
                             ref_info = idref_info
 
+
+
                 # If an object, include just the definition and description, and append a reference if possible:
                 if ref_info.get('type') == 'object':
                     ref_description = ref_info.get('description')
@@ -561,8 +564,16 @@ class DocFormatter:
                                 link_detail = ('Link to another ' + prop_name + ' resource.')
 
                             else:
-                                append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                              ' schema for details on this property.')
+                                if self.is_documented_schema(from_schema_ref):
+                                    append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
+                                                  ' schema for details on this property.')
+                                else:
+                                    # This looks like a Common Object!
+                                    ref_key = ref_info['_ref_uri']
+                                    if self.common_properties.get(ref_key) is None:
+                                        self.common_properties[ref_key] = ref_info
+                                    append_ref = ('See the ' + self.link_to_common_property(ref_key) +
+                                                  ' for details on this property')
 
                         new_ref_info = {
                             'type': ref_info.get('type'),
@@ -1290,6 +1301,12 @@ class DocFormatter:
             return schema_name
         return schema_ref
 
+    def link_to_common_property(self, ref_key):
+        """ String for output. Override in HTML formatter to get actual links. """
+        ref_info = self.common_properties.get(ref_key)
+        if ref_info and ref_info.get('_prop_name'):
+            return ref_info.get('_prop_name') + ' object'
+        return ref_key
 
     def link_to_outside_schema(self, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links."""
