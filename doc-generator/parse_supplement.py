@@ -59,6 +59,10 @@ def parse_file(filehandle):
 
     if 'Introduction' in parsed:
         parsed['Title'] = parse_title_from_introduction(parsed['Introduction'])
+        parsed['wants_common_objects'] = '[insert_common_objects]' in parsed['Introduction']
+
+    if not parsed['wants_common_objects'] and 'Postscript' in parsed:
+        parsed['wants_common_objects'] = '[insert_common_objects]' in parsed['Postscript']
 
     if 'Excluded Properties' in parsed:
         parsed['Excluded Properties'] = parse_excluded_properties(parsed['Excluded Properties'])
@@ -103,6 +107,7 @@ def parse_file(filehandle):
 
     if 'Units Translation' in parsed:
         parsed['units_translation'] = parse_units_translation(parsed['Units Translation'])
+
 
     return parsed
 
