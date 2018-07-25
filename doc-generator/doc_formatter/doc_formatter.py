@@ -448,10 +448,47 @@ class DocFormatter:
         return frag_gen.emit()
 
 
-    def generate_common_properties(self):
+    def generate_common_properties_doc(self):
         """ Generate output for common object properties """
-        # TODO
-        return ''
+        config = copy.deepcopy(self.config)
+        config['strip_top_object'] = True
+
+        cp_gen = self.__class__(self.property_data, self.traverser, config, self.level)
+
+        # Sort the properties by prop_name
+        sorted_properties = sorted(self.common_properties.items(), key=lambda elt: elt[1].get('_prop_name'))
+
+        for prop_tuple in sorted_properties:
+            (ref, prop_info) = prop_tuple
+            schema_ref = prop_info['_from_schema_ref']
+            prop_name = prop_info['_prop_name']
+            meta = prop_info.get('_doc_generator_meta')
+            if not meta:
+                meta = {}
+            prop_infos = cp_gen.extend_property_info(schema_ref, prop_info) # TODO: Do we really need to expand this?
+
+            # TODO: if this works out well, refactor with frag_gen
+            formatted = cp_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
+            if formatted:
+                cp_gen.add_section(prop_name, 'common-properties-' + prop_name)
+                if prop_info.get('description'):
+                    # TODO: description logic from around line 306
+                    cp_gen.add_description(prop_info.get('description'))
+                cp_gen.current_version = {}
+
+                cp_gen.add_property_row(formatted['row'])
+                if len(formatted['details']):
+                    prop_details = {}
+                    prop_details.update(formatted['details'])
+                    detail_names = [x for x in prop_details.keys()]
+                    detail_names.sort(key=str.lower)
+                    for detail_name in detail_names:
+                        cp_gen.add_property_details(prop_details[detail_name])
+
+                if formatted['action_details']:
+                    cp_gen.add_action_details(formatted['action_details'])
+
+        return cp_gen.emit()
 
 
     def extend_property_info(self, schema_ref, prop_info, context_meta=None):

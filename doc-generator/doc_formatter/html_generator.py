@@ -698,12 +698,12 @@ pre.code{
             else:
                 body = toc + body
 
-        common_properties = self.generate_common_properties()
+        common_properties = self.generate_common_properties_doc()
         if '[insert_common_objects]' in body:
             body = body.replace('[insert_common_objects]', common_properties, 1)
         else:
             if common_properties:
-                warnings.warn('Supplemental file lacks "# Common Objects" marker. Common object properties were found but will be omitted.')
+                warnings.warn('Supplemental file lacks "[insert_common_objects]" marker. Common object properties were found but will be omitted.')
 
         if 'Title' in supplemental:
             doc_title = supplemental['Title']
@@ -756,8 +756,8 @@ pre.code{
 
         fragment_config = {
             'output_format': 'html',
-            'normative': self.config['normative'],
-            'cwd': self.config['cwd'],
+            'normative': self.config.get('normative'),
+            'cwd': self.config.get('cwd'),
             'schema_supplement': {},
             'supplemental': {},
             'excluded_annotations': [],
@@ -769,7 +769,7 @@ pre.code{
             'escape_chars': [],
             'uri_replacements': {},
             'units_translation': self.config.get('units_translation'),
-            'profile': self.config['profile'],
+            'profile': self.config.get('profile'),
             'profile_mode': self.config.get('profile_mode'),
             'profile_resources': self.config.get('profile_resources', {})
             }

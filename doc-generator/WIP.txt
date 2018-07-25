@@ -1,0 +1,34 @@
+5. Add Support for a Referenced Objects Section
+
+Second Rise will create another section in the output to contain the
+definitions of embedded JSON objects that appear in the schema but are
+defined externally, under headings matching the object name.
+
+Design / work items:
+
+    * Gather referenced object list while building the Schema section.
+    * Items are $ref from another schema file source
+    * Items (once reference has been located) are of JSON type “object”
+    * Non-object types are simply included in-line and do not apply to this treatment
+    * Possible additional rules to be considered, if necessary:
+      - Tag items with a (new definition) “treat as external reference” in the supplemental markdown input
+      - Detect objects to treat as external by the presence of an “AnyOf” structure on the object.
+      - Add reference and HTML link tag (or appropriate text in markdown)
+        to descriptions of these objects.  “This object uses a common
+        Redfish definition. See <link> for details about this object.”
+    * Output new “Common Object Definitions” section
+      - Output new section wherever new tag for ‘# Common Objects’ (or
+        whatever) appears in Input file.  This would likely appear either
+        before or after the main schema section.  Schema Guide (DSP2046)
+        will use this section in place of many of the Common Properties
+        fragments.
+      - Each object should be treated as a schema fragment (no headings,
+        etc. so that the input document handles most of the formatting)
+    * Object name used as sub-section title
+    * Object definition used is the highest-version (newest) definition
+    * All supported:
+      - Mockup examples,
+      - Property details,
+      - enumeration support,
+      - version and deprecated version
+    * Description replacement, supplemental property details read from Supplement file

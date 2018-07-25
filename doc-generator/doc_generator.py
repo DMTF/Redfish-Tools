@@ -812,6 +812,8 @@ def main():
 
     config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
 
+    config['wants_common_objects'] = config['supplemental'].get('wants_common_objects', False)
+
     if 'keywords' in config['schema_supplement']:
         config['add_toc'] = config['supplemental']['keywords'].get('add_toc')
 

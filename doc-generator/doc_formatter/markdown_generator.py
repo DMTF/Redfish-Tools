@@ -562,7 +562,7 @@ class MarkdownGenerator(DocFormatter):
     def output_document(self):
         """Return full contents of document"""
         body = self.emit()
-        common_properties = self.generate_common_properties()
+        common_properties = self.generate_common_properties_doc()
 
         supplemental = self.config.get('supplemental', {})
 
@@ -580,17 +580,16 @@ search: true
         intro = supplemental.get('Introduction')
         if intro:
             intro = self.process_intro(intro)
-            if '# Common Objects' in intro:
-                intro = intro.replace('# Common Objects', common_properties, 1)
-            else:
-                if common_properties:
-                    warnings.warn('Supplemental file lacks "# Common Objects" marker. Common object properties were found but will be omitted.')
             prelude += '\n' + intro + '\n'
 
         contents = [prelude, body]
         if 'Postscript' in supplemental:
             contents.append('\n' + supplemental['Postscript'])
-        return '\n'.join(contents)
+
+        output = '\n'.join(contents)
+        if '[insert_common_objects]' in output:
+            output = output.replace('[insert_common_objects]', common_properties, 1)
+        return output
 
 
     def process_intro(self, intro_blob):
@@ -601,8 +600,8 @@ search: true
 
         fragment_config = {
             'output_format': 'markdown',
-            'normative': self.config['normative'],
-            'cwd': self.config['cwd'],
+            'normative': self.config.get('normative'),
+            'cwd': self.config.get('cwd'),
             'schema_supplement': {},
             'supplemental': {},
             'excluded_annotations': [],
@@ -613,10 +612,10 @@ search: true
             'excluded_schemas_by_match': [],
             'escape_chars': [],
             'uri_replacements': {},
-            'units_translation': self.config['units_translation'],
-            'profile': self.config['profile'],
-            'profile_mode': self.config['profile_mode'],
-            'profile_resources': self.config['profile_resources'],
+            'units_translation': self.config.get('units_translation'),
+            'profile': self.config.get('profile'),
+            'profile_mode': self.config.get('profile_mode'),
+            'profile_resources': self.config.get('profile_resources', {}),
             }
 
         for line in intro_blob.splitlines():
