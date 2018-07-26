@@ -28,8 +28,6 @@ base_config = {
     'wants_common_objects': True,
     'profile': {},
     'escape_chars': [],
-    'supplemental': {'Introduction': "# Common Objects\n\n[insert_common_objects]\n"},
-
 }
 
 
@@ -46,7 +44,6 @@ def test_gather(mockRequest):
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
-    import pdb; pdb.set_trace()
     common_properties = docGen.generator.common_properties
 
     assert 'http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem' in common_properties
@@ -54,22 +51,23 @@ def test_gather(mockRequest):
     assert len(common_properties) == 2
 
 
-@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_gather_html(mockRequest):
+# @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+# def test_gather_html(mockRequest):
 
-    config = copy.deepcopy(base_config)
-    config['output_format'] = 'html'
+#     config = copy.deepcopy(base_config)
+#     config['output_format'] = 'html'
+#     # The following is needed only if we want to inspect the output:
+#     config['supplemental'] = {'Introduction': "# Common Objects\n\n[insert_common_objects]\n"},
 
-    input_dir = os.path.abspath(os.path.join(testcase_path, 'network_sample'))
+#     input_dir = os.path.abspath(os.path.join(testcase_path, 'network_sample'))
 
-    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
-    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+#     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+#     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
-    docGen = DocGenerator([ input_dir ], '/dev/null', config)
-    output = docGen.generate_docs()
-    import pdb; pdb.set_trace()
-    common_properties = docGen.generator.common_properties
+#     docGen = DocGenerator([ input_dir ], '/dev/null', config)
+#     output = docGen.generate_docs()
+#     common_properties = docGen.generator.common_properties
 
-    assert 'http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem' in common_properties
-    assert 'http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status' in common_properties
-    assert len(common_properties) == 2
+#     assert 'http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem' in common_properties
+#     assert 'http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status' in common_properties
+#     assert len(common_properties) == 2

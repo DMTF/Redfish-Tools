@@ -32,3 +32,6 @@ Design / work items:
       - enumeration support,
       - version and deprecated version
     * Description replacement, supplemental property details read from Supplement file
+
+
+* Make sure common properties get into the TOC.
