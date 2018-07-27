@@ -691,19 +691,19 @@ pre.code{
         if 'Postscript' in supplemental:
             body += self.markdown_to_html(supplemental['Postscript'])
 
-        if self.config.get('add_toc'):
-            toc = self.generate_toc(body)
-            if '[add_toc]' in body:
-                body = body.replace('[add_toc]', toc, 1)
-            else:
-                body = toc + body
-
         common_properties = self.generate_common_properties_doc()
         if '[insert_common_objects]' in body:
             body = body.replace('[insert_common_objects]', common_properties, 1)
         else:
             if common_properties:
                 warnings.warn('Supplemental file lacks "[insert_common_objects]" marker. Common object properties were found but will be omitted.')
+
+        if self.config.get('add_toc'):
+            toc = self.generate_toc(body)
+            if '[add_toc]' in body:
+                body = body.replace('[add_toc]', toc, 1)
+            else:
+                body = toc + body
 
         if 'Title' in supplemental:
             doc_title = supplemental['Title']

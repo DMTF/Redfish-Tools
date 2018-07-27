@@ -34,4 +34,12 @@ Design / work items:
     * Description replacement, supplemental property details read from Supplement file
 
 
-* Make sure common properties get into the TOC.
+* Add links to Referenced Objects in HTML output
+
+Possible misses:
+
+ * Oem object: there's nothing there! Probably want to add a "skip" option or something.
+
+ * Location: Getting linked to Resource.json. Resource.json is not
+   versioned, but Location is. So there's an issue with following
+   anyOfs, I think.
