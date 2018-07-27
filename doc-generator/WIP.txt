@@ -34,8 +34,30 @@ Design / work items:
     * Description replacement, supplemental property details read from Supplement file
 
 
-* Add links to Referenced Objects in HTML output
-
 Possible misses:
 
  * Oem object: there's nothing there! Probably want to add a "skip" option or something.
+
+ - Mockup examples,
+ - version and deprecated version
+ * Identifier being output twice, probably two versions
+
+Questions:
+
+1) OEM object: I see how you've handled this in the current
+   documentation. This object meets all the rules for a Referenced
+   Object, but it looks mighty silly (heading, description, no
+   properties). I think the right thing to do would be to add a way to
+   explicitly exclude objects from the Referenced Objects section --
+   and you can continue to use the description overrides.
+
+2) Is there a desire to override descriptions here, separately from
+   the overrides elsewhere? For example, the description of the Status
+   object is: "This type describes the status and health of a resource
+   and its children." With no overrides, this would appear as a line
+   beneath the heading "Status" in the referenced objects
+   section. When Status appears as a property of another object, the
+   description would read "This type describes the status and health
+   of a resource and its children. See the Status object for details
+   on this property." If you override a description, the overriding
+   text will appear in both places.

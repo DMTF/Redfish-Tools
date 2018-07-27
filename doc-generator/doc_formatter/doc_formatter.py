@@ -611,7 +611,7 @@ class DocFormatter:
                                     if self.common_properties.get(ref_key) is None:
                                         self.common_properties[ref_key] = ref_info
                                     append_ref = ('See the ' + self.link_to_common_property(ref_key) +
-                                                  ' for details on this property')
+                                                  ' for details on this property.')
 
                         new_ref_info = {
                             'type': ref_info.get('type'),
