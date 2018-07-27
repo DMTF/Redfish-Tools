@@ -650,29 +650,40 @@ class DocFormatter:
             is_nullable = skip_null and [x for x in prop_anyof if x.get('type') == 'null']
 
             # This is a special case for references to multiple versions of the same object.
+            # Get the most recent version, and make it the prop_ref.
+            # The expected result is that these show up as referenced objects.
             if len(sans_null) > 1:
                 match_ref = unversioned_ref = ''
+                latest_ref = latest_version = ''
+                refs_by_version = {}
                 for elt in prop_anyof:
                     this_ref = elt.get('$ref')
                     if this_ref:
                         unversioned_ref = self.make_unversioned_ref(this_ref)
-                    if not unversioned_ref:
-                        break
+                        this_version = self.get_ref_version(this_ref)
+                        if this_version:
+                            refs_by_version[this_version] = this_ref
+                        else:
+                            break
 
                     if not match_ref:
                         match_ref = unversioned_ref
+                    if not latest_ref:
+                        latest_ref = this_ref
+                        latest_version = this_version
                     else:
-                        if match_ref != unversioned_ref:
-                            break
-                if match_ref == unversioned_ref:
-                    prop_infos.append({
-                        'type': '',
-                        'description': '',
-                        'add_link_text': ('See the ' + self.link_to_outside_schema(unversioned_ref) +
-                                          ' schema for details.')
-                        })
-                    prop_anyof = [] # short-circuit any further processing
+                        compare = self.compare_versions(latest_version, this_version)
+                        if compare < 0:
+                            latest_version = this_version
+                    if match_ref != unversioned_ref: # These are not all versions of the same thing
+                        break
 
+                if match_ref == unversioned_ref:
+                    # Get the ref for the latest version and replace prop_anyof with a ref to it:
+                    prop_ref = refs_by_version[latest_version]
+                    prop_anyof = [ {
+                        '$ref': prop_ref
+                        }]
 
             for elt in prop_anyof:
                 if skip_null and (elt.get('type') == 'null'):
@@ -1416,8 +1427,16 @@ class DocFormatter:
         if version == context_version:
             return 0
         else:
-            version_parts = version.split('.')
-            context_parts = context_version.split('.')
+            if '_' in version:
+                sep = '_'
+            else:
+                sep = '.'
+            version_parts = version.split(sep)
+            if '_' in context_version:
+                sep = '_'
+            else:
+                sep = '.'
+            context_parts = context_version.split(sep)
             # versions are expected to have three parts
             for i in range(3):
                 if version_parts[i] > context_parts[i]:
@@ -1547,6 +1566,18 @@ class DocFormatter:
         if match:
             unversioned = match.group(1) + '.json#' + match.group(3)
         return unversioned
+
+
+    @staticmethod
+    def get_ref_version(this_ref):
+        """Get the version string based on a (possibly versioned) ref"""
+
+        version_string = None
+        pattern = re.compile(r'.+\.v([^\.]+)\.json#.+')
+        match = pattern.fullmatch(this_ref)
+        if match:
+            version_string = match.group(1)
+        return version_string
 
 
     @staticmethod
