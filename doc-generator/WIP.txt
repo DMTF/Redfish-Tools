@@ -39,7 +39,3 @@ Design / work items:
 Possible misses:
 
  * Oem object: there's nothing there! Probably want to add a "skip" option or something.
-
- * Location: Getting linked to Resource.json. Resource.json is not
-   versioned, but Location is. So there's an issue with following
-   anyOfs, I think.

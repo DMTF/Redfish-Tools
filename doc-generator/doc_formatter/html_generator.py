@@ -692,8 +692,13 @@ pre.code{
             body += self.markdown_to_html(supplemental['Postscript'])
 
         common_properties = self.generate_common_properties_doc()
-        if '[insert_common_objects]' in body:
-            body = body.replace('[insert_common_objects]', common_properties, 1)
+        marker = False
+        if '<p>[insert_common_objects]</p>' in body:
+            marker = '<p>[insert_common_objects]</p>'
+        elif '[insert_common_objects]' in body:
+            marker = '[insert_common_objects]'
+        if marker:
+            body = body.replace(marker, common_properties, 1)
         else:
             if common_properties:
                 warnings.warn('Supplemental file lacks "[insert_common_objects]" marker. Common object properties were found but will be omitted.')
@@ -893,8 +898,15 @@ pre.code{
         else:
             return '<a href="' + schema_uri + '" target="_blank">' + schema_name + '</a>'
 
-
         return schema_name
+
+
+    def link_to_common_property(self, ref_key):
+        """ String for output. Override in HTML formatter to get actual links. """
+        ref_info = self.common_properties.get(ref_key)
+        if ref_info and ref_info.get('_prop_name'):
+            return '<a href="#' + 'common-properties-' + ref_info.get('_prop_name') + '">' + ref_info.get('_prop_name') + ' object' + '</a>'
+        return ref_key
 
 
     def link_to_outside_schema(self, uri):
