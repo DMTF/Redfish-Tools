@@ -15,6 +15,7 @@ import copy
 import re
 import warnings
 import sys
+import functools
 from doc_gen_util import DocGenUtilities
 
 class DocFormatter:
@@ -662,7 +663,8 @@ class DocFormatter:
                         unversioned_ref = self.make_unversioned_ref(this_ref)
                         this_version = self.get_ref_version(this_ref)
                         if this_version:
-                            refs_by_version[this_version] = this_ref
+                            cleaned_version = this_version.replace('_', '.')
+                            refs_by_version[cleaned_version] = this_ref
                         else:
                             break
 
@@ -670,11 +672,11 @@ class DocFormatter:
                         match_ref = unversioned_ref
                     if not latest_ref:
                         latest_ref = this_ref
-                        latest_version = this_version
+                        latest_version = cleaned_version
                     else:
-                        compare = self.compare_versions(latest_version, this_version)
+                        compare = self.compare_versions(latest_version, cleaned_version)
                         if compare < 0:
-                            latest_version = this_version
+                            latest_version = cleaned_version
                     if match_ref != unversioned_ref: # These are not all versions of the same thing
                         break
 
@@ -687,6 +689,7 @@ class DocFormatter:
                     prop_anyof = [ {
                         '$ref': prop_ref
                         }]
+                    self.update_versioned_common_properties(prop_ref, refs_by_version)
 
             for elt in prop_anyof:
                 if skip_null and (elt.get('type') == 'null'):
@@ -750,6 +753,56 @@ class DocFormatter:
                 prop_names = list(set(prop_names) & set(profile_props))
         prop_names.sort(key=str.lower)
         return prop_names
+
+
+    def update_versioned_common_properties(self, common_ref, refs_by_version):
+        """ From a dict of version -> $ref, generate a prop_info structure with version information. """
+
+        # Get any existing common_properties data for this property:
+        prop_info =  self.common_properties.get(common_ref, {})
+        properties = prop_info.get('properties', {})
+        if '_doc_generator_meta' not in prop_info:
+            prop_info['_doc_generator_meta'] = {}
+        meta = prop_info['_doc_generator_meta']
+
+        # Check latest version in refs_by_version against prop_info _latest_version:
+        latest_version = prop_info.get('_latest_version', '0.0.0')
+
+        # Walk refs_by_version, extending prop_info
+        ref_keys = [x for x in refs_by_version.keys()]
+        ref_keys.sort(key=functools.cmp_to_key(self.compare_versions))
+
+        new_versions = [this_version for this_version in ref_keys if self.compare_versions(latest_version, this_version) < 0 ]
+
+        if not len(new_versions):
+            return prop_info # No changes to make
+        else:
+            for this_version in new_versions:
+                this_ref = refs_by_version[this_version]
+                ref_info = self.traverser.find_ref_data(this_ref)
+                ref_properties = ref_info.get('properties', {})
+
+                for prop_name in ref_properties.keys():
+                    if prop_name not in meta:
+                        meta[prop_name] = {}
+                        meta[prop_name]['version'] = this_version
+                if 'deprecated' in ref_properties:
+                    if 'version_deprecated' not in meta[prop_name]:
+                        if this_version == '1.0.0':
+                            warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
+                        else:
+                            meta[prop_name]['version_deprecated'] = this_version
+                        meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
+
+            # Update saved property to latest version, with extended metadata:
+            prop_info = copy.deepcopy(ref_info)
+            prop_info['properties'] = ref_properties
+            prop_info['_doc_generator_meta'] = meta
+            prop_info['_latest_version'] = this_version
+            prop_info['_ref_uri'] = common_ref
+
+        # Save it for later lookup.
+        self.common_properties[common_ref] = prop_info
 
 
     def exclude_annotations(self, prop_names):
