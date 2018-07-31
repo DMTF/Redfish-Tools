@@ -408,12 +408,6 @@ pre.code{
             else:
                 formatted_array = self._add_closing_brace(formatted_array, indentation_string, ']')
             formatted.append(formatted_array)
-            # desc_row = [''] * len(row)
-            # if formatted_details['array_of_objects']:
-            #     desc_row[0] = indentation_string + '} ]'
-            # else:
-            #     desc_row[0] = indentation_string + ']'
-            # formatted.append(self.make_row(desc_row))
 
         return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
                 'action_details':formatted_details.get('action_details'),
