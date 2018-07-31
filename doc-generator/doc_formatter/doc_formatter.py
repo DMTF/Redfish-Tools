@@ -549,7 +549,7 @@ class DocFormatter:
                 meta = self.merge_metadata(node_name, meta, context_meta)
 
                 from_schema_ref = ref_info.get('_from_schema_ref')
-                is_versioned_schema = traverser.is_versioned_schema(from_schema_ref)
+                is_documented_schema = self.is_documented_schema(from_schema_ref)
                 is_other_schema = from_schema_ref and (schema_ref != from_schema_ref)
                 is_collection_of = traverser.is_collection_of(from_schema_ref)
                 prop_name = ref_info.get('_prop_name', False)
@@ -580,7 +580,7 @@ class DocFormatter:
 
                     # Links to other Redfish resources are a special case.
                     if is_other_schema or is_ref_to_same_schema:
-                        if is_versioned_schema and is_collection_of:
+                        if is_documented_schema and is_collection_of:
                             append_ref = 'Contains a link to a resource.'
                             ref_schema_name = self.traverser.get_schema_name(is_collection_of)
 
@@ -591,7 +591,7 @@ class DocFormatter:
                                            + '. See the ' + ref_schema_name + ' schema for details.')
 
                         else:
-                            if is_versioned_schema:
+                            if is_documented_schema:
                                 link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
                                                + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                ' schema for details.')
@@ -602,7 +602,7 @@ class DocFormatter:
 
                             else:
                                 wants_common_objects = self.config.get('wants_common_objects')
-                                if self.is_documented_schema(from_schema_ref) or not wants_common_objects:
+                                if is_documented_schema or not wants_common_objects:
                                     append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                   ' schema for details on this property.')
                                 else:
@@ -680,6 +680,9 @@ class DocFormatter:
 
                 if match_ref == unversioned_ref:
                     # Get the ref for the latest version and replace prop_anyof with a ref to it:
+
+                    # TODO: process refs_by_version to get the version-added and deprecated strings;
+                    # TODO: somehow make a ref to that.
                     prop_ref = refs_by_version[latest_version]
                     prop_anyof = [ {
                         '$ref': prop_ref
