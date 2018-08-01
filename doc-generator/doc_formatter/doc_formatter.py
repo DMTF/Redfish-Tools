@@ -464,6 +464,10 @@ class DocFormatter:
             schema_ref = prop_info['_from_schema_ref']
             prop_name = prop_info['_prop_name']
             meta = prop_info.get('_doc_generator_meta')
+            version = prop_info.get('_latest_version')
+            if not version:
+                version = self.get_ref_version(prop_info.get('_ref_uri', ''))
+
             if not meta:
                 meta = {}
             prop_infos = cp_gen.extend_property_info(schema_ref, prop_info) # TODO: Do we really need to expand this?
@@ -471,7 +475,12 @@ class DocFormatter:
             # TODO: if this works out well, refactor with frag_gen
             formatted = cp_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
             if formatted:
-                cp_gen.add_section(prop_name, 'common-properties-' + prop_name)
+                ref_id = 'common-properties-' + prop_name
+                if version:
+                    ref_id += '_v' + version
+                    prop_name += ' (v.' + version + ')'
+
+                cp_gen.add_section(prop_name, ref_id)
                 if prop_info.get('description'):
                     # TODO: description logic from around line 306
                     cp_gen.add_description(prop_info.get('description'))
@@ -1633,6 +1642,7 @@ class DocFormatter:
         match = pattern.fullmatch(this_ref)
         if match:
             version_string = match.group(1)
+            version_string = version_string.replace('_', '.')
         return version_string
 
 

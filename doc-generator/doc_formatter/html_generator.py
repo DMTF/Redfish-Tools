@@ -899,7 +899,14 @@ pre.code{
         """ String for output. Override in HTML formatter to get actual links. """
         ref_info = self.common_properties.get(ref_key)
         if ref_info and ref_info.get('_prop_name'):
-            return '<a href="#' + 'common-properties-' + ref_info.get('_prop_name') + '">' + ref_info.get('_prop_name') + ' object' + '</a>'
+            ref_id = 'common-properties-' + ref_info.get('_prop_name')
+            # Get the version as well.
+            version = ref_info.get('_latest_version')
+            if not version:
+                version = self.get_ref_version(ref_info.get('_ref_uri', ''))
+            if version:
+                ref_id += '_v' + version
+            return '<a href="#' + ref_id + '">' + ref_info.get('_prop_name') + ' object' + '</a>'
         return ref_key
 
 
