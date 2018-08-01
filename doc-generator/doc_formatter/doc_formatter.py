@@ -457,7 +457,10 @@ class DocFormatter:
         cp_gen = self.__class__(self.property_data, self.traverser, config, self.level)
 
         # Sort the properties by prop_name
-        sorted_properties = sorted(self.common_properties.items(), key=lambda elt: elt[1].get('_prop_name', '').lower())
+        def sortkey(elt):
+            key = elt[1].get('_prop_name', '') + ' ' + elt[1].get('__latest_version', '')
+            return key.lower()
+        sorted_properties = sorted(self.common_properties.items(), key=sortkey)
 
         for prop_tuple in sorted_properties:
             (ref, prop_info) = prop_tuple
