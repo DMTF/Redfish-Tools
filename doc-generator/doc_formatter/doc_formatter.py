@@ -453,6 +453,7 @@ class DocFormatter:
         """ Generate output for common object properties """
         config = copy.deepcopy(self.config)
         config['strip_top_object'] = True
+        schema_supplement = config.get('schema_supplement', {})
 
         cp_gen = self.__class__(self.property_data, self.traverser, config, self.level)
 
@@ -475,6 +476,16 @@ class DocFormatter:
                 meta = {}
             prop_infos = cp_gen.extend_property_info(schema_ref, prop_info) # TODO: Do we really need to expand this?
 
+            # Get the supplemental details for this property/version.
+            # (Probably the version information is not desired?)
+            prop_key = prop_name
+            if version:
+                major_version = version.split('.')[0]
+                prop_key = prop_name + '_' + major_version
+
+            supplemental = schema_supplement.get(prop_key,
+                                                 schema_supplement.get(prop_name, {}))
+
             formatted = cp_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
             if formatted:
                 ref_id = 'common-properties-' + prop_name
@@ -483,6 +494,8 @@ class DocFormatter:
                     prop_name += ' (v.' + version + ')'
 
                 cp_gen.add_section(prop_name, ref_id)
+                cp_gen.add_json_payload(supplemental.get('jsonpayload'))
+
                 description = self.get_property_description(prop_info)
                 if description:
                     cp_gen.add_description(description)
@@ -499,6 +512,7 @@ class DocFormatter:
 
                 if formatted['action_details']:
                     cp_gen.add_action_details(formatted['action_details'])
+
 
         return cp_gen.emit()
 
@@ -980,7 +994,6 @@ class DocFormatter:
         # read_only and units should be the same for all
         parsed['read_only'] = details[0]['read_only']
         parsed['prop_units'] = details[0]['prop_units']
-        # TODO: also same for all?
         parsed['prop_required'] = details[0]['prop_required']
         parsed['prop_required_on_create'] = details[0]['prop_required_on_create']
 
