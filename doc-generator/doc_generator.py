@@ -572,6 +572,7 @@ class DocGenerator:
                         meta[prop_name]['enum'][enum_name] = {}
                         if version:
                             meta[prop_name]['enum'][enum_name]['version'] = version
+                    # TODO: Get deprecation info from schema
                     if enum_deprecations:
                         if enum_deprecations.get(enum_name):
                             meta[prop_name]['enum'][enum_name]['version_deprecated'] = enum_deprecations[enum_name]['version']

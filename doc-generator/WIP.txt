@@ -39,8 +39,8 @@ Possible misses:
  * Oem object: there's nothing there! Probably want to add a "skip" option or something.
 
  - Mockup examples,
- - version and deprecated version
- * Identifier being output twice, probably two versions
+ - version and deprecated version (Done?)
+ * Identifier being output twice, probably two versions (Can see what the versions are now)
 
 Questions:
 
