@@ -475,7 +475,6 @@ class DocFormatter:
                 meta = {}
             prop_infos = cp_gen.extend_property_info(schema_ref, prop_info) # TODO: Do we really need to expand this?
 
-            # TODO: if this works out well, refactor with frag_gen
             formatted = cp_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
             if formatted:
                 ref_id = 'common-properties-' + prop_name
@@ -484,9 +483,9 @@ class DocFormatter:
                     prop_name += ' (v.' + version + ')'
 
                 cp_gen.add_section(prop_name, ref_id)
-                if prop_info.get('description'):
-                    # TODO: description logic from around line 306
-                    cp_gen.add_description(prop_info.get('description'))
+                description = self.get_property_description(prop_info)
+                if description:
+                    cp_gen.add_description(description)
                 cp_gen.current_version = {}
 
                 cp_gen.add_property_row(formatted['row'])
@@ -1089,26 +1088,11 @@ class DocFormatter:
         prop_required = prop_info.get('prop_required')
         prop_required_on_create = prop_info.get('prop_required_on_create')
 
-        descr = None
-        if self.config.get('profile_mode') != 'terse':
-            if self.config.get('normative') and 'longDescription' in prop_info:
-                descr = prop_info.get('longDescription', '')
-            else:
-                descr = prop_info.get('description', '')
+        descr = self.get_property_description(prop_info)
 
-        normative_descr = prop_info.get('longDescription', '')
-        non_normative_descr = prop_info.get('description', '')
-        pattern = prop_info.get('pattern')
         required = prop_info.get('required', [])
         required_on_create = prop_info.get('requiredOnCreate', [])
 
-        if self.config.get('normative') and normative_descr:
-            descr = normative_descr
-        else:
-            descr = non_normative_descr
-
-        if self.config.get('normative') and pattern:
-            descr = descr + ' Pattern: ' + pattern
 
         add_link_text = prop_info.get('add_link_text', '')
 
@@ -1288,11 +1272,11 @@ class DocFormatter:
                        'has_action_details': has_prop_actions,
                        'action_details': action_details,
                        'promote_me': promote_me,
-                       'normative_descr': normative_descr,
-                       'non_normative_descr': non_normative_descr,
+                       'normative_descr': prop_info.get('longDescription', ''),
+                       'non_normative_descr': prop_info.get('description', ''),
                        'prop_required': prop_required,
                        'prop_required_on_create': prop_required_on_create,
-                       'pattern': pattern,
+                       'pattern': prop_info.get('pattern'),
                        'is_in_profile': False,
                        'profile_read_req': None,
                        'profile_write_req': None,
@@ -1340,6 +1324,30 @@ class DocFormatter:
                               }
                              }
         return prop_info
+
+
+    def get_property_description(self, prop_info):
+        """ Get the right description to output, based on prop data and config """
+        descr = None
+        if self.config.get('profile_mode') != 'terse':
+            if self.config.get('normative') and 'longDescription' in prop_info:
+                descr = prop_info.get('longDescription', '')
+            else:
+                descr = prop_info.get('description', '')
+
+        normative_descr = prop_info.get('longDescription', '')
+        non_normative_descr = prop_info.get('description', '')
+        pattern = prop_info.get('pattern')
+
+        if self.config.get('normative') and normative_descr:
+            descr = normative_descr
+        else:
+            descr = non_normative_descr
+
+        if self.config.get('normative') and pattern:
+            descr = descr + ' Pattern: ' + pattern
+
+        return descr
 
 
     def format_object_descr(self, schema_ref, prop_info, prop_path=[], is_action=False):
