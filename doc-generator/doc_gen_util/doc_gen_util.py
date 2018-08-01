@@ -21,7 +21,7 @@ import warnings
 class DocGenUtilities:
     """ Redfish Documentation Generator Utilities. """
 
-    timeout = 2 # Seconds for HTTP timeout
+    timeout = 4 # Seconds for HTTP timeout
 
     @staticmethod
     def load_as_json(filename):
