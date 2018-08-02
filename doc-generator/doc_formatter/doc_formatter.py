@@ -488,6 +488,7 @@ class DocFormatter:
 
             formatted = cp_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
             if formatted:
+                # TODO: There is an opportunity here to refactor with code around line 319 in generate_output.
                 ref_id = 'common-properties-' + prop_name
                 if version:
                     ref_id += '_v' + version
@@ -496,7 +497,20 @@ class DocFormatter:
                 cp_gen.add_section(prop_name, ref_id)
                 cp_gen.add_json_payload(supplemental.get('jsonpayload'))
 
+                # Override with supplemental schema description, if provided
+                # If there is a supplemental Description or Schema-Intro, it replaces
+                # the description in the schema. If both are present, the Description
+                # should be output, followed by the Schema-Intro.
                 description = self.get_property_description(prop_info)
+
+                if supplemental.get('description') and supplemental.get('schema-intro'):
+                    description = (supplemental.get('description') + '\n\n' +
+                                   supplemental.get('schema-intro'))
+                elif supplemental.get('description'):
+                    description = supplemental.get('description')
+                else:
+                    description = supplemental.get('schema-intro', description)
+
                 if description:
                     cp_gen.add_description(description)
                 cp_gen.current_version = {}

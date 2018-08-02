@@ -34,11 +34,9 @@ Design / work items:
     * Description replacement, supplemental property details read from Supplement file
 
 
-Possible misses:
+Possible issues:
 
  * Oem object: there's nothing there! Probably want to add a "skip" option or something.
-
- - Mockup examples,
  - version and deprecated version (Done?)
  * Identifier being output twice, probably two versions (Can see what the versions are now)
 
@@ -51,7 +49,12 @@ Questions:
    explicitly exclude objects from the Referenced Objects section --
    and you can continue to use the description overrides.
 
-2) Is there a desire to override descriptions here, separately from
+
+2) ANSWERED my own question here: we do want description replacement,
+   etc. This is accomplished simply by adding a section to the Schema
+   Supplement section as if the object were a top-level schema.
+
+   Is there a desire to override descriptions here, separately from
    the overrides elsewhere? For example, the description of the Status
    object is: "This type describes the status and health of a resource
    and its children." With no overrides, this would appear as a line
