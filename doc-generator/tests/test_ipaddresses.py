@@ -47,5 +47,5 @@ def test_ipaddresses (mockRequest):
     output = docGen.generate_docs()
     common_properties = docGen.generator.common_properties
 
-    assert 'http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_6.json#/definitions/IPv4Address' in common_properties
-    assert 'http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_6.json#/definitions/IPv6Address' in common_properties
+    assert 'http://redfish.dmtf.org/schemas/v1/IPAddresses.json#/definitions/IPv4Address' in common_properties
+    assert 'http://redfish.dmtf.org/schemas/v1/IPAddresses.json#/definitions/IPv6Address' in common_properties

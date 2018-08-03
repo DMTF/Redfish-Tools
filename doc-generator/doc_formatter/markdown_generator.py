@@ -12,6 +12,7 @@ Initial author: Second Rise LLC.
 
 import copy
 import warnings
+from doc_gen_util import DocGenUtilities
 from . import DocFormatter
 
 # Format user warnings simply
@@ -102,7 +103,7 @@ class MarkdownGenerator(DocFormatter):
         deprecated_descr = None
         if self.current_version.get(parent_depth) and 'version' in meta:
             version = meta.get('version')
-            if self.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 del meta['version']
             self.current_version[current_depth] = version
 
@@ -329,7 +330,7 @@ class MarkdownGenerator(DocFormatter):
                 deprecated_descr = None
                 if 'version' in enum_item_meta:
                     version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                    if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_display = self.truncate_version(version, 2) + '+'
                 if version_display:
                     if 'version_deprecated' in enum_item_meta:
@@ -380,7 +381,7 @@ class MarkdownGenerator(DocFormatter):
 
                 if 'version' in enum_item_meta:
                     version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                    if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_display = self.truncate_version(version, 2) + '+'
                 if version_display:
                     if 'version_deprecated' in enum_item_meta:

@@ -14,6 +14,7 @@ import copy
 import html
 import markdown
 import warnings
+from doc_gen_util import DocGenUtilities
 from . import DocFormatter
 from . import ToCParser
 
@@ -214,7 +215,7 @@ pre.code{
         deprecated_descr = None
         if self.current_version.get(parent_depth) and 'version' in meta:
             version = meta.get('version')
-            if self.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 del meta['version']
             self.current_version[current_depth] = version
 
@@ -466,7 +467,7 @@ pre.code{
 
                 if 'version' in enum_item_meta:
                     version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                    if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
@@ -521,7 +522,7 @@ pre.code{
 
                 if 'version' in enum_item_meta:
                     version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                    if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
@@ -903,7 +904,7 @@ pre.code{
             # Get the version as well.
             version = ref_info.get('_latest_version')
             if not version:
-                version = self.get_ref_version(ref_info.get('_ref_uri', ''))
+                version = DocGenUtilities.get_ref_version(ref_info.get('_ref_uri', ''))
             if version:
                 ref_id += '_v' + version
             return '<a href="#' + ref_id + '">' + ref_info.get('_prop_name') + ' object' + '</a>'

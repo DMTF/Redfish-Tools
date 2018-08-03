@@ -469,7 +469,7 @@ class DocFormatter:
             meta = prop_info.get('_doc_generator_meta')
             version = prop_info.get('_latest_version')
             if not version:
-                version = self.get_ref_version(prop_info.get('_ref_uri', ''))
+                version = DocGenUtilities.get_ref_version(prop_info.get('_ref_uri', ''))
 
             if not meta:
                 meta = {}
@@ -643,12 +643,19 @@ class DocFormatter:
                                     append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                   ' schema for details on this property.')
                                 else:
-                                    # This looks like a Common Object!
-                                    ref_key = ref_info['_ref_uri']
+                                    # This looks like a Common Object! We should have an unversioned ref for this.
+                                    ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
+                                    if ref_key:
+                                        parent_info = traverser.find_ref_data(ref_key)
+                                        if parent_info:
+                                            ref_info = self.apply_overrides(parent_info)
+                                    else:
+                                        ref_key = ref_info['_ref_uri']
+
                                     if self.common_properties.get(ref_key) is None:
                                         self.common_properties[ref_key] = ref_info
                                     append_ref = ('See the ' + self.link_to_common_property(ref_key) +
-                                                  ' for details on this property.')
+                                                  ' for details on this property.' + ref_key)
 
                         new_ref_info = {
                             '_prop_name': ref_info.get('_prop_name'),
@@ -699,8 +706,8 @@ class DocFormatter:
                 for elt in prop_anyof:
                     this_ref = elt.get('$ref')
                     if this_ref:
-                        unversioned_ref = self.make_unversioned_ref(this_ref)
-                        this_version = self.get_ref_version(this_ref)
+                        unversioned_ref = DocGenUtilities.make_unversioned_ref(this_ref)
+                        this_version = DocGenUtilities.get_ref_version(this_ref)
                         if this_version:
                             cleaned_version = this_version.replace('_', '.')
                             refs_by_version[cleaned_version] = this_ref
@@ -713,7 +720,7 @@ class DocFormatter:
                         latest_ref = this_ref
                         latest_version = cleaned_version
                     else:
-                        compare = self.compare_versions(latest_version, cleaned_version)
+                        compare = DocGenUtilities.compare_versions(latest_version, cleaned_version)
                         if compare < 0:
                             latest_version = cleaned_version
                     if match_ref != unversioned_ref: # These are not all versions of the same thing
@@ -808,9 +815,9 @@ class DocFormatter:
 
         # Walk refs_by_version, extending prop_info
         ref_keys = [x for x in refs_by_version.keys()]
-        ref_keys.sort(key=functools.cmp_to_key(self.compare_versions))
+        ref_keys.sort(key=functools.cmp_to_key(DocGenUtilities.compare_versions))
 
-        new_versions = [this_version for this_version in ref_keys if self.compare_versions(latest_version, this_version) < 0 ]
+        new_versions = [this_version for this_version in ref_keys if DocGenUtilities.compare_versions(latest_version, this_version) < 0 ]
 
         if not len(new_versions):
             return prop_info # No changes to make
@@ -1551,30 +1558,6 @@ class DocFormatter:
         return prop_info
 
 
-    def compare_versions(self, version, context_version):
-        """ Returns +1 if version is newer than context_version, -1 if version is older, 0 if equal """
-
-        if version == context_version:
-            return 0
-        else:
-            if '_' in version:
-                sep = '_'
-            else:
-                sep = '.'
-            version_parts = version.split(sep)
-            if '_' in context_version:
-                sep = '_'
-            else:
-                sep = '.'
-            context_parts = context_version.split(sep)
-            # versions are expected to have three parts
-            for i in range(3):
-                if version_parts[i] > context_parts[i]:
-                    return 1
-                if version_parts[i] < context_parts[i]:
-                    return -1
-            return 0
-
     def merge_metadata(self, node_name, meta, context_meta):
         """ Merge version and version_deprecated information from meta with that from context_meta
 
@@ -1603,7 +1586,7 @@ class DocFormatter:
         meta2 = copy.deepcopy(meta_b)
 
         if ('version' in meta1) and ('version' in meta2):
-            compare = self.compare_versions(meta1['version'], meta2['version'])
+            compare = DocGenUtilities.compare_versions(meta1['version'], meta2['version'])
             # We want the "first seen" entry, so use the older one.
             if compare > 0:
                 meta1['version'] = meta2['version']
@@ -1611,7 +1594,7 @@ class DocFormatter:
             meta1['version'] = meta2['version']
 
         if ('version_deprecated' in meta1) and ('version_deprecated' in meta2):
-            compare = self.compare_versions(meta1['version_deprecated'], meta2['version_deprecated'])
+            compare = DocGenUtilities.compare_versions(meta1['version_deprecated'], meta2['version_deprecated'])
             if compare > 0:
                 # meta2 is older, use that:
                 meta1['version_deprecated'] = meta2['version_deprecated']
@@ -1684,31 +1667,6 @@ class DocFormatter:
                 break
 
         return '.'.join(keep)
-
-
-    @staticmethod
-    def make_unversioned_ref(this_ref):
-        """Get the un-versioned string based on a (possibly versioned) ref"""
-
-        unversioned = None
-        pattern = re.compile(r'(.+)\.([^\.]+)\.json#(.+)')
-        match = pattern.fullmatch(this_ref)
-        if match:
-            unversioned = match.group(1) + '.json#' + match.group(3)
-        return unversioned
-
-
-    @staticmethod
-    def get_ref_version(this_ref):
-        """Get the version string based on a (possibly versioned) ref"""
-
-        version_string = None
-        pattern = re.compile(r'.+\.v([^\.]+)\.json#.+')
-        match = pattern.fullmatch(this_ref)
-        if match:
-            version_string = match.group(1)
-            version_string = version_string.replace('_', '.')
-        return version_string
 
 
     @staticmethod
