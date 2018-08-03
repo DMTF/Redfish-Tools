@@ -343,7 +343,6 @@ class DocFormatter:
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
-                    prop_info = self.apply_overrides(prop_info, schema_name, prop_name)
 
                     prop_info['prop_required'] = prop_name in required
                     prop_info['prop_required_on_create'] = prop_name in required_on_create
@@ -459,7 +458,7 @@ class DocFormatter:
 
         # Sort the properties by prop_name
         def sortkey(elt):
-            key = elt[1].get('_prop_name', '') + ' ' + elt[1].get('__latest_version', '')
+            key = elt[1].get('_prop_name', '') + ' ' + elt[1].get('_latest_version', '') +  elt[0]
             return key.lower()
         sorted_properties = sorted(self.common_properties.items(), key=sortkey)
 
@@ -737,7 +736,6 @@ class DocFormatter:
                     for x in prop_info.keys():
                         if x in self.parent_props:
                             elt[x] = prop_info[x]
-                elt = self.apply_overrides(elt)
                 elt = self.extend_property_info(schema_ref, elt, context_meta)
                 prop_infos.extend(elt)
 
@@ -1094,7 +1092,6 @@ class DocFormatter:
         # Only objects within Actions have parameters
         action_parameters = prop_info.get('parameters', {})
 
-        # TODO: is this the only place we need to do this?
         prop_info = self.apply_overrides(prop_info)
 
         if isinstance(prop_type, list):
@@ -1230,7 +1227,7 @@ class DocFormatter:
             prop_info['parent_requires'] = required
             prop_info['parent_requires_on_create'] = required_on_create
 
-            object_formatted = self.format_object_descr(schema_ref, prop_info, new_path, is_action) # Wrong?
+            object_formatted = self.format_object_descr(schema_ref, prop_info, new_path, is_action)
             object_description = object_formatted['rows']
             if object_formatted['details']:
                 prop_details.update(object_formatted['details'])
@@ -1240,7 +1237,7 @@ class DocFormatter:
             new_path = prop_path.copy()
             new_path.append(prop_name)
             if list_of_objects:
-                item_formatted = self.format_list_of_object_descrs(schema_ref, prop_items, new_path) # Right?
+                item_formatted = self.format_list_of_object_descrs(schema_ref, prop_items, new_path)
                 if collapse_description:
                     # remember, we set collapse_description when we made prop_items a single-element list.
                     item_list = prop_items[0].get('type')
@@ -1287,8 +1284,6 @@ class DocFormatter:
             profile_values = profile.get('Values')
             if profile_values:
                 profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
-
-        prop_info = self.apply_overrides(prop_info)
 
         parsed_info = {'_prop_name': prop_name,
                        'prop_type': prop_type,
