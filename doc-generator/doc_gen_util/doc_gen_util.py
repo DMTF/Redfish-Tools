@@ -130,9 +130,8 @@ class DocGenUtilities:
     @staticmethod
     def make_unversioned_ref(this_ref):
         """Get the un-versioned string based on a (possibly versioned) ref"""
-
         unversioned = None
-        pattern = re.compile(r'(.+)\.([^\.]+)\.json#(.+)')
+        pattern = re.compile(r'\.v(.+)\.([^\.]+)\.json#(.+)')
         match = pattern.fullmatch(this_ref)
         if match:
             unversioned = match.group(1) + '.json#' + match.group(3)
