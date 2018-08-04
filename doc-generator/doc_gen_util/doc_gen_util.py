@@ -26,6 +26,12 @@ class DocGenUtilities:
     @staticmethod
     def load_as_json(filename):
         """Load json data from a file, printing an error message on failure."""
+
+        # We will generate an "unversioned" odata URI, which is not a thing that exists,
+        # in order to group objects. This is a hack and should be eliminated.
+        if '/odata.json' in filename:
+            return None
+
         data = {}
         try:
             # Parse file as json
@@ -47,7 +53,7 @@ class DocGenUtilities:
 
             # We will generate an "unversioned" odata URI, which is not a thing that exists,
             # in order to group objects. This is a hack and should be eliminated.
-            if uri == 'http://redfish.dmtf.org/schemas/v1/odata.json':
+            if 'odata.json' in uri:
                 return None
 
             f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
