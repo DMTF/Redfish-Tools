@@ -644,6 +644,7 @@ class DocFormatter:
                                                   ' schema for details on this property.')
                                 else:
                                     # This looks like a Common Object! We should have an unversioned ref for this.
+                                    requested_ref_uri = ref_info['_ref_uri']
                                     ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
                                     if ref_key:
                                         parent_info = traverser.find_ref_data(ref_key)
@@ -654,7 +655,8 @@ class DocFormatter:
 
                                     if self.common_properties.get(ref_key) is None:
                                         self.common_properties[ref_key] = ref_info
-                                    specific_version = DocGenUtilities.get_ref_version(ref_key)
+
+                                    specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
                                     if specific_version:
                                         append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
                                          + '(v' + str(specific_version) + ')' +
