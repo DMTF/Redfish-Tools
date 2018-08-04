@@ -473,6 +473,7 @@ class DocFormatter:
 
             if not meta:
                 meta = {}
+
             prop_infos = cp_gen.extend_property_info(schema_ref, prop_info) # TODO: Do we really need to expand this?
 
             # Get the supplemental details for this property/version.
@@ -577,8 +578,13 @@ class DocFormatter:
 
             else:
                 prop_meta = prop_info.get('_doc_generator_meta', {})
+
                 # Update version info from the ref, provided that it is within the same schema.
-                if ref_info.get('_from_schema_ref') == schema_ref:
+                # Make the comparison by unversioned ref, in respect of the way common_properties are keyed
+                from_schema_ref = ref_info.get('_from_schema_ref')
+                unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
+                is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref) or (schema_ref == unversioned_schema_ref))
+                if not is_other_schema:
                     ref_meta = ref_info.get('_doc_generator_meta', {})
                     meta = self.merge_full_metadata(prop_meta, ref_meta)
                 else:
@@ -586,9 +592,7 @@ class DocFormatter:
                 node_name = traverser.get_node_from_ref(prop_ref)
                 meta = self.merge_metadata(node_name, meta, context_meta)
 
-                from_schema_ref = ref_info.get('_from_schema_ref')
                 is_documented_schema = self.is_documented_schema(from_schema_ref)
-                is_other_schema = from_schema_ref and (schema_ref != from_schema_ref)
                 is_collection_of = traverser.is_collection_of(from_schema_ref)
                 prop_name = ref_info.get('_prop_name', False)
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
