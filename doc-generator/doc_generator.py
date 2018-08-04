@@ -640,7 +640,9 @@ class DocGenerator:
 
                 # Update any relative refs in ref_properties with this_ref base:
                 [base_ref, rest] = this_ref.split('#')
-                ref_properties = self.absolutize_refs(base_ref, ref_properties)
+                [common_base_ref, rest] = common_ref.split('#')
+                if common_base_ref != base_ref:
+                    ref_properties = self.absolutize_refs(base_ref, ref_properties)
 
             # Update saved property to latest version, with extended metadata:
             prop_info = copy.deepcopy(ref_info)

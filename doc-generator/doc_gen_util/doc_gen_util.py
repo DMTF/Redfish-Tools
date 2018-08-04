@@ -44,6 +44,12 @@ class DocGenUtilities:
         try:
             if '://' not in uri:
                 uri = 'http://' + uri
+
+            # We will generate an "unversioned" odata URI, which is not a thing that exists,
+            # in order to group objects. This is a hack and should be eliminated.
+            if uri == 'http://redfish.dmtf.org/schemas/v1/odata.json':
+                return None
+
             f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
             json_string = f.read().decode('utf-8')
             json_data = json.loads(json_string)
@@ -60,6 +66,7 @@ class DocGenUtilities:
         try:
             if '://' not in uri:
                 uri = 'http://' + uri
+
             f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
             return f.read().decode('utf-8')
 
