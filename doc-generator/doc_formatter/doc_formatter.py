@@ -745,9 +745,6 @@ class DocFormatter:
                     prop_anyof = [ {
                         '$ref': prop_ref
                         }]
-                    # Process refs_by_version to get the version-added and deprecated strings
-                    # incorporated into the properties for the latest version:
-                    self.update_versioned_common_properties(prop_ref, refs_by_version)
 
             for elt in prop_anyof:
                 if skip_null and (elt.get('type') == 'null'):
@@ -811,47 +808,6 @@ class DocFormatter:
                 prop_names = list(set(prop_names) & set(profile_props))
         prop_names.sort(key=str.lower)
         return prop_names
-
-
-    def update_versioned_common_properties(self, common_ref, refs_by_version):
-        """ From a dict of version -> $ref, generate a prop_info structure with version information. """
-
-        # Get any existing common_properties data for this property:
-        prop_info =  self.common_properties.get(common_ref, {})
-        properties = prop_info.get('properties', {})
-        if '_doc_generator_meta' not in prop_info:
-            prop_info['_doc_generator_meta'] = {}
-        meta = prop_info['_doc_generator_meta']
-
-        # Check latest version in refs_by_version against prop_info _latest_version:
-        latest_version = prop_info.get('_latest_version', '0.0.0')
-
-        # Walk refs_by_version, extending prop_info
-        ref_keys = [x for x in refs_by_version.keys()]
-        ref_keys.sort(key=functools.cmp_to_key(DocGenUtilities.compare_versions))
-
-        new_versions = [this_version for this_version in ref_keys if DocGenUtilities.compare_versions(latest_version, this_version) < 0 ]
-
-        if not len(new_versions):
-            return prop_info # No changes to make
-        else:
-            for this_version in new_versions:
-                this_ref = refs_by_version[this_version]
-                ref_info = self.traverser.find_ref_data(this_ref)
-                ref_properties = ref_info.get('properties', {})
-
-                meta = self.extend_metadata(meta, ref_properties, this_version)
-
-            # Update saved property to latest version, with extended metadata:
-            prop_info = copy.deepcopy(ref_info)
-            prop_info['properties'] = ref_properties
-            prop_info['_doc_generator_meta'] = meta
-            prop_info['_latest_version'] = this_version
-            prop_info['_ref_uri'] = common_ref
-
-        # Save it for later lookup.
-        self.common_properties[common_ref] = prop_info
-
 
     def extend_metadata(self, meta, properties, version):
 
