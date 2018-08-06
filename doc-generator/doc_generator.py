@@ -631,12 +631,49 @@ class DocGenerator:
         else:
             for this_version in ref_keys:
                 this_ref = refs_by_version[this_version]
+
                 ref_info = traverser.find_ref_data(this_ref)
                 if not ref_info:
                     warnings.warn("Can't find schema file for " + this_ref)
                     continue
-                ref_properties = ref_info.get('properties', {})
-                meta = self.extend_metadata(meta, ref_properties, this_version, this_ref + '#properties')
+                if 'properties' in ref_info:
+                    ref_properties = ref_info['properties']
+                    meta = self.extend_metadata(meta, ref_properties, this_version, this_ref + '#properties')
+
+                # Follow refs in properties, if they are local to the same schema.
+                [this_schema, rest] = this_ref.split('#')
+                for prop_name, props in ref_properties.items():
+                    prop_ref = None
+                    if '$ref' in props and (props['$ref'].startswith('#') or props['$ref'].startswith(this_schema)):
+                        if props['$ref'].startswith('#'):
+                            prop_ref = this_schema + props['$ref']
+                        else:
+                            prop_ref = props['$ref']
+                    elif 'anyOf' in props:
+                        # may be "$ref or null"
+                        for elt in props['anyOf']:
+                            if elt.get('type') == 'null':
+                                continue
+                            if elt.get('$ref'):
+                                # Don't follow $ref if multiple are offered. Too complicated?
+                                if prop_ref:
+                                    prop_ref = None
+                                    break
+                                else:
+                                    if elt['$ref'].startswith(this_schema):
+                                        prop_ref = elt['$ref']
+                                    if elt['$ref'].startswith('#'):
+                                        prop_ref = this_schema + elt['$ref']
+                    if prop_ref:
+                        child_ref = traverser.find_ref_data(prop_ref)
+                        if child_ref and 'properties' in child_ref:
+                            child_ref_properties = child_ref['properties']
+                            meta[prop_name] = self.extend_metadata(meta[prop_name], child_ref_properties, this_version,
+                                                                   this_ref + '/prop_name#properties')
+                            ref_properties[prop_name]['properties'] = child_ref_properties
+                            ref_properties[prop_name]['type'] = 'object'
+                            del(ref_properties[prop_name]['anyOf'])
+
 
                 # Update any relative refs in ref_properties with this_ref base:
                 [base_ref, rest] = this_ref.split('#')

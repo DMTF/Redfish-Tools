@@ -47,6 +47,7 @@ class DocGenUtilities:
     @staticmethod
     def http_load_as_json(uri):
         """Load a URI and convert from JSON"""
+
         try:
             if '://' not in uri:
                 uri = 'http://' + uri
