@@ -788,6 +788,14 @@ class CSDLToJSON():
             if "@odata.context" not in json_obj_def["required"]:
                 json_obj_def["required"].append( "@odata.context" )
 
+        # If the object is the ReferenceableMember, or is derived from it, then we add the OData properties
+        if ( name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember" ):
+            json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
+            if "required" not in json_obj_def:
+                json_obj_def["required"] = []
+            if "@odata.id" not in json_obj_def["required"]:
+                json_obj_def["required"].append( "@odata.id" )
+
         # Add Members@odata.nextLink for objects that inherit from ResourceCollection
         if base_type == "Resource.v1_0_0.ResourceCollection":
             json_obj_def["properties"]["Members@odata.nextLink"] = { "$ref": self.odata_schema + "#/definitions/nextLink" }
