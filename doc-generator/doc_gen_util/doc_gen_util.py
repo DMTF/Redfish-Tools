@@ -21,11 +21,17 @@ import warnings
 class DocGenUtilities:
     """ Redfish Documentation Generator Utilities. """
 
-    timeout = 2 # Seconds for HTTP timeout
+    timeout = 4 # Seconds for HTTP timeout
 
     @staticmethod
     def load_as_json(filename):
         """Load json data from a file, printing an error message on failure."""
+
+        # We will generate an "unversioned" odata URI, which is not a thing that exists,
+        # in order to group objects. This is a hack and should be eliminated.
+        if '/odata.json' in filename:
+            return None
+
         data = {}
         try:
             # Parse file as json
@@ -41,9 +47,16 @@ class DocGenUtilities:
     @staticmethod
     def http_load_as_json(uri):
         """Load a URI and convert from JSON"""
+
         try:
             if '://' not in uri:
                 uri = 'http://' + uri
+
+            # We will generate an "unversioned" odata URI, which is not a thing that exists,
+            # in order to group objects. This is a hack and should be eliminated.
+            if 'odata.json' in uri:
+                return None
+
             f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
             json_string = f.read().decode('utf-8')
             json_data = json.loads(json_string)
@@ -60,6 +73,7 @@ class DocGenUtilities:
         try:
             if '://' not in uri:
                 uri = 'http://' + uri
+
             f = urllib.request.urlopen(uri, None, DocGenUtilities.timeout)
             return f.read().decode('utf-8')
 
@@ -101,3 +115,57 @@ class DocGenUtilities:
 
         filenames = [os.path.join(path, x) for x in filenames]
         return filenames
+
+    @staticmethod
+    def compare_versions(version, context_version):
+        """ Returns +1 if version is newer than context_version, -1 if version is older, 0 if equal """
+
+        if version == context_version:
+            return 0
+        else:
+            if '_' in version:
+                sep = '_'
+            else:
+                sep = '.'
+            version_parts = version.split(sep)
+            if '_' in context_version:
+                sep = '_'
+            else:
+                sep = '.'
+            context_parts = context_version.split(sep)
+            # versions are expected to have three parts
+            for i in range(3):
+                if version_parts[i] > context_parts[i]:
+                    return 1
+                if version_parts[i] < context_parts[i]:
+                    return -1
+            return 0
+
+    @staticmethod
+    def make_unversioned_ref(this_ref):
+        """Get the un-versioned string based on a (possibly versioned) ref"""
+        unversioned = None
+        pattern = re.compile(r'(.+)\.v([^\.]+)\.json(#.+)?')
+        match = pattern.fullmatch(this_ref)
+        if not match and 'odata' in this_ref:
+            pattern = re.compile(r'(.+/odata)\.(.+)\.json(#.+)?')
+            match = pattern.fullmatch(this_ref)
+        if match:
+            unversioned = match.group(1) + '.json'
+            if match.group(3):
+                unversioned += match.group(3)
+
+        return unversioned
+
+
+    @staticmethod
+    def get_ref_version(this_ref):
+        """Get the version string based on a (possibly versioned) ref"""
+
+        version_string = None
+        pattern = re.compile(r'.+\.v([^\.]+)\.json#.+')
+        match = pattern.fullmatch(this_ref)
+        if match:
+            version_string = match.group(1)
+            version_string = version_string.replace('_', '.')
+        return version_string

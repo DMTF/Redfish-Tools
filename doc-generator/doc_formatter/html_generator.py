@@ -14,6 +14,7 @@ import copy
 import html
 import markdown
 import warnings
+from doc_gen_util import DocGenUtilities
 from . import DocFormatter
 from . import ToCParser
 
@@ -214,14 +215,14 @@ pre.code{
         deprecated_descr = None
         if self.current_version.get(parent_depth) and 'version' in meta:
             version = meta.get('version')
-            if self.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 del meta['version']
             self.current_version[current_depth] = version
 
         if not self.current_version.get(current_depth):
             self.current_version[current_depth] = meta.get('version')
 
-        if 'version' in meta:
+        if meta.get('version', '1.0.0') != '1.0.0':
             version_text = html.escape(meta['version'], False)
             version_display = self.truncate_version(version_text, 2) + '+'
             if 'version_deprecated' in meta:
@@ -408,12 +409,6 @@ pre.code{
             else:
                 formatted_array = self._add_closing_brace(formatted_array, indentation_string, ']')
             formatted.append(formatted_array)
-            # desc_row = [''] * len(row)
-            # if formatted_details['array_of_objects']:
-            #     desc_row[0] = indentation_string + '} ]'
-            # else:
-            #     desc_row[0] = indentation_string + ']'
-            # formatted.append(self.make_row(desc_row))
 
         return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
                 'action_details':formatted_details.get('action_details'),
@@ -472,7 +467,7 @@ pre.code{
 
                 if 'version' in enum_item_meta:
                     version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                    if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
@@ -527,7 +522,7 @@ pre.code{
 
                 if 'version' in enum_item_meta:
                     version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                    if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
@@ -678,7 +673,6 @@ pre.code{
     def output_document(self):
         """Return full contents of document"""
 
-
         supplemental = self.config.get('supplemental', {})
         body = ''
 
@@ -691,6 +685,18 @@ pre.code{
 
         if 'Postscript' in supplemental:
             body += self.markdown_to_html(supplemental['Postscript'])
+
+        common_properties = self.generate_common_properties_doc()
+        marker = False
+        if '<p>[insert_common_objects]</p>' in body:
+            marker = '<p>[insert_common_objects]</p>'
+        elif '[insert_common_objects]' in body:
+            marker = '[insert_common_objects]'
+        if marker:
+            body = body.replace(marker, common_properties, 1)
+        else:
+            if common_properties:
+                warnings.warn('Supplemental file lacks "[insert_common_objects]" marker. Common object properties were found but will be omitted.')
 
         if self.config.get('add_toc'):
             toc = self.generate_toc(body)
@@ -750,8 +756,8 @@ pre.code{
 
         fragment_config = {
             'output_format': 'html',
-            'normative': self.config['normative'],
-            'cwd': self.config['cwd'],
+            'normative': self.config.get('normative'),
+            'cwd': self.config.get('cwd'),
             'schema_supplement': {},
             'supplemental': {},
             'excluded_annotations': [],
@@ -763,7 +769,7 @@ pre.code{
             'escape_chars': [],
             'uri_replacements': {},
             'units_translation': self.config.get('units_translation'),
-            'profile': self.config['profile'],
+            'profile': self.config.get('profile'),
             'profile_mode': self.config.get('profile_mode'),
             'profile_resources': self.config.get('profile_resources', {})
             }
@@ -887,8 +893,22 @@ pre.code{
         else:
             return '<a href="' + schema_uri + '" target="_blank">' + schema_name + '</a>'
 
-
         return schema_name
+
+
+    def link_to_common_property(self, ref_key):
+        """ String for output. Override in HTML formatter to get actual links. """
+        ref_info = self.common_properties.get(ref_key)
+        if ref_info and ref_info.get('_prop_name'):
+            ref_id = 'common-properties-' + ref_info.get('_prop_name')
+            # Get the version as well.
+            version = ref_info.get('_latest_version')
+            if not version:
+                version = DocGenUtilities.get_ref_version(ref_info.get('_ref_uri', ''))
+            if version:
+                ref_id += '_v' + version
+            return '<a href="#' + ref_id + '">' + ref_info.get('_prop_name') + ' object' + '</a>'
+        return ref_key
 
 
     def link_to_outside_schema(self, uri):

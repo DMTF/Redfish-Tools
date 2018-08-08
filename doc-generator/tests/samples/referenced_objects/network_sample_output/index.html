@@ -1,0 +1,65 @@
+<h1 id="common-objects">Common Objects</h1>
+<h2 id="common-properties-Oem">Oem</h2>
+<p>Oem extension object.</p>
+<table class="properties">
+<tbody>
+
+</tbody></table>
+<h2 id="common-properties-Status">Status</h2>
+<p>This type describes the status and health of a resource and its children.</p>
+<table class="properties">
+<tbody>
+<tr><td><nobr><b>Health</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-only</nobr> (null)</td><td>This represents the health state of this resource in the absence of its dependent resources.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/Resource.json|details|Health">Health</a> in Property Details, below, for the possible values of this property.</i></td></tr>
+<tr><td><nobr><b>HealthRollup</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-only</nobr> (null)</td><td>This represents the overall health state from the view of this resource.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/Resource.json|details|HealthRollup">HealthRollup</a> in Property Details, below, for the possible values of this property.</i></td></tr>
+<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>Oem extension object.</td></tr>
+<tr><td><nobr><b>State</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-only</nobr> (null)</td><td>This indicates the known state of the resource, such as if it is enabled.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/Resource.json|details|State">State</a> in Property Details, below, for the possible values of this property.</i></td></tr>
+</tbody></table>
+<div class="property-details">
+<h3>Property Details</h3>
+<div class="property-details-content">
+<h4 id="redfish.dmtf.org/schemas/v1/Resource.json|details|Health">Health:</h4>
+<p>This represents the health state of this resource in the absence of its dependent resources.</p>
+<table class="enum enum-details">
+<thead>
+<tr><th>string</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>Critical</td><td>A critical condition exists that requires immediate attention.</td></tr>
+<tr><td>OK</td><td>Normal.</td></tr>
+<tr><td>Warning</td><td>A condition exists that requires attention.</td></tr>
+</tbody></table>
+
+<h4 id="redfish.dmtf.org/schemas/v1/Resource.json|details|HealthRollup">HealthRollup:</h4>
+<p>This represents the overall health state from the view of this resource.</p>
+<table class="enum enum-details">
+<thead>
+<tr><th>string</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>Critical</td><td>A critical condition exists that requires immediate attention.</td></tr>
+<tr><td>OK</td><td>Normal.</td></tr>
+<tr><td>Warning</td><td>A condition exists that requires attention.</td></tr>
+</tbody></table>
+
+<h4 id="redfish.dmtf.org/schemas/v1/Resource.json|details|State">State:</h4>
+<p>This indicates the known state of the resource, such as if it is enabled.</p>
+<table class="enum enum-details">
+<thead>
+<tr><th>string</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>Absent</td><td>This function or resource is not present or not detected.</td></tr>
+<tr><td>Deferring</td><td>The element will not process any commands but will queue new requests.</td></tr>
+<tr><td>Disabled</td><td>This function or resource has been disabled.</td></tr>
+<tr><td>Enabled</td><td>This function or resource has been enabled.</td></tr>
+<tr><td>InTest</td><td>This function or resource is undergoing testing.</td></tr>
+<tr><td>Quiesced</td><td>The element is enabled but only processes a restricted set of commands.</td></tr>
+<tr><td>StandbyOffline</td><td>This function or resource is enabled, but awaiting an external action to activate it.</td></tr>
+<tr><td>StandbySpare</td><td>This function or resource is part of a redundancy set and is awaiting a failover or other external action to activate it.</td></tr>
+<tr><td>Starting</td><td>This function or resource is starting.</td></tr>
+<tr><td>UnavailableOffline</td><td>This function or resource is present but cannot be used.</td></tr>
+<tr><td>Updating</td><td>The element is updating and may be unavailable or degraded.</td></tr>
+</tbody></table>
+
+</div>
+</div>

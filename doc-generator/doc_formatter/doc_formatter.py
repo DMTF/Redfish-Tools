@@ -15,6 +15,7 @@ import copy
 import re
 import warnings
 import sys
+import functools
 from doc_gen_util import DocGenUtilities
 
 class DocFormatter:
@@ -28,6 +29,7 @@ class DocFormatter:
         config: configuration dict
         """
         self.property_data = property_data
+        self.common_properties = {}
         self.traverser = traverser
         self.config = config
         self.level = level
@@ -341,7 +343,6 @@ class DocFormatter:
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
-                    prop_info = self.apply_overrides(prop_info, schema_name, prop_name)
 
                     prop_info['prop_required'] = prop_name in required
                     prop_info['prop_required_on_create'] = prop_name in required_on_create
@@ -447,6 +448,89 @@ class DocFormatter:
         return frag_gen.emit()
 
 
+    def generate_common_properties_doc(self):
+        """ Generate output for common object properties """
+        config = copy.deepcopy(self.config)
+        config['strip_top_object'] = True
+        schema_supplement = config.get('schema_supplement', {})
+
+        cp_gen = self.__class__(self.property_data, self.traverser, config, self.level)
+
+        # Sort the properties by prop_name
+        def sortkey(elt):
+            key = elt[1].get('_prop_name', '') + ' ' + elt[1].get('_latest_version', '') +  elt[0]
+            return key.lower()
+        sorted_properties = sorted(self.common_properties.items(), key=sortkey)
+
+        for prop_tuple in sorted_properties:
+            (ref, prop_info) = prop_tuple
+            schema_ref = prop_info['_from_schema_ref']
+            prop_name = prop_info['_prop_name']
+            meta = prop_info.get('_doc_generator_meta')
+            version = prop_info.get('_latest_version')
+            if not version:
+                version = DocGenUtilities.get_ref_version(prop_info.get('_ref_uri', ''))
+
+            if not meta:
+                meta = {}
+
+            prop_infos = cp_gen.extend_property_info(schema_ref, prop_info) # TODO: Do we really need to expand this?
+
+            # Get the supplemental details for this property/version.
+            # (Probably the version information is not desired?)
+            prop_key = prop_name
+            if version:
+                major_version = version.split('.')[0]
+                prop_key = prop_name + '_' + major_version
+
+            supplemental = schema_supplement.get(prop_key,
+                                                 schema_supplement.get(prop_name, {}))
+
+            formatted = cp_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
+            if formatted:
+                # TODO: There is an opportunity here to refactor with code around line 319 in generate_output.
+                ref_id = 'common-properties-' + prop_name
+                if version:
+                    ref_id += '_v' + version
+                    prop_name += ' (v.' + version + ')'
+
+                cp_gen.add_section(prop_name, ref_id)
+                cp_gen.add_json_payload(supplemental.get('jsonpayload'))
+
+                # Override with supplemental schema description, if provided
+                # If there is a supplemental Description or Schema-Intro, it replaces
+                # the description in the schema. If both are present, the Description
+                # should be output, followed by the Schema-Intro.
+                description = self.get_property_description(prop_info)
+
+                if supplemental.get('description') and supplemental.get('schema-intro'):
+                    description = (supplemental.get('description') + '\n\n' +
+                                   supplemental.get('schema-intro'))
+                elif supplemental.get('description'):
+                    description = supplemental.get('description')
+                else:
+                    description = supplemental.get('schema-intro', description)
+
+                if description:
+                    cp_gen.add_description(description)
+                cp_gen.current_version = {}
+
+                cp_gen.add_property_row(formatted['row'])
+                if len(formatted['details']):
+                    prop_details = {}
+                    prop_details.update(formatted['details'])
+                    detail_names = [x for x in prop_details.keys()]
+                    detail_names.sort(key=str.lower)
+                    for detail_name in detail_names:
+                        cp_gen.add_property_details(prop_details[detail_name])
+
+                if formatted['action_details']:
+                    cp_gen.add_action_details(formatted['action_details'])
+
+
+        return cp_gen.emit()
+
+
     def extend_property_info(self, schema_ref, prop_info, context_meta=None):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
@@ -493,16 +577,22 @@ class DocFormatter:
                 warnings.warn("Unable to find data for " + prop_ref)
 
             else:
-                ref_info = self.apply_overrides(ref_info)
-                meta = ref_info.get('_doc_generator_meta')
-                if not meta:
-                    meta = {}
+                prop_meta = prop_info.get('_doc_generator_meta', {})
+
+                # Update version info from the ref, provided that it is within the same schema.
+                # Make the comparison by unversioned ref, in respect of the way common_properties are keyed
+                from_schema_ref = ref_info.get('_from_schema_ref')
+                unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
+                is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref) or (schema_ref == unversioned_schema_ref))
+                if not is_other_schema:
+                    ref_meta = ref_info.get('_doc_generator_meta', {})
+                    meta = self.merge_full_metadata(prop_meta, ref_meta)
+                else:
+                    meta = prop_meta
                 node_name = traverser.get_node_from_ref(prop_ref)
                 meta = self.merge_metadata(node_name, meta, context_meta)
 
-                from_schema_ref = ref_info.get('_from_schema_ref')
-                is_versioned_schema = traverser.is_versioned_schema(from_schema_ref)
-                is_other_schema = from_schema_ref and (schema_ref != from_schema_ref)
+                is_documented_schema = self.is_documented_schema(from_schema_ref)
                 is_collection_of = traverser.is_collection_of(from_schema_ref)
                 prop_name = ref_info.get('_prop_name', False)
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
@@ -517,6 +607,7 @@ class DocFormatter:
                         idref_info = self.process_for_idRef(anyof_ref)
                         if idref_info:
                             ref_info = idref_info
+                ref_info = self.apply_overrides(ref_info)
 
                 # If an object, include just the definition and description, and append a reference if possible:
                 if ref_info.get('type') == 'object':
@@ -530,7 +621,7 @@ class DocFormatter:
 
                     # Links to other Redfish resources are a special case.
                     if is_other_schema or is_ref_to_same_schema:
-                        if is_versioned_schema and is_collection_of:
+                        if is_documented_schema and is_collection_of:
                             append_ref = 'Contains a link to a resource.'
                             ref_schema_name = self.traverser.get_schema_name(is_collection_of)
 
@@ -541,7 +632,7 @@ class DocFormatter:
                                            + '. See the ' + ref_schema_name + ' schema for details.')
 
                         else:
-                            if is_versioned_schema:
+                            if is_documented_schema:
                                 link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
                                                + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                ' schema for details.')
@@ -551,10 +642,38 @@ class DocFormatter:
                                 link_detail = ('Link to another ' + prop_name + ' resource.')
 
                             else:
-                                append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                              ' schema for details on this property.')
+                                wants_common_objects = self.config.get('wants_common_objects')
+                                if is_documented_schema or not wants_common_objects:
+                                    append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
+                                                  ' schema for details on this property.')
+                                else:
+                                    # This looks like a Common Object! We should have an unversioned ref for this.
+                                    requested_ref_uri = ref_info['_ref_uri']
+                                    ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
+                                    if ref_key:
+                                        parent_info = traverser.find_ref_data(ref_key)
+                                        if parent_info:
+                                            ref_info = self.apply_overrides(parent_info)
+                                    else:
+                                        ref_key = ref_info['_ref_uri']
+
+                                    if self.common_properties.get(ref_key) is None:
+                                        self.common_properties[ref_key] = ref_info
+
+                                    specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
+                                    if specific_version:
+                                        append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
+                                         + '(v' + str(specific_version) + ')' +
+                                         ' for details on this property.')
+                                    else:
+                                        append_ref = ('See the ' + self.link_to_common_property(ref_key) +
+                                                      ' for details on this property.')
+
 
                         new_ref_info = {
+                            '_prop_name': ref_info.get('_prop_name'),
+                            '_from_schema_ref': ref_info.get('_from_schema_ref'),
+                            '_schema_name': ref_info.get('_schema_name'),
                             'type': ref_info.get('type'),
                             'readonly': ref_info.get('readonly'),
                             'description': ref_description,
@@ -577,8 +696,11 @@ class DocFormatter:
                         ref_info[x] = prop_info[x]
                 prop_info = ref_info
 
-                if '$ref' in ref_info or 'anyOf' in ref_info:
-                    return self.extend_property_info(ref_info['_from_schema_ref'], ref_info, context_meta)
+                # override metadata with merged metadata from above.
+                prop_info['_doc_generator_meta'] = meta
+
+                if '$ref' in prop_info or 'anyOf' in prop_info:
+                        return self.extend_property_info(prop_info['_from_schema_ref'], prop_info, context_meta)
 
             prop_infos.append(prop_info)
 
@@ -588,29 +710,41 @@ class DocFormatter:
             is_nullable = skip_null and [x for x in prop_anyof if x.get('type') == 'null']
 
             # This is a special case for references to multiple versions of the same object.
+            # Get the most recent version, and make it the prop_ref.
+            # The expected result is that these show up as referenced objects.
             if len(sans_null) > 1:
                 match_ref = unversioned_ref = ''
+                latest_ref = latest_version = ''
+                refs_by_version = {}
                 for elt in prop_anyof:
                     this_ref = elt.get('$ref')
                     if this_ref:
-                        unversioned_ref = self.make_unversioned_ref(this_ref)
-                    if not unversioned_ref:
-                        break
+                        unversioned_ref = DocGenUtilities.make_unversioned_ref(this_ref)
+                        this_version = DocGenUtilities.get_ref_version(this_ref)
+                        if this_version:
+                            cleaned_version = this_version.replace('_', '.')
+                            refs_by_version[cleaned_version] = this_ref
+                        else:
+                            break
 
                     if not match_ref:
                         match_ref = unversioned_ref
+                    if not latest_ref:
+                        latest_ref = this_ref
+                        latest_version = cleaned_version
                     else:
-                        if match_ref != unversioned_ref:
-                            break
-                if match_ref == unversioned_ref:
-                    prop_infos.append({
-                        'type': '',
-                        'description': '',
-                        'add_link_text': ('See the ' + self.link_to_outside_schema(unversioned_ref) +
-                                          ' schema for details.')
-                        })
-                    prop_anyof = [] # short-circuit any further processing
+                        compare = DocGenUtilities.compare_versions(latest_version, cleaned_version)
+                        if compare < 0:
+                            latest_version = cleaned_version
+                    if match_ref != unversioned_ref: # These are not all versions of the same thing
+                        break
 
+                if match_ref == unversioned_ref:
+                    # Replace the anyof with a ref to the latest version:
+                    prop_ref = refs_by_version[latest_version]
+                    prop_anyof = [ {
+                        '$ref': prop_ref
+                        }]
 
             for elt in prop_anyof:
                 if skip_null and (elt.get('type') == 'null'):
@@ -674,6 +808,39 @@ class DocFormatter:
                 prop_names = list(set(prop_names) & set(profile_props))
         prop_names.sort(key=str.lower)
         return prop_names
+
+    def extend_metadata(self, meta, properties, version):
+
+        for prop_name in properties.keys():
+            props = properties[prop_name]
+
+            if prop_name not in meta:
+                meta[prop_name] = {}
+                meta[prop_name]['version'] = version
+            if 'deprecated' in props:
+                if 'version_deprecated' not in meta[prop_name]:
+                    if version == '1.0.0':
+                        warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
+                    else:
+                        meta[prop_name]['version_deprecated'] = version
+                    meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
+
+            if props.get('enum'):
+                enum = props.get('enum')
+                meta[prop_name]['enum'] = meta[prop_name].get('enum', {})
+
+                for enum_name in enum:
+                    if enum_name not in meta[prop_name]['enum']:
+                        meta[prop_name]['enum'][enum_name] = {}
+                        meta[prop_name]['enum'][enum_name]['version'] = version
+                    # TODO: Get deprecation info from schema
+
+            # build out metadata for sub-properties.
+            if props.get('properties'):
+                child_props = props['properties']
+                meta[prop_name] = self.extend_metadata(meta[prop_name], child_props, version)
+
+        return meta
 
 
     def exclude_annotations(self, prop_names):
@@ -741,7 +908,8 @@ class DocFormatter:
             else:
                 return self.parse_property_info(schema_ref, prop_name, prop_info, prop_path, within_action)
 
-        parsed = {'prop_type': [],
+        parsed = {
+                  'prop_type': [],
                   'prop_units': False,
                   'read_only': False,
                   'descr': [],
@@ -817,7 +985,6 @@ class DocFormatter:
         # read_only and units should be the same for all
         parsed['read_only'] = details[0]['read_only']
         parsed['prop_units'] = details[0]['prop_units']
-        # TODO: also same for all?
         parsed['prop_required'] = details[0]['prop_required']
         parsed['prop_required_on_create'] = details[0]['prop_required_on_create']
 
@@ -901,6 +1068,8 @@ class DocFormatter:
         # Only objects within Actions have parameters
         action_parameters = prop_info.get('parameters', {})
 
+        prop_info = self.apply_overrides(prop_info)
+
         if isinstance(prop_type, list):
             prop_is_object = 'object' in prop_type
             prop_is_array = 'array' in prop_type
@@ -925,26 +1094,11 @@ class DocFormatter:
         prop_required = prop_info.get('prop_required')
         prop_required_on_create = prop_info.get('prop_required_on_create')
 
-        descr = None
-        if self.config.get('profile_mode') != 'terse':
-            if self.config.get('normative') and 'longDescription' in prop_info:
-                descr = prop_info.get('longDescription', '')
-            else:
-                descr = prop_info.get('description', '')
+        descr = self.get_property_description(prop_info)
 
-        normative_descr = prop_info.get('longDescription', '')
-        non_normative_descr = prop_info.get('description', '')
-        pattern = prop_info.get('pattern')
         required = prop_info.get('required', [])
         required_on_create = prop_info.get('requiredOnCreate', [])
 
-        if self.config.get('normative') and normative_descr:
-            descr = normative_descr
-        else:
-            descr = non_normative_descr
-
-        if self.config.get('normative') and pattern:
-            descr = descr + ' Pattern: ' + pattern
 
         add_link_text = prop_info.get('add_link_text', '')
 
@@ -1107,7 +1261,8 @@ class DocFormatter:
             if profile_values:
                 profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
 
-        parsed_info = {'prop_type': prop_type,
+        parsed_info = {'_prop_name': prop_name,
+                       'prop_type': prop_type,
                        'prop_units': prop_units,
                        'read_only': read_only,
                        'nullable': has_null,
@@ -1124,11 +1279,11 @@ class DocFormatter:
                        'has_action_details': has_prop_actions,
                        'action_details': action_details,
                        'promote_me': promote_me,
-                       'normative_descr': normative_descr,
-                       'non_normative_descr': non_normative_descr,
+                       'normative_descr': prop_info.get('longDescription', ''),
+                       'non_normative_descr': prop_info.get('description', ''),
                        'prop_required': prop_required,
                        'prop_required_on_create': prop_required_on_create,
-                       'pattern': pattern,
+                       'pattern': prop_info.get('pattern'),
                        'is_in_profile': False,
                        'profile_read_req': None,
                        'profile_write_req': None,
@@ -1176,6 +1331,30 @@ class DocFormatter:
                               }
                              }
         return prop_info
+
+
+    def get_property_description(self, prop_info):
+        """ Get the right description to output, based on prop data and config """
+        descr = None
+        if self.config.get('profile_mode') != 'terse':
+            if self.config.get('normative') and 'longDescription' in prop_info:
+                descr = prop_info.get('longDescription', '')
+            else:
+                descr = prop_info.get('description', '')
+
+        normative_descr = prop_info.get('longDescription', '')
+        non_normative_descr = prop_info.get('description', '')
+        pattern = prop_info.get('pattern')
+
+        if self.config.get('normative') and normative_descr:
+            descr = normative_descr
+        else:
+            descr = non_normative_descr
+
+        if self.config.get('normative') and pattern:
+            descr = descr + ' Pattern: ' + pattern
+
+        return descr
 
 
     def format_object_descr(self, schema_ref, prop_info, prop_path=[], is_action=False):
@@ -1277,6 +1456,12 @@ class DocFormatter:
             return schema_name
         return schema_ref
 
+    def link_to_common_property(self, ref_key):
+        """ String for output. Override in HTML formatter to get actual links. """
+        ref_info = self.common_properties.get(ref_key)
+        if ref_info and ref_info.get('_prop_name'):
+            return ref_info.get('_prop_name') + ' object'
+        return ref_key
 
     def link_to_outside_schema(self, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links."""
@@ -1342,52 +1527,61 @@ class DocFormatter:
         return prop_info
 
 
-    def compare_versions(self, version, context_version):
-        """ Returns +1 if version is newer than context_version, -1 if version is older, 0 if equal """
-
-        if version == context_version:
-            return 0
-        else:
-            version_parts = version.split('.')
-            context_parts = context_version.split('.')
-            # versions are expected to have three parts
-            for i in range(3):
-                if version_parts[i] > context_parts[i]:
-                    return +1
-                if version_parts[i] < context_parts[i]:
-                    return 1
-            return 0
-
     def merge_metadata(self, node_name, meta, context_meta):
         """ Merge version and version_deprecated information from meta with that from context_meta
 
         context_meta contains version info for the parent, plus embedded version info for node_name
         (and its siblings). We want:
+        * (MAYBE) If meta['node_name'] and context_meta['node_name'] both exist, use the older version. For example,
+          this can occur when an object was initially defined inline and later moved to the definitions section
+          of a schema and included by reference. Presumably definitions could move in the other direction as well!
+          We want the version of the first appearance of this property in the schema.
         * If context_meta['node_name']['version'] is newer than meta['version'], use the newer version.
           (implication is that this property was added to the parent after it was already defined elsewhere.)
         For deprecations, it's even less likely differing versions will make sense, but we generally want the
         older version.
         """
         node_meta = context_meta.get(node_name, {})
-
-        if ('version' in meta) and ('version' in node_meta):
-            compare = self.compare_versions(meta['version'], node_meta['version'])
-            if compare > 0:
-                # node_meta is newer; use that.
-                meta['version'] = node_meta['version']
-        elif 'version' in node_meta:
-            meta['version'] = node_meta['version']
-
-        if ('version_deprecated' in meta) and ('version_deprecated' in context_meta):
-            compare = self.compare_versions(meta['version_deprecated'], node_meta['version_deprecated'])
-            if compare < 0:
-                # node_meta is older, use that:
-                meta['version_deprecated'] = node_meta['version_deprecated']
-        elif 'version_deprecated' in node_meta:
-            meta['version_deprecated'] = node_meta['version_deprecated']
-            meta['version_deprecated_explanation'] = node_meta.get('version_deprecated_explanation', '')
+        meta = self.merge_full_metadata(meta, node_meta)
 
         return meta
+
+
+    def merge_full_metadata(self, meta_a, meta_b):
+        """ Recursively merge two metadata structures.
+        We want to capture the earlier of version and version_deprecated values for all nodes. """
+
+        meta1 = copy.deepcopy(meta_a)
+        meta2 = copy.deepcopy(meta_b)
+
+        if ('version' in meta1) and ('version' in meta2):
+            compare = DocGenUtilities.compare_versions(meta1['version'], meta2['version'])
+            # We want the "first seen" entry, so use the older one.
+            if compare > 0:
+                meta1['version'] = meta2['version']
+        elif 'version' in meta2:
+            meta1['version'] = meta2['version']
+
+        if ('version_deprecated' in meta1) and ('version_deprecated' in meta2):
+            compare = DocGenUtilities.compare_versions(meta1['version_deprecated'], meta2['version_deprecated'])
+            if compare > 0:
+                # meta2 is older, use that:
+                meta1['version_deprecated'] = meta2['version_deprecated']
+        elif 'version_deprecated' in meta2:
+            meta1['version_deprecated'] = meta2['version_deprecated']
+            meta1['version_deprecated_explanation'] = meta2.get('version_deprecated_explanation', '')
+
+        for key, val in meta1.items():
+            if isinstance(val, dict):
+                if meta2.get(key):
+                    meta1[key] = self.merge_full_metadata(meta1[key], meta2[key])
+        for key, val in meta2.items():
+            if isinstance(val, dict):
+                # Just pick up the missed items.
+                if not meta1.get(key):
+                    meta1[key] = meta2[key]
+        return meta1
+
 
     def get_prop_profile(self, schema_ref, prop_path, section):
         """Get profile data for the specified property, by schema_ref, prop name path, and section.
@@ -1423,6 +1617,7 @@ class DocFormatter:
 
         return prop_profile
 
+
     @staticmethod
     def truncate_version(version_string, num_parts):
         """Truncate the version string to at least the specified number of parts.
@@ -1441,18 +1636,6 @@ class DocFormatter:
                 break
 
         return '.'.join(keep)
-
-
-    @staticmethod
-    def make_unversioned_ref(this_ref):
-        """Get the un-versioned string based on a (possibly versioned) ref"""
-
-        unversioned = None
-        pattern = re.compile(r'(.+)\.([^\.]+)\.json#(.+)')
-        match = pattern.fullmatch(this_ref)
-        if match:
-            unversioned = match.group(1) + '.json#' + match.group(3)
-        return unversioned
 
 
     @staticmethod

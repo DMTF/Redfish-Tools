@@ -1,6 +1,6 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
-# Copyright 2016, 2017 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017, 2018 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -17,6 +17,8 @@ import os
 import re
 import argparse
 import json
+import copy
+import functools
 import warnings
 from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
@@ -37,6 +39,7 @@ class DocGenerator:
         self.config = config
         self.import_from = import_from
         self.outfile = outfile
+        self.property_data = {} # This is an object property for ease of testing.
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
@@ -277,21 +280,22 @@ class DocGenerator:
         This is the main loop of the product.
         """
         files_to_process = self.get_files(self.import_from)
-        files, schema_data = self.group_files(files_to_process)
+        grouped_files, schema_data = self.group_files(files_to_process)
 
-        property_data = {}
+        self.property_data = {}
         doc_generator_meta = {}
 
-        for normalized_uri in files.keys():
-            data = self.process_files(normalized_uri, files[normalized_uri])
+        # First expand the grouped files -- these are the schemas that get first-class documentation sections
+        for normalized_uri in grouped_files.keys():
+            data = self.process_files(normalized_uri, grouped_files[normalized_uri])
             if not data:
                 # If we're in profile mode, this is probably normal.
                 if not self.config['profile_mode']:
                     warnings.warn("Unable to process files for " + normalized_uri)
                 continue
-            property_data[normalized_uri] = data
-            doc_generator_meta[normalized_uri] = property_data[normalized_uri]['doc_generator_meta']
-            latest_info = files[normalized_uri][-1]
+            self.property_data[normalized_uri] = data
+            doc_generator_meta[normalized_uri] = self.property_data[normalized_uri]['doc_generator_meta']
+            latest_info = grouped_files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
             latest_data = DocGenUtilities.load_as_json(latest_file)
             latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
@@ -299,20 +303,23 @@ class DocGenerator:
             latest_data['_schema_name'] = latest_info.get('schema_name')
             schema_data[normalized_uri] = latest_data
 
+        # Also process and version definitions in any "other" files. These are files without top-level $ref objects.
+        schema_data = self.process_unversioned_files(schema_data, doc_generator_meta, self.config['uri_to_local'])
+
         traverser = SchemaTraverser(schema_data, doc_generator_meta, self.config['uri_to_local'])
 
         # Generate output
         if self.config['output_format'] == 'markdown':
             from doc_formatter import MarkdownGenerator
-            generator = MarkdownGenerator(property_data, traverser, self.config, level)
+            self.generator = MarkdownGenerator(self.property_data, traverser, self.config, level)
         elif self.config['output_format'] == 'html':
             from doc_formatter import HtmlGenerator
-            generator = HtmlGenerator(property_data, traverser, self.config, level)
+            self.generator = HtmlGenerator(self.property_data, traverser, self.config, level)
         elif self.config['output_format'] == 'csv':
             from doc_formatter import CsvGenerator
-            generator = CsvGenerator(property_data, traverser, self.config, level)
+            self.generator = CsvGenerator(self.property_data, traverser, self.config, level)
 
-        return generator.generate_output()
+        return self.generator.generate_output()
 
 
     def group_files(self, files):
@@ -508,10 +515,7 @@ class DocGenerator:
             property_data['properties'] = {}
         meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
 
-        if version == '1.0.0':
-            version = None
-
-        if (not version) and (schema_ref in property_data):
+        if (version == '1.0.0') and (schema_ref in property_data):
             warnings.warn('Check', schema_ref, 'for version problems.',
                           'Are there two files with either version 1.0.0 or no version?')
 
@@ -545,6 +549,170 @@ class DocGenerator:
         return property_data
 
 
+    def process_unversioned_files(self, schema_data, doc_generator_meta, uri_to_local):
+        """ Process version metadata in individually-versioned properties in files lacking a $ref.
+        That complicated rule catches some of the "referenced objects."
+        """
+
+        interim_traverser = SchemaTraverser(schema_data, doc_generator_meta, uri_to_local)
+        for filename, data in schema_data.items():
+            if '$ref' in data:
+                continue
+            # Iterate definitions, then properties:
+            for prop_name, prop_data in data.get('definitions', {}).items():
+                schema_data[filename]['definitions'][prop_name] = self.generate_version_data(prop_name, prop_data, interim_traverser)
+            for prop_name, prop_data in data.get('properties', {}).items():
+                schema_data[filename]['properties'][prop_name] = self.generate_version_data(prop_name, prop_data, interim_traverser)
+
+        return schema_data
+
+
+    def generate_version_data(self, prop_name, prop_data, interim_traverser):
+
+        if 'anyOf' in prop_data:
+            prop_anyof = prop_data['anyOf']
+            skip_null = len([x for x in prop_anyof if '$ref' in x])
+            sans_null = [x for x in prop_anyof if x.get('type') != 'null']
+            is_nullable = skip_null and [x for x in prop_anyof if x.get('type') == 'null']
+            if len(sans_null) > 1:
+                match_ref = unversioned_ref = ''
+                latest_ref = latest_version = ''
+                refs_by_version = {}
+                for elt in prop_anyof:
+                    this_ref = elt.get('$ref')
+                    if this_ref:
+                        unversioned_ref = DocGenUtilities.make_unversioned_ref(this_ref)
+                        this_version = DocGenUtilities.get_ref_version(this_ref)
+                        if this_version:
+                            cleaned_version = this_version.replace('_', '.')
+                            refs_by_version[cleaned_version] = this_ref
+                        else:
+                            break
+
+                    if not match_ref:
+                        match_ref = unversioned_ref
+                    if not latest_ref:
+                        latest_ref = this_ref
+                        latest_version = cleaned_version
+                    else:
+                        compare = DocGenUtilities.compare_versions(latest_version, cleaned_version)
+                        if compare < 0:
+                            latest_version = cleaned_version
+                    if match_ref != unversioned_ref: # These are not all versions of the same thing
+                        break
+
+                if match_ref == unversioned_ref:
+                    # Process refs_by_version to get the version-added and deprecated strings
+                    # incorporated into the properties for the latest version:
+                    prop_data = self.update_versioned_properties(unversioned_ref, refs_by_version, interim_traverser)
+
+        return prop_data
+
+
+    def update_versioned_properties(self, common_ref, refs_by_version, traverser):
+        """ This is for generating versioned information for properties in supporting schemas,
+        in which a property definition contains an "anyOf" linking to versioned properties.
+
+        From a dict of version -> $ref, generate a prop_info structure with version information.
+        """
+
+        prop_info =  {}
+        meta = {}
+
+        # Check latest version in refs_by_version against prop_info _latest_version:
+        latest_version = '0.0.0'
+
+        # Walk refs_by_version, extending prop_info
+        ref_keys = [x for x in refs_by_version.keys()]
+        ref_keys.sort(key=functools.cmp_to_key(DocGenUtilities.compare_versions))
+
+        if not len(ref_keys):
+            return prop_info # No changes to make
+        else:
+            for this_version in ref_keys:
+                this_ref = refs_by_version[this_version]
+
+                ref_info = traverser.find_ref_data(this_ref)
+                if not ref_info:
+                    warnings.warn("Can't find schema file for " + this_ref)
+                    continue
+                if 'properties' in ref_info:
+                    ref_properties = ref_info['properties']
+                    meta = self.extend_metadata(meta, ref_properties, this_version, this_ref + '#properties')
+
+                # Follow refs in properties, if they are local to the same schema.
+                [this_schema, rest] = this_ref.split('#')
+                for prop_name, props in ref_properties.items():
+                    prop_ref = None
+                    if '$ref' in props and (props['$ref'].startswith('#') or props['$ref'].startswith(this_schema)):
+                        if props['$ref'].startswith('#'):
+                            prop_ref = this_schema + props['$ref']
+                        else:
+                            prop_ref = props['$ref']
+                    elif 'anyOf' in props:
+                        # may be "$ref or null"
+                        for elt in props['anyOf']:
+                            if elt.get('type') == 'null':
+                                continue
+                            if elt.get('$ref'):
+                                # Don't follow $ref if multiple are offered. Too complicated?
+                                if prop_ref:
+                                    prop_ref = None
+                                    break
+                                else:
+                                    if elt['$ref'].startswith(this_schema):
+                                        prop_ref = elt['$ref']
+                                    if elt['$ref'].startswith('#'):
+                                        prop_ref = this_schema + elt['$ref']
+                    if prop_ref:
+                        child_ref = traverser.find_ref_data(prop_ref)
+                        if child_ref and 'properties' in child_ref:
+                            child_ref_properties = child_ref['properties']
+                            meta[prop_name] = self.extend_metadata(meta[prop_name], child_ref_properties, this_version,
+                                                                   this_ref + '/prop_name#properties')
+                            ref_properties[prop_name]['properties'] = child_ref_properties
+                            ref_properties[prop_name]['type'] = 'object'
+                            del(ref_properties[prop_name]['anyOf'])
+
+
+                # Update any relative refs in ref_properties with this_ref base:
+                [base_ref, rest] = this_ref.split('#')
+                [common_base_ref, rest] = common_ref.split('#')
+                if common_base_ref != base_ref:
+                    ref_properties = self.absolutize_refs(base_ref, ref_properties)
+
+            # Update saved property to latest version, with extended metadata:
+            prop_info = copy.deepcopy(ref_info)
+            prop_info['properties'] = ref_properties
+            prop_info['_doc_generator_meta'] = meta
+            prop_info['_latest_version'] = this_version
+            prop_info['_ref_uri'] = common_ref
+
+        return prop_info
+
+
+    def absolutize_refs(self, base_ref, prop_data):
+        """ Find any relative $ref in prop_data (recursively) and prepend base_ref """
+
+        for key, value in prop_data.items():
+            if key == '$ref':
+                if value.startswith('#'):
+                    value = base_ref + value
+            elif isinstance(value, dict):
+                value = self.absolutize_refs(base_ref, value)
+            elif isinstance(value, list):
+                updated = []
+                for elt in value:
+                    if isinstance(elt, dict):
+                        updated.append(self.absolutize_refs(base_ref, elt))
+                    else:
+                        updated.append(elt)
+                value = updated
+            prop_data[key] = value
+
+        return prop_data
+
+
     def extend_metadata(self, meta, properties, version, normalized_uri=''):
 
         for prop_name in properties.keys():
@@ -556,7 +724,7 @@ class DocGenerator:
                     meta[prop_name]['version'] = version
             if 'deprecated' in props:
                 if 'version_deprecated' not in meta[prop_name]:
-                    if not version:
+                    if not version or version == '1.0.0':
                         warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
                     else:
                         meta[prop_name]['version_deprecated'] = version
@@ -574,6 +742,7 @@ class DocGenerator:
                         meta[prop_name]['enum'][enum_name] = {}
                         if version:
                             meta[prop_name]['enum'][enum_name]['version'] = version
+                    # TODO: Get deprecation info from schema
                     if enum_deprecations:
                         if enum_deprecations.get(enum_name):
                             meta[prop_name]['enum'][enum_name]['version_deprecated'] = enum_deprecations[enum_name]['version']
@@ -813,6 +982,8 @@ def main():
     config['units_translation'] = config['supplemental'].get('units_translation', {})
 
     config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
+
+    config['wants_common_objects'] = config['supplemental'].get('wants_common_objects', False)
 
     if 'keywords' in config['schema_supplement']:
         config['add_toc'] = config['supplemental']['keywords'].get('add_toc')

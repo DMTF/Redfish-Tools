@@ -58,7 +58,7 @@ def test_html_output(mockRequest):
 
         expected_output = open(os.path.join(dirpath, 'expected_output', 'index.html')).read().strip()
 
-        docGen = DocGenerator([ dirpath ], '/dev/null', config)
+        docGen = DocGenerator([ input_dir ], '/dev/null', config)
         output = docGen.generate_docs()
         output = output.strip()
 
@@ -80,7 +80,7 @@ def test_markdown_output(mockRequest):
 
         expected_output = open(os.path.join(dirpath, 'expected_output', 'output.md')).read().strip()
 
-        docGen = DocGenerator([ dirpath ], '/dev/null', config)
+        docGen = DocGenerator([ input_dir ], '/dev/null', config)
         output = docGen.generate_docs()
         output = output.strip()
 
@@ -104,12 +104,12 @@ def test_normative_html_output(mockRequest):
 
     expected_output = open(os.path.join(dirpath, 'expected_output', 'index.html')).read().strip()
 
-    docGen = DocGenerator([ dirpath ], '/dev/null', config)
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
     output = output.strip()
 
     assert output == expected_output, "Failed on: " + name
-    
+
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_csv_output(mockRequest):
@@ -128,11 +128,10 @@ def test_csv_output(mockRequest):
 
     expected_output = open(os.path.join(dirpath, 'expected_output', 'output.csv'), newline=None).read().strip()
 
-    docGen = DocGenerator([ dirpath ], '/dev/null', config)
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
     # "Universal newline" mode replaced '\r\n' with '\n' in the expected output.
     output = output.replace('\r\n', '\n').strip()
 
     assert output == expected_output, "Failed on: " + name
-

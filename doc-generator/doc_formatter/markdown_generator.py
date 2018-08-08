@@ -12,6 +12,7 @@ Initial author: Second Rise LLC.
 
 import copy
 import warnings
+from doc_gen_util import DocGenUtilities
 from . import DocFormatter
 
 # Format user warnings simply
@@ -102,14 +103,14 @@ class MarkdownGenerator(DocFormatter):
         deprecated_descr = None
         if self.current_version.get(parent_depth) and 'version' in meta:
             version = meta.get('version')
-            if self.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 del meta['version']
             self.current_version[current_depth] = version
 
         if not self.current_version.get(current_depth):
             self.current_version[current_depth] = meta.get('version')
 
-        if 'version' in meta:
+        if meta.get('version', '1.0.0') != '1.0.0':
             version_display = self.truncate_version(meta['version'], 2) + '+'
             if 'version_deprecated' in meta:
                 deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
@@ -329,7 +330,7 @@ class MarkdownGenerator(DocFormatter):
                 deprecated_descr = None
                 if 'version' in enum_item_meta:
                     version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                    if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_display = self.truncate_version(version, 2) + '+'
                 if version_display:
                     if 'version_deprecated' in enum_item_meta:
@@ -380,7 +381,7 @@ class MarkdownGenerator(DocFormatter):
 
                 if 'version' in enum_item_meta:
                     version = enum_item_meta['version']
-                    if not parent_version or self.compare_versions(version, parent_version) > 0:
+                    if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_display = self.truncate_version(version, 2) + '+'
                 if version_display:
                     if 'version_deprecated' in enum_item_meta:
@@ -562,6 +563,8 @@ class MarkdownGenerator(DocFormatter):
     def output_document(self):
         """Return full contents of document"""
         body = self.emit()
+        common_properties = self.generate_common_properties_doc()
+
         supplemental = self.config.get('supplemental', {})
 
         if 'Title' in supplemental:
@@ -579,10 +582,15 @@ search: true
         if intro:
             intro = self.process_intro(intro)
             prelude += '\n' + intro + '\n'
+
         contents = [prelude, body]
         if 'Postscript' in supplemental:
             contents.append('\n' + supplemental['Postscript'])
-        return '\n'.join(contents)
+
+        output = '\n'.join(contents)
+        if '[insert_common_objects]' in output:
+            output = output.replace('[insert_common_objects]', common_properties, 1)
+        return output
 
 
     def process_intro(self, intro_blob):
@@ -593,8 +601,8 @@ search: true
 
         fragment_config = {
             'output_format': 'markdown',
-            'normative': self.config['normative'],
-            'cwd': self.config['cwd'],
+            'normative': self.config.get('normative'),
+            'cwd': self.config.get('cwd'),
             'schema_supplement': {},
             'supplemental': {},
             'excluded_annotations': [],
@@ -605,10 +613,10 @@ search: true
             'excluded_schemas_by_match': [],
             'escape_chars': [],
             'uri_replacements': {},
-            'units_translation': self.config['units_translation'],
-            'profile': self.config['profile'],
-            'profile_mode': self.config['profile_mode'],
-            'profile_resources': self.config['profile_resources'],
+            'units_translation': self.config.get('units_translation'),
+            'profile': self.config.get('profile'),
+            'profile_mode': self.config.get('profile_mode'),
+            'profile_resources': self.config.get('profile_resources', {}),
             }
 
         for line in intro_blob.splitlines():

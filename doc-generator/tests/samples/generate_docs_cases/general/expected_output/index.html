@@ -125,8 +125,8 @@ pre.code{
 <p>A Network Device Function represents a logical interface exposed by the network adapter.</p>
 <table class="properties">
 <tbody>
-<tr><td><nobr><b>@odata.etag</b></nobr></td><td>string</td><td><nobr>read-only</nobr></td><td>The current ETag of the resource.</td></tr>
-<tr><td><nobr><b>Actions</b> <i>(v1.1.1+)</i> { }</nobr></td><td>object</td><td></td><td>The available actions for this resource.</td></tr>
+<tr><td><nobr><b>@odata.etag</b> <i>(v1.2.1+)</i></nobr></td><td>string</td><td><nobr>read-only</nobr></td><td>The current ETag of the resource.</td></tr>
+<tr><td><nobr><b>Actions</b> <i>(v1.1+)</i> { }</nobr></td><td>object</td><td></td><td>The available actions for this resource.</td></tr>
 <tr><td><nobr><b>AssignablePhysicalPorts</b> [ {</nobr></td><td>array</td><td><nobr>read-only</nobr></td><td>The array of physical port references that this network device function may be assigned to.</td></tr>
 <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td>Link to a NetworkPort resource. See the Links section and the <a href="#NetworkPort">NetworkPort</a> schema for details.</td></tr>
 <tr><td><nobr><b>BootMode</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-write</nobr> (null)</td><td>The boot mode configured for this network device function.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/NetworkDeviceFunction.json|details|BootMode">BootMode</a> in Property Details, below, for the possible values of this property.</i></td></tr>
