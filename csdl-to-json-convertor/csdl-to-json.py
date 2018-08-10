@@ -22,8 +22,8 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 # Default configurations
-CONFIG_DEF_COPYRIGHT = "Copyright 2014-2018 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
-CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_5_0.json"
+CONFIG_DEF_COPYRIGHT = "Copyright 2014-2018 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
+CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json"
 CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json"
 CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
@@ -893,6 +893,10 @@ class CSDLToJSON():
             # Type Deprecated
             if term == "Redfish.Deprecated":
                 json_type_def["deprecated"] = self.get_attrib( annotation, "String" )
+
+            # Type Auto Expand
+            if term == "OData.AutoExpand":
+                json_type_def["autoExpand"] = True
 
     def csdl_type_to_json_type( self, type, is_nullable ):
         """
