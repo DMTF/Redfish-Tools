@@ -466,6 +466,8 @@ class DocFormatter:
             (ref, prop_info) = prop_tuple
             schema_ref = prop_info['_from_schema_ref']
             prop_name = prop_info['_prop_name']
+            if self.skip_schema(prop_name):
+                continue;
             meta = prop_info.get('_doc_generator_meta')
             version = prop_info.get('_latest_version')
             if not version:
