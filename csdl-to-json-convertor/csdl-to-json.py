@@ -785,8 +785,6 @@ class CSDLToJSON():
                 json_obj_def["required"].append( "@odata.id" )
             if "@odata.type" not in json_obj_def["required"]:
                 json_obj_def["required"].append( "@odata.type" )
-            if "@odata.context" not in json_obj_def["required"]:
-                json_obj_def["required"].append( "@odata.context" )
 
         # If the object is the ReferenceableMember, or is derived from it, then we add the OData properties
         if ( name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember" ):
