@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017, 2018 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -579,6 +579,7 @@ class DocFormatter:
                 warnings.warn("Unable to find data for " + prop_ref)
 
             else:
+
                 prop_meta = prop_info.get('_doc_generator_meta', {})
 
                 # Update version info from the ref, provided that it is within the same schema.
@@ -586,6 +587,7 @@ class DocFormatter:
                 from_schema_ref = ref_info.get('_from_schema_ref')
                 unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
                 is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref) or (schema_ref == unversioned_schema_ref))
+
                 if not is_other_schema:
                     ref_meta = ref_info.get('_doc_generator_meta', {})
                     meta = self.merge_full_metadata(prop_meta, ref_meta)
@@ -702,7 +704,7 @@ class DocFormatter:
                 prop_info['_doc_generator_meta'] = meta
 
                 if '$ref' in prop_info or 'anyOf' in prop_info:
-                        return self.extend_property_info(prop_info['_from_schema_ref'], prop_info, context_meta)
+                    return self.extend_property_info(schema_ref, prop_info, context_meta)
 
             prop_infos.append(prop_info)
 
