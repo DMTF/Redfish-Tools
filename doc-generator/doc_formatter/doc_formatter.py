@@ -466,6 +466,7 @@ class DocFormatter:
             (ref, prop_info) = prop_tuple
             schema_ref = prop_info['_from_schema_ref']
             prop_name = prop_info['_prop_name']
+
             if self.skip_schema(prop_name):
                 continue;
             meta = prop_info.get('_doc_generator_meta')
@@ -1174,7 +1175,6 @@ class DocFormatter:
             else:
                 prop_enum_details = prop_info.get('enumDescriptions')
             anchor = schema_ref + '|details|' + prop_name
-
             prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
                                                                    prop_enum, prop_enum_details,
                                                                    supplemental_details,
@@ -1405,13 +1405,12 @@ class DocFormatter:
                 prop_names = [x for x in prop_names if x.startswith('#')]
 
             for prop_name in prop_names:
-                meta = {}
                 base_detail_info = properties[prop_name]
                 base_detail_info['prop_required'] = prop_name in parent_requires
                 base_detail_info['prop_required_on_create'] = prop_name in parent_requires_on_create
-                detail_info = self.extend_property_info(schema_ref, base_detail_info, context_meta)
-                meta = detail_info[0].get('_doc_generator_meta', {})
-                meta = self.merge_metadata(prop_name, meta, context_meta)
+                meta = self.merge_metadata(prop_name, base_detail_info.get('_doc_generator_meta', {}), context_meta)
+                detail_info = self.extend_property_info(schema_ref, base_detail_info, meta)
+                meta = self.merge_full_metadata(detail_info[0].get('_doc_generator_meta', {}), meta)
 
                 if is_action:
                     # Trim out the properties; these are always Target and Title:
