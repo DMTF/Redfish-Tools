@@ -725,7 +725,7 @@ pre.code{
         """ Generate a TOC for an HTML blob (probably the body of this document) """
 
         toc = ''
-        levels = ['h2'] # h1 heading is title.
+        levels = ['h1', 'h2']
         parser = ToCParser(levels)
         parser.feed(html_blob)
         toc_data = parser.close()
