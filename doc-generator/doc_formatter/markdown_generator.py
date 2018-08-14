@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017, 2018 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -158,7 +158,7 @@ class MarkdownGenerator(DocFormatter):
                         property_values.append(val)
                 formatted_details[property_name] = delim.join(property_values)
 
-        if formatted_details['prop_is_object']:
+        if formatted_details['prop_is_object'] and not in_array:
             if formatted_details['object_description'] == '':
                 name_and_version += ' {}'
             else:
@@ -177,7 +177,10 @@ class MarkdownGenerator(DocFormatter):
                     collapse_array = True
                     name_and_version += ' [ ]'
         elif in_array:
-            name_and_version += ' [ ]'
+            if formatted_details['prop_is_object']:
+                name_and_version += ' [ { } ]'
+            else:
+                name_and_version += ' [ ]'
 
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
