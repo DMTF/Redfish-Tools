@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017, 2018 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -466,6 +466,9 @@ class DocFormatter:
             (ref, prop_info) = prop_tuple
             schema_ref = prop_info['_from_schema_ref']
             prop_name = prop_info['_prop_name']
+
+            if self.skip_schema(prop_name):
+                continue;
             meta = prop_info.get('_doc_generator_meta')
             version = prop_info.get('_latest_version')
             if not version:
@@ -577,6 +580,7 @@ class DocFormatter:
                 warnings.warn("Unable to find data for " + prop_ref)
 
             else:
+
                 prop_meta = prop_info.get('_doc_generator_meta', {})
 
                 # Update version info from the ref, provided that it is within the same schema.
@@ -584,6 +588,7 @@ class DocFormatter:
                 from_schema_ref = ref_info.get('_from_schema_ref')
                 unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
                 is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref) or (schema_ref == unversioned_schema_ref))
+
                 if not is_other_schema:
                     ref_meta = ref_info.get('_doc_generator_meta', {})
                     meta = self.merge_full_metadata(prop_meta, ref_meta)
@@ -700,7 +705,7 @@ class DocFormatter:
                 prop_info['_doc_generator_meta'] = meta
 
                 if '$ref' in prop_info or 'anyOf' in prop_info:
-                        return self.extend_property_info(prop_info['_from_schema_ref'], prop_info, context_meta)
+                    return self.extend_property_info(schema_ref, prop_info, context_meta)
 
             prop_infos.append(prop_info)
 
@@ -1170,7 +1175,6 @@ class DocFormatter:
             else:
                 prop_enum_details = prop_info.get('enumDescriptions')
             anchor = schema_ref + '|details|' + prop_name
-
             prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
                                                                    prop_enum, prop_enum_details,
                                                                    supplemental_details,
@@ -1401,13 +1405,12 @@ class DocFormatter:
                 prop_names = [x for x in prop_names if x.startswith('#')]
 
             for prop_name in prop_names:
-                meta = {}
                 base_detail_info = properties[prop_name]
                 base_detail_info['prop_required'] = prop_name in parent_requires
                 base_detail_info['prop_required_on_create'] = prop_name in parent_requires_on_create
-                detail_info = self.extend_property_info(schema_ref, base_detail_info, context_meta)
-                meta = detail_info[0].get('_doc_generator_meta', {})
-                meta = self.merge_metadata(prop_name, meta, context_meta)
+                meta = self.merge_metadata(prop_name, base_detail_info.get('_doc_generator_meta', {}), context_meta)
+                detail_info = self.extend_property_info(schema_ref, base_detail_info, meta)
+                meta = self.merge_full_metadata(detail_info[0].get('_doc_generator_meta', {}), meta)
 
                 if is_action:
                     # Trim out the properties; these are always Target and Title:

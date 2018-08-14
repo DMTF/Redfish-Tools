@@ -272,7 +272,7 @@ pre.code{
                         property_values.append(val)
                 formatted_details[property_name] = delim.join(property_values)
 
-        if formatted_details['prop_is_object']:
+        if formatted_details['prop_is_object'] and not in_array:
             if formatted_details['object_description'] == '':
                 name_and_version += ' { }'
             else:
@@ -291,7 +291,10 @@ pre.code{
                     collapse_array = True
                     name_and_version += ' [ ] '
         elif in_array:
-            name_and_version += ' [ ] '
+            if formatted_details['prop_is_object']:
+                name_and_version += ' [ { } ]'
+            else:
+                name_and_version += ' [ ] '
 
         name_and_version = '<nobr>' + name_and_version  + '</nobr>'
 
