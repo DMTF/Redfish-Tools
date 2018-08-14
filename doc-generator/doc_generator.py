@@ -973,8 +973,7 @@ def main():
     if 'profile_local_to_uri' in config['supplemental']:
         config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
 
-    if 'profile_uri_to_local' in config['supplemental']:
-        config['profile_uri_to_local'] = config['supplemental']['profile_uri_to_local']
+    config['profile_uri_to_local'] = config['supplemental'].get('profile_uri_to_local', {})
 
     if 'enum_deprecations' in config['supplemental']:
         config['enum_deprecations'] = config['supplemental']['enum_deprecations']

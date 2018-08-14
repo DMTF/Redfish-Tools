@@ -710,8 +710,8 @@ pre.code{
 
         if 'Title' in supplemental:
             doc_title = supplemental['Title']
-        else:
-            doc_title = ''
+        if not doc_title:
+            doc_title = 'Profile Output'
 
         headlines = ['<head>', '<meta charset="utf-8">', '<title>' + doc_title + '</title>']
         styles = self.css_content
@@ -725,7 +725,7 @@ pre.code{
         """ Generate a TOC for an HTML blob (probably the body of this document) """
 
         toc = ''
-        levels = ['h1', 'h2']
+        levels = ['h2'] # h1 heading is title.
         parser = ToCParser(levels)
         parser.feed(html_blob)
         toc_data = parser.close()

@@ -238,7 +238,7 @@ class DocFormatter:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
 
             if compare_property:
-                comparison = creq.get('Comparison')
+                comparison = creq.get('Comparison', '')
                 if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
                     comparison += ' to'
 
