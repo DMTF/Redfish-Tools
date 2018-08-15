@@ -522,6 +522,8 @@ class MarkdownGenerator(DocFormatter):
             contents.append(section.get('heading'))
             if section.get('description'):
                 contents.append(section['description'])
+            if section.get('uris'):
+                contents.append(section['uris'])
             if section.get('json_payload'):
                 contents.append(section['json_payload'])
             # something is awry if there are no properties, but ...
@@ -657,6 +659,24 @@ search: true
     def add_description(self, text):
         """ Add the schema description """
         self.this_section['description'] = text + '\n'
+
+
+    def add_uris(self, uris):
+        """ Add the URIs (which should be a list) """
+        uri_block = "**URIs**:\n"
+
+        for uri in uris:
+            uri_parts = uri.split('/')
+            uri_parts_highlighted = []
+            for part in uri_parts:
+                if part.startswith('{') and part.endswith('}'):
+                    part = self.italic(part)
+                uri_parts_highlighted.append(part)
+            uri_highlighted = '/'.join(uri_parts_highlighted)
+
+            uri_block += "\n" + uri_highlighted
+
+        self.this_section['uris'] = uri_block + "\n"
 
 
     def add_json_payload(self, json_payload):

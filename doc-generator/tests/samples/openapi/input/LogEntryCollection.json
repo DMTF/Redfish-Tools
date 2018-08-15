@@ -89,9 +89,9 @@
             "insertable": false,
             "updatable": false,
             "uris": [
-                "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/Entries",
-                "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries",
-                "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries"
+                "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/STUBCollection",
+                "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/STUBCollection",
+                "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/STUBCollection"
             ]
         }
     },

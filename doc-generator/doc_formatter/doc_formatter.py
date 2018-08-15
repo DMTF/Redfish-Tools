@@ -78,6 +78,12 @@ class DocFormatter:
         raise NotImplementedError
 
 
+    def add_uris(self, uris):
+        """ Add the uris """
+        # raise NotImplementedError
+        pass
+
+
     def add_action_details(self, action_details):
         """ Add the action details (which should already be formatted) """
         if 'action_details' not in self.this_section:
@@ -303,6 +309,8 @@ class DocFormatter:
             self.add_section(section_name, schema_name)
             self.current_version = {}
 
+            uris = details['uris']
+
             # Normative docs prefer longDescription to description
             if config.get('normative') and 'longDescription' in definitions[schema_name]:
                 description = definitions[schema_name].get('longDescription')
@@ -330,6 +338,9 @@ class DocFormatter:
 
             if description:
                 self.add_description(description)
+
+            if len(uris):
+                self.add_uris(uris)
 
             self.add_json_payload(supplemental.get('jsonpayload'))
 
