@@ -293,7 +293,9 @@ class DocGenerator:
                 if not self.config['profile_mode']:
                     warnings.warn("Unable to process files for " + normalized_uri)
                 continue
+            data['uris'] = schema_data[normalized_uri].get('_uris', [])
             self.property_data[normalized_uri] = data
+
             doc_generator_meta[normalized_uri] = self.property_data[normalized_uri]['doc_generator_meta']
             latest_info = grouped_files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
@@ -424,6 +426,10 @@ class DocGenerator:
 
             else:
                 ref = original_ref
+
+            if 'uris' in data:
+                # Stash these in the unversioned schema_data.
+                all_schemas[normalized_uri]['_uris'] = data['uris']
 
             if len(ref_files):
                 # Add the _is_versioned_schema and  is_collection_of hints to each ref object
