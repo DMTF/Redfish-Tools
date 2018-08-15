@@ -708,10 +708,9 @@ pre.code{
             else:
                 body = toc + body
 
-        if 'Title' in supplemental:
-            doc_title = supplemental['Title']
+        doc_title = supplemental.get('Title')
         if not doc_title:
-            doc_title = 'Profile Output'
+            doc_title = ''
 
         headlines = ['<head>', '<meta charset="utf-8">', '<title>' + doc_title + '</title>']
         styles = self.css_content
