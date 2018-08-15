@@ -28,6 +28,7 @@ base_config = {
     'wants_common_objects': False,
     'profile': {},
     'escape_chars': [],
+    'output_format': 'html'
 }
 
 
@@ -35,7 +36,6 @@ base_config = {
 def test_uri_capture(mockRequest):
 
     config = copy.deepcopy(base_config)
-    config['output_format'] = 'html'
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'input'))
 
@@ -55,6 +55,29 @@ def test_uri_capture(mockRequest):
         "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries/{LogEntryId}",
         "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries/{LogEntryId}"
         ])
+    assert sorted(logentrycollection_properties['uris']) == sorted([
+        "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/Entries",
+        "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries",
+        "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries"
+        ])
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_collection_uris_captured_when_collections_excluded (mockRequest):
+
+    config = copy.deepcopy(base_config)
+    config['excluded_schemas_by_match'] = [ 'Collection' ]
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'input'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    logentrycollection_properties = docGen.property_data.get('redfish.dmtf.org/schemas/v1/LogEntryCollection.json')
+
     assert sorted(logentrycollection_properties['uris']) == sorted([
         "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/Entries",
         "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries",
