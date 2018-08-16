@@ -719,14 +719,15 @@ class DocFormatter:
                                     if self.common_properties.get(ref_key) is None:
                                         self.common_properties[ref_key] = ref_info
 
-                                    specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
-                                    if specific_version:
-                                        append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
-                                         + '(v' + str(specific_version) + ')' +
-                                         ' for details on this property.')
-                                    else:
-                                        append_ref = ('See the ' + self.link_to_common_property(ref_key) +
-                                                      ' for details on this property.')
+                                    if not self.skip_schema(ref_info.get('_prop_name')):
+                                        specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
+                                        if specific_version:
+                                            append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
+                                                          + '(v' + str(specific_version) + ')' +
+                                                          ' for details on this property.')
+                                        else:
+                                            append_ref = ('See the ' + self.link_to_common_property(ref_key) +
+                                                          ' for details on this property.')
 
 
                         new_ref_info = {
