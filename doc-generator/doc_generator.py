@@ -283,6 +283,7 @@ class DocGenerator:
         grouped_files, schema_data = self.group_files(files_to_process)
 
         self.property_data = {}
+        collection_data = {}
         doc_generator_meta = {}
 
         # First expand the grouped files -- these are the schemas that get first-class documentation sections
@@ -293,7 +294,14 @@ class DocGenerator:
                 if not self.config['profile_mode']:
                     warnings.warn("Unable to process files for " + normalized_uri)
                 continue
+            data['uris'] = schema_data[normalized_uri].get('_uris', [])
+
+            if normalized_uri.endswith('Collection.json'):
+                [preamble, collection_name] = normalized_uri.rsplit('/', 1)
+                collection_data[collection_name] = data['uris']
+
             self.property_data[normalized_uri] = data
+
             doc_generator_meta[normalized_uri] = self.property_data[normalized_uri]['doc_generator_meta']
             latest_info = grouped_files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
@@ -424,6 +432,10 @@ class DocGenerator:
 
             else:
                 ref = original_ref
+
+            if 'uris' in data:
+                # Stash these in the unversioned schema_data.
+                all_schemas[normalized_uri]['_uris'] = data['uris']
 
             if len(ref_files):
                 # Add the _is_versioned_schema and  is_collection_of hints to each ref object
@@ -973,8 +985,7 @@ def main():
     if 'profile_local_to_uri' in config['supplemental']:
         config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
 
-    if 'profile_uri_to_local' in config['supplemental']:
-        config['profile_uri_to_local'] = config['supplemental']['profile_uri_to_local']
+    config['profile_uri_to_local'] = config['supplemental'].get('profile_uri_to_local', {})
 
     if 'enum_deprecations' in config['supplemental']:
         config['enum_deprecations'] = config['supplemental']['enum_deprecations']

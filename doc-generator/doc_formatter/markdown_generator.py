@@ -522,6 +522,8 @@ class MarkdownGenerator(DocFormatter):
             contents.append(section.get('heading'))
             if section.get('description'):
                 contents.append(section['description'])
+            if section.get('uris'):
+                contents.append(section['uris'])
             if section.get('json_payload'):
                 contents.append(section['json_payload'])
             # something is awry if there are no properties, but ...
@@ -593,6 +595,11 @@ search: true
         output = '\n'.join(contents)
         if '[insert_common_objects]' in output:
             output = output.replace('[insert_common_objects]', common_properties, 1)
+
+        if '[insert_collections]' in output:
+            collections_doc = self.generate_collections_doc()
+            output = output.replace('[insert_collections]', collections_doc, 1)
+
         return output
 
 
@@ -657,6 +664,15 @@ search: true
     def add_description(self, text):
         """ Add the schema description """
         self.this_section['description'] = text + '\n'
+
+
+    def add_uris(self, uris):
+        """ Add the URIs (which should be a list) """
+        uri_block = "**URIs**:\n"
+        for uri in sorted(uris, key=str.lower):
+            uri_block += "\n" + self.format_uri(uri)
+
+        self.this_section['uris'] = uri_block + "\n"
 
 
     def add_json_payload(self, json_payload):
@@ -764,10 +780,7 @@ search: true
         return row
 
     def make_header_row(self, cells):
-        header = []
-        header.append(self.make_row(cells))
-        header.append(self._make_separator_row(len(cells)))
-        return header
+        return self.make_row(cells)
 
     def _make_separator_row(self, num):
         return self.make_row(['---' for x in range(0, num)])

@@ -90,7 +90,8 @@ class DocGenUtilities:
 
         if content:
             urlinfo = urllib.parse.urlparse(uri)
-            urlpath = ''.join([urlinfo.scheme, '://', urlinfo.hostname])
+            # import pdb; pdb.set_trace()
+            urlpath = ''.join([urlinfo.scheme, '://', urlinfo.netloc])
 
             m = re.findall('href="([^"]+)"', content)
             for href in m:

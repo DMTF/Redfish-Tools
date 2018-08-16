@@ -1,0 +1,81 @@
+{
+    "$ref": "#/definitions/PCIeDevice",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2018 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "PCIeDevice": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_0_0.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_0_1.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_0_2.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_0_3.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_1_0.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_1_1.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_2_0.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_2_1.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_9_9.json#/definitions/PCIeDevice"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_3_0.json#/definitions/PCIeDevice"
+                }
+            ],
+            "deletable": false,
+            "description": "This is the schema definition for the PCIeDevice resource.  It represents the properties of a PCIeDevice attached to a System.",
+            "insertable": false,
+            "longDescription": "This resource shall be used to represent a PCIeDevice attached to a System.",
+            "updatable": false,
+            "uris": [
+                "/redfish/v1/Chassis/{ChassisId}/PCIeDevices/{PCIeDeviceId}",
+                "/redfish/v1/Systems/{ComputerSystemId}/PCIeDevices/{PCIeDeviceId}"
+            ]
+        },
+        "PCIeInterface": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/PCIeDevice.v1_3_0.json#/definitions/PCIeInterface"
+                }
+            ],
+            "description": "This type describes a PCIe Interface.",
+            "longDescription": "This type shall describe the PCIe interface characteristics of a PCIe Device."
+        },
+        "PCIeTypes": {
+            "enum": [
+                "Gen1",
+                "Gen2",
+                "Gen3",
+                "Gen4",
+                "Gen5"
+            ],
+            "enumDescriptions": {
+                "Gen1": "A PCIe v1.0 slot.",
+                "Gen2": "A PCIe v2.0 slot.",
+                "Gen3": "A PCIe v3.0 slot.",
+                "Gen4": "A PCIe v4.0 slot.",
+                "Gen5": "A PCIe v5.0 slot."
+            },
+            "type": "string"
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#PCIeDevice.PCIeDevice"
+}

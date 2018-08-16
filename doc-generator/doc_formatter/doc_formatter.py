@@ -78,6 +78,24 @@ class DocFormatter:
         raise NotImplementedError
 
 
+    def add_uris(self, uris):
+        """ Add the uris """
+        raise NotImplementedError
+
+
+    def format_uri(self, uri):
+        """ Format a URI for output. """
+        # This is highlighting for markdown. Override for other output.
+        uri_parts = uri.split('/')
+        uri_parts_highlighted = []
+        for part in uri_parts:
+            if part.startswith('{') and part.endswith('}'):
+                part = self.italic(part)
+            uri_parts_highlighted.append(part)
+        uri_highlighted = '/'.join(uri_parts_highlighted)
+        return uri_highlighted
+
+
     def add_action_details(self, action_details):
         """ Add the action details (which should already be formatted) """
         if 'action_details' not in self.this_section:
@@ -238,7 +256,7 @@ class DocFormatter:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
 
             if compare_property:
-                comparison = creq.get('Comparison')
+                comparison = creq.get('Comparison', '')
                 if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
                     comparison += ' to'
 
@@ -303,6 +321,8 @@ class DocFormatter:
             self.add_section(section_name, schema_name)
             self.current_version = {}
 
+            uris = details['uris']
+
             # Normative docs prefer longDescription to description
             if config.get('normative') and 'longDescription' in definitions[schema_name]:
                 description = definitions[schema_name].get('longDescription')
@@ -330,6 +350,9 @@ class DocFormatter:
 
             if description:
                 self.add_description(description)
+
+            if len(uris):
+                self.add_uris(uris)
 
             self.add_json_payload(supplemental.get('jsonpayload'))
 
@@ -534,6 +557,37 @@ class DocFormatter:
         return cp_gen.emit()
 
 
+    def generate_collections_doc(self):
+        """ Generate output for collections. This is a table of CollectionName, URIs. """
+
+        collections_uris = self.get_collections_uris()
+        if not collections_uris:
+            return ''
+
+        doc = ""
+        header = self.make_header_row(['Collection Type', 'URIs'])
+        rows = []
+        for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
+            item_text = ' '.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
+            rows.append(self.make_row([collection_name, item_text]))
+        doc = self.make_table(rows, [header])
+        return doc
+
+
+    def get_collections_uris(self):
+        """ Get just the collection names and URIs from property_data.
+
+        Collections are identified by "Collection" in the normalized_uri. """
+        data = {}
+        collection_keys = sorted([x for x in self.property_data if 'Collection.' in x], key=str.lower)
+        for x in collection_keys:
+            [preamble, collection_file_name] = x.rsplit('/', 1)
+            [collection_name, rest] = collection_file_name.split('.', 1)
+            uris = sorted(self.property_data[x].get('uris', []), key=str.lower)
+            data[collection_name] = [self.format_uri(x) for x in uris]
+        return data
+
+
     def extend_property_info(self, schema_ref, prop_info, context_meta=None):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
@@ -665,14 +719,15 @@ class DocFormatter:
                                     if self.common_properties.get(ref_key) is None:
                                         self.common_properties[ref_key] = ref_info
 
-                                    specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
-                                    if specific_version:
-                                        append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
-                                         + '(v' + str(specific_version) + ')' +
-                                         ' for details on this property.')
-                                    else:
-                                        append_ref = ('See the ' + self.link_to_common_property(ref_key) +
-                                                      ' for details on this property.')
+                                    if not self.skip_schema(ref_info.get('_prop_name')):
+                                        specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
+                                        if specific_version:
+                                            append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
+                                                          + '(v' + str(specific_version) + ')' +
+                                                          ' for details on this property.')
+                                        else:
+                                            append_ref = ('See the ' + self.link_to_common_property(ref_key) +
+                                                          ' for details on this property.')
 
 
                         new_ref_info = {
@@ -1499,9 +1554,18 @@ class DocFormatter:
             return "See " + target
         return False
 
-    def is_documented_schema(self, schema_name):
+    def is_documented_schema(self, schema_ref):
         """ True if the schema will appear as a section in the output documentation """
-        return schema_name in self.documented_schemas
+        return schema_ref in self.documented_schemas
+
+
+    def get_ref_for_documented_schema_name(self, schema_name):
+        """ Get the schema_ref for the schema_name, if it is a documented schema. """
+        candidates = [x for x in self.documented_schemas if schema_name in x]
+        for x in candidates:
+            if self.property_data[x]['schema_name'] == schema_name:
+                return x
+        return False
 
 
     def apply_overrides(self, prop_info, schema_name=None, prop_name=None):

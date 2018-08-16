@@ -50,7 +50,7 @@ String-replacement for "units" values. Case-sensitive. Any units not matched wil
 
 # Introduction
 
-<h1 class="title">Sample Profile-focused Document</h1>
+# Sample Profile-focused Document
 
 [add_toc]
 
