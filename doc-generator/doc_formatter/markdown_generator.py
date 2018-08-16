@@ -669,7 +669,7 @@ search: true
     def add_uris(self, uris):
         """ Add the URIs (which should be a list) """
         uri_block = "**URIs**:\n"
-        for uri in uris:
+        for uri in sorted(uris, key=str.lower):
             uri_block += "\n" + self.format_uri(uri)
 
         self.this_section['uris'] = uri_block + "\n"

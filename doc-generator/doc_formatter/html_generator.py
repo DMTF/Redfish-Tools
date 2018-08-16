@@ -841,7 +841,7 @@ pre.code{
     def add_uris(self, uris):
         """ Add the URIs (which should be a list) """
         uri_strings = []
-        for uri in uris:
+        for uri in sorted(uris, key=str.lower):
             uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
