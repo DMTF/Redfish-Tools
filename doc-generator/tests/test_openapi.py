@@ -101,23 +101,23 @@ def test_uris_in_regular_schema_markdown_output (mockRequest):
     output = docGen.generate_docs()
 
     # Links should appear with asterisks around {} path parts to highlight them.
-    expected_links = [
+    expected_strings = [
         "/redfish/v1/Managers/*{ManagerId}*/LogServices/*{LogServiceId}*/Entries/*{LogEntryId}*",
         "/redfish/v1/Systems/*{ComputerSystemId}*/LogServices/*{LogServiceId}*/Entries/*{LogEntryId}*",
         "/redfish/v1/CompositionService/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/LogServices/*{LogServiceId}*/Entries/*{LogEntryId}*"
         ]
 
-    for x in expected_links:
+    for x in expected_strings:
         assert x in output
 
 
-@pytest.mark.xfail
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_uris_in_collection_schema_markdown_output (mockRequest):
 
     config = copy.deepcopy(base_config)
     config['excluded_schemas_by_match'] = [ 'Collection' ]
     config['output_format'] = 'markdown'
+    config['supplemental'] = {'Introduction': "# Redfish Collections\n\n[insert_collections]\n"}
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'input'))
 
@@ -127,11 +127,11 @@ def test_uris_in_collection_schema_markdown_output (mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    expected_links = [
+    expected_strings = [
         "/redfish/v1/Managers/*{ManagerId}*/LogServices/*{LogServiceId}*/STUBCollection",
         "/redfish/v1/Systems/*{ComputerSystemId}*/LogServices/*{LogServiceId}*/STUBCollection",
         "/redfish/v1/CompositionService/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/LogServices/*{LogServiceId}*/STUBCollection"
         ]
 
-    for x in expected_links:
+    for x in expected_strings:
         assert x in output

@@ -701,6 +701,16 @@ pre.code{
             if common_properties:
                 warnings.warn('Supplemental file lacks "[insert_common_objects]" marker. Common object properties were found but will be omitted.')
 
+
+        marker = False
+        if '<p>[insert_collections]</p>' in body:
+            marker = '<p>[insert_collections]</p>'
+        elif '[insert_collections]' in body:
+            marker = '[insert_collections]'
+        if marker:
+            collections_doc = self.generate_collections_doc()
+            body = body.replace(marker, collections_doc, 1)
+
         if self.config.get('add_toc'):
             toc = self.generate_toc(body)
             if '[add_toc]' in body:

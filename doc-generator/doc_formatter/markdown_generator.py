@@ -595,6 +595,11 @@ search: true
         output = '\n'.join(contents)
         if '[insert_common_objects]' in output:
             output = output.replace('[insert_common_objects]', common_properties, 1)
+
+        if '[insert_collections]' in output:
+            collections_doc = self.generate_collections_doc()
+            output = output.replace('[insert_collections]', collections_doc, 1)
+
         return output
 
 
@@ -664,17 +669,8 @@ search: true
     def add_uris(self, uris):
         """ Add the URIs (which should be a list) """
         uri_block = "**URIs**:\n"
-
         for uri in uris:
-            uri_parts = uri.split('/')
-            uri_parts_highlighted = []
-            for part in uri_parts:
-                if part.startswith('{') and part.endswith('}'):
-                    part = self.italic(part)
-                uri_parts_highlighted.append(part)
-            uri_highlighted = '/'.join(uri_parts_highlighted)
-
-            uri_block += "\n" + uri_highlighted
+            uri_block += "\n" + self.format_uri(uri)
 
         self.this_section['uris'] = uri_block + "\n"
 
@@ -786,7 +782,6 @@ search: true
     def make_header_row(self, cells):
         header = []
         header.append(self.make_row(cells))
-        header.append(self._make_separator_row(len(cells)))
         return header
 
     def _make_separator_row(self, num):
