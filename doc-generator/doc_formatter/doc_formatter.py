@@ -570,7 +570,7 @@ class DocFormatter:
         for collection_name, uris in collections_uris.items():
             item_text = ' '.join([self.format_uri(x) for x in uris])
             rows.append(self.make_row([collection_name, item_text]))
-        doc = self.make_table(rows, header)
+        doc = self.make_table(rows, [header])
         return doc
 
 

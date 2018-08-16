@@ -780,9 +780,7 @@ search: true
         return row
 
     def make_header_row(self, cells):
-        header = []
-        header.append(self.make_row(cells))
-        return header
+        return self.make_row(cells)
 
     def _make_separator_row(self, num):
         return self.make_row(['---' for x in range(0, num)])
