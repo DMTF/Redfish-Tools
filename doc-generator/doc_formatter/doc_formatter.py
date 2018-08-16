@@ -80,8 +80,8 @@ class DocFormatter:
 
     def add_uris(self, uris):
         """ Add the uris """
-        # raise NotImplementedError
-        pass
+        raise NotImplementedError
+
 
     def format_uri(self, uri):
         """ Format a URI for output. """
@@ -1554,9 +1554,18 @@ class DocFormatter:
             return "See " + target
         return False
 
-    def is_documented_schema(self, schema_name):
+    def is_documented_schema(self, schema_ref):
         """ True if the schema will appear as a section in the output documentation """
-        return schema_name in self.documented_schemas
+        return schema_ref in self.documented_schemas
+
+
+    def get_ref_for_documented_schema_name(self, schema_name):
+        """ Get the schema_ref for the schema_name, if it is a documented schema. """
+        candidates = [x for x in self.documented_schemas if schema_name in x]
+        for x in candidates:
+            if self.property_data[x]['schema_name'] == schema_name:
+                return x
+        return False
 
 
     def apply_overrides(self, prop_info, schema_name=None, prop_name=None):

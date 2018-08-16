@@ -135,3 +135,33 @@ def test_uris_in_collection_schema_markdown_output (mockRequest):
 
     for x in expected_strings:
         assert x in output
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_uris_in_regular_schema_html_output (mockRequest):
+    """ HTML output is more complex and subject to change.
+
+    In addition to highlighting Id placeholders, they are linked to schema documentation. For this test, several schemas
+    are not documented, so the link will go to the schema file itself. """
+
+    config = copy.deepcopy(base_config)
+    config['excluded_schemas_by_match'] = [ 'Collection' ]
+    config['output_format'] = 'html'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'input'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # Links should appear with asterisks around {} path parts to highlight them.
+    expected_strings = [
+        '/redfish/v1/Managers/<i>{ManagerId}</i>/LogServices/<i>{LogServiceId}</i>/Entries/<i><a href="#LogEntry">{LogEntryId}</a></i>',
+        '/redfish/v1/Systems/<i>{ComputerSystemId}</i>/LogServices/<i>{LogServiceId}</i>/Entries/<i><a href="#LogEntry">{LogEntryId}</a></i>',
+        '/redfish/v1/CompositionService/ResourceBlocks/<i>{ResourceBlockId}</i>/Systems/<i>{ComputerSystemId}</i>/LogServices/<i>{LogServiceId}</i>/Entries/<i><a href="#LogEntry">{LogEntryId}</a></i>'
+        ]
+
+    for x in expected_strings:
+        assert x in output

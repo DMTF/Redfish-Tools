@@ -56,6 +56,7 @@ class HtmlGenerator(DocFormatter):
  p {margin: 0 0 0.5em;}
  div.toc {margin: 0 0 2em 0;}
  .toc ul {list-style-type: none;}
+ ul.nobullet { list-style-type: none }
  table{
     max-width: 100%;
     background-color: transparent;
@@ -624,6 +625,10 @@ pre.code{
 
             if section.get('description'):
                 contents.append(section['description'])
+
+            if section.get('uris'):
+                contents.append(section['uris'])
+
             # something is awry if there are no properties
             if section.get('properties'):
                 contents.append(self.make_table(section['properties'], None, 'properties'))
@@ -831,6 +836,36 @@ pre.code{
     def add_description(self, text):
         """ Add the schema description """
         self.this_section['description'] = self.markdown_to_html(text)
+
+
+    def add_uris(self, uris):
+        """ Add the URIs (which should be a list) """
+        uri_strings = []
+        for uri in uris:
+            uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
+
+        uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
+        uri_content = '<h4>URIs:</h4>' + uri_block
+        self.this_section['uris'] = uri_content
+
+
+    def format_uri(self, uri):
+        """ Format a URI for output. Includes creating links to Id'd schemas """
+        uri_parts = uri.split('/')
+        uri_parts_highlighted = []
+        for part in uri_parts:
+            if part.startswith('{') and part.endswith('}'):
+                # Look up the schema and create a link, if documented.
+                if part.endswith('Id}'):
+                    schema_name = part[1:-3]
+                    if self.get_ref_for_documented_schema_name(schema_name):
+                        part = '<a href="#' + schema_name + '">' + part + '</a>'
+
+                # and italicize it
+                part = self.italic(part)
+            uri_parts_highlighted.append(part)
+        uri_highlighted = '/'.join(uri_parts_highlighted)
+        return uri_highlighted
 
 
     def add_json_payload(self, json_payload):
