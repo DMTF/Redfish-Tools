@@ -76,6 +76,9 @@ class HtmlGenerator(DocFormatter):
 table.properties{
     width: 100%;
 }
+table.uris tr td:nth-child(2) {
+    word-break: break-all;
+}
 .property-details-content {
     margin-left: 5em;
 }
