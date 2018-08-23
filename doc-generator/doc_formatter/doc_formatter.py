@@ -568,9 +568,9 @@ class DocFormatter:
         header = self.make_header_row(['Collection Type', 'URIs'])
         rows = []
         for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
-            item_text = ' '.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
+            item_text = '<br>'.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
             rows.append(self.make_row([collection_name, item_text]))
-        doc = self.make_table(rows, [header])
+        doc = self.make_table(rows, [header], 'uris')
         return doc
 
 

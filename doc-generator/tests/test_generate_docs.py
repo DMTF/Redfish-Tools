@@ -42,6 +42,16 @@ base_config = {
     'escape_chars': [],
 }
 
+def _strip_styles(htmlstring):
+    """ Return a copy of htmlstring with the <style>...</style> block stripped out.
+
+    The <style> block is boilerplate, we don't test it, and it gets tweaked periodically.
+    We know there is just one <style> block, so we can keep this simple.
+    """
+    startblock = htmlstring.find('<style>')
+    endblock = htmlstring.find('</style>') + len('</style>')
+    return htmlstring[0:startblock] + htmlstring[endblock:]
+
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_html_output(mockRequest):
@@ -61,6 +71,9 @@ def test_html_output(mockRequest):
         docGen = DocGenerator([ input_dir ], '/dev/null', config)
         output = docGen.generate_docs()
         output = output.strip()
+
+        expected_output = _strip_styles(expected_output)
+        output = _strip_styles(output)
 
         assert output == expected_output, "Failed on: " + name
 
@@ -107,6 +120,9 @@ def test_normative_html_output(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
     output = output.strip()
+
+    expected_output = _strip_styles(expected_output)
+    output = _strip_styles(output)
 
     assert output == expected_output, "Failed on: " + name
 
