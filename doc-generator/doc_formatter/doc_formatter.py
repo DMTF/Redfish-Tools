@@ -518,7 +518,7 @@ class DocFormatter:
                 ref_id = 'common-properties-' + prop_name
                 if version:
                     ref_id += '_v' + version
-                    prop_name += ' (v.' + version + ')'
+                    # prop_name += ' ' + version
 
                 cp_gen.add_section(prop_name, ref_id)
                 cp_gen.add_json_payload(supplemental.get('jsonpayload'))
