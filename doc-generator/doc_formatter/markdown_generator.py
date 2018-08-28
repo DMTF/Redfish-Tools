@@ -244,7 +244,7 @@ class MarkdownGenerator(DocFormatter):
 
         if formatted_details['prop_required_on_create']:
             prop_access += ' required on create'
-        elif formatted_details['prop_required']:
+        elif formatted_details['prop_required'] or formatted_details['required_parameter']:
             prop_access += ' required'
 
         if formatted_details['nullable']:

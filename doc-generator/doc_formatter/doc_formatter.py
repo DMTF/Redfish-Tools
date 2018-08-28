@@ -60,7 +60,7 @@ class DocFormatter:
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create']
+        self.parent_props = ['description', 'longDescription', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
 
 
     def emit(self):
@@ -371,6 +371,7 @@ class DocFormatter:
                     prop_info['prop_required_on_create'] = prop_name in required_on_create
                     prop_info['parent_requires'] = required
                     prop_info['parent_requires_on_create'] = required_on_create
+                    prop_info['required_parameter'] = prop_info.get('requiredParameter') == True
 
                     meta = prop_info.get('_doc_generator_meta', {})
                     prop_infos = self.extend_property_info(schema_ref, prop_info, properties.get('_doc_generator_meta'))
@@ -921,7 +922,7 @@ class DocFormatter:
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
-        'pattern', 'prop_required', 'prop_required_on_create'
+        'pattern', 'prop_required', 'prop_required_on_create', 'required_parameter'
         """
         if isinstance(prop_infos, dict):
             return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
@@ -953,6 +954,7 @@ class DocFormatter:
                   'pattern': [],
                   'prop_required': False,
                   'prop_required_on_create': False,
+                  'required_parameter': False,
                   'is_in_profile': False,
                   'profile_read_req': None,
                   'profile_write_req': None,
@@ -1014,6 +1016,7 @@ class DocFormatter:
         parsed['prop_units'] = details[0]['prop_units']
         parsed['prop_required'] = details[0]['prop_required']
         parsed['prop_required_on_create'] = details[0]['prop_required_on_create']
+        parsed['required_parameter'] = details[0].get('requiredParameter') == True
 
         # Data from profile:
         if profile is not None:
@@ -1049,7 +1052,8 @@ class DocFormatter:
         'has_direct_prop_details', 'has_action_details', 'action_details', 'nullable',
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
-        'normative_descr', 'non_normative_descr', 'pattern', 'prop_required', 'prop_required_on_create'
+        'normative_descr', 'non_normative_descr', 'pattern', 'prop_required', 'prop_required_on_create',
+        'required_parameter'
         """
         traverser = self.traverser
 
@@ -1120,6 +1124,7 @@ class DocFormatter:
 
         prop_required = prop_info.get('prop_required')
         prop_required_on_create = prop_info.get('prop_required_on_create')
+        required_parameter = prop_info.get('requiredParameter')
 
         descr = self.get_property_description(prop_info)
 
@@ -1309,6 +1314,7 @@ class DocFormatter:
                        'non_normative_descr': prop_info.get('description', ''),
                        'prop_required': prop_required,
                        'prop_required_on_create': prop_required_on_create,
+                       'required_parameter': required_parameter,
                        'pattern': prop_info.get('pattern'),
                        'is_in_profile': False,
                        'profile_read_req': None,
