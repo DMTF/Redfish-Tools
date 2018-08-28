@@ -11,7 +11,7 @@ A Network Device Function represents a logical interface exposed by the network 
 
 |     |     |     |
 | --- | --- | --- |
-| **@odata.etag** | string<br><br>*read-only* | The current ETag of the resource. |
+| **@odata.etag** *(v1.2.1+)* | string<br><br>*read-only* | The current ETag of the resource. |
 | **Actions** *(v1.1+)* {} | object | The available actions for this resource. |
 | **AssignablePhysicalPorts** [ { | array<br><br>*read-only* | The array of physical port references that this network device function may be assigned to. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |
@@ -71,8 +71,8 @@ A Network Device Function represents a logical interface exposed by the network 
 | } |   |   |
 | **MaxVirtualFunctions** | number<br><br>*read-only<br>(null)* | The number of virtual functions (VFs) that are available for this Network Device Function. |
 | **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
-| **NetDevFuncCapabilities** *(v1.2+)* [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | Capabilities of this network device function. *See NetDevFuncCapabilities in Property Details, below, for the possible values of this property.* |
-| **NetDevFuncType** *(v1.2+)* | string<br>(enum)<br><br>*read-write<br>(null)* | The configured capability of this network device function. *See NetDevFuncType in Property Details, below, for the possible values of this property.* |
+| **NetDevFuncCapabilities** *(v1.0.2+)* [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | Capabilities of this network device function. *See NetDevFuncCapabilities in Property Details, below, for the possible values of this property.* |
+| **NetDevFuncType** *(v1.0.2+)* | string<br>(enum)<br><br>*read-write<br>(null)* | The configured capability of this network device function. *See NetDevFuncType in Property Details, below, for the possible values of this property.* |
 | **Oem** {} | object | This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections. See the *Resource* schema for details on this property. |
 | **PhysicalPortAssignment** { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |

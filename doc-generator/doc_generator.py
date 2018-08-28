@@ -597,6 +597,12 @@ class DocGenerator:
                         this_version = DocGenUtilities.get_ref_version(this_ref)
                         if this_version:
                             cleaned_version = this_version.replace('_', '.')
+                            # WORKAROUND for CSDL-to-JSON bug that inappropriately adds properties
+                            # in errata versions prior to their actual addition:
+                            # version_bits = cleaned_version.split('.')
+                            # if ((len(version_bits) == 3) and (version_bits[2] != '0')):
+                            #     pass # continue
+                            # else:
                             refs_by_version[cleaned_version] = this_ref
                         else:
                             break
@@ -676,6 +682,9 @@ class DocGenerator:
                                         prop_ref = elt['$ref']
                                     if elt['$ref'].startswith('#'):
                                         prop_ref = this_schema + elt['$ref']
+                        if prop_ref:
+                            del(ref_properties[prop_name]['anyOf'])
+
                     if prop_ref:
                         child_ref = traverser.find_ref_data(prop_ref)
                         if child_ref and 'properties' in child_ref:
@@ -684,8 +693,6 @@ class DocGenerator:
                                                                    this_ref + '/prop_name#properties')
                             ref_properties[prop_name]['properties'] = child_ref_properties
                             ref_properties[prop_name]['type'] = 'object'
-                            del(ref_properties[prop_name]['anyOf'])
-
 
                 # Update any relative refs in ref_properties with this_ref base:
                 [base_ref, rest] = this_ref.split('#')
@@ -727,13 +734,21 @@ class DocGenerator:
 
     def extend_metadata(self, meta, properties, version, normalized_uri=''):
 
+        # WORKAROUND for CSDL-to-JSON bug that inappropriately adds properties
+        # in errata versions prior to their actual addition:
+        workaround_errata_version = False
+        version_bits = version.split('.')
+        if ((len(version_bits) == 3) and (version_bits[2] != '0')):
+            workaround_errata_version = True
+
         for prop_name in properties.keys():
             props = properties[prop_name]
 
             if prop_name not in meta:
                 meta[prop_name] = {}
-                if version: # Track version only when first seen
-                    meta[prop_name]['version'] = version
+            if version and ('version' not in meta[prop_name]) and (not workaround_errata_version):
+                # Track version only when first seen
+                meta[prop_name]['version'] = version
             if 'deprecated' in props:
                 if 'version_deprecated' not in meta[prop_name]:
                     if not version or version == '1.0.0':
@@ -752,8 +767,10 @@ class DocGenerator:
                 for enum_name in enum:
                     if enum_name not in meta[prop_name]['enum']:
                         meta[prop_name]['enum'][enum_name] = {}
-                        if version:
-                            meta[prop_name]['enum'][enum_name]['version'] = version
+                    enum_meta = meta[prop_name]['enum'][enum_name]
+                    if version and ('version' not in enum_meta) and (not workaround_errata_version):
+                        enum_meta['version'] = version
+
                     # TODO: Get deprecation info from schema
                     if enum_deprecations:
                         if enum_deprecations.get(enum_name):

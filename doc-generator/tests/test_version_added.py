@@ -60,8 +60,12 @@ def test_version_added_metadata(mockRequest):
                                                            },
                                                   'version': '1.3.0',
                                                   },
-                         'Actions': { 'version': '1.2.2',
-                                      'Oem': { 'version': '1.2.2' },
+                         # WORKAROUND for properties incorrectly included in errata versions:
+                         # 'Actions': { 'version': '1.2.2',
+                         #              'Oem': { 'version': '1.2.2' },
+                         #              },
+                         'Actions': { 'version': '1.3.0',
+                                      'Oem': { 'version': '1.3.0' },
                                       },
                          'LDAPSearchSettings': { 'version': '1.3.0',
                                                  'BaseDistinguishedNames': {'version': '1.3.0'},
@@ -153,7 +157,9 @@ def test_version_added_output_Chassis(mockRequest):
     input_dir = os.path.abspath(os.path.join(testcase_path, 'version_added', 'Chassis'))
 
     expected_version_strings = ['| **Actions** { |', '| **Links** { |',  # string to match property without version
-                                '**PowerState** *(v1.0.1+)*'  ]
+                                # WORKAROUND for properties incorrectly included in errata versions:
+                                # '**PowerState** *(v1.0.1+)*'
+                                '**PowerState** *(v1.1+)*']
 
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
