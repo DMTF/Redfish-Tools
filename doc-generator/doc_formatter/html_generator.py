@@ -360,7 +360,7 @@ pre.code{
 
         if formatted_details['prop_required_on_create']:
             prop_access += ' <nobr>required on create</nobr>'
-        elif formatted_details['prop_required']:
+        elif formatted_details['prop_required'] or formatted_details.get('required_parameter'):
             prop_access += ' <nobr>required</nobr>'
 
         if formatted_details['nullable']:
