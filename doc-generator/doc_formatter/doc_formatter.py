@@ -518,7 +518,7 @@ class DocFormatter:
                 ref_id = 'common-properties-' + prop_name
                 if version:
                     ref_id += '_v' + version
-                    prop_name += ' (v.' + version + ')'
+                    # prop_name += ' ' + version
 
                 cp_gen.add_section(prop_name, ref_id)
                 cp_gen.add_json_payload(supplemental.get('jsonpayload'))
@@ -868,39 +868,6 @@ class DocFormatter:
                 prop_names = list(set(prop_names) & set(profile_props))
         prop_names.sort(key=str.lower)
         return prop_names
-
-    def extend_metadata(self, meta, properties, version):
-
-        for prop_name in properties.keys():
-            props = properties[prop_name]
-
-            if prop_name not in meta:
-                meta[prop_name] = {}
-                meta[prop_name]['version'] = version
-            if 'deprecated' in props:
-                if 'version_deprecated' not in meta[prop_name]:
-                    if version == '1.0.0':
-                        warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
-                    else:
-                        meta[prop_name]['version_deprecated'] = version
-                    meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
-
-            if props.get('enum'):
-                enum = props.get('enum')
-                meta[prop_name]['enum'] = meta[prop_name].get('enum', {})
-
-                for enum_name in enum:
-                    if enum_name not in meta[prop_name]['enum']:
-                        meta[prop_name]['enum'][enum_name] = {}
-                        meta[prop_name]['enum'][enum_name]['version'] = version
-                    # TODO: Get deprecation info from schema
-
-            # build out metadata for sub-properties.
-            if props.get('properties'):
-                child_props = props['properties']
-                meta[prop_name] = self.extend_metadata(meta[prop_name], child_props, version)
-
-        return meta
 
 
     def exclude_annotations(self, prop_names):

@@ -1,0 +1,77 @@
+{
+    "$ref": "#/definitions/LogEntry",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2018 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "LogEntry": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_0_0.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_0_2.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_0_3.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_0_4.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_0_5.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_0_6.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_1_0.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_1_1.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_1_2.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_1_3.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_1_4.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_2_0.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_2_1.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_2_2.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_3_0.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_3_1.json#/definitions/LogEntry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/LogEntry.v1_4_0.json#/definitions/LogEntry"
+                }
+            ],
+            "deletable": true,
+            "description": "This resource defines the record format for a log.  It is designed to be used for SEL logs (from IPMI) as well as Event Logs and OEM-specific log formats.  The EntryType field indicates the type of log and the resource includes several additional properties dependent on the EntryType.",
+            "insertable": false,
+            "longDescription": "This resource shall represent the log format for log services in a Redfish implementation.",
+            "updatable": false,
+            "uris": [
+                "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/Entries/{LogEntryId}",
+                "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries/{LogEntryId}",
+                "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries/{LogEntryId}"
+            ]
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#LogEntry.LogEntry"
+}

@@ -750,7 +750,7 @@ class DocGenerator:
                 # Track version only when first seen
                 meta[prop_name]['version'] = version
             if 'deprecated' in props:
-                if 'version_deprecated' not in meta[prop_name]:
+                if ('version_deprecated' not in meta[prop_name]) and (not workaround_errata_version):
                     if not version or version == '1.0.0':
                         warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
                     else:
@@ -760,10 +760,12 @@ class DocGenerator:
             if props.get('enum'):
                 enum = props.get('enum')
                 meta[prop_name]['enum'] = meta[prop_name].get('enum', {})
-                # deprecated enums are not currently discernable from schema data, so look them up in config:
-                prop_ref = normalized_uri + prop_name
 
-                enum_deprecations = self.config.get('enum_deprecations', {}).get(prop_ref, {})
+                # Until mid-2018, enum deprecations were not noted in the schema, so we support them from
+                # the supplemental config.
+                prop_ref = normalized_uri + prop_name
+                sup_enum_deprecations = self.config.get('enum_deprecations', {}).get(prop_ref, {})
+                enum_deprecations = props.get('enumDeprecated', {})
                 for enum_name in enum:
                     if enum_name not in meta[prop_name]['enum']:
                         meta[prop_name]['enum'][enum_name] = {}
@@ -771,11 +773,17 @@ class DocGenerator:
                     if version and ('version' not in enum_meta) and (not workaround_errata_version):
                         enum_meta['version'] = version
 
-                    # TODO: Get deprecation info from schema
-                    if enum_deprecations:
+                    if sup_enum_deprecations:
+                        if sup_enum_deprecations.get(enum_name):
+                            meta[prop_name]['enum'][enum_name]['version_deprecated'] = sup_enum_deprecations[enum_name]['version']
+                            meta[prop_name]['enum'][enum_name]['version_deprecated_explanation'] = sup_enum_deprecations[enum_name]['description']
+
+                    else:
                         if enum_deprecations.get(enum_name):
-                            meta[prop_name]['enum'][enum_name]['version_deprecated'] = enum_deprecations[enum_name]['version']
-                            meta[prop_name]['enum'][enum_name]['version_deprecated_explanation'] = enum_deprecations[enum_name]['description']
+                            meta[prop_name]['enum'][enum_name]['version_deprecated_explanation'] = enum_deprecations.get(enum_name)
+                            # import pdb; pdb.set_trace()
+                            if ('version_deprecated' not in meta[prop_name]['enum'][enum_name]) and (not workaround_errata_version):
+                                meta[prop_name]['enum'][enum_name]['version_deprecated'] = version
 
             # build out metadata for sub-properties.
             if props.get('properties'):
