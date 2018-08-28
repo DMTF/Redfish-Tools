@@ -750,7 +750,7 @@ class DocGenerator:
                 # Track version only when first seen
                 meta[prop_name]['version'] = version
             if 'deprecated' in props:
-                if 'version_deprecated' not in meta[prop_name]:
+                if ('version_deprecated' not in meta[prop_name]) and (not workaround_errata_version):
                     if not version or version == '1.0.0':
                         warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
                     else:
