@@ -168,7 +168,7 @@ def test_version_deprecated_output_Chassis(mockRequest):
     input_dir = os.path.abspath(os.path.join(testcase_path, 'version_deprecated', 'Chassis'))
 
     expected_version_strings = ['| Lit |', # string to match property without version
-                                'Unknown *(deprecated v1.5.0)* |',
+                                'Unknown *(deprecated v1.5)* |',
                                 ]
 
 

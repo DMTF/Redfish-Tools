@@ -481,16 +481,20 @@ pre.code{
                 if version_display:
                     if 'version_deprecated' in enum_item_meta:
                         version_depr = html.escape(enum_item_meta['version_deprecated'], False)
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
+                        deprecated_display = self.truncate_version(version_depr, 2)
+                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = html.escape(enum_item_meta['version_deprecated_explanation'], False)
+                            deprecated_descr = html.escape('Deprecated v' + deprecated_display + '+. ' +
+                                                           enum_item_meta['version_deprecated_explanation'], False)
                     else:
                         enum_name += ' ' + self.italic('(v' + version_display + ')')
                 elif 'version_deprecated' in enum_item_meta:
                     version_depr = html.escape(enum_item_meta['version_deprecated'], False)
-                    enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
+                    deprecated_display = self.truncate_version(version_depr, 2)
+                    enum_name += ' ' + self.italic('(deprecated v' + deprecated_display + ')')
                     if enum_item_meta.get('version_deprecated_explanation'):
-                        deprecated_descr = html.escape(enum_item_meta['version_deprecated_explanation'], False)
+                        deprecated_descr = html.escape('Deprecated v' + deprecated_display + '+. ' +
+                                                       enum_item_meta['version_deprecated_explanation'], False)
 
                 descr = html.escape(enum_details.get(enum_item, ''), False)
                 if deprecated_descr:
@@ -536,17 +540,21 @@ pre.code{
                 if version_display:
                     if 'version_deprecated' in enum_item_meta:
                         version_depr = html.escape(enum_item_meta['version_deprecated'], False)
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + version_depr + ')')
+                        deprecated_display = self.truncate_version(version_depr, 2)
+                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if enum_item_meta.get('version_deprecated_explanation'):
-                            enum_name += '<br>' + self.italic(html.escape(enum_item_meta['version_deprecated_explanation'], False))
+                            enum_name += '<br>' + self.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
+                                                                          enum_item_meta['version_deprecated_explanation'], False))
                     else:
                         enum_name += ' ' + self.italic('(v' + version_display + ')')
 
                 elif 'version_deprecated' in enum_item_meta:
                     version_depr = html.escape(enum_item_meta['version_deprecated'], False)
-                    enum_name += ' ' + self.italic('(deprecated v' + version_depr + ')')
+                    deprecated_display = self.truncate_version(version_depr, 2)
+                    enum_name += ' ' + self.italic('(deprecated v' + deprecated_display + ')')
                     if enum_item_meta.get('version_deprecated_explanation'):
-                        enum_name += '<br>' + self.italic(html.escape(enum_item_meta['version_deprecated_explanation'], False))
+                        enum_name += '<br>' + self.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
+                                                                      enum_item_meta['version_deprecated_explanation'], False))
 
                 cells = [enum_name]
                 if profile_mode:
