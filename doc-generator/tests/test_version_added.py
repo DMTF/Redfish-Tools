@@ -125,11 +125,10 @@ def test_version_added_output_AccountService(mockRequest):
     config = copy.deepcopy(base_config)
     input_dir = os.path.abspath(os.path.join(testcase_path, 'version_added', 'AccountService'))
 
-    expected_version_strings = ['**ActiveDirectory** *(v1.3+)*', '**AccountProviderType** *(v1.3+)*', '**Authentication** *(v1.3+)*',
-                                '**LDAPService** *(v1.3+)*', '**RemoteRoleMapping** *(v1.3+)*', '**ServiceAddresses** *(v1.3+)*',
-                                '**ServiceEnabled** *(v1.3+)*', '**LDAP** *(v1.3+)*', '**LocalAccountAuth** *(v1.3+)*',
-                                '**PrivilegeMap** *(v1.1+)*', '**Actions** *(v1.2+)*'
-                                ]
+    expected_version_strings = [ '**LDAP** *(v1.3+)*', '**LDAPService** {',
+                                 '**LocalAccountAuth** *(v1.3+)*',
+                                 '**PrivilegeMap** *(v1.1+)*', '**Actions** *(v1.2+)*'
+                                 ]
 
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}

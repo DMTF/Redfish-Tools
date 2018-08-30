@@ -217,14 +217,14 @@ pre.code{
 
         name_and_version = self.bold(html.escape(prop_name, False))
         deprecated_descr = None
-        if self.current_version.get(parent_depth) and 'version' in meta:
-            version = meta.get('version')
+
+        version = meta.get('version')
+        self.current_version[current_depth] = version
+
+        # Don't display version if there is a parent version and this is not newer:
+        if self.current_version.get(parent_depth) and version:
             if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 del meta['version']
-            self.current_version[current_depth] = version
-
-        if not self.current_version.get(current_depth):
-            self.current_version[current_depth] = meta.get('version')
 
         if meta.get('version', '1.0.0') != '1.0.0':
             version_text = html.escape(meta['version'], False)
