@@ -212,6 +212,9 @@ pre.code{
         if not meta:
             meta = {}
 
+        if prop_name == 'SystemType':
+            import pdb; pdb.set_trace()
+
         # We want to modify a local copy of meta, deleting redundant version info
         meta = copy.deepcopy(meta)
 
@@ -221,8 +224,8 @@ pre.code{
         version = meta.get('version')
         self.current_version[current_depth] = version
 
-        # Don't display version if there is a parent version and this is not newer:
-        if self.current_version.get(parent_depth) and version:
+        # If this version is not newer than the parent version, we don't want it in the output:
+        if self.current_version.get(parent_depth) and 'version' in meta:
             if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 del meta['version']
 

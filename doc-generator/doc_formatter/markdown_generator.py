@@ -101,14 +101,15 @@ class MarkdownGenerator(DocFormatter):
             name_and_version = ''
 
         deprecated_descr = None
-        if self.current_version.get(parent_depth) and 'version' in meta:
+
+        version = meta.get('version')
+        self.current_version[current_depth] = version
+
+        # Don't display version if there is a parent version and this is not newer:
+        if self.current_version.get(parent_depth) and version:
             version = meta.get('version')
             if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 del meta['version']
-            self.current_version[current_depth] = version
-
-        if not self.current_version.get(current_depth):
-            self.current_version[current_depth] = meta.get('version')
 
         if meta.get('version', '1.0.0') != '1.0.0':
             version_display = self.truncate_version(meta['version'], 2) + '+'
