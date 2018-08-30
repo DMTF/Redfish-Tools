@@ -685,7 +685,7 @@ class DocFormatter:
                             append_ref = 'Contains a link to a resource.'
                             ref_schema_name = self.traverser.get_schema_name(is_collection_of)
 
-                            if 'redfish.dmtf.org/schemas/v1/odata.4' in from_schema_uri:
+                            if 'redfish.dmtf.org/schemas/v1/odata' in from_schema_uri:
                                 from_schema_uri = 'http://' + is_collection_of
 
                             link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of, from_schema_uri)
