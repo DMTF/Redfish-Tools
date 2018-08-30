@@ -681,11 +681,11 @@ class DocFormatter:
 
                     # Links to other Redfish resources are a special case.
                     if is_other_schema or is_ref_to_same_schema:
-                        if is_documented_schema and is_collection_of:
+                        if is_collection_of:
                             append_ref = 'Contains a link to a resource.'
                             ref_schema_name = self.traverser.get_schema_name(is_collection_of)
 
-                            if from_schema_uri.endswith('redfish.dmtf.org/schemas/v1/odata.4.0.0.json') or from_schema_uri.endswith('redfish.dmtf.org/schemas/v1/odata.v4_0_1.json'):
+                            if 'redfish.dmtf.org/schemas/v1/odata.4' in from_schema_uri:
                                 from_schema_uri = 'http://' + is_collection_of
 
                             link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of, from_schema_uri)
