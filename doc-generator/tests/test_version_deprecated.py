@@ -64,7 +64,7 @@ def test_version_deprecated_metadata(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
     meta = docGen.property_data['redfish.dmtf.org/schemas/v1/Event.json']['doc_generator_meta']
-    import pdb; pdb.set_trace()
+
     discrepancies = DiscrepancyList()
     for name, data in expected_versions.items():
         if name == 'version': continue
