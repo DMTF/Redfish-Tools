@@ -479,14 +479,16 @@ class DocGenerator:
         1.0 and version_deprecated for deprecated properties.
         """
         property_data = {}
-        schema_ref_is_unversioned = False
+        unversioned_ref = None
+
+        if schema_ref not in refs:
+            unversioned_ref = schema_ref
 
         for info in refs:
             property_data = self.process_data_file(schema_ref, info, property_data)
 
-
-        if schema_ref not in refs:
-            property_data = self.apply_unversioned_data_file(schema_ref, property_data)
+        if unversioned_ref:
+            property_data = self.apply_unversioned_data_file(unversioned_ref, property_data)
         return property_data
 
 
@@ -535,6 +537,9 @@ class DocGenerator:
 
         if 'properties' not in property_data:
             property_data['properties'] = {}
+        if 'definitions' not in property_data:
+            property_data['definitions'] = {}
+
         meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
 
         if (version == '1.0.0') and (schema_ref in property_data):
@@ -586,8 +591,8 @@ class DocGenerator:
         data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
 
+        # If there is no definitions block, there's nothing to do:
         if 'definitions' not in data:
-            warnings.warn("Didn't find 'definitions' in ' + filename + ' while trying to apply unversioned schema data to versioned property data. This is unexpected because 'definitions' is where the versioned refs normally come from.");
             return property_data
 
         ref = data.get('$ref', '')
@@ -607,11 +612,14 @@ class DocGenerator:
 
         meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
         definitions = data.get('definitions')
+        if 'definitions' not in property_data:
+            property_data['definitions'] = {}
 
         for prop_name, prop_info in definitions.items():
             if prop_name == element_to_skip:
                 continue
             property_data['definitions'][prop_name] = prop_info
+        meta['definitions'] = meta.get('definitions', {})
         meta['definitions'] = self.extend_metadata(meta['definitions'], definitions, 'unversioned',
                                                    normalized_uri + '#definitions/')
 
@@ -819,6 +827,7 @@ class DocGenerator:
             # If this data is from the unversioned schema, remove any previously-set deprecation version
             # and either remove or update the version_deprecated_explanation:
             if version == 'unversioned':
+                meta[prop_name]['unversioned'] = True
                 if 'version_deprecated' in meta[prop_name]:
                     del meta[prop_name]['version_deprecated']
                     del meta[prop_name]['version_deprecated_explanation']
