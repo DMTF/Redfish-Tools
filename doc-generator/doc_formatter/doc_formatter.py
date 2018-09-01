@@ -685,7 +685,7 @@ class DocFormatter:
                             append_ref = 'Contains a link to a resource.'
                             ref_schema_name = self.traverser.get_schema_name(is_collection_of)
 
-                            if 'redfish.dmtf.org/schemas/v1/odata.4' in from_schema_uri:
+                            if 'redfish.dmtf.org/schemas/v1/odata' in from_schema_uri:
                                 from_schema_uri = 'http://' + is_collection_of
 
                             link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of, from_schema_uri)
@@ -1602,7 +1602,19 @@ class DocFormatter:
         elif 'version' in meta2:
             meta1['version'] = meta2['version']
 
-        if ('version_deprecated' in meta1) and ('version_deprecated' in meta2):
+        # If any of this data is from the unversioned schema, that wins (expected is that it will be from meta2):
+        if meta1.get('unversioned'):
+            if 'version_deprecated' in meta2:
+                del(meta2['version_deprecated'])
+            # It's still possible for an unversioned schema to include a deprecation notice!
+            meta2['version_deprecated_explanation'] = meta1.get('version_deprecated_explanation', '')
+        elif meta2.get('unversioned'):
+            if 'version_deprecated' in meta1:
+                del(meta1['version_deprecated'])
+            # It's still possible for an unversioned schema to include a deprecation notice!
+            meta1['version_deprecated_explanation'] = meta2.get('version_deprecated_explanation', '')
+
+        elif ('version_deprecated' in meta1) and ('version_deprecated' in meta2):
             compare = DocGenUtilities.compare_versions(meta1['version_deprecated'], meta2['version_deprecated'])
             if compare > 0:
                 # meta2 is older, use that:
