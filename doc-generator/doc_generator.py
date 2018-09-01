@@ -40,6 +40,7 @@ class DocGenerator:
         self.import_from = import_from
         self.outfile = outfile
         self.property_data = {} # This is an object property for ease of testing.
+        self.schema_ref_to_filename = {}
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
@@ -355,6 +356,7 @@ class DocGenerator:
             if schema_name is None: continue
 
             normalized_uri = self.construct_uri_for_filename(filename)
+            self.schema_ref_to_filename[normalized_uri] = filename
 
             data['_schema_name'] = schema_name
             all_schemas[normalized_uri] = data
@@ -388,7 +390,6 @@ class DocGenerator:
                     if '$ref' in obj:
                         refpath_uri, refpath_path = obj['$ref'].split('#')
                         if refpath_path == '/definitions/idRef':
-                            is_versioned_schema = True
                             continue
                         ref_fn = refpath_uri.split('/')[-1]
                         # Skip files that are not present.
@@ -439,6 +440,7 @@ class DocGenerator:
 
             if len(ref_files):
                 # Add the _is_versioned_schema and  is_collection_of hints to each ref object
+                is_versioned_schema = True
                 [x.update({'_is_versioned_schema': is_versioned_schema, '_is_collection_of': is_collection_of})
                  for x in ref_files]
                 grouped_files[normalized_uri] = ref_files
@@ -477,8 +479,14 @@ class DocGenerator:
         1.0 and version_deprecated for deprecated properties.
         """
         property_data = {}
+        schema_ref_is_unversioned = False
+
         for info in refs:
             property_data = self.process_data_file(schema_ref, info, property_data)
+
+
+        if schema_ref not in refs:
+            property_data = self.apply_unversioned_data_file(schema_ref, property_data)
         return property_data
 
 
@@ -499,12 +507,14 @@ class DocGenerator:
 
         data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
+
         version = self.get_version_string(ref['filename'])
 
+
         property_data['schema_name'] = schema_name
-        property_data['latest_version'] = version
         property_data['name_and_version'] = schema_name
         property_data['normalized_uri'] = normalized_uri
+        property_data['latest_version'] = version
 
         min_version = False
         if profile_mode:
@@ -557,6 +567,53 @@ class DocGenerator:
         definitions = property_data['definitions']
         meta['definitions'] = self.extend_metadata(meta['definitions'], definitions, version, normalized_uri + '#definitions/')
         property_data['doc_generator_meta'] = meta
+
+        return property_data
+
+
+    def apply_unversioned_data_file(self, ref, property_data):
+        """ Overlay the unversioned data on this property_data.
+
+        This may include additions and updates, but properties not mentioned in the unversioned file
+        should be unaffected. """
+
+        filename = self.schema_ref_to_filename[ref]
+        normalized_uri = self.construct_uri_for_filename(filename)
+
+        profile_mode = self.config.get('profile_mode')
+        profile = self.config.get('profile_resources', {})
+
+        data = DocGenUtilities.load_as_json(filename)
+        schema_name = SchemaTraverser.find_schema_name(filename, data, True)
+
+        if 'definitions' not in data:
+            warnings.warn("Didn't find 'definitions' in ' + filename + ' while trying to apply unversioned schema data to versioned property data. This is unexpected because 'definitions' is where the versioned refs normally come from.");
+            return property_data
+
+        ref = data.get('$ref', '')
+        element_to_skip = False
+
+        if ref.startswith('#/definitions/'):
+            # If $ref was present (and it surely was), we want to skip the element identified by it.
+            # It will consist of an anyOf that led us to the versioned schemas.
+            element_to_skip = ref[14:]
+
+
+        if profile_mode:
+            schema_profile = profile.get(normalized_uri)
+            if not schema_profile:
+                # Skip schemas that aren't mentioned in the profile:
+                return property_data
+
+        meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
+        definitions = data.get('definitions')
+
+        for prop_name, prop_info in definitions.items():
+            if prop_name == element_to_skip:
+                continue
+            property_data['definitions'][prop_name] = prop_info
+        meta['definitions'] = self.extend_metadata(meta['definitions'], definitions, 'unversioned',
+                                                   normalized_uri + '#definitions/')
 
         return property_data
 
@@ -746,7 +803,9 @@ class DocGenerator:
 
             if prop_name not in meta:
                 meta[prop_name] = {}
-            if version and ('version' not in meta[prop_name]) and (not workaround_errata_version):
+            if (version and ('version' not in meta[prop_name])
+                and (version != 'unversioned')
+                and (not workaround_errata_version)):
                 # Track version only when first seen
                 meta[prop_name]['version'] = version
             if 'deprecated' in props:
@@ -755,6 +814,15 @@ class DocGenerator:
                         warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
                     else:
                         meta[prop_name]['version_deprecated'] = version
+                    meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
+
+            # If this data is from the unversioned schema, remove any previously-set deprecation version
+            # and either remove or update the version_deprecated_explanation:
+            if version == 'unversioned':
+                if 'version_deprecated' in meta[prop_name]:
+                    del meta[prop_name]['version_deprecated']
+                    del meta[prop_name]['version_deprecated_explanation']
+                if props.get('deprecated'):
                     meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
 
             if props.get('enum'):
@@ -781,7 +849,6 @@ class DocGenerator:
                     else:
                         if enum_deprecations.get(enum_name):
                             meta[prop_name]['enum'][enum_name]['version_deprecated_explanation'] = enum_deprecations.get(enum_name)
-                            # import pdb; pdb.set_trace()
                             if ('version_deprecated' not in meta[prop_name]['enum'][enum_name]) and (not workaround_errata_version):
                                 meta[prop_name]['enum'][enum_name]['version_deprecated'] = version
 

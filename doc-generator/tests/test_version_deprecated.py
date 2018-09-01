@@ -54,7 +54,7 @@ def test_version_deprecated_metadata(mockRequest):
             'Context': { 'version_deprecated': '1.2.0' },
             'MemberId': {},
             },
-        'EventType': { 'version_deprecated': '1.3.0' },
+        'EventType': {},  # Event type was "deprecated" in 1.3 and moved to the unversioned schema
         }
         }
 
