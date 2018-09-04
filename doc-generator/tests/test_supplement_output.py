@@ -100,11 +100,13 @@ def test_supplement_description_vs_full_html (mockRequest):
     config['output_format'] = 'html'
 
     config['property_description_overrides'] = {
-        "IPv4Address": "This is a description override for the IPv4Address object."
+        "IPv4Address": "This is a description override for the IPv4Address object.",
+        "DeviceId": "This is a description override for DeviceId, which is not a top-level property.",
     }
 
     config['property_fulldescription_overrides'] = {
-        "IPv6Address": "This is a full description override for the IPv6Address object."
+        "IPv6Address": "This is a full description override for the IPv6Address object.",
+        "SubsystemId": "This is a description override for SubsystemId, which is not a top-level property.",
     }
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'ipaddresses'))
@@ -119,6 +121,8 @@ def test_supplement_description_vs_full_html (mockRequest):
     output_rows = output.split('<tr')
     ipv4_rows = [x for x in output_rows if "<b>IPv4Address</b>" in x]
     ipv6_rows = [x for x in output_rows if "<b>IPv6Address</b>" in x]
+    deviceId_rows = [x for x in output_rows if "<b>DeviceId</b>" in x]
+    subsystemId_rows = [x for x in output_rows if "<b>SubsystemId</b>" in x]
 
     # Verify that the overrides were used:
     ipv4_failed_overrides = [x for x in ipv4_rows if "This is a description override for the IPv4Address object." not in x]
@@ -126,6 +130,12 @@ def test_supplement_description_vs_full_html (mockRequest):
 
     ipv6_failed_overrides = [x for x in ipv6_rows if "This is a full description override for the IPv6Address object." not in x]
     assert len(ipv6_failed_overrides) == 0, "Property full description override failed for " + str(len(ipv6_failed_overrides)) + " mentions of Ipv6Address"
+
+    deviceId_failed_overrides = [x for x in deviceId_rows if "This is a description override for DeviceId" not in x]
+    assert len(deviceId_failed_overrides) == 0, "Property description override failed for " + str(len(deviceId_failed_overrides)) + " mentions of DeviceId"
+
+    subsystemId_failed_overrides = [x for x in subsystemId_rows if "This is a description override for SubsystemId" not in x]
+    assert len(subsystemId_failed_overrides) == 0, "Property description override failed for " + str(len(subsystemId_failed_overrides)) + " mentions of SubsystemId"
 
     # Verify that the description overrides retained the reference to the common property:
     ipv4_failed_overrides = [x for x in ipv4_rows if "for details on this property" not in x]

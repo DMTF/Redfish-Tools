@@ -1447,11 +1447,10 @@ class DocFormatter:
                 base_detail_info = properties[prop_name]
                 base_detail_info['prop_required'] = prop_name in parent_requires
                 base_detail_info['prop_required_on_create'] = prop_name in parent_requires_on_create
+                base_detail_info = self.apply_overrides(base_detail_info, schema_name, prop_name)
                 meta = self.merge_metadata(prop_name, base_detail_info.get('_doc_generator_meta', {}), context_meta)
                 detail_info = self.extend_property_info(schema_ref, base_detail_info, meta)
                 meta = self.merge_full_metadata(detail_info[0].get('_doc_generator_meta', {}), meta)
-
-                base_detail_info = self.apply_overrides(base_detail_info, schema_name, prop_name)
 
                 if is_action:
                     # Trim out the properties; these are always Target and Title:
