@@ -312,25 +312,27 @@ pre.code{
                 formatted_details['descr'] += ' '
             formatted_details['descr'] += formatted_details['add_link_text']
 
-        # If there are prop_details (enum details), add a note to the description:
-        if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
-            if has_enum:
-                anchor = schema_ref + '|details|' + prop_name
-                text_descr = 'See <a href="#' + anchor + '">' + prop_name + '</a> in Property Details, below, for the possible values of this property.'
-            else:
-                text_descr = 'See Property Details, below, for more information about this property.'
+        # Append reference info to descriptions, if appropriate:
+        if not formatted_details.get('fulldescription_override'):
+            # If there are prop_details (enum details), add a note to the description:
+            if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
+                if has_enum:
+                    anchor = schema_ref + '|details|' + prop_name
+                    text_descr = 'See <a href="#' + anchor + '">' + prop_name + '</a> in Property Details, below, for the possible values of this property.'
+                else:
+                    text_descr = 'See Property Details, below, for more information about this property.'
 
 
-            if formatted_details['descr']:
+                if formatted_details['descr']:
+                    formatted_details['descr'] += '<br>' + self.italic(text_descr)
+                else:
+                    formatted_details['descr'] = self.italic(text_descr)
+
+            # If this is an Action with details, add a note to the description:
+            if formatted_details['has_action_details']:
+                anchor = schema_ref + '|action_details|' + prop_name
+                text_descr = 'For more information, see the <a href="#' + anchor + '">Action Details</a> section below.'
                 formatted_details['descr'] += '<br>' + self.italic(text_descr)
-            else:
-                formatted_details['descr'] = self.italic(text_descr)
-
-        # If this is an Action with details, add a note to the description:
-        if formatted_details['has_action_details']:
-            anchor = schema_ref + '|action_details|' + prop_name
-            text_descr = 'For more information, see the <a href="#' + anchor + '">Action Details</a> section below.'
-            formatted_details['descr'] += '<br>' + self.italic(text_descr)
 
         if deprecated_descr:
             formatted_details['descr'] += ' ' + self.italic(deprecated_descr)

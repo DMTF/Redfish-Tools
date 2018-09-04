@@ -1077,6 +1077,9 @@ def main():
     if 'Description Overrides' in config['supplemental']:
         config['property_description_overrides'] = config['supplemental']['Description Overrides']
 
+    if 'FullDescription Overrides' in config['supplemental']:
+        config['property_fulldescription_overrides'] = config['supplemental']['FullDescription Overrides']
+
     if 'local_to_uri' in config['supplemental']:
         config['local_to_uri'] = config['supplemental']['local_to_uri']
 

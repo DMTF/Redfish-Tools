@@ -204,17 +204,19 @@ class MarkdownGenerator(DocFormatter):
                 formatted_details['descr'] += ' '
             formatted_details['descr'] += formatted_details['add_link_text']
 
-        # If there are prop_details (enum details), add a note to the description:
-        if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
-            if has_enum:
-                text_descr = 'See ' + prop_name + ' in Property Details, below, for the possible values of this property.'
-            else:
-                text_descr = 'See Property Details, below, for more information about this property.'
-            formatted_details['descr'] += ' ' + self.italic(text_descr)
+        # Append reference info to descriptions, if appropriate:
+        if not formatted_details.get('fulldescription_override'):
+            if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
+                # If there are prop_details (enum details), add a note to the description:
+                if has_enum:
+                    text_descr = 'See ' + prop_name + ' in Property Details, below, for the possible values of this property.'
+                else:
+                    text_descr = 'See Property Details, below, for more information about this property.'
+                formatted_details['descr'] += ' ' + self.italic(text_descr)
 
-        if formatted_details['has_action_details']:
-            text_descr = 'For more information, see the Action Details section below.'
-            formatted_details['descr'] += ' ' + self.italic(text_descr)
+            if formatted_details['has_action_details']:
+                text_descr = 'For more information, see the Action Details section below.'
+                formatted_details['descr'] += ' ' + self.italic(text_descr)
 
         if deprecated_descr:
             formatted_details['descr'] += ' ' + self.italic(deprecated_descr)
