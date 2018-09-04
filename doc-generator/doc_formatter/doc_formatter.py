@@ -60,7 +60,7 @@ class DocFormatter:
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
+        self.parent_props = ['description', 'longDescription', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
 
 
     def emit(self):
@@ -673,6 +673,7 @@ class DocFormatter:
                 if ref_info.get('type') == 'object':
                     ref_description = ref_info.get('description')
                     ref_longDescription = ref_info.get('longDescription')
+                    ref_fulldescription_override = ref_info.get('fulldescription_override')
                     ref_pattern = ref_info.get('pattern')
                     link_detail = ''
                     append_ref = ''
@@ -739,16 +740,21 @@ class DocFormatter:
                             'readonly': ref_info.get('readonly'),
                             'description': ref_description,
                             'longDescription': ref_longDescription,
+                            'fulldescription_override': ref_fulldescription_override,
                             'pattern': ref_pattern,
-                            'add_link_text': append_ref
                             }
+                        if not ref_fulldescription_override:
+                            new_ref_info['add_link_text'] = append_ref
 
                         if link_detail:
-                            new_ref_info['properties'] = {'@odata.id': {'type': 'string',
-                                                                        'readonly': True,
-                                                                        'description': '',
-                                                                        'add_link_text': link_detail}
-                                                          }
+                            link_props = {'type': 'string',
+                                          'readonly': True,
+                                          'description': '',
+                                          }
+                            if not ref_fulldescription_override:
+                                link_props['add_link_text'] = link_detail
+                            new_ref_info['properties'] = {'@odata.id': link_props}
+
                         ref_info = new_ref_info
 
                 # if parent_props were specified in prop_info, they take precedence:
@@ -1127,6 +1133,7 @@ class DocFormatter:
         required_parameter = prop_info.get('requiredParameter')
 
         descr = self.get_property_description(prop_info)
+        fulldescription_override = prop_info.get('fulldescription_override')
 
         required = prop_info.get('required', [])
         required_on_create = prop_info.get('requiredOnCreate', [])
@@ -1256,12 +1263,14 @@ class DocFormatter:
                 combined_prop_item['_prop_name'] = prop_name
                 combined_prop_item['readonly'] = prop_info.get('readonly', False)
                 if self.config.get('normative') and 'longDescription' in combined_prop_item:
-                    descr = descr + ' ' + prop_items[0]['longDescription']
+                    descr = descr + ' ' + combined_prop_item['longDescription']
                     combined_prop_item['longDescription'] = descr
                 else:
                     if prop_items[0].get('description'):
-                        descr = descr + ' ' + prop_items[0]['description']
+                        descr = descr + ' ' + combined_prop_item['description']
                     combined_prop_item['description'] = descr
+                if fulldescription_override:
+                    combined_prop_item['fulldescription_override'] = fulldescription_override
 
                 item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, new_path, True)
 
@@ -1312,6 +1321,7 @@ class DocFormatter:
                        'promote_me': promote_me,
                        'normative_descr': prop_info.get('longDescription', ''),
                        'non_normative_descr': prop_info.get('description', ''),
+                       'fulldescription_override': prop_info.get('fulldescription_override', False),
                        'prop_required': prop_required,
                        'prop_required_on_create': prop_required_on_create,
                        'required_parameter': required_parameter,
@@ -1404,6 +1414,7 @@ class DocFormatter:
         # If prop_info was extracted from a different schema, it will be present as
         # _from_schema_ref
         schema_ref = prop_info.get('_from_schema_ref', schema_ref)
+        schema_name = self.traverser.get_schema_name(schema_ref)
 
         required = prop_info.get('required', [])
         required_on_create = prop_info.get('requiredOnCreate', [])
@@ -1439,6 +1450,8 @@ class DocFormatter:
                 meta = self.merge_metadata(prop_name, base_detail_info.get('_doc_generator_meta', {}), context_meta)
                 detail_info = self.extend_property_info(schema_ref, base_detail_info, meta)
                 meta = self.merge_full_metadata(detail_info[0].get('_doc_generator_meta', {}), meta)
+
+                base_detail_info = self.apply_overrides(base_detail_info, schema_name, prop_name)
 
                 if is_action:
                     # Trim out the properties; these are always Target and Title:
@@ -1552,13 +1565,22 @@ class DocFormatter:
         if not prop_name:
             prop_name = prop_info.get('_prop_name')
 
-        local_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('description overrides')
-        if local_overrides:
+        local_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('description overrides', {})
+        local_full_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('fulldescription overrides', {})
+        prop_info['fulldescription_override'] = False
+
+        if (prop_name in local_overrides) or (prop_name in local_full_overrides):
             if prop_name in local_overrides:
                 prop_info['description'] = prop_info['longDescription'] = local_overrides[prop_name]
-                return prop_info
+            if prop_name in local_full_overrides:
+                prop_info['description'] = prop_info['longDescription'] = local_full_overrides[prop_name]
+                prop_info['fulldescription_override'] = True
+            return prop_info
         if prop_name in self.config.get('property_description_overrides', {}):
             prop_info['description'] = prop_info['longDescription'] = self.config['property_description_overrides'][prop_name]
+        if prop_name in self.config.get('property_fulldescription_overrides', {}):
+            prop_info['description'] = prop_info['longDescription'] = self.config['property_fulldescription_overrides'][prop_name]
+            prop_info['fulldescription_override'] = True
 
         units_trans = self.config.get('units_translation', {}).get(prop_info.get('units'))
         if units_trans:

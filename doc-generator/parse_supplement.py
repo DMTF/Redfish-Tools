@@ -34,6 +34,7 @@ def parse_file(filehandle):
         '# Schema Supplement',     # parse out for schema-specific details (see below)
         '# Schema Documentation',  # list of search/replace patterns for links
         '# Description Overrides', # list of property name:description to substitute throughout the doc
+        '# FullDescription Overrides', # list of property name:description to substitute throughout the doc
         '# Schema URI Mapping',    # map URI(s) to local repo(s)
         '# Profile URI Mapping',   # map URI(s) for profiles to local repo(s)
         '# Enum Deprecations',     # Version and description info for deprecated enums
@@ -75,6 +76,9 @@ def parse_file(filehandle):
 
     if 'Description Overrides' in parsed:
         parsed['Description Overrides'] = parse_description_overrides(parsed['Description Overrides'])
+
+    if 'FullDescription Overrides' in parsed:
+        parsed['FullDescription Overrides'] = parse_description_overrides(parsed['FullDescription Overrides'])
 
     if 'Schema Supplement' in parsed:
         parsed['Schema Supplement'] = parse_schema_supplement(parsed['Schema Supplement'])
@@ -294,6 +298,9 @@ def parse_schema_supplement(markdown_blob):
         if 'description overrides' in parsed[schema_name]:
             parsed[schema_name]['description overrides'] = parse_description_overrides(parsed[schema_name]['description overrides'])
 
+        if 'fulldescription overrides' in parsed[schema_name]:
+            parsed[schema_name]['fulldescription overrides'] = parse_description_overrides(parsed[schema_name]['fulldescription overrides'])
+
     return parsed
 
 
@@ -304,7 +311,8 @@ def parse_schema_details(markdown_blob):
     """
 
     markers = ['### description', '### jsonpayload', '### property details', '### action details',
-               '### schema-intro', '### schema-postscript', '### mockup', '### description overrides']
+               '### schema-intro', '### schema-postscript', '### mockup',
+               '### description overrides', '### fulldescription overrides']
     parsed = {}
     current_marker = None
     bloblines = []

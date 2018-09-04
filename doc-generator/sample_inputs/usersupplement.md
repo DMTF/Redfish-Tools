@@ -8,6 +8,7 @@ The supplement is split into several major sections, noted by first-level headin
 - Profile URI Mapping
 - Keyword Configuration
 - Description Overrides
+- FullDescription Overrides
 - Units Translation
 - Enum Deprecations
 - Introduction
@@ -58,7 +59,15 @@ Note: you can specify the location of the TOC, presumably in the Introduction se
 
 # Description Overrides
 
+Replace a property's description. The doc generator will use your definition, and possibly append a reference to further detail (enum details, definition in another schema, common property, etc.)
+
 Note: markdown is allowed in description overrides, but HTML markup is not; it will be escaped.
+
+* SomeProperty: Some description.
+
+# FullDescription Overrides
+
+This is just like Description Overrides, except that *only* the description will be output, with no auto-generated reference.
 
 * Status: See  [The Status Object](#status_description), above.
 
