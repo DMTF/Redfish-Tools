@@ -280,6 +280,11 @@ class CsvGenerator(DocFormatter):
         pass
 
 
+    def add_uris(self, uris):
+        """ CSV omits URIs """
+        pass
+
+
     def add_json_payload(self, json_payload):
         """ JSON payloads don't make sense for CSV  """
         if json_payload:
