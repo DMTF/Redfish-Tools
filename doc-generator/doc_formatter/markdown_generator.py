@@ -154,9 +154,7 @@ class MarkdownGenerator(DocFormatter):
         for property_name, delim in props.items():
             if isinstance(formatted_details[property_name], list):
                 property_values = []
-                for val in formatted_details[property_name]:
-                    if val and val not in property_values:
-                        property_values.append(val)
+                self.append_unique_values(formatted_details[property_name], property_values)
                 formatted_details[property_name] = delim.join(property_values)
 
         if formatted_details['prop_is_object'] and not in_array:

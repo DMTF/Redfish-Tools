@@ -279,6 +279,17 @@ class DocFormatter:
         return "\n".join(formatted)
 
 
+    def append_unique_values(self, value_list, target_list):
+        """ Unwind possibly-nested list, producing a list of unique strings found. """
+
+        for val in value_list:
+            if isinstance(val, list):
+                self.append_unique_values(val, target_list)
+            else:
+                if val and val not in target_list:
+                    target_list.append(val)
+
+
     def output_document(self):
         """Return full contents of document"""
         body = self.emit()
