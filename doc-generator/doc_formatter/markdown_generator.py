@@ -542,7 +542,8 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('\n'.join(section['properties']))
 
             if section.get('profile_conditional_details'):
-                conditional_details = '\n'.join(section['profile_conditional_details'])
+                # sort them now; these can be sub-properties so may not be in alpha order.
+                conditional_details = '\n'.join(sorted(section['profile_conditional_details'], key=str.lower))
                 contents.append('\n' + self.head_two('Conditional Requirements'))
                 contents.append(conditional_details)
 

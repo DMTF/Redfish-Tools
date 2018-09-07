@@ -256,21 +256,20 @@ class DocFormatter:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
 
             if compare_property:
-                comparison = creq.get('Comparison', '')
-                if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
-                    comparison += ' to'
+                compare_to = creq.get('CompareType', '')
+                if compare_to in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
+                    compare_to += ' to'
 
-                compare_values = creq.get('CompareValues') or creq.get('Values') # Which is right?
+                compare_values = creq.get('CompareValues')
                 if compare_values:
                     compare_values = ', '.join('"' + x + '"' for x in compare_values)
 
                 if req_desc:
                     req_desc += ' and '
-                req_desc += '"' + compare_property + '"' + ' is ' + comparison
+                req_desc += '"' + compare_property + '"' + ' is ' + compare_to
 
                 if compare_values:
                     req_desc += ' ' + compare_values
-
 
             rows.append(self.make_row([req_desc, req, purpose]))
 
@@ -1312,6 +1311,7 @@ class DocFormatter:
             if profile_values:
                 profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
 
+
         parsed_info = {'_prop_name': prop_name,
                        'prop_type': prop_type,
                        'prop_units': prop_units,
@@ -1417,6 +1417,7 @@ class DocFormatter:
         output = []
         details = {}
         action_details = {}
+        conditional_details = {}
 
         context_meta = prop_info.get('_doc_generator_meta')
         if not context_meta:
@@ -1479,8 +1480,18 @@ class DocFormatter:
                         details.update(formatted['details'])
                     if formatted['action_details']:
                         action_details[prop_name] = formatted['action_details']
+                    if formatted.get('profile_conditional_details'):
+                        conditional_details.update(formatted['profile_conditional_details'])
 
-        return {'rows': output, 'details': details, 'action_details': action_details}
+        if len(conditional_details):
+            cond_names = [x for x in conditional_details.keys()]
+            cond_names.sort(key=str.lower)
+            for cond_name in cond_names:
+                self.add_profile_conditional_details(conditional_details[cond_name])
+
+
+
+        return {'rows': output, 'details': details, 'action_details': action_details }
 
 
     def format_non_object_descr(self, schema_ref, prop_dict, prop_path=[], in_array=False):

@@ -645,7 +645,8 @@ pre.code{
                 contents.append(self.make_table(section['properties'], None, 'properties'))
 
             if section.get('profile_conditional_details'):
-                conditional_details = '\n'.join(section['profile_conditional_details'])
+                # sort them now; these can be sub-properties so may not be in alpha order.
+                conditional_details = '\n'.join(sorted(section['profile_conditional_details'], key=str.lower))
                 deets = []
                 deets.append(self.head_three('Conditional Requirements'))
                 deets.append(self.make_div(conditional_details, 'property-details-content'))

@@ -1,0 +1,237 @@
+{
+	"SchemaDefinition": "RedfishInteroperabilityProfile.v1_0_0",
+	"ProfileName": "OCPBasicServer",
+	"ProfileVersion": "1.0.3",
+	"Purpose": "A baseline interoperability profile for typical scale-out 1P/2P servers",
+	"OwningEntity": "Open Compute Project",
+	"ContactInfo": "redfish@opencompute.org",
+	"RequiredProfiles": {
+		"OCPManagedDevice": {
+			"MinVersion": "1.0.0"
+		}
+	},
+	"Resources": {
+		"Chassis": {
+			"MinVersion": "1.0.0",
+			"PropertyRequirements": {
+				"Links": {
+					"PropertyRequirements": {
+						"ComputerSystems": {}
+					}
+				},
+				"Thermal": {},
+				"Power": {}
+			}
+		},
+		"ComputerSystem": {
+			"MinVersion": "1.0.0",
+			"PropertyRequirements": {
+				"AssetTag": {
+					"WriteRequirement": "Mandatory"
+				},
+				"SystemType": {},
+				"SerialNumber": {},
+				"Manufacturer": {},
+				"MemorySummary": {
+					"PropertyRequirements": {
+						"TotalSystemMemoryGiB": {}
+					}
+				},
+				"ProcessorSummary": {
+					"PropertyRequirements": {
+						"Count": {},
+						"Model": {}
+					}
+				},
+				"Model": {},
+				"SKU": {
+					"ReadRequirement": "Recommended",
+					"ConditionalRequirements": [{
+						"Purpose": "Either PartNumber or SKU (or both) must be implemented.",
+						"CompareProperty": "PartNumber",
+						"CompareType": "Absent",
+						"ReadRequirement": "Mandatory"
+					}]
+				},
+				"PartNumber": {
+					"ReadRequirement": "Recommended",
+					"ConditionalRequirements": [{
+						"Purpose": "Either PartNumber or SKU (or both) must be implemented.",
+						"CompareProperty": "SKU",
+						"CompareType": "Absent",
+						"ReadRequirement": "Mandatory"
+					}]
+				},
+				"PowerState": {},
+				"BiosVersion": {},
+				"UUID": {},
+				"IndicatorLED": {
+					"ReadRequirement": "Recommended",
+					"ConditionalRequirements": [{
+						"Purpose": "Physical Systems must have a writable Indicator LED",
+						"CompareProperty": "SystemType",
+						"CompareType": "AnyOf",
+						"CompareValues": ["Physical"],
+						"ReadRequirement": "Mandatory",
+						"WriteRequirement": "Mandatory"
+					}]
+				},
+				"Status": {
+					"PropertyRequirements": {
+						"State": {},
+						"Health": {}
+					}
+				},
+				"Boot": {
+					"PropertyRequirements": {
+						"BootSourceOverrideEnabled": {},
+						"BootSourceOverrideMode": {
+							"ReadRequirement": "Recommended"
+						},
+						"BootSourceOverrideTarget": {},
+						"UefiTargetBootSourceOverride": {
+							"ReadRequirement": "Recommended",
+							"ConditionalRequirements": [{
+								"Purpose": "If UEFI mode is selected, must allow for UEFI target.",
+								"CompareProperty": "BootSourceOverrideMode",
+								"CompareType": "Equal",
+							        "CompareValues": ["UEFI"],
+								"ReadRequirement": "Mandatory"
+							}]
+						}
+					}
+				},
+				"LogServices": {
+					"ReadRequirement": "Recommended"
+				},
+				"Links": {
+					"PropertyRequirements": {
+						"Chassis": {},
+						"ManagedBy": {}
+					}
+				}
+			},
+			"ActionRequirements": {
+				"Reset": {
+					"ReadRequirement": "Mandatory",
+					"Parameters": {
+						"ResetType": {
+							"AllowableValues": ["ForceOff", "On", "ForceRestart"],
+							"Purpose": "Minimal set to allow power on, off and reboot.",
+							"ReadRequirement": "Mandatory"
+						}
+					}
+				}
+			}
+		},
+		"ComputerSystemCollection": {
+			"PropertyRequirements": {
+				"Members": {
+					"MinCount": 1
+				}
+			}
+		},
+		"EthernetInterface": {
+			"MinVersion": "1.1.0",
+			"ReadRequirement": "Recommended",
+			"PropertyRequirements": {
+				"MACAddress": {},
+				"SpeedMbps": {},
+				"InterfaceEnabled": {},
+				"LinkStatus": {},
+				"Status": {
+					"PropertyRequirements": {
+						"Health": {},
+						"State": {}
+					}
+				},
+				"HostName": {},
+				"FQDN": {},
+				"NameServers": {},
+				"IPv4Addresses": {
+					"PropertyRequirements": {
+						"Address": {},
+						"SubnetMask": {},
+						"AddressOrigin": {},
+						"Gateway": {}
+					}
+				}
+			}
+		},
+		"Manager": {
+			"PropertyRequirements": {
+				"SerialConsole": {
+					"ReadRequirement": "Mandatory",
+					"Purpose": "SSH or IPMI-based serial remote console is required.",
+					"PropertyRequirements": {
+						"ConnectTypesSupported": {
+							"Values": [ "SSH", "IPMI"],
+							"Comparison": "AnyOf"
+						}
+					}
+				}
+			}
+		},
+		"Power": {
+			"ReadRequirement": "Mandatory",
+			"PropertyRequirements": {
+				"PowerControl": {
+					"PropertyRequirements": {
+						"PowerConsumedWatts": {},
+						"PowerCapacityWatts": {},
+						"PowerLimit": {
+							"PropertyRequirements": {
+								"LimitInWatts": {},
+								"LimitException": {}
+							}
+						}
+					}
+				}
+			}
+		},
+		"Thermal": {
+			"MinVersion": "1.1.0",
+			"PropertyRequirements": {
+				"Temperatures": {
+					"ReadRequirement": "Mandatory",
+					"MinCount": 3,
+					"PropertyRequirements": {
+						"ReadingCelsius": {},
+						"PhysicalContext": {
+							"Comparison": "AllOf",
+							"Values": ["CPU", "Intake", "SystemBoard"]
+						},
+						"UpperThresholdFatal": {
+							"ReadRequirement": "Recommended"
+						},
+						"UpperThresholdCritical": {
+							"ReadRequirement": "Recommended"
+						},
+						"UpperThresholdNonCritical": {
+							"ReadRequirement": "Recommended"
+						},
+						"Status": {}
+					}
+				},
+				"Redundancy": {
+					"ReadRequirement": "IfImplemented",
+					"PropertyRequirements": {
+						"MemberId": {},
+						"RedundancySet": {},
+						"Mode": {},
+						"Status": {},
+						"MinNumNeeded": {},
+						"MaxNumSupported": {
+							"ReadRequirement": "Recommended"
+						}
+					}
+				}
+			}
+		},
+		"ServiceRoot": {
+			"PropertyRequirements": {
+				"Systems": {}
+			}
+		}
+	}
+}
