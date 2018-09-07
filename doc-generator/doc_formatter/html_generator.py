@@ -800,7 +800,8 @@ pre.code{
             'units_translation': self.config.get('units_translation'),
             'profile': self.config.get('profile'),
             'profile_mode': self.config.get('profile_mode'),
-            'profile_resources': self.config.get('profile_resources', {})
+            'profile_resources': self.config.get('profile_resources', {}),
+            'wants_common_objects': self.config.get('wants_common_objects'),
             }
 
         for line in intro_blob.splitlines():

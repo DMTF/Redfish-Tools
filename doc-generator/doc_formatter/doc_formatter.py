@@ -451,6 +451,9 @@ class DocFormatter:
 
         prop_info = frag_gen.traverser.find_ref_data(ref)
 
+        # Give frag_gen our common_properties to share. This way, we get the updates.
+        frag_gen.common_properties = self.common_properties
+
         if not prop_info:
             warnings.warn("Can't generate fragment for '" + ref + "': could not find data.")
             return ''
