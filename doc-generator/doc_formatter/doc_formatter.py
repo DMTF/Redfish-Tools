@@ -1306,7 +1306,6 @@ class DocFormatter:
                 req['ReadRequirement'] = profile.get('ReadRequirement')
                 req['WriteRequirement'] = profile.get('WriteRequirement')
                 profile_conditional_req.insert(0, req)
-
                 profile_conditional_details[prop_name] = self.format_conditional_details(schema_ref, prop_name,
                                                                                          profile_conditional_req)
             # Comparison

@@ -44,7 +44,7 @@ class DocGenerator:
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            profile_resources = {}
+            profile_resources = config['profile'].get('Resources', {})
 
             if 'RequiredProfiles' in config['profile']:
                 for req_profile_name in config['profile']['RequiredProfiles'].keys():
