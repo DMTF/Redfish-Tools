@@ -803,8 +803,7 @@ search: true
         firstrow = rows[0]
         numcells = firstrow.count(' | ') + 1
         if not header_rows:
-            header_rows = self.make_header_row(['   ' for x in range(0, numcells)])
-        else:
-            header_rows.append(self._make_separator_row(numcells))
+            header_rows = [ self.make_header_row(['   ' for x in range(0, numcells)]) ]
+        header_rows.append(self._make_separator_row(numcells))
 
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])

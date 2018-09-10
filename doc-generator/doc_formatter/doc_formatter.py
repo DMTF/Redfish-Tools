@@ -246,6 +246,8 @@ class DocFormatter:
             purpose = creq.get('Purpose', self.nbsp()*10)
             subordinate_to = creq.get('SubordinateToResource')
             compare_property = creq.get('CompareProperty')
+            comparison = creq.get('Comparison')
+            values = creq.get('Values')
             req = self.format_conditional_access(creq)
 
             if creq.get('BaseRequirement'):
@@ -262,7 +264,7 @@ class DocFormatter:
 
                 compare_values = creq.get('CompareValues')
                 if compare_values:
-                    compare_values = ', '.join('"' + x + '"' for x in compare_values)
+                    compare_values = ', '.join(['"' + x + '"' for x in compare_values])
 
                 if req_desc:
                     req_desc += ' and '
@@ -271,6 +273,8 @@ class DocFormatter:
                 if compare_values:
                     req_desc += ' ' + compare_values
 
+                if comparison and len(values):
+                    req += ', must be ' + comparison + ' ' + ', '.join(['"' + val + '"' for val in values])
             rows.append(self.make_row([req_desc, req, purpose]))
 
         formatted.append(self.make_table(rows))
@@ -1756,6 +1760,16 @@ class DocFormatter:
     def make_paras(text):
         """ Split text at linebreaks and output as paragraphs """
         return text
+
+    @staticmethod
+    def bold(text):
+        """Apply bold to text"""
+        return '**' + text + '**'
+
+    @staticmethod
+    def italic(text):
+        """Apply italic to text"""
+        return '*' + text + '*'
 
     @staticmethod
     def br():
