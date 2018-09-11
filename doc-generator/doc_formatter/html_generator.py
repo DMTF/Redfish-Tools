@@ -271,9 +271,7 @@ pre.code{
         for property_name, delim in props.items():
             if isinstance(formatted_details[property_name], list):
                 property_values = []
-                for val in formatted_details[property_name]:
-                    if val and val not in property_values:
-                        property_values.append(val)
+                self.append_unique_values(formatted_details[property_name], property_values)
                 formatted_details[property_name] = delim.join(property_values)
 
         if formatted_details['prop_is_object'] and not in_array:
@@ -647,7 +645,8 @@ pre.code{
                 contents.append(self.make_table(section['properties'], None, 'properties'))
 
             if section.get('profile_conditional_details'):
-                conditional_details = '\n'.join(section['profile_conditional_details'])
+                # sort them now; these can be sub-properties so may not be in alpha order.
+                conditional_details = '\n'.join(sorted(section['profile_conditional_details'], key=str.lower))
                 deets = []
                 deets.append(self.head_three('Conditional Requirements'))
                 deets.append(self.make_div(conditional_details, 'property-details-content'))
@@ -801,7 +800,8 @@ pre.code{
             'units_translation': self.config.get('units_translation'),
             'profile': self.config.get('profile'),
             'profile_mode': self.config.get('profile_mode'),
-            'profile_resources': self.config.get('profile_resources', {})
+            'profile_resources': self.config.get('profile_resources', {}),
+            'wants_common_objects': self.config.get('wants_common_objects'),
             }
 
         for line in intro_blob.splitlines():

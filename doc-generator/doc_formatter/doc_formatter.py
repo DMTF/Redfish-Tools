@@ -246,6 +246,8 @@ class DocFormatter:
             purpose = creq.get('Purpose', self.nbsp()*10)
             subordinate_to = creq.get('SubordinateToResource')
             compare_property = creq.get('CompareProperty')
+            comparison = creq.get('Comparison')
+            values = creq.get('Values')
             req = self.format_conditional_access(creq)
 
             if creq.get('BaseRequirement'):
@@ -256,27 +258,39 @@ class DocFormatter:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
 
             if compare_property:
-                comparison = creq.get('Comparison', '')
-                if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
-                    comparison += ' to'
+                compare_to = creq.get('CompareType', '')
+                if compare_to in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
+                    compare_to += ' to'
 
-                compare_values = creq.get('CompareValues') or creq.get('Values') # Which is right?
+                compare_values = creq.get('CompareValues')
                 if compare_values:
-                    compare_values = ', '.join('"' + x + '"' for x in compare_values)
+                    compare_values = ', '.join(['"' + x + '"' for x in compare_values])
 
                 if req_desc:
                     req_desc += ' and '
-                req_desc += '"' + compare_property + '"' + ' is ' + comparison
+                req_desc += '"' + compare_property + '"' + ' is ' + compare_to
 
                 if compare_values:
                     req_desc += ' ' + compare_values
 
-
+                if comparison and len(values):
+                    req += ', must be ' + comparison + ' ' + ', '.join(['"' + val + '"' for val in values])
             rows.append(self.make_row([req_desc, req, purpose]))
 
         formatted.append(self.make_table(rows))
 
         return "\n".join(formatted)
+
+
+    def append_unique_values(self, value_list, target_list):
+        """ Unwind possibly-nested list, producing a list of unique strings found. """
+
+        for val in value_list:
+            if isinstance(val, list):
+                self.append_unique_values(val, target_list)
+            else:
+                if val and val not in target_list:
+                    target_list.append(val)
 
 
     def output_document(self):
@@ -440,6 +454,9 @@ class DocFormatter:
                 pass
 
         prop_info = frag_gen.traverser.find_ref_data(ref)
+
+        # Give frag_gen our common_properties to share. This way, we get the updates.
+        frag_gen.common_properties = self.common_properties
 
         if not prop_info:
             warnings.warn("Can't generate fragment for '" + ref + "': could not find data.")
@@ -1293,13 +1310,13 @@ class DocFormatter:
                 req['ReadRequirement'] = profile.get('ReadRequirement')
                 req['WriteRequirement'] = profile.get('WriteRequirement')
                 profile_conditional_req.insert(0, req)
-
                 profile_conditional_details[prop_name] = self.format_conditional_details(schema_ref, prop_name,
                                                                                          profile_conditional_req)
             # Comparison
             profile_values = profile.get('Values')
             if profile_values:
                 profile_comparison = profile.get('Comparison', 'AnyOf') # Default if Comparison absent
+
 
         parsed_info = {'_prop_name': prop_name,
                        'prop_type': prop_type,
@@ -1406,6 +1423,7 @@ class DocFormatter:
         output = []
         details = {}
         action_details = {}
+        conditional_details = {}
 
         context_meta = prop_info.get('_doc_generator_meta')
         if not context_meta:
@@ -1468,8 +1486,18 @@ class DocFormatter:
                         details.update(formatted['details'])
                     if formatted['action_details']:
                         action_details[prop_name] = formatted['action_details']
+                    if formatted.get('profile_conditional_details'):
+                        conditional_details.update(formatted['profile_conditional_details'])
 
-        return {'rows': output, 'details': details, 'action_details': action_details}
+        if len(conditional_details):
+            cond_names = [x for x in conditional_details.keys()]
+            cond_names.sort(key=str.lower)
+            for cond_name in cond_names:
+                self.add_profile_conditional_details(conditional_details[cond_name])
+
+
+
+        return {'rows': output, 'details': details, 'action_details': action_details }
 
 
     def format_non_object_descr(self, schema_ref, prop_dict, prop_path=[], in_array=False):
@@ -1732,6 +1760,16 @@ class DocFormatter:
     def make_paras(text):
         """ Split text at linebreaks and output as paragraphs """
         return text
+
+    @staticmethod
+    def bold(text):
+        """Apply bold to text"""
+        return '**' + text + '**'
+
+    @staticmethod
+    def italic(text):
+        """Apply italic to text"""
+        return '*' + text + '*'
 
     @staticmethod
     def br():

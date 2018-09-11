@@ -44,7 +44,7 @@ class DocGenerator:
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            profile_resources = {}
+            profile_resources = config['profile'].get('Resources', {})
 
             if 'RequiredProfiles' in config['profile']:
                 for req_profile_name in config['profile']['RequiredProfiles'].keys():
@@ -687,7 +687,9 @@ class DocGenerator:
                 if match_ref == unversioned_ref:
                     # Process refs_by_version to get the version-added and deprecated strings
                     # incorporated into the properties for the latest version:
-                    prop_data = self.update_versioned_properties(unversioned_ref, refs_by_version, interim_traverser)
+                    updated_data = self.update_versioned_properties(unversioned_ref, refs_by_version, interim_traverser)
+                    if updated_data:
+                        prop_data = updated_data
 
         return prop_data
 
@@ -764,6 +766,9 @@ class DocGenerator:
                 [common_base_ref, rest] = common_ref.split('#')
                 if common_base_ref != base_ref:
                     ref_properties = self.absolutize_refs(base_ref, ref_properties)
+
+            if not ref_info:
+                return prop_info
 
             # Update saved property to latest version, with extended metadata:
             prop_info = copy.deepcopy(ref_info)

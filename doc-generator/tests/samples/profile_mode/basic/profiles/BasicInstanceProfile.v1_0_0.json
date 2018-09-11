@@ -1,0 +1,53 @@
+{
+    "SchemaDefinition": "RedfishInteroperabilityProfile.v1_0_0",
+    "ProfileName": "BasicInstanceProfile",
+    "ProfileVersion": "1.0.3",
+    "Purpose": "A profile that relies on another profile, for the doc generator test suite.",
+    "OwningEntity": "DMTF",
+    "ContactInfo": "redfish@example.org",
+    "RequiredProfiles": {
+	"BasicClassProfile": {
+	    "MinVersion": "1.0.0"
+	}
+    },
+    "Resources": {
+        "NetworkDeviceFunction": {
+            "MinVersion": "1.1",
+            "PropertyRequirements": {
+                "PhysicalPortAssignment": {
+                },
+                "Ethernet": {
+                    "ReadRequirement": "Recommended",
+                    "ConditionalRequirements": [{
+                        "Purpose": "If no FibreChannel, Ethernet must be implemented.",
+                        "CompareProperty": "FibreChannel",
+                        "CompareType": "Absent",
+                        "ReadRequirement": "Mandatory"
+                    }]
+                },
+                "FibreChannel": {
+                    "ReadRequirement": "Recommended",
+                    "ConditionalRequirements": [{
+                        "Purpose": "Show that FibreChannel must be readable and writeable if the device's name is Fred.",
+                        "CompareProperty": "Name",
+                        "CompareType": "Equal",
+                        "CompareValues": ["Fred"],
+                        "ReadRequirement": "Mandatory",
+                        "WriteRequirement": "Mandatory"
+                    }]
+                },
+                "Description": {
+                    "ReadRequirement": "Mandatory",
+                    "ConditionalRequirements": [{
+                        "Purpose": "Show that if the device's name is Fred, its description must be 'A very good dog' or 'A good cat'",
+                        "CompareProperty": "Name",
+                        "CompareType": "Equal",
+                        "CompareValues": ["Fred"],
+                        "Comparison": "AnyOf",
+                        "Values":["A very good dog", "A good cat"]
+                    }]
+                }
+            }
+        }
+    }
+}
