@@ -254,7 +254,7 @@ class DocGenerator:
                     for elt in v:
                         if elt not in dict2[k]:
                             dict2[k].append(elt)
-                elif isinstance(v, string) and isinstance(dict2[k], string):
+                elif isinstance(v, str) and isinstance(dict2[k], str):
                     # dict1 wins
                     dict2[k] = v
                 else:
