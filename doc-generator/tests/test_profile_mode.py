@@ -30,8 +30,35 @@ base_config = {
     'output_format': 'markdown',
 }
 
+
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_profile_basic_full (mockRequest):
+def test_profile_basic_req_props (mockRequest):
+    """ Test that the required properties are all listed. """
+
+    config = copy.deepcopy(base_config)
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'basic', 'NetworkPort'))
+    profile_dir = os.path.abspath(os.path.join(testcase_path, 'basic', 'profiles'))
+    profile_json = os.path.abspath(os.path.join(profile_dir, 'BasicInstanceProfile.v1_0_0.json'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+    config['profile_doc'] = profile_json
+    config['profile_uri_to_local'] = { 'redfish.dmtf.org/profiles': profile_dir }
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    expected_props = ['AssignablePhysicalPorts', 'Description', 'Ethernet', 'FibreChannel',
+                      'PhysicalPortAssignment', 'DeviceEnabled']
+    for prop_name in expected_props:
+        assert '| **' + prop_name + '** ' in output
+
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_profile_basic_conditional_reqs (mockRequest):
+    """ Test for correct descriptions of conditional props. """
 
     config = copy.deepcopy(base_config)
 
@@ -51,18 +78,18 @@ def test_profile_basic_full (mockRequest):
     # Then we'll check for the expected rows of markdown by property.
     header_marker = '\n##### '
     chunks = output.split(header_marker)
-    expected_props = {
+    expected_conditional_props = {
         'Description': '| "Name" is Equal to "Fred" | Mandatory (Read), must be AnyOf "A very good dog", "A good cat" |',
         'Ethernet': '| "FibreChannel" is Absent | Mandatory (Read) | If no FibreChannel, Ethernet must be implemented. |',
         'FibreChannel': '| "Name" is Equal to "Fred" | Mandatory (Read/Write) | Show that FibreChannel must be readable and writeable if the device\'s name is Fred. |',
                       }
     condreq_output = {}
-    for x in expected_props.keys():
+    for x in expected_conditional_props.keys():
         chunk = [c for c in chunks if c.startswith(x + '\n')]
         assert len(chunk) > 0, "Conditional Requirements not output for " + x
         assert len(chunk) < 2, "Conditional Requirements has multiple headings for " + x
         if len(chunk) == 1:
             condreq_output[x] = chunk[0]
 
-    for name, expected_description in expected_props.items():
+    for name, expected_description in expected_conditional_props.items():
         assert expected_description in  condreq_output.get(name, '')

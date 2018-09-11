@@ -44,7 +44,7 @@ class DocGenerator:
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            profile_resources = config['profile'].get('Resources', {})
+            profile_resources = {}
 
             if 'RequiredProfiles' in config['profile']:
                 for req_profile_name in config['profile']['RequiredProfiles'].keys():
@@ -235,7 +235,7 @@ class DocGenerator:
 
 
     def merge_dicts(self, dict1, dict2):
-        """ Merge two dictionaries recursively. Returns the merged result. """
+        """ Merge two dictionaries recursively, with dict1 "winning." Returns the merged result. """
         return self._merge_dicts(dict1.copy(), dict2.copy())
 
 
@@ -250,10 +250,18 @@ class DocGenerator:
             if k in dict2:
                 if isinstance(v, dict) and isinstance(dict2[k], dict):
                     dict2[k] = self._merge_dicts(v, dict2[k])
-                else:
+                elif isinstance(v, list) and isinstance(dict2[k], list):
+                    for elt in v:
+                        if elt not in dict2[k]:
+                            dict2[k].append(elt)
+                elif isinstance(v, str) and isinstance(dict2[k], str):
+                    # dict1 wins
                     dict2[k] = v
+                else:
+                    warnings.warn("Merging two items with different types would fail. Probably attempting to merge two profiles; debugging here may be required.")
+            else:
+                dict2[k] = v
 
-        dict2.update(dict1)
         return dict2
 
 
