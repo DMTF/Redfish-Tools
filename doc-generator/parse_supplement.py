@@ -62,7 +62,7 @@ def parse_file(filehandle):
         parsed['Title'] = parse_title_from_introduction(parsed['Introduction'])
         parsed['wants_common_objects'] = '[insert_common_objects]' in parsed['Introduction']
 
-    if not parsed['wants_common_objects'] and 'Postscript' in parsed:
+    if not parsed.get('wants_common_objects') and 'Postscript' in parsed:
         parsed['wants_common_objects'] = '[insert_common_objects]' in parsed['Postscript']
 
     if 'Excluded Properties' in parsed:
