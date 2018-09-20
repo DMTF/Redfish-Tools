@@ -163,7 +163,7 @@ class DocGenUtilities:
         """Get the version string based on a (possibly versioned) ref"""
 
         version_string = None
-        pattern = re.compile(r'.+\.v([^\.]+)\.json#.+')
+        pattern = re.compile(r'.+\.v([^\.]+)\.json.*')
         match = pattern.fullmatch(this_ref)
         if match:
             version_string = match.group(1)
