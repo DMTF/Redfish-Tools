@@ -259,9 +259,11 @@ class SchemaTraverser:
             if len(title_parts) > 3:
                 return None
 
-            schema_name = title_parts[0]
-            if len(title_parts) > 1 and title_parts[1].startswith('v'):
-                schema_name += '.' + title_parts[1]
+            schema_name = title_parts[-1]
+            for tp in title_parts:
+                if tp.startswith('v'):
+                    schema_name += '.' + title_parts[1]
+                    break
 
             if schema_name[0] == '#':
                 schema_name = schema_name[1:]
