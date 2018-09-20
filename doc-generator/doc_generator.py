@@ -272,6 +272,7 @@ class DocGenerator:
         for file_to_import in text_input:
             if os.path.isdir(file_to_import):
                 for root, _, files in os.walk(file_to_import):
+                    # NB: this is an adequate sort for file-grouping purposes. It's not guaranteed to sort versions correctly.
                     files.sort(key=str.lower)
                     for filename in files:
                         if filename[-4:] == 'json':
@@ -386,6 +387,7 @@ class DocGenerator:
                 data = data[pathpart]
 
             ref_files = []
+            ref_files_by_version = {}
 
             # is_versioned_schema will be True if there is an "anyOf" pointing to one or more versioned files.
             is_versioned_schema = False
@@ -394,6 +396,7 @@ class DocGenerator:
             is_collection_of = None
 
             if 'anyOf' in data:
+
                 for obj in data['anyOf']:
                     if '$ref' in obj:
                         refpath_uri, refpath_path = obj['$ref'].split('#')
@@ -403,10 +406,16 @@ class DocGenerator:
                         # Skip files that are not present.
                         ref_filename = os.path.abspath(os.path.join(root, ref_fn))
                         if ref_filename in file_list:
-                            ref_files.append({'root': root,
-                                              'filename': ref_fn,
-                                              'ref': refpath_path,
-                                              'schema_name': schema_name})
+                            version_string = DocGenUtilities.get_ref_version(ref_fn)
+                            file_data = {'root': root,
+                                         'filename': ref_fn,
+                                         'ref': refpath_path,
+                                         'schema_name': schema_name,
+                                         'version': version_string}
+                            if version_string not in ref_files_by_version:
+                                ref_files_by_version[version_string] = [ file_data ]
+                            else:
+                                ref_files_by_version[version_string].append(file_data) # Unexpected, but roll with it.
                         elif ref_filename not in missing_files:
                             missing_files.append(ref_filename)
 
@@ -422,6 +431,12 @@ class DocGenerator:
                                     is_collection_of = self.normalize_ref(member_ref)
                         ref_files = []
                         continue
+
+                # Sort the ref_files by version.
+                version_keys = sorted(ref_files_by_version.keys(), key=functools.cmp_to_key(DocGenUtilities.compare_versions))
+                for vk in version_keys:
+                    for file_data in ref_files_by_version[vk]:
+                        ref_files.append(file_data)
 
             elif '$ref' in data:
                 refpath_uri, refpath_path = data['$ref'].split('#')
