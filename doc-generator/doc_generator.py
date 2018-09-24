@@ -327,6 +327,12 @@ class DocGenerator:
         traverser = SchemaTraverser(schema_data, doc_generator_meta, self.config['uri_to_local'])
 
         # Generate output
+        if self.config.get('output_content') == 'property_index':
+            from property_index_generator import PropertyIndexGenerator
+            self.property_indexer = PropertyIndexGenerator(self.property_data, traverser, self.config)
+            # property_index_data = self.property_indexer.generate()
+            return self.property_indexer.generate_output()
+
         if self.config['output_format'] == 'markdown':
             from doc_formatter import MarkdownGenerator
             self.generator = MarkdownGenerator(self.property_data, traverser, self.config, level)
@@ -998,6 +1004,8 @@ def main():
                         help='Produce normative (developer-focused) output')
     parser.add_argument('--format', dest='format', default='markdown',
                         choices=['markdown', 'html', 'csv'], help='Output format')
+    parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
+                        help='Produce Property Index output')
     parser.add_argument('--out', dest='outfile', default='output.md',
                         help=('Output file (default depends on output format: '
                               'output.md for markdown, index.html for html, output.csv for csv)'))
@@ -1021,6 +1029,10 @@ def main():
     args = parser.parse_args()
 
     config['output_format'] = args.format
+    if (args.property_index):
+        config['output_content'] = 'property_index'
+    else:
+        config['output_content'] = 'full_doc'
 
     if len(args.import_from):
         import_from = args.import_from
