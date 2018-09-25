@@ -36,6 +36,8 @@ class DocFormatter:
         self.this_section = None
         self.current_version = {} # marker for latest version within property we're displaying.
         self.current_depth = 0
+        self.sections = []
+        self.registry_sections = []
 
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.

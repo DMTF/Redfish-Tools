@@ -328,9 +328,8 @@ class DocGenerator:
 
         # Generate output
         if self.config.get('output_content') == 'property_index':
-            from property_index_generator import PropertyIndexGenerator
-            self.property_indexer = PropertyIndexGenerator(self.property_data, traverser, self.config)
-            # property_index_data = self.property_indexer.generate()
+            from doc_formatter import PropertyIndexGenerator
+            self.property_indexer = PropertyIndexGenerator(self.property_data, traverser, self.config, level)
             return self.property_indexer.generate_output()
 
         if self.config['output_format'] == 'markdown':
@@ -1046,6 +1045,14 @@ def main():
             outfile_name = 'index.html'
         if config['output_format'] == 'csv':
             outfile_name = 'output.csv'
+        if config['output_content'] == 'property_index':
+            outfile_name = 'property_index'
+            if config['output_format'] == 'html':
+                outfile_name += '.html'
+            if config['output_format'] == 'csv':
+                outfile_name += '.csv'
+            if config['output_format'] == 'markdown':
+                outfile_name += '.md'
 
     try:
         outfile = open(outfile_name, 'w', encoding="utf8")

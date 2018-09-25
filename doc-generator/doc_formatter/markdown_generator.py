@@ -32,8 +32,6 @@ class MarkdownGenerator(DocFormatter):
 
     def __init__(self, property_data, traverser, config, level=0):
         super(MarkdownGenerator, self).__init__(property_data, traverser, config, level)
-        self.sections = []
-        self.registry_sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '\n'

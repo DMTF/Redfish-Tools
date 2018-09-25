@@ -7,3 +7,4 @@ from .markdown_generator import MarkdownGenerator
 from .toc_parser import ToCParser
 from .html_generator import HtmlGenerator
 from .csv_generator import CsvGenerator
+from .property_index_generator import PropertyIndexGenerator
