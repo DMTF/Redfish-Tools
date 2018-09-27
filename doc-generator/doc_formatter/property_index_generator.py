@@ -181,10 +181,10 @@ class PropertyIndexGenerator(DocFormatter):
         for prop_name in property_names:
             info = self.coalesced_properties[prop_name]
             prop_types = sorted(info.keys(), key=str.lower)
-            for prop_type in info.keys():
+            for prop_type in prop_types:
                 descriptions = sorted(info[prop_type].keys(), key=str.lower) # TODO: what's the preferred sort?
                 for description in descriptions:
-                    schema_list = info[prop_type][description]
+                    schema_list = sorted(info[prop_type][description], key=str.lower)
                     rows.append(make_row(['<b>' + prop_name + '</b>', ', <br>'.join(schema_list),
                                           prop_type, description]))
 
