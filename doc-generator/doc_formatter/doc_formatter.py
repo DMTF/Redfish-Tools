@@ -742,6 +742,10 @@ class DocFormatter:
 
                                     if not self.skip_schema(ref_info.get('_prop_name')):
                                         specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
+                                        if 'type' not in ref_info:
+                                            # This clause papers over a bug; somehow we never get to the bottom
+                                            # of IPv6GatewayStaticAddress.
+                                            ref_info['type'] = 'object'
                                         if specific_version:
                                             append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
                                                           + '(v' + str(specific_version) + ')' +
@@ -751,17 +755,18 @@ class DocFormatter:
                                                           ' for details on this property.')
 
 
+
                         new_ref_info = {
-                            '_prop_name': ref_info.get('_prop_name'),
-                            '_from_schema_ref': ref_info.get('_from_schema_ref'),
-                            '_schema_name': ref_info.get('_schema_name'),
-                            'type': ref_info.get('type'),
-                            'readonly': ref_info.get('readonly'),
                             'description': ref_description,
                             'longDescription': ref_longDescription,
                             'fulldescription_override': ref_fulldescription_override,
                             'pattern': ref_pattern,
                             }
+                        props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly']
+                        for x in props_to_add:
+                            if ref_info.get(x):
+                                new_ref_info[x] = ref_info[x]
+
                         if not ref_fulldescription_override:
                             new_ref_info['add_link_text'] = append_ref
 
