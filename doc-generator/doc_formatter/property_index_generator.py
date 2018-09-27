@@ -73,19 +73,6 @@ class PropertyIndexGenerator(DocFormatter):
             'schema_name': text
             }
 
-    def add_description(self, text):
-        """ This is for the schema description. We don't actually use this. """
-        pass
-
-    def add_uris(self, uris):
-        """ omit URIs """
-        pass
-
-
-    def add_json_payload(self, json_payload):
-        """ JSON payloads don't make sense for PropertyIndex  """
-        pass
-
 
     def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
         """ Instead of formatting this data, add info to self.properties_by_name. """
@@ -101,7 +88,9 @@ class PropertyIndexGenerator(DocFormatter):
 
         prop_type = details.get('prop_type')
         if isinstance(prop_type, list):
-            prop_type = ', '.join(prop_type)
+            prop_type_values = []
+            self.append_unique_values(prop_type, prop_type_values)
+            prop_type = ', '.join(sorted(prop_type_values))
 
         description_entry = {
             'schemas': [ schema_path_formatted ], 'prop_type': prop_type
@@ -115,6 +104,17 @@ class PropertyIndexGenerator(DocFormatter):
         if prop_name not in self.properties_by_name:
             self.properties_by_name[prop_name] = []
         self.properties_by_name[prop_name].append(description_entry)
+
+
+    def append_unique_values(self, value_list, target_list):
+        """ Unwind possibly-nested list, producing a list of unique strings found.
+
+        We don't want nulls reflected in the property index!
+        """
+        super(PropertyIndexGenerator, self).append_unique_values(value_list, target_list)
+        for i in range(0, len(target_list)):
+            if target_list[i] == 'null':
+                del target_list[i]
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
@@ -177,14 +177,14 @@ class PropertyIndexGenerator(DocFormatter):
 
         rows = []
 
-        property_names = sorted(self.coalesced_properties.keys(), key=str.lower)
+        property_names = sorted(self.coalesced_properties.keys())
         for prop_name in property_names:
             info = self.coalesced_properties[prop_name]
-            prop_types = sorted(info.keys(), key=str.lower)
+            prop_types = sorted(info.keys())
             for prop_type in prop_types:
-                descriptions = sorted(info[prop_type].keys(), key=str.lower) # TODO: what's the preferred sort?
+                descriptions = sorted(info[prop_type].keys()) # TODO: what's the preferred sort?
                 for description in descriptions:
-                    schema_list = sorted(info[prop_type][description], key=str.lower)
+                    schema_list = sorted(info[prop_type][description])
                     rows.append(make_row(['<b>' + prop_name + '</b>', ', <br>'.join(schema_list),
                                           prop_type, description]))
 
@@ -229,3 +229,17 @@ table.properties{
 
     def emit_csv(self):
         raise NotImplementedError
+
+
+    def add_description(self, text):
+        """ This is for the schema description. We don't actually use this. """
+        pass
+
+    def add_uris(self, uris):
+        """ omit URIs """
+        pass
+
+
+    def add_json_payload(self, json_payload):
+        """ JSON payloads don't make sense for PropertyIndex  """
+        pass
