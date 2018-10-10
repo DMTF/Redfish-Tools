@@ -1012,6 +1012,10 @@ def main():
                         help=('Path to the supplemental material document. '
                               'Default is usersupplement.md for user-focused documentation, '
                               'and devsupplement.md for normative documentation.'))
+    parser.add_argument('--config', dest="config_file",
+                        help=('Path to a config file, containing configuration '
+                              ' in JSON format. '
+                              'Used in property_index mode only.'))
     parser.add_argument('--profile', dest='profile_doc',
                         help=('Path to a JSON profile document, for profile output'))
     parser.add_argument('-t', '--terse', action='store_true', dest='profile_terse',
@@ -1058,6 +1062,18 @@ def main():
         outfile = open(outfile_name, 'w', encoding="utf8")
     except (OSError) as ex:
         warnings.warn('Unable to open ' + outfile_name + ' to write: ' + str(ex))
+
+
+    # If property_index mode was specified, get config from args.config_file:
+    if config['output_content'] == 'property_index':
+        args.supfile = False
+        if args.config_file:
+            config_file= open(args.config_file, 'r', encoding="utf8")
+            config_data = json.load(config_file)
+            config['supplemental']['DescriptionOverrides'] = config_data.get('DescriptionOverrides', {})
+            excluded_props =  config_data.get('ExcludedProperties', [])
+            config['excluded_properties'].extend([x for x in excluded_props if not x.startswith('*')])
+            config['excluded_by_match'].extend([x[1:] for x in excluded_props if x.startswith('*')])
 
     # Ensure supfile is readable (if not, warn but proceed)
     supfile_expected = False

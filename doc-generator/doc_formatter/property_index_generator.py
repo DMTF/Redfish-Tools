@@ -103,6 +103,7 @@ class PropertyIndexGenerator(DocFormatter):
 
         if prop_name not in self.properties_by_name:
             self.properties_by_name[prop_name] = []
+
         self.properties_by_name[prop_name].append(description_entry)
 
 
@@ -128,12 +129,30 @@ class PropertyIndexGenerator(DocFormatter):
         pass
 
 
+    def is_excluded(self, prop_name):
+        """ True if prop_name is in the excluded or excluded-by-match list.
+
+        Many properties are excluded in the parent doc_generator code, but for other output
+        modes we sometimes include them in sub-properties. """
+        if prop_name in self.config['excluded_properties']:
+            return True
+        if prop_name in self.config['excluded_by_match']:
+            pass
+
+        return False
+
+
     def coalesce_properties(self):
         """ Group the info in self.properties_by_name based on prop_type and description match. """
 
         # Group the property info by prop_name, type, description:
         coalesced_info = {}
-        for property_name, property_infos in self.properties_by_name.items():
+        prop_names = self.exclude_prop_names(self.properties_by_name.keys(),
+                                             self.config['excluded_properties'],
+                                             self.config['excluded_by_match'])
+
+        for property_name in prop_names:
+            property_infos = self.properties_by_name[property_name]
             if len(property_infos) == 1:
                 continue # nothing to do here.
             coalesced_info[property_name] = {}
@@ -178,6 +197,7 @@ class PropertyIndexGenerator(DocFormatter):
         rows = []
 
         property_names = sorted(self.coalesced_properties.keys())
+
         for prop_name in property_names:
             info = self.coalesced_properties[prop_name]
             prop_types = sorted(info.keys())
