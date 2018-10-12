@@ -15,6 +15,7 @@ Initial author: Second Rise LLC.
 """
 
 import copy
+import json
 import html
 import markdown
 import warnings
@@ -83,8 +84,10 @@ class PropertyIndexGenerator(DocFormatter):
         details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
         schema_path_formatted = self.this_section['schema_name']
+        schema_path = [ self.this_section['schema_name'] ]
         if len(prop_path):
-            schema_path_formatted += ' (' + ' > '.join(prop_path) + ')'
+            # schema_path_formatted += ' (' + ' > '.join(prop_path) + ')'
+            schema_path += prop_path
 
         prop_type = details.get('prop_type')
         if isinstance(prop_type, list):
@@ -93,7 +96,7 @@ class PropertyIndexGenerator(DocFormatter):
             prop_type = ', '.join(sorted(prop_type_values))
 
         description_entry = {
-            'schemas': [ schema_path_formatted ], 'prop_type': prop_type
+            'schemas': [ schema_path ], 'prop_type': prop_type,
             }
 
         if self.config.get('normative') and details.get('normative_descr'):
@@ -168,6 +171,49 @@ class PropertyIndexGenerator(DocFormatter):
 
         self.coalesced_properties = coalesced_info
 
+
+    def generate_updated_config(self):
+        """ Update property_index_config data.
+
+        Flag any properties that were found to have more than one type, or more than one
+        description. If the property already appears in self.config['property_index_config']
+        and it has a globalDescription, flag only entries with a different *type*. """
+
+        updated = copy.deepcopy(self.config['property_index_config'])
+        overrides = updated['DescriptionOverrides'] # NB: this should already be in place.
+
+        # Sorting isn't necessary in this method, but it's nice to have for troubleshooting.
+        property_names = sorted(self.coalesced_properties.keys())
+
+        for prop_name in property_names:
+            prop_overrides = overrides.get(prop_name)
+
+            info = self.coalesced_properties[prop_name]
+            prop_types = sorted(info.keys())
+            add_all = False
+
+            # If we don't already have prop_overrides and we have multiple types, output all:
+            if len(prop_types) > 1 and not prop_overrides:
+                overrides[prop_name] = []
+                prop_overrides = overrides.get(prop_name)
+                add_all = True
+
+            for prop_type in prop_types:
+                descriptions = sorted(info[prop_type].keys())
+                for description in descriptions:
+                    schemas = info[prop_type][description]
+                    if add_all:
+                        found_entry = {
+                            "type": prop_type,
+                            "description": description,
+                            'knownException': False,
+                            "schemas": ['/'.join(x) for x in schemas]
+                            }
+                        prop_overrides.append(found_entry)
+
+        return updated
+
+
     def emit_html(self):
 
         def make_row(cells):
@@ -204,9 +250,19 @@ class PropertyIndexGenerator(DocFormatter):
             for prop_type in prop_types:
                 descriptions = sorted(info[prop_type].keys()) # TODO: what's the preferred sort?
                 for description in descriptions:
-                    schema_list = sorted(info[prop_type][description])
+                    schema_list = [self.format_schema_list(x) for x in info[prop_type][description] ]
+                    # for x in info[prop_type][description]:
+
+                    # schema_list = sorted(info[prop_type][description])
                     rows.append(make_row(['<b>' + prop_name + '</b>', ', <br>'.join(schema_list),
                                           prop_type, description]))
+
+        if self.config.get('write_config_fh'):
+            config_out = self.config.get('write_config_fh')
+            # TODO: update config
+            updated_config = self.generate_updated_config()
+            print(json.dumps(updated_config, indent=3), file=config_out)
+            config_out.close()
 
         headers = make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
         table = make_table(rows, [headers])
@@ -241,6 +297,11 @@ table.properties{
         return '\n'.join(['<!doctype html>', '<html>', head, '<body>', table, '</body></html>'])
 
 
+    def format_schema_list(self, sl):
+        formatted = sl[0]
+        if len(sl) > 1:
+            formatted += ' (' + ' > '.join(sl[1:]) + ')'
+        return formatted
 
 
     def emit_markdown(self):

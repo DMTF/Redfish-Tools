@@ -1005,6 +1005,9 @@ def main():
                         choices=['markdown', 'html', 'csv'], help='Output format')
     parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
                         help='Produce Property Index output')
+    parser.add_argument('--property_index_config_out', dest='property_index_config_out',
+                        metavar='CONFIG_FILE_OUT',
+                        default=False, help='Generate updated config file (property_index mode only)')
     parser.add_argument('--out', dest='outfile', default='output.md',
                         help=('Output file (default depends on output format: '
                               'output.md for markdown, index.html for html, output.csv for csv)'))
@@ -1032,8 +1035,17 @@ def main():
     args = parser.parse_args()
 
     config['output_format'] = args.format
-    if (args.property_index):
+    if args.property_index:
         config['output_content'] = 'property_index'
+        write_config_to = args.property_index_config_out
+        if write_config_to:
+            try:
+                config_out = open(write_config_to, 'w', encoding="utf8")
+                config['write_config_fh'] = config_out
+            except (OSError) as ex:
+                warnings.warn('Unable to open ' + config_out + ' to write: ' + str(ex))
+                exit
+
     else:
         config['output_content'] = 'full_doc'
 
@@ -1070,30 +1082,36 @@ def main():
         if args.config_file:
             config_file= open(args.config_file, 'r', encoding="utf8")
             config_data = json.load(config_file)
+            config['property_index_config'] = config_data # We will amend this on output, if requested
             config['supplemental']['DescriptionOverrides'] = config_data.get('DescriptionOverrides', {})
             excluded_props =  config_data.get('ExcludedProperties', [])
             config['excluded_properties'].extend([x for x in excluded_props if not x.startswith('*')])
             config['excluded_by_match'].extend([x[1:] for x in excluded_props if x.startswith('*')])
-
-    # Ensure supfile is readable (if not, warn but proceed)
-    supfile_expected = False
-    if args.supfile:
-        supfile = args.supfile
-        supfile_expected = True
-    elif args.normative:
-        supfile = config.get('cwd') + '/devsupplement.md'
-    else:
-        supfile = config.get('cwd') + '/usersupplement.md'
-
-    try:
-        supfile = open(supfile, 'r', encoding="utf8")
-        config['supplemental'] = parse_supplement.parse_file(supfile)
-    except (OSError) as ex:
-        if supfile_expected:
-            warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
         else:
-            warnings.warn('No supplemental file specified and ' + supfile +
-                          ' not found. Proceeding.')
+            config['property_index_config'] = {'DescriptionOverrides': {},
+                                               'ExcludedProperties': []}
+
+    else:
+        # In any mode other than property_index, we should have a supplemental file.
+        # Ensure supfile is readable (if not, warn but proceed)
+        supfile_expected = False
+        if args.supfile:
+            supfile = args.supfile
+            supfile_expected = True
+        elif args.normative:
+            supfile = config.get('cwd') + '/devsupplement.md'
+        else:
+            supfile = config.get('cwd') + '/usersupplement.md'
+
+        try:
+            supfile = open(supfile, 'r', encoding="utf8")
+            config['supplemental'] = parse_supplement.parse_file(supfile)
+        except (OSError) as ex:
+            if supfile_expected:
+                warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
+            else:
+                warnings.warn('No supplemental file specified and ' + supfile +
+                              ' not found. Proceeding.')
 
     # Check profile document, if specified
     if args.profile_doc:
