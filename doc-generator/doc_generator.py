@@ -1083,10 +1083,6 @@ def main():
             config_file= open(args.config_file, 'r', encoding="utf8")
             config_data = json.load(config_file)
             config['property_index_config'] = config_data # We will amend this on output, if requested
-            config['supplemental']['DescriptionOverrides'] = config_data.get('DescriptionOverrides', {})
-            excluded_props =  config_data.get('ExcludedProperties', [])
-            config['excluded_properties'].extend([x for x in excluded_props if not x.startswith('*')])
-            config['excluded_by_match'].extend([x[1:] for x in excluded_props if x.startswith('*')])
         else:
             config['property_index_config'] = {'DescriptionOverrides': {},
                                                'ExcludedProperties': []}

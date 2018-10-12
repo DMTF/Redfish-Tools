@@ -39,6 +39,13 @@ class PropertyIndexGenerator(DocFormatter):
         traverser: SchemaTraverser object
         config: configuration dict
         """
+        # parse the property index config data
+        config_data = config['property_index_config']
+        config['supplemental']['DescriptionOverrides'] = config_data.get('DescriptionOverrides', {})
+        excluded_props =  config_data.get('ExcludedProperties', [])
+        config['excluded_properties'].extend([x for x in excluded_props if not x.startswith('*')])
+        config['excluded_by_match'].extend([x[1:] for x in excluded_props if x.startswith('*')])
+
         super(PropertyIndexGenerator, self).__init__(property_data, traverser, config, level)
 
         self.properties_by_name = {}
@@ -47,6 +54,7 @@ class PropertyIndexGenerator(DocFormatter):
         # Force some config here:
         self.config['omit_version_in_headers'] = True # This puts just the schema name in the section head.
         self.config['wants_common_objects'] = True
+
 
 
     def emit(self):
