@@ -48,6 +48,15 @@ class PropertyIndexGenerator(DocFormatter):
 
         super(PropertyIndexGenerator, self).__init__(property_data, traverser, config, level)
 
+        # If there's a file to write config to, check it now.
+        self.write_config_fh = False
+        if config.get('write_config_to'):
+            try:
+                config_out = open(config['write_config_to'], 'w', encoding="utf8")
+                self.write_config_fh = config_out
+            except (OSError) as ex:
+                warnings.warn('Unable to open ' + config['write_config_to'] + ' to write: ' + str(ex))
+
         self.properties_by_name = {}
         self.coalesced_properties = {}
 
@@ -265,8 +274,8 @@ class PropertyIndexGenerator(DocFormatter):
                     rows.append(make_row(['<b>' + prop_name + '</b>', ', <br>'.join(schema_list),
                                           prop_type, description]))
 
-        if self.config.get('write_config_fh'):
-            config_out = self.config.get('write_config_fh')
+        if self.write_config_fh:
+            config_out = self.write_config_fh
             # TODO: update config
             updated_config = self.generate_updated_config()
             print(json.dumps(updated_config, indent=3), file=config_out)

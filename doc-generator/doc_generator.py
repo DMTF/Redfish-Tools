@@ -1037,14 +1037,7 @@ def main():
     config['output_format'] = args.format
     if args.property_index:
         config['output_content'] = 'property_index'
-        write_config_to = args.property_index_config_out
-        if write_config_to:
-            try:
-                config_out = open(write_config_to, 'w', encoding="utf8")
-                config['write_config_fh'] = config_out
-            except (OSError) as ex:
-                warnings.warn('Unable to open ' + config_out + ' to write: ' + str(ex))
-                exit
+        config['write_config_to'] = args.property_index_config_out
 
     else:
         config['output_content'] = 'full_doc'
@@ -1083,6 +1076,13 @@ def main():
             config_file= open(args.config_file, 'r', encoding="utf8")
             config_data = json.load(config_file)
             config['property_index_config'] = config_data # We will amend this on output, if requested
+            # Populate the URI mappings
+            config['uri_to_local'] = {}
+            config['local_to_uri'] = {}
+            for k, v in config_data.get('uri_mapping', {}).items():
+                vpath = os.path.abspath(v)
+                config['uri_to_local'][k] = vpath
+                config['local_to_uri'][vpath] = k
         else:
             config['property_index_config'] = {'DescriptionOverrides': {},
                                                'ExcludedProperties': []}
