@@ -41,6 +41,7 @@ class PropertyIndexGenerator(DocFormatter):
         """
         # parse the property index config data
         config_data = config['property_index_config']
+        # doc generator will be looking for config['supplemental']['DescriptionOverrides']
         config['supplemental']['DescriptionOverrides'] = config_data.get('DescriptionOverrides', {})
         excluded_props =  config_data.get('ExcludedProperties', [])
         config['excluded_properties'].extend([x for x in excluded_props if not x.startswith('*')])
@@ -59,6 +60,8 @@ class PropertyIndexGenerator(DocFormatter):
 
         self.properties_by_name = {}
         self.coalesced_properties = {}
+        # Shorthand for the overrides.
+        self.overrides = config['supplemental']['DescriptionOverrides']
 
         # Force some config here:
         self.config['omit_version_in_headers'] = True # This puts just the schema name in the section head.
@@ -116,7 +119,16 @@ class PropertyIndexGenerator(DocFormatter):
             'schemas': [ schema_path ], 'prop_type': prop_type,
             }
 
-        if self.config.get('normative') and details.get('normative_descr'):
+        # Check for an override:
+        override_description = False
+        if self.overrides.get(prop_name):
+            for override_entry in self.overrides.get(prop_name):
+                if override_entry.get('globalOverride') and override_entry.get('type') == prop_type:
+                    override_description = override_entry.get('description')
+
+        if override_description:
+            description_entry['description'] = override_description
+        elif self.config.get('normative') and details.get('normative_descr'):
             description_entry['description'] = details.get('normative_descr')
         else:
             description_entry['description'] = details.get('descr')
@@ -219,6 +231,7 @@ class PropertyIndexGenerator(DocFormatter):
                 descriptions = sorted(info[prop_type].keys())
                 for description in descriptions:
                     schemas = info[prop_type][description]
+                    # TODO: handle the non-add_all case.
                     if add_all:
                         found_entry = {
                             "type": prop_type,
