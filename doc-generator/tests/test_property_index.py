@@ -49,11 +49,63 @@ base_config = {
     'escape_chars': [],
 }
 
+
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_property_index(mockRequest):
+def test_property_index_config_out(mockRequest):
 
     config = copy.deepcopy(base_config)
     config['output_format'] = 'html'
+
+    expected_config_out = {
+    "ExcludedProperties": [
+        "description",
+        "Id",
+        "@odata.context",
+        "@odata.type",
+        "@odata.id",
+        "@odata.etag",
+        "*@odata.count"
+    ],
+    "DescriptionOverrides": {
+        "NetDevFuncCapabilities": [
+            {
+                "knownException": False,
+                "description": "Capabilities of this network device function.",
+                "schemas": [
+                    "NetworkDeviceFunction"
+                ],
+                "type": "array"
+            },
+            {
+                "knownException": False,
+                "description": "Capabilities of this network device function.",
+                "schemas": [
+                    "NetworkDeviceFunction/NetDevFuncCapabilities"
+                ],
+                "type": "string"
+            }
+        ],
+        "SupportedEthernetCapabilities": [
+            {
+                "knownException": False,
+                "description": "The set of Ethernet capabilities that this port supports.",
+                "schemas": [
+                    "NetworkPort"
+                ],
+                "type": "array"
+            },
+            {
+                "knownException": False,
+                "description": "The set of Ethernet capabilities that this port supports.",
+                "schemas": [
+                    "NetworkPort/SupportedEthernetCapabilities"
+                ],
+                "type": "string"
+            }
+        ]
+        }
+    }
+
 
     dirpath = os.path.abspath(os.path.join(testcase_path, 'general'))
     input_dir = os.path.join(dirpath, 'input')
@@ -64,4 +116,42 @@ def test_property_index(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    assert False
+    # Get the property indexer and compare the config output it would produce with what we expect:
+    updated_config = docGen.generator.generate_updated_config()
+    assert updated_config == expected_config_out
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_property_index_config_overrides(mockRequest):
+    """ Test that overrides are applied. """
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    override_desc = "This is an override description for NetDevFuncCapbilities, a string."
+
+    config['property_index_config']['DescriptionOverrides'] = {
+        "NetDevFuncCapabilities": [
+        {
+        "description": override_desc,
+        "type": "string",
+        "globalOverride": True
+        },
+        ],
+        }
+
+    dirpath = os.path.abspath(os.path.join(testcase_path, 'general'))
+    input_dir = os.path.join(dirpath, 'input')
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    lines = [x for x in output.split('\n') if '*NetDevFuncCapabilities*' in x]
+    stringlines = [x for x in lines if '| string |' in x]
+    otherlines  = [x for x in lines if '| string |' not in x]
+
+    assert len(stringlines) and len([x for x in stringlines if override_desc in x]) == len(stringlines)
+    assert len([x for x in otherlines if override_desc in x]) == 0

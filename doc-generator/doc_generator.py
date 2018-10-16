@@ -329,8 +329,8 @@ class DocGenerator:
         # Generate output
         if self.config.get('output_content') == 'property_index':
             from doc_formatter import PropertyIndexGenerator
-            self.property_indexer = PropertyIndexGenerator(self.property_data, traverser, self.config, level)
-            return self.property_indexer.generate_output()
+            self.generator = PropertyIndexGenerator(self.property_data, traverser, self.config, level)
+            return self.generator.generate_output()
 
         if self.config['output_format'] == 'markdown':
             from doc_formatter import MarkdownGenerator

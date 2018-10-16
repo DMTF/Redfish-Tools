@@ -276,9 +276,8 @@ class PropertyIndexGenerator(DocFormatter):
 
         if self.write_config_fh:
             config_out = self.write_config_fh
-            # TODO: update config
             updated_config = self.generate_updated_config()
-            print(json.dumps(updated_config, indent=3), file=config_out)
+            print(json.dumps(updated_config, indent=4), file=config_out)
             config_out.close()
 
         headers = make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
@@ -322,7 +321,49 @@ table.properties{
 
 
     def emit_markdown(self):
-        raise NotImplementedError
+
+        def make_row(cells):
+            row = '| ' + ' | '.join(cells) + ' |'
+            return row
+
+        def make_header_row(cells):
+            return make_row(cells)
+
+        def _make_separator_row(num):
+            return make_row(['---' for x in range(0, num)])
+
+        def make_table(rows, header_rows=None, css_class=None):
+            # Get the number of cells from the first row.
+            firstrow = rows[0]
+            numcells = firstrow.count(' | ') + 1
+            if not header_rows:
+                header_rows = [ make_header_row(['   ' for x in range(0, numcells)]) ]
+            header_rows.append(_make_separator_row(numcells))
+            return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
+
+        rows = []
+
+        property_names = sorted(self.coalesced_properties.keys())
+
+        for prop_name in property_names:
+            info = self.coalesced_properties[prop_name]
+            prop_types = sorted(info.keys())
+            for prop_type in prop_types:
+                descriptions = sorted(info[prop_type].keys()) # TODO: what's the preferred sort?
+                for description in descriptions:
+                    schema_list = [self.format_schema_list(x) for x in info[prop_type][description] ]
+                    rows.append(make_row(['*' + prop_name + '*', ', '.join(schema_list),
+                                          prop_type, description]))
+
+        if self.write_config_fh:
+            config_out = self.write_config_fh
+            updated_config = self.generate_updated_config()
+            print(json.dumps(updated_config, indent=4), file=config_out)
+            config_out.close()
+
+        headers = make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
+        table = make_table(rows, [headers])
+        return table
 
 
     def emit_csv(self):
