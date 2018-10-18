@@ -290,6 +290,13 @@ class PropertyIndexGenerator(DocFormatter):
 
             return table_tag + '\n' + head + body + '</table>'
 
+        def format_schema_list(schema_list):
+
+            if len(schema_list) > 10:
+                return '<i>various</i><br>' + '(' + ', <br>'.join(schema_list[:2]) + ' ... )'
+            else:
+                return ', <br>'.join(schema_list)
+
         rows = []
 
         property_names = sorted(self.coalesced_properties.keys())
@@ -299,13 +306,11 @@ class PropertyIndexGenerator(DocFormatter):
             prop_types = sorted(info.keys())
 
             for prop_type in prop_types:
-                descriptions = sorted(info[prop_type].keys()) # TODO: what's the preferred sort?
+                descriptions = sorted(info[prop_type].keys())
                 for description in descriptions:
                     schema_list = [self.format_schema_list(x) for x in info[prop_type][description] ]
-                    # for x in info[prop_type][description]:
 
-                    # schema_list = sorted(info[prop_type][description])
-                    rows.append(make_row(['<b>' + prop_name + '</b>', ', <br>'.join(schema_list),
+                    rows.append(make_row(['<b>' + prop_name + '</b>', format_schema_list(schema_list),
                                           prop_type, description]))
 
         if self.write_config_fh:
