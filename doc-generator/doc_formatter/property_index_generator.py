@@ -48,6 +48,7 @@ class PropertyIndexGenerator(DocFormatter):
         config['excluded_by_match'].extend([x[1:] for x in excluded_props if x.startswith('*')])
 
         super(PropertyIndexGenerator, self).__init__(property_data, traverser, config, level)
+        self.collapse_list_of_simple_type = False
 
         # If there's a file to write config to, check it now.
         self.write_config_fh = False
@@ -66,7 +67,6 @@ class PropertyIndexGenerator(DocFormatter):
         # Force some config here:
         self.config['omit_version_in_headers'] = True # This puts just the schema name in the section head.
         self.config['wants_common_objects'] = True
-
 
 
     def emit(self):
@@ -122,9 +122,14 @@ class PropertyIndexGenerator(DocFormatter):
         # Check for an override:
         override_description = False
         if self.overrides.get(prop_name):
+            # TODO: this gets globalOverride, but not schema-specific override.
             for override_entry in self.overrides.get(prop_name):
                 if override_entry.get('globalOverride') and override_entry.get('type') == prop_type:
-                    override_description = override_entry.get('description')
+                    override_description = override_entry.get('overrideDescription')
+                    if not override_description:
+                        warnings.warn("globalOverride is defined for '" + prop_name + ', ' + prop_type +
+                                      "' but overrideDescription is absent or empty.")
+
 
         if override_description:
             description_entry['description'] = override_description
@@ -136,7 +141,8 @@ class PropertyIndexGenerator(DocFormatter):
         if prop_name not in self.properties_by_name:
             self.properties_by_name[prop_name] = []
 
-        self.properties_by_name[prop_name].append(description_entry)
+        if description_entry['description']:
+            self.properties_by_name[prop_name].append(description_entry)
 
 
     def append_unique_values(self, value_list, target_list):
@@ -185,8 +191,6 @@ class PropertyIndexGenerator(DocFormatter):
 
         for property_name in prop_names:
             property_infos = self.properties_by_name[property_name]
-            if len(property_infos) == 1:
-                continue # nothing to do here.
             coalesced_info[property_name] = {}
             for info in property_infos:
                 prop_type = info['prop_type']
@@ -216,23 +220,19 @@ class PropertyIndexGenerator(DocFormatter):
 
         for prop_name in property_names:
             prop_overrides = overrides.get(prop_name)
-
             info = self.coalesced_properties[prop_name]
             prop_types = sorted(info.keys())
             add_all = False
 
             # If we don't already have prop_overrides and we have multiple types, output all:
-            if len(prop_types) > 1 and not prop_overrides:
-                overrides[prop_name] = []
-                prop_overrides = overrides.get(prop_name)
-                add_all = True
+            num_prop_types = len(prop_types)
 
-            for prop_type in prop_types:
-                descriptions = sorted(info[prop_type].keys())
-                for description in descriptions:
-                    schemas = info[prop_type][description]
-                    # TODO: handle the non-add_all case.
-                    if add_all:
+            if num_prop_types > 1 and not prop_overrides:
+                prop_overrides = overrides[prop_name] = []
+                for prop_type in prop_types:
+                    descriptions = sorted(info[prop_type].keys())
+                    for description in descriptions:
+                        schemas = info[prop_type][description]
                         found_entry = {
                             "type": prop_type,
                             "description": description,
@@ -240,6 +240,26 @@ class PropertyIndexGenerator(DocFormatter):
                             "schemas": ['/'.join(x) for x in schemas]
                             }
                         prop_overrides.append(found_entry)
+
+            else:
+                entries_to_add = []
+
+                # TODO
+
+                # Example info:
+                # {'object': {'The available actions for this resource.': [['NetworkDeviceFunction'], ['NetworkPort']]}}
+                # Example prop_overrides:
+                #
+
+                # Entries that are good matches (don't need to add):
+                # * We have this prop_type in prop_overrides, with a globalOverride.
+                # * We have this prop_type, with the Schema listed, and knownException is true.
+
+                # Entries that are okay even though unmatched (don't need to add):
+                # * num_prop_types == 1 and ...
+                #      ... number of descriptions is also 1.
+
+
 
         return updated
 
@@ -277,6 +297,7 @@ class PropertyIndexGenerator(DocFormatter):
         for prop_name in property_names:
             info = self.coalesced_properties[prop_name]
             prop_types = sorted(info.keys())
+
             for prop_type in prop_types:
                 descriptions = sorted(info[prop_type].keys()) # TODO: what's the preferred sort?
                 for description in descriptions:

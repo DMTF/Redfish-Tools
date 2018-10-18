@@ -38,6 +38,7 @@ class DocFormatter:
         self.current_depth = 0
         self.sections = []
         self.registry_sections = []
+        self.collapse_list_of_simple_type = True
 
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
@@ -1281,22 +1282,27 @@ class DocFormatter:
                     item_list = prop_items[0].get('type')
 
             elif list_of_simple_type:
-                # We want to combine the array and its item(s) into a single row. Create a combined
-                # prop_item to make it work.
-                combined_prop_item = prop_items[0]
-                combined_prop_item['_prop_name'] = prop_name
-                combined_prop_item['readonly'] = prop_info.get('readonly', False)
-                if self.config.get('normative') and 'longDescription' in combined_prop_item:
-                    descr = descr + ' ' + combined_prop_item['longDescription']
-                    combined_prop_item['longDescription'] = descr
-                else:
-                    if prop_items[0].get('description'):
-                        descr = descr + ' ' + combined_prop_item['description']
-                    combined_prop_item['description'] = descr
-                if fulldescription_override:
-                    combined_prop_item['fulldescription_override'] = fulldescription_override
+                if self.collapse_list_of_simple_type:
+                    # We want to combine the array and its item(s) into a single row. Create a combined
+                    # prop_item to make it work.
+                    combined_prop_item = prop_items[0]
+                    combined_prop_item['_prop_name'] = prop_name
+                    combined_prop_item['readonly'] = prop_info.get('readonly', False)
+                    if self.config.get('normative') and 'longDescription' in combined_prop_item:
+                        descr = descr + ' ' + combined_prop_item['longDescription']
+                        combined_prop_item['longDescription'] = descr
+                    else:
+                        if prop_items[0].get('description'):
+                            descr = descr + ' ' + combined_prop_item['description']
+                        combined_prop_item['description'] = descr
+                    if fulldescription_override:
+                        combined_prop_item['fulldescription_override'] = fulldescription_override
 
-                item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, new_path, True)
+                    item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, new_path, True)
+
+                else:
+                    item_formatted = self.format_non_object_descr(schema_ref, prop_items[0], new_path)
+                    item_formatted['promote_me'] = False
 
             else:
                 item_formatted = self.format_non_object_descr(schema_ref, prop_item, new_path)
@@ -1305,6 +1311,7 @@ class DocFormatter:
             item_description = item_formatted['rows']
             if item_formatted['details']:
                 prop_details.update(item_formatted['details'])
+
 
         # Read/Write requirements from profile:
         if self.config.get('profile_mode') and prop_name and profile is not None:

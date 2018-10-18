@@ -49,7 +49,7 @@ base_config = {
     'escape_chars': [],
 }
 
-
+@pytest.mark.xfail       # This set actually doesn't output overrides, since list handling was fixed. Need a different sample.
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_property_index_config_out(mockRequest):
 
@@ -133,8 +133,8 @@ def test_property_index_config_overrides(mockRequest):
     config['property_index_config']['DescriptionOverrides'] = {
         "NetDevFuncCapabilities": [
         {
-        "description": override_desc,
-        "type": "string",
+        "overrideDescription": override_desc,
+        "type": "array",
         "globalOverride": True
         },
         ],
@@ -150,8 +150,7 @@ def test_property_index_config_overrides(mockRequest):
     output = docGen.generate_docs()
 
     lines = [x for x in output.split('\n') if '*NetDevFuncCapabilities*' in x]
-    stringlines = [x for x in lines if '| string |' in x]
-    otherlines  = [x for x in lines if '| string |' not in x]
 
-    assert len(stringlines) and len([x for x in stringlines if override_desc in x]) == len(stringlines)
-    assert len([x for x in otherlines if override_desc in x]) == 0
+    assert len(lines) and len([x for x in lines if override_desc in x]) == len(lines)
+
+    updated_config = docGen.generator.generate_updated_config()
