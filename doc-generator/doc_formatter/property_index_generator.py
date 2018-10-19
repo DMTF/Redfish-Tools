@@ -136,13 +136,17 @@ class PropertyIndexGenerator(DocFormatter):
         override_description = False
         if self.overrides.get(prop_name):
             for override_entry in self.overrides.get(prop_name):
+                if not override_entry.get('overrideDescription'):
+                    continue
                 if override_entry.get('globalOverride') and override_entry.get('type') == prop_type:
                     override_description = override_entry.get('overrideDescription')
-                    if not override_description:
-                        warnings.warn("globalOverride is defined for '" + prop_name + ', ' + prop_type +
-                                      "' but overrideDescription is absent or empty.")
-                # TODO: schema-specific overrides
-
+                    if override_description:
+                        break
+                elif override_entry.get('type') == prop_type and '/'.join(schema_path) in override_entry.get('schemas', []):
+                    import pdb; pdb.set_trace()
+                    override_description = override_entry.get('overrideDescription')
+                    if override_description:
+                        break
 
         if override_description:
             description_entry['description'] = override_description
@@ -287,14 +291,17 @@ class PropertyIndexGenerator(DocFormatter):
                             # check each entry against prop_overrides
                             for description in descriptions:
                                 schemas = info[prop_type][description]
-                                for schema_name in schemas:
+                                for schema_path in schemas:
+                                    schema_name = '/'.join(schema_path)
                                     for over_info in prop_overrides:
                                         # schemas should be listed if not an override, but allow for human error:
-                                        if schemas not in over_info:
+                                        if 'schemas' not in over_info:
                                             over_info['schemas'] = []
+
                                         over_schemas = over_info['schemas']
                                         if schema_name in over_schemas:
-                                            if description == over_info.get('description') and prop_type == over_info.get('type'):
+                                            if prop_type == over_info.get('type') and (description == over_info.get('description') or
+                                                                                       over_info.get('overrideDescription')):
                                                 break
                                             else:
                                                 # This looked like a match, but something has changed!
