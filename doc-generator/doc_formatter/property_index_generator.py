@@ -224,10 +224,11 @@ class PropertyIndexGenerator(DocFormatter):
             prop_types = sorted(info.keys())
             add_all = False
 
-            # If we don't already have prop_overrides and we have multiple types, output all:
+            # If we don't already have prop_overrides and we have multiple types, capture them all:
             num_prop_types = len(prop_types)
 
-            if num_prop_types > 1 and not prop_overrides:
+            done_with_prop_name = False
+            if not prop_overrides and num_prop_types > 1:
                 prop_overrides = overrides[prop_name] = []
                 for prop_type in prop_types:
                     descriptions = sorted(info[prop_type].keys())
@@ -240,26 +241,81 @@ class PropertyIndexGenerator(DocFormatter):
                             "schemas": ['/'.join(x) for x in schemas]
                             }
                         prop_overrides.append(found_entry)
+                done_with_prop_name = True
 
             else:
-                entries_to_add = []
+                for prop_type in prop_types:
+                    descriptions = sorted(info[prop_type].keys())
+                    num_descriptions = len(descriptions)
+                    done_with_prop_type = False
 
-                # TODO
+                    if not prop_overrides:
+                        # If we found multiple descriptions and we have no overrides, capture each:
+                        if num_descriptions > 1:
+                            prop_overrides = overrides[prop_name] = []
+                            for description in descriptions:
+                                schemas = info[prop_type][description]
+                                found_entry = {
+                                    "type": prop_type,
+                                    "description": description,
+                                    'knownException': False,
+                                    "schemas": ['/'.join(x) for x in schemas]
+                                    }
+                                prop_overrides.append(found_entry)
+                            done_with_prop_name = True
 
-                # Example info:
-                # {'object': {'The available actions for this resource.': [['NetworkDeviceFunction'], ['NetworkPort']]}}
-                # Example prop_overrides:
-                #
+                    else:
+                        # Do we have a globalOverride for this prop_type? If so, we're done. Again.
+                        for over_info in prop_overrides:
+                            if over_info.get('globalOverride', False):
+                                done_with_prop_type = True
 
-                # Entries that are good matches (don't need to add):
-                # * We have this prop_type in prop_overrides, with a globalOverride.
-                # * We have this prop_type, with the Schema listed, and knownException is true.
+                        if not done_with_prop_type:
+                            # check each entry against prop_overrides
+                            for description in descriptions:
+                                schemas = info[prop_type][description]
+                                for schema_name in schemas:
+                                    for over_info in prop_overrides:
+                                        # schemas should be listed if not an override, but allow for human error:
+                                        if schemas not in over_info:
+                                            over_info['schemas'] = []
+                                        over_schemas = over_info['schemas']
+                                        if schema_name in over_schemas:
+                                            if description == over_info.get('description') and prop_type == over_info.get('type'):
+                                                break
+                                            else:
+                                                # This looked like a match, but something has changed!
+                                                if len(over_schemas) == 1:
+                                                    over_info['description'] = description
+                                                    over_info['knownException'] = False
+                                                else:
+                                                    # Remove schema_name from this one and add a new entry for the description.
+                                                    over_info['schemas'].remove(schema_name)
 
-                # Entries that are okay even though unmatched (don't need to add):
-                # * num_prop_types == 1 and ...
-                #      ... number of descriptions is also 1.
+                                                    # Do we already have this description?
+                                                    found_description = False
+                                                    for over_info2 in prop_overrides:
+                                                        if over_info2.get('description') == description:
+                                                            over_info2['schemas'].append(schema_name)
+                                                            found_description = True
+                                                            break
 
-
+                                                    if not found_description:
+                                                        found_entry = {
+                                                            "type": prop_type,
+                                                            "description": description,
+                                                            'knownException': False,
+                                                            "schemas": [ schema_name ]
+                                                            }
+                                                        prop_overrides.append(found_entry)
+                                        else: # schema_name not found (and we had no override)
+                                            found_entry = {
+                                                "type": prop_type,
+                                                "description": description,
+                                                'knownException': False,
+                                                "schemas": [ schema_name ]
+                                                }
+                                            prop_overrides.append(found_entry)
 
         return updated
 

@@ -49,65 +49,74 @@ base_config = {
     'escape_chars': [],
 }
 
-@pytest.mark.xfail       # This set actually doesn't output overrides, since list handling was fixed. Need a different sample.
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_property_index_config_out(mockRequest):
 
     config = copy.deepcopy(base_config)
     config['output_format'] = 'html'
 
-    expected_config_out = {
-    "ExcludedProperties": [
-        "description",
-        "Id",
-        "@odata.context",
-        "@odata.type",
-        "@odata.id",
-        "@odata.etag",
-        "*@odata.count"
-    ],
-    "DescriptionOverrides": {
-        "NetDevFuncCapabilities": [
+    # A selection of what we expect to find in the DescriptionOverrides *output* by the tool:
+    expected = {
+        "FanName": [
             {
-                "knownException": False,
-                "description": "Capabilities of this network device function.",
                 "schemas": [
-                    "NetworkDeviceFunction"
+                    "Thermal/Fans"
                 ],
-                "type": "array"
+                "description": "Name of the fan.",
+                "knownException": False,
+                "type": "string"
             },
             {
-                "knownException": False,
-                "description": "Capabilities of this network device function.",
                 "schemas": [
-                    "NetworkDeviceFunction/NetDevFuncCapabilities"
+                    "Thermal/Temperatures"
                 ],
+                "description": "This property was inserted to have an example of a variant description for the same type.",
+                "knownException": False,
                 "type": "string"
+            }
+
+        ],
+        "LowerThresholdFatal": [
+            {
+                "schemas": [
+                    "Thermal/Fans"
+                ],
+                "description": "Below normal range and is fatal.",
+                "knownException": False,
+                "type": "integer"
+            },
+            {
+                "schemas": [
+                    "Thermal/Temperatures"
+                ],
+                "description": "Below normal range and is fatal.",
+                "knownException": False,
+                "type": "number"
             }
         ],
-        "SupportedEthernetCapabilities": [
+        "RelatedItem": [
             {
-                "knownException": False,
-                "description": "The set of Ethernet capabilities that this port supports.",
+                "type": "array",
                 "schemas": [
-                    "NetworkPort"
+                    "Thermal/Temperatures"
                 ],
-                "type": "array"
+                "knownException": False,
+                "description": "Describes the areas or devices to which this temperature measurement applies."
             },
             {
-                "knownException": False,
-                "description": "The set of Ethernet capabilities that this port supports.",
+                "type": "array",
                 "schemas": [
-                    "NetworkPort/SupportedEthernetCapabilities"
+                    "Thermal/Fans"
                 ],
-                "type": "string"
+                "knownException": False,
+                "description": "The ID(s) of the resources serviced with this fan."
             }
-        ]
-        }
+        ],
     }
 
 
-    dirpath = os.path.abspath(os.path.join(testcase_path, 'general'))
+
+    dirpath = os.path.abspath(os.path.join(testcase_path, 'thermal_plus'))
     input_dir = os.path.join(dirpath, 'input')
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
@@ -118,7 +127,12 @@ def test_property_index_config_out(mockRequest):
 
     # Get the property indexer and compare the config output it would produce with what we expect:
     updated_config = docGen.generator.generate_updated_config()
-    assert updated_config == expected_config_out
+
+    # Checking specific cases here.
+    out = updated_config['DescriptionOverrides']
+    assert out.get('LowerThresholdFatal') == expected['LowerThresholdFatal'], "Type mismatch not detected for LowerThresholdFatal"
+    assert out.get('RelatedItem') == expected['RelatedItem'], "Description mismatch not detected for RelatedItem"
+    assert out.get('FanName') == expected['FanName'], "Description mismatch not detected for FanName"
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
