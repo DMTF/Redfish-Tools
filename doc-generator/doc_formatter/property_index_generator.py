@@ -143,10 +143,10 @@ class PropertyIndexGenerator(DocFormatter):
                     if override_description:
                         break
                 elif override_entry.get('type') == prop_type and '/'.join(schema_path) in override_entry.get('schemas', []):
-                    import pdb; pdb.set_trace()
                     override_description = override_entry.get('overrideDescription')
                     if override_description:
                         break
+
 
         if override_description:
             description_entry['description'] = override_description
@@ -236,17 +236,16 @@ class PropertyIndexGenerator(DocFormatter):
         property_names = sorted(self.coalesced_properties.keys())
 
         for prop_name in property_names:
-            prop_overrides = overrides.get(prop_name)
+            prop_config = overrides.get(prop_name)
             info = self.coalesced_properties[prop_name]
             prop_types = sorted(info.keys())
-            add_all = False
 
-            # If we don't already have prop_overrides and we have multiple types, capture them all:
+            # If we don't already have prop_config and we have multiple types, capture them all:
             num_prop_types = len(prop_types)
 
             done_with_prop_name = False
-            if not prop_overrides and num_prop_types > 1:
-                prop_overrides = overrides[prop_name] = []
+            if not prop_config and num_prop_types > 1:
+                prop_config = overrides[prop_name] = []
                 for prop_type in prop_types:
                     descriptions = sorted(info[prop_type].keys())
                     for description in descriptions:
@@ -257,7 +256,7 @@ class PropertyIndexGenerator(DocFormatter):
                             'knownException': False,
                             "schemas": ['/'.join(x) for x in schemas]
                             }
-                        prop_overrides.append(found_entry)
+                        prop_config.append(found_entry)
                 done_with_prop_name = True
 
             else:
@@ -266,10 +265,10 @@ class PropertyIndexGenerator(DocFormatter):
                     num_descriptions = len(descriptions)
                     done_with_prop_type = False
 
-                    if not prop_overrides:
+                    if not prop_config:
                         # If we found multiple descriptions and we have no overrides, capture each:
                         if num_descriptions > 1:
-                            prop_overrides = overrides[prop_name] = []
+                            prop_config = overrides[prop_name] = []
                             for description in descriptions:
                                 schemas = info[prop_type][description]
                                 found_entry = {
@@ -278,66 +277,74 @@ class PropertyIndexGenerator(DocFormatter):
                                     'knownException': False,
                                     "schemas": ['/'.join(x) for x in schemas]
                                     }
-                                prop_overrides.append(found_entry)
+                                prop_config.append(found_entry)
                             done_with_prop_name = True
 
                     else:
-                        # Do we have a globalOverride for this prop_type? If so, we're done. Again.
-                        for over_info in prop_overrides:
-                            if over_info.get('globalOverride', False):
-                                done_with_prop_type = True
-
-                        if not done_with_prop_type:
-                            # check each entry against prop_overrides
-                            for description in descriptions:
-                                schemas = info[prop_type][description]
-                                for schema_path in schemas:
-                                    schema_name = '/'.join(schema_path)
-                                    for over_info in prop_overrides:
-                                        # schemas should be listed if not an override, but allow for human error:
-                                        if 'schemas' not in over_info:
-                                            over_info['schemas'] = []
-
-                                        over_schemas = over_info['schemas']
-                                        if schema_name in over_schemas:
-                                            if prop_type == over_info.get('type') and (description == over_info.get('description') or
-                                                                                       over_info.get('overrideDescription')):
-                                                break
-                                            else:
-                                                # This looked like a match, but something has changed!
-                                                if len(over_schemas) == 1:
-                                                    over_info['description'] = description
-                                                    over_info['knownException'] = False
-                                                else:
-                                                    # Remove schema_name from this one and add a new entry for the description.
-                                                    over_info['schemas'].remove(schema_name)
-
-                                                    # Do we already have this description?
-                                                    found_description = False
-                                                    for over_info2 in prop_overrides:
-                                                        if over_info2.get('description') == description:
-                                                            over_info2['schemas'].append(schema_name)
-                                                            found_description = True
-                                                            break
-
-                                                    if not found_description:
-                                                        found_entry = {
-                                                            "type": prop_type,
-                                                            "description": description,
-                                                            'knownException': False,
-                                                            "schemas": [ schema_name ]
-                                                            }
-                                                        prop_overrides.append(found_entry)
-                                        else: # schema_name not found (and we had no override)
-                                            found_entry = {
-                                                "type": prop_type,
-                                                "description": description,
-                                                'knownException': False,
-                                                "schemas": [ schema_name ]
-                                                }
-                                            prop_overrides.append(found_entry)
+                        self.update_config_for_prop_name_and_type(prop_name, prop_type, info, prop_config)
 
         return updated
+
+
+    def update_config_for_prop_name_and_type(self, prop_name, prop_type, info, prop_config):
+        """ Update a property name/type selection of prop_config based on coalesced info. Updates prop_config. """
+
+        # Do we have a globalOverride for this prop_type? If so, we're done. Again.
+        for over_info in prop_config:
+            if over_info.get('type') == prop_type and over_info.get('globalOverride', False):
+                return
+
+        # check each entry against prop_config
+        descriptions = sorted(info[prop_type].keys())
+        for description in descriptions:
+            self.update_config_for_prop_name_and_type_and_description(prop_name, prop_type, description, info, prop_config)
+
+
+    def update_config_for_prop_name_and_type_and_description(self, prop_name, prop_type, description, info, prop_config):
+        """ Update a property name/type/description selection of prop_config based on coalesced info. Updates prop_config. """
+
+        """ Info is arranged by prop_name: prop_type: description: schemas (list).
+        prop_config, conversely, is arranged as a list of dicts with keys schemas, type, description, overrideDescription, knownException.
+
+        If we applied an override, the description in "info" will match the overrideDescription in prop_config. """
+
+        config_by_schema = {}
+        for config in prop_config:
+            # Note, we ignore globalOverrides in this method.
+            if config.get('type') == prop_type:
+                for schema in config.get('schemas', []):
+                    config_by_schema[schema] = config
+
+        schemas = info[prop_type][description]
+        for schema_path in schemas:
+            schema_name = '/'.join(schema_path)
+
+            if config_by_schema.get(schema_name):
+                # We have an entry for this schema name. It's still good if it has an overrideDescription, or if the description matches.
+                if config_by_schema[schema_name].get('overrideDescription'):
+                    break
+                elif config_by_schema[schema_name].get('description') == description:
+                    break
+                else:
+                    config_by_schema[schema_name]['description'] = description
+                    config_by_schema[schema_name]['knownException'] = False
+
+            else:
+                # If we already have this description, add the schema there.
+                for config in prop_config:
+                    if config.get('type') == prop_type and config.get('description') == description:
+                        config['schemas'].append(schema_name)
+                        break
+
+                # We didn't find a matching description, so create a new entry:
+                found_entry = {
+                    "type": prop_type,
+                    "description": description,
+                    'knownException': False,
+                    "schemas": [ schema_name ]
+                    }
+                prop_config.append(found_entry)
+                config_by_schema[schema_name] = found_entry
 
 
     def emit_html(self):
