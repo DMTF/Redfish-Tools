@@ -99,14 +99,27 @@ class PropertyIndexGenerator(DocFormatter):
         """ Instead of formatting this data, add info to self.properties_by_name. """
 
         if not prop_name:
+            # We've drilled down to a simple type.
             return
+
+        if isinstance(prop_info, list):
+            meta = prop_info[0].get('_doc_generator_meta')
+        elif isinstance(prop_info, dict):
+            meta = prop_info.get('_doc_generator_meta')
+        if not meta:
+            meta = {}
+
+
+        if meta.get('within_action'):
+            prop_name_parts = prop_name.split('.')
+            if len(prop_name_parts) == 2:
+                prop_name = prop_name_parts[1] + ' (Action)'
 
         details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
         schema_path_formatted = self.this_section['schema_name']
         schema_path = [ self.this_section['schema_name'] ]
         if len(prop_path):
-            # schema_path_formatted += ' (' + ' > '.join(prop_path) + ')'
             schema_path += prop_path
 
         prop_type = details.get('prop_type')
@@ -122,13 +135,13 @@ class PropertyIndexGenerator(DocFormatter):
         # Check for an override:
         override_description = False
         if self.overrides.get(prop_name):
-            # TODO: this gets globalOverride, but not schema-specific override.
             for override_entry in self.overrides.get(prop_name):
                 if override_entry.get('globalOverride') and override_entry.get('type') == prop_type:
                     override_description = override_entry.get('overrideDescription')
                     if not override_description:
                         warnings.warn("globalOverride is defined for '" + prop_name + ', ' + prop_type +
                                       "' but overrideDescription is absent or empty.")
+                # TODO: schema-specific overrides
 
 
         if override_description:
