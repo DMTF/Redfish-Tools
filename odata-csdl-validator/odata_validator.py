@@ -1414,7 +1414,7 @@ class MetaData(Element):
                         break
                     except Exception as e:
                         if e.errno != errno.ECONNRESET:
-                            print("ee Could not open " + self.uri)
+                            print("Could not open " + self.uri)
                             print( e )
                             sys.exit(0)
                     retry_count += 1
