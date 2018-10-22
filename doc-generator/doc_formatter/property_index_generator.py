@@ -75,11 +75,19 @@ class PropertyIndexGenerator(DocFormatter):
         output_format = self.config.get('output_format', 'markdown')
         output = ''
         if output_format == 'html':
-            output = self.emit_html()
+            from format_utils import HtmlUtils
+            formatter = HtmlUtils()
+            output = self.format_tabular_output(formatter)
+            output = self.add_html_boilerplate(output)
+
         if output_format == 'markdown':
-            output = self.emit_markdown()
+            from format_utils import FormatUtils
+            formatter = FormatUtils()
+            output = self.format_tabular_output(formatter)
+
         if output_format == 'csv':
-            output = self.emit_csv()
+            output = self.output_csv()
+
         return output
 
 
@@ -347,41 +355,10 @@ class PropertyIndexGenerator(DocFormatter):
                 config_by_schema[schema_name] = found_entry
 
 
-    def emit_html(self):
-
-        def make_row(cells):
-            """ Make an HTML row """
-            row = ''.join(['<td>' + cell + '</td>' for cell in cells])
-            return '<tr>' + row + '</tr>'
-
-        def make_header_row(cells):
-            """ Make an HTML row, using table header markup """
-            row = ''.join(['<th>' + cell + '</th>' for cell in cells])
-            return '<tr>' + row + '</tr>'
-
-        def make_table(rows, header_rows=None, css_class=None):
-            """ Make an HTML table from the provided rows, which should be HTML markup """
-            if header_rows:
-                head = '<thead>\n' + '\n'.join(header_rows) + '\n</thead>\n'
-            else:
-                head = ''
-            body = '<tbody>\n' + '\n'.join(rows) + '\n</tbody>'
-            if css_class:
-                table_tag = '<table class="' + css_class + '">'
-            else:
-                table_tag = '<table>'
-
-            return table_tag + '\n' + head + body + '</table>'
-
-        def format_schema_list(schema_list):
-
-            if len(schema_list) > 10:
-                return '<i>various</i><br>' + '(' + ', <br>'.join(schema_list[:2]) + ' ... )'
-            else:
-                return ', <br>'.join(schema_list)
+    def format_tabular_output(self, formatter):
+        """ Format output in the 'usual' way, as a tabular document """
 
         rows = []
-
         property_names = sorted(self.coalesced_properties.keys())
 
         for prop_name in property_names:
@@ -391,10 +368,10 @@ class PropertyIndexGenerator(DocFormatter):
             for prop_type in prop_types:
                 descriptions = sorted(info[prop_type].keys())
                 for description in descriptions:
-                    schema_list = [self.format_schema_list(x) for x in info[prop_type][description] ]
-
-                    rows.append(make_row(['<b>' + prop_name + '</b>', format_schema_list(schema_list),
-                                          prop_type, description]))
+                    schema_list = [self.format_schema_path(x) for x in info[prop_type][description] ]
+                    rows.append(formatter.make_row([formatter.bold(prop_name),
+                                                    self.format_schema_list(schema_list, formatter),
+                                                    prop_type, description]))
 
         if self.write_config_fh:
             config_out = self.write_config_fh
@@ -402,8 +379,13 @@ class PropertyIndexGenerator(DocFormatter):
             print(json.dumps(updated_config, indent=4), file=config_out)
             config_out.close()
 
-        headers = make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
-        table = make_table(rows, [headers])
+        headers = formatter.make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
+        table = formatter.make_table(rows, [headers])
+        return table
+
+
+    @staticmethod
+    def add_html_boilerplate(htmlblob):
 
         headlines = ['<head>', '<meta charset="utf-8">', '<title>' + 'Property Index' + '</title>']
         styles = """
@@ -432,60 +414,24 @@ table.properties{
         headlines.append(styles)
         headlines.append('</head>')
         head = '\n'.join(headlines)
-        return '\n'.join(['<!doctype html>', '<html>', head, '<body>', table, '</body></html>'])
+        return '\n'.join(['<!doctype html>', '<html>', head, '<body>', htmlblob, '</body></html>'])
 
 
-    def format_schema_list(self, sl):
+    @staticmethod
+    def format_schema_list(schema_list, formatter):
+        sep = ', ' + formatter.br()
+        if len(schema_list) > 10:
+            return formatter.italic('various') + formatter.br() + '(' + sep.join(schema_list[:2]) + ' ... )'
+        else:
+            return sep.join(schema_list)
+
+
+    @staticmethod
+    def format_schema_path(sl):
         formatted = sl[0]
         if len(sl) > 1:
             formatted += ' (' + ' > '.join(sl[1:]) + ')'
         return formatted
-
-
-    def emit_markdown(self):
-
-        def make_row(cells):
-            row = '| ' + ' | '.join(cells) + ' |'
-            return row
-
-        def make_header_row(cells):
-            return make_row(cells)
-
-        def _make_separator_row(num):
-            return make_row(['---' for x in range(0, num)])
-
-        def make_table(rows, header_rows=None, css_class=None):
-            # Get the number of cells from the first row.
-            firstrow = rows[0]
-            numcells = firstrow.count(' | ') + 1
-            if not header_rows:
-                header_rows = [ make_header_row(['   ' for x in range(0, numcells)]) ]
-            header_rows.append(_make_separator_row(numcells))
-            return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
-
-        rows = []
-
-        property_names = sorted(self.coalesced_properties.keys())
-
-        for prop_name in property_names:
-            info = self.coalesced_properties[prop_name]
-            prop_types = sorted(info.keys())
-            for prop_type in prop_types:
-                descriptions = sorted(info[prop_type].keys()) # TODO: what's the preferred sort?
-                for description in descriptions:
-                    schema_list = [self.format_schema_list(x) for x in info[prop_type][description] ]
-                    rows.append(make_row(['*' + prop_name + '*', ', '.join(schema_list),
-                                          prop_type, description]))
-
-        if self.write_config_fh:
-            config_out = self.write_config_fh
-            updated_config = self.generate_updated_config()
-            print(json.dumps(updated_config, indent=4), file=config_out)
-            config_out.close()
-
-        headers = make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
-        table = make_table(rows, [headers])
-        return table
 
 
     def emit_csv(self):
