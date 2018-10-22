@@ -992,7 +992,7 @@ def main():
                                      epilog=help_epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('import_from', metavar='import_from', nargs='*',
-                        help=('Name of a file or directory to process (wildcards are acceptable).'
+                        help=('Name of a file or directory to process (wild cards are acceptable). '
                               'Default: json-schema'))
     parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False,
                         help='Produce normative (developer-focused) output')
@@ -1000,22 +1000,22 @@ def main():
                         choices=['markdown', 'html', 'csv'], help='Output format')
     parser.add_argument('--out', dest='outfile', default='output.md',
                         help=('Output file (default depends on output format: '
-                              'output.md for markdown, index.html for html, output.csv for csv)'))
+                              'output.md for Markdown, index.html for HTML, output.csv for CSV'))
     parser.add_argument('--sup', dest='supfile',
                         help=('Path to the supplemental material document. '
                               'Default is usersupplement.md for user-focused documentation, '
                               'and devsupplement.md for normative documentation.'))
     parser.add_argument('--profile', dest='profile_doc',
-                        help=('Path to a JSON profile document, for profile output'))
+                        help=('Path to a JSON profile document, for profile output.'))
     parser.add_argument('-t', '--terse', action='store_true', dest='profile_terse',
-                        help=('Terse output (meaningful only with --profile). By default,'
-                              'profile output is verbose, including all properties regardless of'
-                              'profile requirements. "Terse" output is intended for use by'
+                        help=('Terse output (meaningful only with --profile). By default, '
+                              'profile output is verbose and includes all properties regardless of '
+                              'profile requirements. "Terse" output is intended for use by '
                               'Service developers, including only the subset of properties with'
                               'profile requirements.'))
     parser.add_argument('--escape', dest='escape_chars',
-                        help=("Characters to escape (\\) in generated markdown; "
-                              "e.g., --escape=@#. Use --escape=@ if strings with embedded @ "
+                        help=("Characters to escape (\\) in generated Markdown. "
+                              "For example, --escape=@#. Use --escape=@ if strings with embedded @ "
                               "are being converted to mailto links."))
 
     args = parser.parse_args()
