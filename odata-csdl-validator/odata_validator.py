@@ -1397,8 +1397,9 @@ class MetaData(Element):
                 try:
                     self.data = ET.parse(local_directory + os.path.sep + filename)
                     self.raw_data = self.data.getroot()
-                except Exception:
-                    print("Could not open " + local_directory + os.path.sep + filename)
+                except Exception as error:
+                    print("Error Opening or parsing schema file: {}".format(local_directory + os.path.sep + filename))
+                    print("  Exception: {}".format(error))
                     sys.exit(0)
             # If not available, go open via HTTP
             else:
@@ -1412,10 +1413,10 @@ class MetaData(Element):
                         self.raw_data = ET.fromstring(self.data)
                         self.rootUri=self.uri
                         break
-                    except Exception as e:
-                        if e.errno != errno.ECONNRESET:
-                            print("Could not open " + self.uri)
-                            print( e )
+                    except Exception as error:
+                        if error.errno != errno.ECONNRESET:
+                            print("Error Opening or parsing schema file: {}".format(self.uri))
+                            print("  Exception: {}".format(error))
                             sys.exit(0)
                     retry_count += 1
                 if retry_count >= retry_count_max:
