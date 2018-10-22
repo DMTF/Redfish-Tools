@@ -1004,10 +1004,10 @@ def main():
     parser.add_argument('--format', dest='format', default='markdown',
                         choices=['markdown', 'html', 'csv'], help='Output format')
     parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
-                        help='Produce Property Index output')
+                        help='Produce Property Index output.')
     parser.add_argument('--property_index_config_out', dest='property_index_config_out',
                         metavar='CONFIG_FILE_OUT',
-                        default=False, help='Generate updated config file (property_index mode only)')
+                        default=False, help='Generate updated config file, with specified filename (property_index mode only).')
     parser.add_argument('--out', dest='outfile', default='output.md',
                         help=('Output file (default depends on output format: '
                               'output.md for Markdown, index.html for HTML, output.csv for CSV'))
@@ -1025,7 +1025,7 @@ def main():
                         help=('Terse output (meaningful only with --profile). By default, '
                               'profile output is verbose and includes all properties regardless of '
                               'profile requirements. "Terse" output is intended for use by '
-                              'Service developers, including only the subset of properties with'
+                              'Service developers, including only the subset of properties with '
                               'profile requirements.'))
     parser.add_argument('--escape', dest='escape_chars',
                         help=("Characters to escape (\\) in generated Markdown. "

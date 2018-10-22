@@ -10,7 +10,7 @@ Output is GitHub-flavored Markdown targeted for the [Slate API docs generator](h
 
 ## Installation
 
-1. Install the following required software on the machine from which you will run the `doc_generator`: 
+1. Install the following required software on the machine from which you will run the `doc_generator`:
 
     | Software | Description | Download |
     |----------|-------------|----------|
@@ -19,7 +19,7 @@ Output is GitHub-flavored Markdown targeted for the [Slate API docs generator](h
     | Pygments | Required for HTML output. | [http://pygments.org/](http://pygments.org/) |
 
 1. Verify the installation of requirements. If you use `pip`:
- 
+
     ```
     % cd doc-generator
     % pip install -r requirements.txt
@@ -37,9 +37,11 @@ The `doc_generator` tool uses this information to determine whether to get
 referenced data from local files or over the Internet. See [The Supplemental Material Document](#the-supplemental-material-document).
 
 ```
-usage: doc_generator.py [-h] [-n] [--format {markdown,html}] [--out OUTFILE]
-                        [--sup SUPFILE] [--profile PROFILE_DOC] [-t]
-                        [--escape ESCAPE_CHARS]
+usage: doc_generator.py [-h] [-n] [--format {markdown,html,csv}]
+                        [--property_index]
+                        [--property_index_config_out CONFIG_FILE_OUT]
+                        [--out OUTFILE] [--sup SUPFILE] [--config CONFIG_FILE]
+                        [--profile PROFILE_DOC] [-t] [--escape ESCAPE_CHARS]
                         [import_from [import_from ...]]
 
 Generate documentation for Redfish JSON schema files.
@@ -49,27 +51,34 @@ positional arguments:
                         acceptable). Default: json-schema
 
 optional arguments:
-  -h, --help            Show this help message and exit
+  -h, --help            show this help message and exit
   -n, --normative       Produce normative (developer-focused) output
-  --format {markdown,html}
+  --format {markdown,html,csv}
                         Output format
+  --property_index      Produce Property Index output.
+  --property_index_config_out CONFIG_FILE_OUT
+                        Generate updated config file, with specified filename
+                        (property_index mode only).
   --out OUTFILE         Output file (default depends on output format:
-                        output.md for Markdown, index.html for HTML)
+                        output.md for Markdown, index.html for HTML,
+                        output.csv for CSV
   --sup SUPFILE         Path to the supplemental material document. Default is
                         usersupplement.md for user-focused documentation, and
                         devsupplement.md for normative documentation.
+  --config CONFIG_FILE  Path to a config file, containing configuration in
+                        JSON format. Used in property_index mode only.
   --profile PROFILE_DOC
                         Path to a JSON profile document, for profile output.
   -t, --terse           Terse output (meaningful only with --profile). By
                         default, profile output is verbose and includes all
                         properties regardless of profile requirements. "Terse"
-                        output is intended for use by service developers,
+                        output is intended for use by Service developers,
                         including only the subset of properties with profile
                         requirements.
   --escape ESCAPE_CHARS
-                        Characters to escape (\) in generated Markdown. For example,
-                        --escape=@#. Use --escape=@ if strings with embedded @
-                        are being converted to mailto links.
+                        Characters to escape (\) in generated Markdown. For
+                        example, --escape=@#. Use --escape=@ if strings with
+                        embedded @ are being converted to mailto links.
 
 Example:
    doc_generator.py --format=html
