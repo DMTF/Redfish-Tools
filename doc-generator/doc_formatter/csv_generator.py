@@ -22,7 +22,6 @@ class CsvGenerator(DocFormatter):
 
     def __init__(self, property_data, traverser, config, level=0):
         super(CsvGenerator, self).__init__(property_data, traverser, config, level)
-        self.sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '\n'

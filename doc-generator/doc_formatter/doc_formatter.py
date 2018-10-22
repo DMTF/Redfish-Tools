@@ -36,6 +36,9 @@ class DocFormatter:
         self.this_section = None
         self.current_version = {} # marker for latest version within property we're displaying.
         self.current_depth = 0
+        self.sections = []
+        self.registry_sections = []
+        self.collapse_list_of_simple_type = True
 
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
@@ -740,6 +743,10 @@ class DocFormatter:
 
                                     if not self.skip_schema(ref_info.get('_prop_name')):
                                         specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
+                                        if 'type' not in ref_info:
+                                            # This clause papers over a bug; somehow we never get to the bottom
+                                            # of IPv6GatewayStaticAddress.
+                                            ref_info['type'] = 'object'
                                         if specific_version:
                                             append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
                                                           + '(v' + str(specific_version) + ')' +
@@ -749,17 +756,18 @@ class DocFormatter:
                                                           ' for details on this property.')
 
 
+
                         new_ref_info = {
-                            '_prop_name': ref_info.get('_prop_name'),
-                            '_from_schema_ref': ref_info.get('_from_schema_ref'),
-                            '_schema_name': ref_info.get('_schema_name'),
-                            'type': ref_info.get('type'),
-                            'readonly': ref_info.get('readonly'),
                             'description': ref_description,
                             'longDescription': ref_longDescription,
                             'fulldescription_override': ref_fulldescription_override,
                             'pattern': ref_pattern,
                             }
+                        props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly']
+                        for x in props_to_add:
+                            if ref_info.get(x):
+                                new_ref_info[x] = ref_info[x]
+
                         if not ref_fulldescription_override:
                             new_ref_info['add_link_text'] = append_ref
 
@@ -1274,22 +1282,27 @@ class DocFormatter:
                     item_list = prop_items[0].get('type')
 
             elif list_of_simple_type:
-                # We want to combine the array and its item(s) into a single row. Create a combined
-                # prop_item to make it work.
-                combined_prop_item = prop_items[0]
-                combined_prop_item['_prop_name'] = prop_name
-                combined_prop_item['readonly'] = prop_info.get('readonly', False)
-                if self.config.get('normative') and 'longDescription' in combined_prop_item:
-                    descr = descr + ' ' + combined_prop_item['longDescription']
-                    combined_prop_item['longDescription'] = descr
-                else:
-                    if prop_items[0].get('description'):
-                        descr = descr + ' ' + combined_prop_item['description']
-                    combined_prop_item['description'] = descr
-                if fulldescription_override:
-                    combined_prop_item['fulldescription_override'] = fulldescription_override
+                if self.collapse_list_of_simple_type:
+                    # We want to combine the array and its item(s) into a single row. Create a combined
+                    # prop_item to make it work.
+                    combined_prop_item = prop_items[0]
+                    combined_prop_item['_prop_name'] = prop_name
+                    combined_prop_item['readonly'] = prop_info.get('readonly', False)
+                    if self.config.get('normative') and 'longDescription' in combined_prop_item:
+                        descr = descr + ' ' + combined_prop_item['longDescription']
+                        combined_prop_item['longDescription'] = descr
+                    else:
+                        if prop_items[0].get('description'):
+                            descr = descr + ' ' + combined_prop_item['description']
+                        combined_prop_item['description'] = descr
+                    if fulldescription_override:
+                        combined_prop_item['fulldescription_override'] = fulldescription_override
 
-                item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, new_path, True)
+                    item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, new_path, True)
+
+                else:
+                    item_formatted = self.format_non_object_descr(schema_ref, prop_items[0], new_path)
+                    item_formatted['promote_me'] = False
 
             else:
                 item_formatted = self.format_non_object_descr(schema_ref, prop_item, new_path)
@@ -1298,6 +1311,7 @@ class DocFormatter:
             item_description = item_formatted['rows']
             if item_formatted['details']:
                 prop_details.update(item_formatted['details'])
+
 
         # Read/Write requirements from profile:
         if self.config.get('profile_mode') and prop_name and profile is not None:
