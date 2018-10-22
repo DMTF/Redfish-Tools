@@ -434,8 +434,37 @@ table.properties{
         return formatted
 
 
-    def emit_csv(self):
-        raise NotImplementedError
+    def output_csv(self):
+        """ Generate CSV output. """
+
+        import csv
+        import io
+
+        csv_out = io.StringIO()
+        writer = csv.writer(csv_out)
+
+        rows = []
+        rows.append(['Property Name', 'Schema', 'Type', 'Description'])
+
+        property_names = sorted(self.coalesced_properties.keys())
+        for prop_name in property_names:
+            info = self.coalesced_properties[prop_name]
+            prop_types = sorted(info.keys())
+
+            for prop_type in prop_types:
+                descriptions = sorted(info[prop_type].keys())
+                for description in descriptions:
+                    schema_list = [self.format_schema_path(x) for x in info[prop_type][description] ]
+                    for schema_str in schema_list:
+                        rows.append([prop_name, schema_str, prop_type, description])
+
+        for row in rows:
+            writer.writerow(row)
+
+        result = csv_out.getvalue()
+        csv_out.close()
+        return result
+
 
 
     def add_description(self, text):
