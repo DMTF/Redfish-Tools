@@ -17,6 +17,7 @@ import warnings
 import sys
 import functools
 from doc_gen_util import DocGenUtilities
+from format_utils import FormatUtils
 
 class DocFormatter:
     """Generic class for schema documentation formatter"""
@@ -36,6 +37,10 @@ class DocFormatter:
         self.this_section = None
         self.current_version = {} # marker for latest version within property we're displaying.
         self.current_depth = 0
+        self.sections = []
+        self.registry_sections = []
+        self.collapse_list_of_simple_type = True
+        self.formatter = FormatUtils() # Non-markdown formatters will override this.
 
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
@@ -90,7 +95,7 @@ class DocFormatter:
         uri_parts_highlighted = []
         for part in uri_parts:
             if part.startswith('{') and part.endswith('}'):
-                part = self.italic(part)
+                part = self.formatter.italic(part)
             uri_parts_highlighted.append(part)
         uri_highlighted = '/'.join(uri_parts_highlighted)
         return uri_highlighted
@@ -214,21 +219,21 @@ class DocFormatter:
         if not read_req:
             read_req = 'Mandatory' # This is the default if nothing is specified.
         if read_only:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read-only)'
         elif read_req == write_req:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read/Write)'
         elif not write_req:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read)'
         else:
             # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-            profile_access = (self.nobr(self.text_map(read_req)) + ' (Read)' + self.br() +
-                              self.nobr(self.text_map(write_req)) + ' (Read/Write)')
+            profile_access = (self.formatter.nobr(self.text_map(read_req)) + ' (Read)' + self.br() +
+                              self.formatter.nobr(self.text_map(write_req)) + ' (Read/Write)')
 
         if min_count:
             if profile_access:
                 profile_access += self.br()
 
-            profile_access += self.nobr("Minimum " + str(min_count))
+            profile_access += self.formatter.nobr("Minimum " + str(min_count))
 
         return profile_access
 
@@ -238,12 +243,12 @@ class DocFormatter:
         formatted = []
         anchor = schema_ref + '|conditional_reqs|' + prop_name
 
-        formatted.append(self.head_four(prop_name, anchor))
+        formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
 
         rows = []
         for creq in conditional_reqs:
             req_desc = ''
-            purpose = creq.get('Purpose', self.nbsp()*10)
+            purpose = creq.get('Purpose', self.formatter.nbsp()*10)
             subordinate_to = creq.get('SubordinateToResource')
             compare_property = creq.get('CompareProperty')
             comparison = creq.get('Comparison')
@@ -275,9 +280,9 @@ class DocFormatter:
 
                 if comparison and len(values):
                     req += ', must be ' + comparison + ' ' + ', '.join(['"' + val + '"' for val in values])
-            rows.append(self.make_row([req_desc, req, purpose]))
+            rows.append(self.formatter.make_row([req_desc, req, purpose]))
 
-        formatted.append(self.make_table(rows))
+        formatted.append(self.formatter.make_table(rows))
 
         return "\n".join(formatted)
 
@@ -583,12 +588,12 @@ class DocFormatter:
             return ''
 
         doc = ""
-        header = self.make_header_row(['Collection Type', 'URIs'])
+        header = self.formatter.make_header_row(['Collection Type', 'URIs'])
         rows = []
         for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
             item_text = '<br>'.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
-            rows.append(self.make_row([collection_name, item_text]))
-        doc = self.make_table(rows, [header], 'uris')
+            rows.append(self.formatter.make_row([collection_name, item_text]))
+        doc = self.formatter.make_table(rows, [header], 'uris')
         return doc
 
 
@@ -740,6 +745,10 @@ class DocFormatter:
 
                                     if not self.skip_schema(ref_info.get('_prop_name')):
                                         specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
+                                        if 'type' not in ref_info:
+                                            # This clause papers over a bug; somehow we never get to the bottom
+                                            # of IPv6GatewayStaticAddress.
+                                            ref_info['type'] = 'object'
                                         if specific_version:
                                             append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
                                                           + '(v' + str(specific_version) + ')' +
@@ -749,17 +758,18 @@ class DocFormatter:
                                                           ' for details on this property.')
 
 
+
                         new_ref_info = {
-                            '_prop_name': ref_info.get('_prop_name'),
-                            '_from_schema_ref': ref_info.get('_from_schema_ref'),
-                            '_schema_name': ref_info.get('_schema_name'),
-                            'type': ref_info.get('type'),
-                            'readonly': ref_info.get('readonly'),
                             'description': ref_description,
                             'longDescription': ref_longDescription,
                             'fulldescription_override': ref_fulldescription_override,
                             'pattern': ref_pattern,
                             }
+                        props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly']
+                        for x in props_to_add:
+                            if ref_info.get(x):
+                                new_ref_info[x] = ref_info[x]
+
                         if not ref_fulldescription_override:
                             new_ref_info['add_link_text'] = append_ref
 
@@ -1274,22 +1284,27 @@ class DocFormatter:
                     item_list = prop_items[0].get('type')
 
             elif list_of_simple_type:
-                # We want to combine the array and its item(s) into a single row. Create a combined
-                # prop_item to make it work.
-                combined_prop_item = prop_items[0]
-                combined_prop_item['_prop_name'] = prop_name
-                combined_prop_item['readonly'] = prop_info.get('readonly', False)
-                if self.config.get('normative') and 'longDescription' in combined_prop_item:
-                    descr = descr + ' ' + combined_prop_item['longDescription']
-                    combined_prop_item['longDescription'] = descr
-                else:
-                    if prop_items[0].get('description'):
-                        descr = descr + ' ' + combined_prop_item['description']
-                    combined_prop_item['description'] = descr
-                if fulldescription_override:
-                    combined_prop_item['fulldescription_override'] = fulldescription_override
+                if self.collapse_list_of_simple_type:
+                    # We want to combine the array and its item(s) into a single row. Create a combined
+                    # prop_item to make it work.
+                    combined_prop_item = prop_items[0]
+                    combined_prop_item['_prop_name'] = prop_name
+                    combined_prop_item['readonly'] = prop_info.get('readonly', False)
+                    if self.config.get('normative') and 'longDescription' in combined_prop_item:
+                        descr = descr + ' ' + combined_prop_item['longDescription']
+                        combined_prop_item['longDescription'] = descr
+                    else:
+                        if prop_items[0].get('description'):
+                            descr = descr + ' ' + combined_prop_item['description']
+                        combined_prop_item['description'] = descr
+                    if fulldescription_override:
+                        combined_prop_item['fulldescription_override'] = fulldescription_override
 
-                item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, new_path, True)
+                    item_formatted = self.format_non_object_descr(schema_ref, combined_prop_item, new_path, True)
+
+                else:
+                    item_formatted = self.format_non_object_descr(schema_ref, prop_items[0], new_path)
+                    item_formatted['promote_me'] = False
 
             else:
                 item_formatted = self.format_non_object_descr(schema_ref, prop_item, new_path)
@@ -1298,6 +1313,7 @@ class DocFormatter:
             item_description = item_formatted['rows']
             if item_formatted['details']:
                 prop_details.update(item_formatted['details'])
+
 
         # Read/Write requirements from profile:
         if self.config.get('profile_mode') and prop_name and profile is not None:
@@ -1748,49 +1764,3 @@ class DocFormatter:
             'Conditional': 'Conditional Requirements',
             }
         return output_map.get(text, text)
-
-
-    # Override the following when the output format supports better formatting.
-    @staticmethod
-    def para(text):
-        """ Format text as a paragraph """
-        return text
-
-    @staticmethod
-    def make_paras(text):
-        """ Split text at linebreaks and output as paragraphs """
-        return text
-
-    @staticmethod
-    def bold(text):
-        """Apply bold to text"""
-        return '**' + text + '**'
-
-    @staticmethod
-    def italic(text):
-        """Apply italic to text"""
-        return '*' + text + '*'
-
-    @staticmethod
-    def br():
-        """ Return a linebreak if in-cell linebreaks are supported. Assume they are not by default. """
-        return ' '
-
-    @staticmethod
-    def nobr(text):
-        """ Wrap a bit of text in nobr tags. """
-        return text
-
-    @staticmethod
-    def nbsp():
-        """ A non-breaking space """
-        return ' '
-
-    def make_row(self, cells):
-        raise NotImplementedError
-
-    def make_header_row(self, cells):
-        raise NotImplementedError
-
-    def make_table(self, rows, header_rows=None, css_class=None):
-        raise NotImplementedError

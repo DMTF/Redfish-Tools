@@ -327,6 +327,11 @@ class DocGenerator:
         traverser = SchemaTraverser(schema_data, doc_generator_meta, self.config['uri_to_local'])
 
         # Generate output
+        if self.config.get('output_content') == 'property_index':
+            from doc_formatter import PropertyIndexGenerator
+            self.generator = PropertyIndexGenerator(self.property_data, traverser, self.config, level)
+            return self.generator.generate_output()
+
         if self.config['output_format'] == 'markdown':
             from doc_formatter import MarkdownGenerator
             self.generator = MarkdownGenerator(self.property_data, traverser, self.config, level)
@@ -992,35 +997,50 @@ def main():
                                      epilog=help_epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('import_from', metavar='import_from', nargs='*',
-                        help=('Name of a file or directory to process (wildcards are acceptable).'
+                        help=('Name of a file or directory to process (wild cards are acceptable). '
                               'Default: json-schema'))
     parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False,
                         help='Produce normative (developer-focused) output')
     parser.add_argument('--format', dest='format', default='markdown',
                         choices=['markdown', 'html', 'csv'], help='Output format')
+    parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
+                        help='Produce Property Index output.')
+    parser.add_argument('--property_index_config_out', dest='property_index_config_out',
+                        metavar='CONFIG_FILE_OUT',
+                        default=False, help='Generate updated config file, with specified filename (property_index mode only).')
     parser.add_argument('--out', dest='outfile', default='output.md',
                         help=('Output file (default depends on output format: '
-                              'output.md for markdown, index.html for html, output.csv for csv)'))
+                              'output.md for Markdown, index.html for HTML, output.csv for CSV'))
     parser.add_argument('--sup', dest='supfile',
                         help=('Path to the supplemental material document. '
                               'Default is usersupplement.md for user-focused documentation, '
                               'and devsupplement.md for normative documentation.'))
+    parser.add_argument('--config', dest="config_file",
+                        help=('Path to a config file, containing configuration '
+                              ' in JSON format. '
+                              'Used in property_index mode only.'))
     parser.add_argument('--profile', dest='profile_doc',
-                        help=('Path to a JSON profile document, for profile output'))
+                        help=('Path to a JSON profile document, for profile output.'))
     parser.add_argument('-t', '--terse', action='store_true', dest='profile_terse',
-                        help=('Terse output (meaningful only with --profile). By default,'
-                              'profile output is verbose, including all properties regardless of'
-                              'profile requirements. "Terse" output is intended for use by'
-                              'Service developers, including only the subset of properties with'
+                        help=('Terse output (meaningful only with --profile). By default, '
+                              'profile output is verbose and includes all properties regardless of '
+                              'profile requirements. "Terse" output is intended for use by '
+                              'Service developers, including only the subset of properties with '
                               'profile requirements.'))
     parser.add_argument('--escape', dest='escape_chars',
-                        help=("Characters to escape (\\) in generated markdown; "
-                              "e.g., --escape=@#. Use --escape=@ if strings with embedded @ "
+                        help=("Characters to escape (\\) in generated Markdown. "
+                              "For example, --escape=@#. Use --escape=@ if strings with embedded @ "
                               "are being converted to mailto links."))
 
     args = parser.parse_args()
 
     config['output_format'] = args.format
+    if args.property_index:
+        config['output_content'] = 'property_index'
+        config['write_config_to'] = args.property_index_config_out
+
+    else:
+        config['output_content'] = 'full_doc'
 
     if len(args.import_from):
         import_from = args.import_from
@@ -1034,31 +1054,60 @@ def main():
             outfile_name = 'index.html'
         if config['output_format'] == 'csv':
             outfile_name = 'output.csv'
+        if config['output_content'] == 'property_index':
+            outfile_name = 'property_index'
+            if config['output_format'] == 'html':
+                outfile_name += '.html'
+            if config['output_format'] == 'csv':
+                outfile_name += '.csv'
+            if config['output_format'] == 'markdown':
+                outfile_name += '.md'
 
     try:
         outfile = open(outfile_name, 'w', encoding="utf8")
     except (OSError) as ex:
         warnings.warn('Unable to open ' + outfile_name + ' to write: ' + str(ex))
 
-    # Ensure supfile is readable (if not, warn but proceed)
-    supfile_expected = False
-    if args.supfile:
-        supfile = args.supfile
-        supfile_expected = True
-    elif args.normative:
-        supfile = config.get('cwd') + '/devsupplement.md'
-    else:
-        supfile = config.get('cwd') + '/usersupplement.md'
 
-    try:
-        supfile = open(supfile, 'r', encoding="utf8")
-        config['supplemental'] = parse_supplement.parse_file(supfile)
-    except (OSError) as ex:
-        if supfile_expected:
-            warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
+    # If property_index mode was specified, get config from args.config_file:
+    if config['output_content'] == 'property_index':
+        args.supfile = False
+        if args.config_file:
+            config_file= open(args.config_file, 'r', encoding="utf8")
+            config_data = json.load(config_file)
+            config['property_index_config'] = config_data # We will amend this on output, if requested
+            # Populate the URI mappings
+            config['uri_to_local'] = {}
+            config['local_to_uri'] = {}
+            for k, v in config_data.get('uri_mapping', {}).items():
+                vpath = os.path.abspath(v)
+                config['uri_to_local'][k] = vpath
+                config['local_to_uri'][vpath] = k
         else:
-            warnings.warn('No supplemental file specified and ' + supfile +
-                          ' not found. Proceeding.')
+            config['property_index_config'] = {'DescriptionOverrides': {},
+                                               'ExcludedProperties': []}
+
+    else:
+        # In any mode other than property_index, we should have a supplemental file.
+        # Ensure supfile is readable (if not, warn but proceed)
+        supfile_expected = False
+        if args.supfile:
+            supfile = args.supfile
+            supfile_expected = True
+        elif args.normative:
+            supfile = config.get('cwd') + '/devsupplement.md'
+        else:
+            supfile = config.get('cwd') + '/usersupplement.md'
+
+        try:
+            supfile = open(supfile, 'r', encoding="utf8")
+            config['supplemental'] = parse_supplement.parse_file(supfile)
+        except (OSError) as ex:
+            if supfile_expected:
+                warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
+            else:
+                warnings.warn('No supplemental file specified and ' + supfile +
+                              ' not found. Proceeding.')
 
     # Check profile document, if specified
     if args.profile_doc:
