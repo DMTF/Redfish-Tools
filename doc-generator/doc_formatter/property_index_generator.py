@@ -376,7 +376,7 @@ class PropertyIndexGenerator(DocFormatter):
         if self.write_config_fh:
             config_out = self.write_config_fh
             updated_config = self.generate_updated_config()
-            print(json.dumps(updated_config, indent=4), file=config_out)
+            json.dump(updated_config, config_out, indent=4, sort_keys=True)
             config_out.close()
 
         headers = formatter.make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
