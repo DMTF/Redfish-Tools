@@ -140,7 +140,7 @@ class DocGenerator:
             repo_links = DocGenUtilities.html_get_links(repo)
 
         if repo_links:
-            minversion_parts = re.findall('(\d+)', min_version)
+            minversion_parts = re.findall(r'(\d+)', min_version)
 
             candidate = None
             candidate_strength = 0
@@ -150,7 +150,7 @@ class DocGenerator:
                     parts = rl[0:-5].rsplit(base, 1)
                     if len(parts) == 2:
                         suffix = parts[1]
-                        version_parts = re.findall('(\d+)', suffix)
+                        version_parts = re.findall(r'(\d+)', suffix)
                         # Major version must match; minor.errata must be >=.
                         if version_parts[0] != minversion_parts[0]:
                             continue
