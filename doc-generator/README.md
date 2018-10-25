@@ -4,7 +4,7 @@ Copyright 2016-2018 Distributed Management Task Force, Inc. All rights reserved.
 
 ## About
 
-The `doc_generator` is a Python tool that parses a set of JSON schema files (typically the entire set for a version) and generates a Markdown document.
+The `doc_generator.py` is a Python tool that parses a set of JSON schema files (typically the entire set for a version) and generates a Markdown document.
 
 Output is GitHub-flavored Markdown targeted for the [Slate API docs generator](https://github.com/tripit/slate).
 
@@ -27,13 +27,13 @@ Output is GitHub-flavored Markdown targeted for the [Slate API docs generator](h
 
 ## Usage
 
-By default, `doc_generator` looks for a `json-schema` directory and
+By default, `doc_generator.py` looks for a `json-schema` directory and
 supplement file in the directory from where you run it. Alternatively,
 you can specify the locations of the `json-schema` directory and
-supplement file on the command line.
+supplement file when you run `doc_generator.py`.
 
 You must also specify a mapping from schema URIs to local directories.
-The `doc_generator` tool uses this information to determine whether to get
+The `doc_generator.py` tool uses this information to determine whether to get
 referenced data from local files or over the Internet. See [The Supplemental Material Document](#the-supplemental-material-document).
 
 ```
@@ -93,6 +93,6 @@ For Slate, place the `index.html.md` output in your Slate repository's source di
 
 ## The Supplemental Material Document
 
-The `doc-generator/sample_inputs/excerpt/usersupplement.md` file is an example of a supplemental material document. It describes each information type that you can include in the supplement.
+The `doc-generator/sample_inputs/usersupplement.md` file is an example of a supplemental material document. It describes each information type that you can include in the supplement.
 
-The most important section of this document is *Schema URI Mapping*, which describes how to map schema URIs to local files. You define and map partial URIs to local directories. The `doc_generator` uses the specified local files, if any. Otherwise, the `doc_generator` follows the full URI, including data from remote files, if possible.
+The most important section of this document is *Schema URI Mapping*, which describes how to map schema URIs to local files. You define and map partial URIs to local directories. The `doc_generator.py` uses the specified local files, if any. Otherwise, the `doc_generator.py` follows the full URI, including data from remote files, if possible.
