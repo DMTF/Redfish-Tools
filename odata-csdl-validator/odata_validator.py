@@ -24,6 +24,7 @@ import unicodedata
 import os
 import argparse
 import urllib.request
+from urllib.parse import urljoin
 import errno
 
 global_namespaces = {}
@@ -1381,6 +1382,7 @@ class MetaData(Element):
 
         self.parent = None
         self.uri = uri
+        self.rootUri = None
         self.error_id = uri
         if self.uri.lower().startswith('http'):
             # Get the file name at the end of the URI
@@ -1395,8 +1397,9 @@ class MetaData(Element):
                 try:
                     self.data = ET.parse(local_directory + os.path.sep + filename)
                     self.raw_data = self.data.getroot()
-                except Exception:
-                    print("Could not open " + local_directory + os.path.sep + filename)
+                except Exception as error:
+                    print("Error Opening or parsing schema file: {}".format(local_directory + os.path.sep + filename))
+                    print("  Exception: {}".format(error))
                     sys.exit(0)
             # If not available, go open via HTTP
             else:
@@ -1408,11 +1411,12 @@ class MetaData(Element):
                         response = urllib.request.urlopen(req)
                         self.data = response.read()
                         self.raw_data = ET.fromstring(self.data)
+                        self.rootUri=self.uri
                         break
-                    except Exception as e:
-                        if e.errno != errno.ECONNRESET:
-                            print("Could not open " + self.uri)
-                            print( e )
+                    except Exception as error:
+                        if error.errno != errno.ECONNRESET:
+                            print("Error Opening or parsing schema file: {}".format(self.uri))
+                            print("  Exception: {}".format(error))
                             sys.exit(0)
                     retry_count += 1
                 if retry_count >= retry_count_max:
@@ -1423,8 +1427,9 @@ class MetaData(Element):
             try:
                 self.data = ET.parse(self.uri)
                 self.raw_data = self.data.getroot()
-            except Exception:
-                print("Could not open " + self.uri)
+            except Exception as error:
+                print("Error Opening or parsing schema file: {}".format(self.uri))
+                print("  Exception: {}".format(error))
                 sys.exit(0)
         # Start with a ! to ensure it does not overlap with a possible namespace name
         self.namespaces = {'!Included Alias': {}}
@@ -1618,6 +1623,7 @@ class Reference(Element):
         self.includes = []
         self.annotation_includes = []
         self.uri = None
+        self.rootUri = parent.rootUri
 
         super(Reference, self).__init__(data, parent)
 
@@ -1637,7 +1643,12 @@ class Reference(Element):
             SchemaError: if there was an issue parsing or validating this element.
         """
 
-        self.uri = self._get_required_attrib('Uri')
+        #self.uri = self._get_required_attrib('Uri')
+        uri= self._get_required_attrib('Uri')
+        if self.rootUri is not None:
+            self.uri = urljoin(self.rootUri,uri)
+        else:
+            self.uri = uri
         self.error_id = self.uri
 
         defined_includes = self._get_elements('Include')
