@@ -126,7 +126,8 @@ class CSDLToJSON():
             for include in reference.iter( ODATA_TAG_INCLUDE ):
                 # Based on the URI and the namespace, build the expected JSON Schema reference
                 namespace = self.get_attrib( include, "Namespace" )
-                self.external_references[namespace] = self.get_attrib( reference, "Uri" ).rsplit( "/", 1 )[0] + "/" + namespace + ".json"
+                alias = self.get_attrib( include, "Alias", False, namespace )
+                self.external_references[alias] = self.get_attrib( reference, "Uri" ).rsplit( "/", 1 )[0] + "/" + namespace + ".json"
 
         # Need to add the unversioned Resource namespace since we copy in its base definitions
         self.external_references["Resource"] = self.resource_location + "Resource.json"
