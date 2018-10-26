@@ -99,11 +99,11 @@ QUALIFIED_NAME_RE = re.compile((u'[{L}{Nl}_][{L}{Nl}{Nd}{Mn}{Mc}{Pc}{Cf}]{{0,}}'
 class SchemaError(Exception):
     """Error for catching all syntax errors in Schema files.
 
-    Seperate class so we can catch it and create an easy to read error chain which will point to the
-    schema error by crawling from metadata root down throuigh the elements.
+    Separate class so we can catch it and create an easy to read error chain which will point to the
+    schema error by crawling from metadata root down through the elements.
 
     Attributes:
-        message: Explanitory message for the current error
+        message: Explanatory message for the current error
     """
 
     def __init__(self, message):
@@ -375,8 +375,6 @@ class PrimitiveType(Type):
             ret_val = True
         elif all(item in ['TimeOfDay'] for item in [self.name, other_type.name]):
             ret_val = True
-        else:
-            ret_val = False
 
         return ret_val
 
@@ -387,9 +385,6 @@ class PrimitiveType(Type):
 
         Args:
             attrib: The raw attributes to look for MaxLength in.
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if MaxLength is applied but not applicable.
@@ -407,9 +402,6 @@ class PrimitiveType(Type):
         Args:
             attrib: The raw attributes to look for Precision in.
 
-        Returns:
-            None
-
         Raises:
             SchemaError: if Precision is applied but not applicable.
         """
@@ -421,13 +413,10 @@ class PrimitiveType(Type):
     def check_precision_value(self, value):
         """Checks whether a value is a valid precision value.
 
-        Looks at the curent type and the value passed in to determine validity.
+        Looks at the current type and the value passed in to determine validity.
 
         Args:
             value: value to check.
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If value passed in is not a valid precision value for this type.
@@ -449,9 +438,6 @@ class PrimitiveType(Type):
         Args:
             attrib: The raw attributes to look for Scale in.
 
-        Returns:
-            None
-
         Raises:
             SchemaError: if Scale is applied but not applicable.
         """
@@ -464,9 +450,6 @@ class PrimitiveType(Type):
         """Get the default scale precision value.
 
         Returns the default scale value for this type.
-
-        Args:
-            None
 
         Returns:
             A decimal if this type has a valid default, None if not.
@@ -485,9 +468,6 @@ class PrimitiveType(Type):
         Args:
             attrib: The raw attributes to look for Unicode in.
 
-        Returns:
-            None
-
         Raises:
             SchemaError: if Unicode is applied but not applicable.
         """
@@ -497,12 +477,9 @@ class PrimitiveType(Type):
                 raise SchemaError("Unicode facet not applicable to {}".format(self.name))
 
     def get_unicode_default(self):
-        """Get the default unicode attribure value.
+        """Get the default unicode attribute value.
 
         Returns the default unicode value for this type.
-
-        Args:
-            None
 
         Returns:
             A boolean if this type has a valid default, None if not.
@@ -521,9 +498,6 @@ class PrimitiveType(Type):
         Args:
             attrib: The raw attributes to look for Srid in.
 
-        Returns:
-            None
-
         Raises:
             SchemaError: if Srid is applied but not applicable.
         """
@@ -536,9 +510,6 @@ class PrimitiveType(Type):
         """Get the default srid attribute value.
 
         Returns the default srid value for this type.
-
-        Args:
-            None
 
         Returns:
             A decimal if this type has a valid default, None if not.
@@ -757,7 +728,7 @@ class Element(object):
     Attributes:
         _constant_expression_list: A list of all of the valid ConstantExpression names.
         _dynamic_expression_list: A list of all of the valid DynamicExpression names.
-        annotation: An array of Annotation elements that are appplied to this element.
+        annotation: An array of Annotation elements that are applied to this element.
         raw_data: The raw xml data for this element.
         error_id: The identifier that will be used when an error occurs in this element or any of
                   its children element to locate the error.
@@ -800,12 +771,6 @@ class Element(object):
         Searches for and parses all Annotation elements applied to this element. This includes
         checking to ensure a term and qualifier combo is not applied more than one time per element.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: If there is duplication of term/qualifier combo
         """
@@ -823,7 +788,7 @@ class Element(object):
     def _get_elements(self, element_name):
         """Find all elements of given type for this element.
 
-        Searches the raw data for an XML repentation of a child element of the type passed in. This
+        Searches the raw data for an XML representation of a child element of the type passed in. This
         function finds all instances of the passed in type.
 
         Args:
@@ -861,12 +826,6 @@ class Element(object):
 
         This looks for and parses all constant and dynamic expressions in both element and attribute
         form for this element.
-
-        Args:
-            None
-
-        Returns:
-            None
         """
 
         for data in self.raw_data:
@@ -903,9 +862,6 @@ class Element(object):
 
         Returns:
             A list of elements referencing the target and how they reference it
-
-        Raises:
-            None
         """
 
         uses = []
@@ -927,9 +883,6 @@ class Element(object):
 
         Returns:
             A list of elements referencing the target and how they reference it
-
-        Raises:
-            None
         """
 
         uses = []
@@ -963,12 +916,6 @@ class Element(object):
 
         This function handles crawling through this element's children and calling the check scope
         iterator before checking the scope and annotations of this element.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in the check scope functions
@@ -1004,9 +951,6 @@ class Element(object):
         This default function will raise no errors and should be overridden in elements that could
         raise scope errors.
 
-        Args:
-            None
-
         Returns:
             True
         """
@@ -1018,12 +962,6 @@ class Element(object):
 
         Specifically this checks that the annotations are not validating the term's applies_to
         parameter.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If an annotation is illegally applying a term to this element.
@@ -1070,9 +1008,6 @@ class Element(object):
 
         Args:
             path: The path string to validate
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If the path passed in is not valid or cannot be traversed.
@@ -1218,9 +1153,6 @@ class Element(object):
         Build up a string that points to this element in a human readable format. This is used by
         logging and error reporting.
 
-        Args:
-            None
-
         Returns:
             String representing the path from the root metadata down to this element
         """
@@ -1231,7 +1163,7 @@ class Element(object):
             path = "{}".format(type(self).__name__)
 
         pivot = self
-        while pivot.parent != None:
+        while pivot.parent is not None:
             pivot = pivot.parent
             if pivot.error_id:
                 path = "{}:{}->{}".format(type(pivot).__name__, pivot.error_id, path)
@@ -1274,12 +1206,6 @@ class Element(object):
         Compares all the parsed OData children to the raw representation of the xml children and
         searches for elements that have not been parsed. This would indicate that the element is
         out of place and should be moved. This test is only done on XML elements.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError - If there are un-parsed XML children
@@ -1387,13 +1313,13 @@ class MetaData(Element):
         if self.uri.lower().startswith('http'):
             # Get the file name at the end of the URI
             filelocation = self.uri.rfind('/')
-            if (filelocation > 0):
+            if filelocation > 0:
                 filename = self.uri[filelocation + 1:]
             else:
                 filename = self.uri
 
             # Try to open the file from the local directory being processed
-            if (local_directory != None) and (os.path.isfile(local_directory + os.path.sep + filename)):
+            if (local_directory is not None) and (os.path.isfile(local_directory + os.path.sep + filename)):
                 try:
                     self.data = ET.parse(local_directory + os.path.sep + filename)
                     self.raw_data = self.data.getroot()
@@ -1413,11 +1339,15 @@ class MetaData(Element):
                         self.raw_data = ET.fromstring(self.data)
                         self.rootUri=self.uri
                         break
-                    except Exception as error:
+                    except OSError as error:
                         if error.errno != errno.ECONNRESET:
-                            print("Error Opening or parsing schema file: {}".format(self.uri))
+                            print("Error downloading schema file: {}".format(self.uri))
                             print("  Exception: {}".format(error))
                             sys.exit(0)
+                    except Exception as error:
+                        print("Error Opening or parsing schema file: {}".format(self.uri))
+                        print("  Exception: {}".format(error))
+                        sys.exit(0)
                     retry_count += 1
                 if retry_count >= retry_count_max:
                     print("Could not open " + self.uri)
@@ -1458,12 +1388,6 @@ class MetaData(Element):
         """Parse this metadata document.
 
         Walks though all children and parses them.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there is an error parsing the metadata.
@@ -1520,12 +1444,6 @@ class DataServices(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -1552,9 +1470,6 @@ class DataServices(Element):
 
         Creates a dictionary of schema elements indexed by their names.
 
-        Args:
-            None
-
         Returns:
             A dictionary of all child namespaces of this element.
         """
@@ -1570,9 +1485,6 @@ class DataServices(Element):
         Provides a dictionary for each child namespace which breaks out the name, alias and link to
         the actual schema object.
 
-        Args:
-            None
-
         Returns:
             A list of all schemas broken out in dictionary form.
         """
@@ -1587,9 +1499,6 @@ class DataServices(Element):
 
         Loops through the child schemas and validates that the aliases are legal. Also checks to see
         whether or not an alias is used more than one time.
-
-        Args:
-            None
 
         Returns:
             Dictionary mapping the alias name to the namespace name.
@@ -1633,12 +1542,6 @@ class Reference(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -1672,18 +1575,15 @@ class Reference(Element):
     def generate_reference_dictionary(self, ref_dict):
         """Builds up a dictionary of the namespaces included.
 
-        Called by a higher level object on multiple instances of referece elements to build up a
+        Called by a higher level object on multiple instances of reference elements to build up a
         list of all of the namespaces that are in the scope of that document.
 
         Args:
             ref_dict: The dictionary to add the namespaces this element references to.
 
-        Returns:
-            None
-
         Raises:
-            SchemaErrror: If there are namespace/alias collisions or the included namespace is not
-                          in the file specified.
+            SchemaError: If there are namespace/alias collisions or the included namespace is not
+                         in the file specified.
         """
 
         for include in self.includes:
@@ -1715,7 +1615,7 @@ class Reference(Element):
 
 
 class Include(Element):
-    """Class defining an OData Inlcude Element
+    """Class defining an OData Include Element
 
     Element edmx.Include
     Specify the schemas to include from the target document
@@ -1737,12 +1637,6 @@ class Include(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -1790,12 +1684,6 @@ class IncludeAnnotations(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -1841,12 +1729,6 @@ class Schema(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -2057,7 +1939,7 @@ class Property(Element):
         name: SimpleIdentifier attribute used to reference, serialize or deserialize this property.
               Must be unique within the set of Properties and NavigationProperties in the containing
               structural type.
-        type: QualifiedName of a primitive, complex or enumeration type in scope, or a colelction of
+        type: QualifiedName of a primitive, complex or enumeration type in scope, or a collection of
               one of these types. Indicates the type of this property.
         nullable: Optional boolean specifying whether a value is required for this property.
         max_length: Optional integer specifying the maximum length the value for this property can
@@ -2094,12 +1976,6 @@ class Property(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -2156,7 +2032,7 @@ class Property(Element):
                     raise SchemaError("Scale facet {} is not a non-negative integer".format(
                         self.scale))
 
-        if (self.precision != None) and (self.scale != None):
+        if (self.precision is not None) and (self.scale is not None):
             if self.scale > self.precision:
                 raise SchemaError("Scale facet {} > Precision facet {}".format(self.scale,
                                                                                self.precision))
@@ -2190,14 +2066,8 @@ class Property(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -2239,17 +2109,17 @@ class Property(Element):
             if self.unicode is None:
                 self.unicode = base_prim_type.get_unicode_default()
 
-            if self.precision != None:
+            if self.precision is not None:
                 base_prim_type.check_precision_value(self.precision)
-            if self.default_value != None:
+            if self.default_value is not None:
                 if enum_type:
                     self.default_value = enum_type.convert(self.default_value)
                 else:
                     self.default_value = base_prim_type.convert(self.default_value)
 
         else:
-            if (self.max_length != None or self.precision != None or self.scale != None or
-                    self.unicode != None or self.srid != None):
+            if (self.max_length is not None or self.precision is not None or self.scale is not None or
+                    self.unicode is not None or self.srid is not None):
                 raise SchemaError("Facet specified for non primitive type")
 
         #TODO: This is not an odata fault, but more of a redfish one
@@ -2314,11 +2184,11 @@ class NavigationProperty(Element):
         ref_constraints: Array of child ReferentialConstraint element.
         name: SimpleIdentifier that can be used when navigating from the structured type declaring
               the navigation property to the related entity type.
-        nullable: Optional boolean indicating whether a navaigation target is required.
-        type: Points to an entity type or a collectino of an entity typ[e declared in the same
+        nullable: Optional boolean indicating whether a navigation target is required.
+        type: Points to an entity type or a collection of an entity typ[e declared in the same
               document or a referenced document. Describes the type of what this navigation property
               points to.
-        partner: Optional navigation property path pointing to a parter navigation property pointing
+        partner: Optional navigation property path pointing to a partner navigation property pointing
                  back to this element.
         contains_target: Optional boolean indicating whether this is a Containment Navigation
                          Property or not.
@@ -2341,12 +2211,6 @@ class NavigationProperty(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -2401,14 +2265,8 @@ class NavigationProperty(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -2480,12 +2338,6 @@ class ReferentialConstraint(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -2499,14 +2351,8 @@ class ReferentialConstraint(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -2545,7 +2391,7 @@ class ReferentialConstraint(Element):
             if not dependent_property.nullable:
                 raise SchemaError(
                     "If parent NavigationProperty or principal property is nullable then dependent"
-                    " property nust be nullable")
+                    " property must be nullable")
         else:
             if dependent_property.nullable:
                 raise SchemaError(
@@ -2557,7 +2403,7 @@ class OnDelete(Element):
     """Class defining an OData OnDelete element.
 
     Element edm.OnDelete
-    Descrbes the action the service will take on related entities when the entity on which the
+    Describes the action the service will take on related entities when the entity on which the
     navigation property is defined is deleted
     OData Version 4.0 Part 3 Section 7.3
 
@@ -2576,12 +2422,6 @@ class OnDelete(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -2640,12 +2480,6 @@ class EntityType(Element, StructuredType):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -2711,14 +2545,8 @@ class EntityType(Element, StructuredType):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -2814,12 +2642,6 @@ class Key(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -2859,12 +2681,6 @@ class PropertyRef(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -2887,14 +2703,8 @@ class PropertyRef(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -2965,13 +2775,13 @@ class ComplexType(Element, StructuredType):
     Attributes:
         defined_properties: List of all properties defined by this element.
         defined_nav_properties: List of all navigation properties defined by this element.
-        name: Unique SimpleIdentier identifying the complex type within the namespace.
+        name: Unique SimpleIdentifier identifying the complex type within the namespace.
         base_type: Optional QualifiedName indicating the base complex type this type inherits from.
         abstract: Optional boolean indicating that this is abstract (cannot be instantiated) or not.
         open_type: Optional boolean indicating that this is an open type (client can add properties
                    dynamically) or not.
         properties: List of all properties applied to this element (defined or inherited).
-        nav_properties: List of all navigation properies applied to this element (defined or
+        nav_properties: List of all navigation properties applied to this element (defined or
                         inherited).
     """
 
@@ -2992,12 +2802,6 @@ class ComplexType(Element, StructuredType):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -3045,14 +2849,8 @@ class ComplexType(Element, StructuredType):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -3142,12 +2940,6 @@ class EnumType(Element, PrimitiveType):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -3230,14 +3022,8 @@ class EnumType(Element, PrimitiveType):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -3282,12 +3068,6 @@ class Member(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -3306,12 +3086,6 @@ class Member(Element):
 
         This is a class method instead of a higher level check so the error string could correctly
         point to this member.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If member does not have a value.
@@ -3363,12 +3137,6 @@ class TypeDefinition(Element, PrimitiveType):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -3414,7 +3182,7 @@ class TypeDefinition(Element, PrimitiveType):
                     raise SchemaError("Scale facet {} is not a non-negative integer".format(
                         self.scale))
 
-        if (self.precision != None) and (self.scale != None):
+        if (self.precision is not None) and (self.scale is not None):
             if self.scale > self.precision:
                 raise SchemaError("Scale facet {} > Precision facet {}".format(self.scale,
                                                                                self.precision))
@@ -3475,9 +3243,6 @@ class TypeDefinition(Element, PrimitiveType):
         Args:
             element: OData element that this TypeDefinition is applied to.
 
-        Returns:
-            None
-
         Raises:
             SchemaError: If there is an error applying a facet or annotation.
         """
@@ -3493,7 +3258,7 @@ class TypeDefinition(Element, PrimitiveType):
                 raise SchemaError("Facet Unicode already specified in TypeDefinition")
 
         if 'Precision' in self.raw_data.attrib:
-            if 'Precicion' in element.raw_data.attrib:
+            if 'Precision' in element.raw_data.attrib:
                 raise SchemaError("Facet Precision already specified in TypeDefinition")
 
         if 'Scale' in self.raw_data.attrib:
@@ -3518,14 +3283,8 @@ class TypeDefinition(Element, PrimitiveType):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -3550,7 +3309,7 @@ class TypeDefinition(Element, PrimitiveType):
         if self.unicode is None:
             self.unicode = base_prim_type.get_unicode_default()
 
-        if self.precision != None:
+        if self.precision is not None:
             base_prim_type.check_precision_value(self.precision)
 
 class Action(Element):
@@ -3562,7 +3321,7 @@ class Action(Element):
 
     Attributes:
         name: SimpleIdentifier used to identify this element.
-        is_bound: Optional boolean indicating that this element is bound (invoked by apppending a
+        is_bound: Optional boolean indicating that this element is bound (invoked by appending a
                   segment containing the qualified action name to a segment of the appropriate
                   binding parameter type within the resource path) or not (invoked through an action
                   import).
@@ -3588,12 +3347,6 @@ class Action(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -3676,12 +3429,6 @@ class Function(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -3763,12 +3510,6 @@ class ReturnType(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -3817,7 +3558,7 @@ class ReturnType(Element):
                     raise SchemaError("Scale facet {} is not a non-negative integer".format(
                         self.scale))
 
-        if (self.precision != None) and (self.scale != None):
+        if (self.precision is not None) and (self.scale is not None):
             if self.scale > self.precision:
                 raise SchemaError("Scale facet {} > Precision facet {}".format(self.scale,
                                                                                self.precision))
@@ -3840,14 +3581,8 @@ class ReturnType(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -3877,12 +3612,12 @@ class ReturnType(Element):
             if self.scale is None:
                 self.scale = prim_type.get_scale_default()
 
-            if self.precision != None:
+            if self.precision is not None:
                 prim_type.check_precision_value(self.precision)
 
         else:
-            if (self.max_length != None) or (self.precision != None) or (
-                    self.scale != None) or (self.srid != None):
+            if (self.max_length is not None) or (self.precision is not None) or (
+                    self.scale is not None) or (self.srid is not None):
                 raise SchemaError("Not PrimitiveType and facets are specified")
 
 
@@ -3924,12 +3659,6 @@ class Parameter(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -3984,7 +3713,7 @@ class Parameter(Element):
                     raise SchemaError("Scale facet {} is not a non-negative integer".format(
                         self.scale))
 
-        if (self.precision != None) and (self.scale != None):
+        if (self.precision is not None) and (self.scale is not None):
             if self.scale > self.precision:
                 raise SchemaError("Scale facet {} > Precision facet {}".format(self.scale,
                                                                                self.precision))
@@ -4009,14 +3738,8 @@ class Parameter(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4046,12 +3769,12 @@ class Parameter(Element):
             if self.scale is None:
                 self.scale = prim_type.get_scale_default()
 
-            if self.precision != None:
+            if self.precision is not None:
                 prim_type.check_precision_value(self.precision)
 
         else:
-            if (self.max_length != None) or (self.precision != None) or (
-                    self.scale != None) or (self.srid != None):
+            if (self.max_length is not None) or (self.precision is not None) or (
+                    self.scale is not None) or (self.srid is not None):
                 raise SchemaError("Not PrimitiveType and facets are specified")
 
 
@@ -4065,7 +3788,7 @@ class EntityContainer(Element):
     Attributes:
         name: Unique SimpleIdentifier used to identify this element.
         data_services: Dictionary of all data services exposed in this element.
-        extends: Optional QualifiedName of an entity conatiner extended by this element.
+        extends: Optional QualifiedName of an entity container extended by this element.
     """
 
     def __init__(self, data, parent):
@@ -4082,12 +3805,6 @@ class EntityContainer(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -4140,14 +3857,8 @@ class EntityContainer(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4168,7 +3879,7 @@ class EntitySet(Element):
     OData Version 4.0 Part 3 Section 13.2
 
     Attributes:
-        name: SimpleIdentifier used to indentify this element.
+        name: SimpleIdentifier used to identify this element.
         entity_type: QualifiedName of an entity type in scope. This element must only contain
                      instances of the entity type specified or its subtypes.
         include_in_service_document: Optional boolean indicating whether is is advertised in the
@@ -4189,12 +3900,6 @@ class EntitySet(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -4224,14 +3929,8 @@ class EntitySet(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4274,12 +3973,6 @@ class Singleton(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -4303,14 +3996,8 @@ class Singleton(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4327,13 +4014,13 @@ class Singleton(Element):
 
 
 class NavigationPropertyBinding(Element):
-    """Class defining an OData NavigaionPropertyBinding element.
+    """Class defining an OData NavigationPropertyBinding element.
 
     Element edm.NavigationPropertyBinding
     Should provide one of these for each NavigationProperty of its entity type
     OData Version 4.0 Part 3 Section 13.4
 
-    Attribures:
+    Attributes:
         path: QualifiedName describing the path leading to the navigation property.
         target: SimpleIdentifier that names the entity set that contains the related instances
                 targeted by the navigation property indicated in the path.
@@ -4351,12 +4038,6 @@ class NavigationPropertyBinding(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -4365,7 +4046,7 @@ class NavigationPropertyBinding(Element):
         self.error_id = self.path
         #TODO: this
         #         check_type(self.path, 'QualifiedName')
-        #TODO: this cant end with a constinment property (see 7.1.5)
+        #TODO: this cant end with a containment property (see 7.1.5)
 
         self.target = self._get_required_attrib('Target')
 
@@ -4375,14 +4056,8 @@ class NavigationPropertyBinding(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4455,12 +4130,6 @@ class ActionImport(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -4482,14 +4151,8 @@ class ActionImport(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4571,12 +4234,6 @@ class FunctionImport(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -4604,14 +4261,8 @@ class FunctionImport(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4708,12 +4359,6 @@ class Term(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -4781,7 +4426,7 @@ class Term(Element):
                     raise SchemaError("Scale facet {} is not a non-negative integer".format(
                         self.scale))
 
-        if (self.precision != None) and (self.scale != None):
+        if (self.precision is not None) and (self.scale is not None):
             if self.scale > self.precision:
                 raise SchemaError("Scale facet {} > Precision facet {}".format(self.scale,
                                                                                self.precision))
@@ -4806,14 +4451,8 @@ class Term(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4849,17 +4488,17 @@ class Term(Element):
             if self.scale is None:
                 self.scale = prim_type.get_scale_default()
 
-            if self.precision != None:
+            if self.precision is not None:
                 prim_type.check_precision_value(self.precision)
 
-            if self.default_value != None:
+            if self.default_value is not None:
                 if enum_type:
                     self.default_value = enum_type.convert(self.default_value)
                 else:
                     self.default_value = prim_type.convert(self.default_value)
         else:
-            if (self.max_length != None) or (self.precision != None) or (
-                    self.scale != None) or (self.srid != None):
+            if (self.max_length is not None) or (self.precision is not None) or (
+                    self.scale is not None) or (self.srid is not None):
                 raise SchemaError("Not PrimitiveType and facets are specified")
 
 
@@ -4888,12 +4527,6 @@ class Annotations(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -4941,12 +4574,6 @@ class Annotation(Element):
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
 
-        Args:
-            None
-
-        Returns:
-            None
-
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
         """
@@ -4968,14 +4595,8 @@ class Annotation(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -4999,7 +4620,7 @@ class ConstantExpression(Element):
         data_type: String indicating whether this expression was defined in attribute or element
                    notation.
         type: Underlying type that this expression evaluates to.
-        value: Value that this expression evaluuates to.
+        value: Value that this expression evaluates to.
     """
 
     def __init__(self, data, name, data_type, parent):
@@ -5015,12 +4636,6 @@ class ConstantExpression(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -5293,14 +4908,8 @@ class ConstantExpression(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -5334,9 +4943,6 @@ class ConstantExpression(Element):
         For a constant expression this method is simple since the value is already calculated when
         the element was parsed.
 
-        Args:
-            None
-
         Returns:
             Value of the parsed expression.
         """
@@ -5361,7 +4967,7 @@ class DynamicExpression(Element):
         property: For a PropertyValue element, the property to assign the value to
         data: For a LabeledElementReference, the name of a labeled element expression in scope.
         target_name: For a LabeledElement, a link to the named expression.
-        target_term: For a Record, target term if type has to be defived from context.
+        target_term: For a Record, target term if type has to be defined from context.
     """
 
     def __init__(self, data, name, data_type, parent):
@@ -5383,12 +4989,6 @@ class DynamicExpression(Element):
 
         Verifies all attributes for this element as well as kicks off parsing and validating of all
         children elements. Performs basic OData format and data validation.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: if there was an issue parsing or validating this element.
@@ -5616,8 +5216,7 @@ class DynamicExpression(Element):
 
             for expression in self.expressions:
                 if expression.name != 'PropertyValue':
-                    raise SchemaError("Need only PropertyValues, provided {}".format(type(
-                        element)))
+                    raise SchemaError("Need only PropertyValues, provided {}".format(expression.name))
 
             self.target_term = None
             if 'type' in self.raw_data.attrib:
@@ -5668,14 +5267,8 @@ class DynamicExpression(Element):
         """Function for checking the scope of this element.
 
         This function is called once the basic crawling has been done on the entire metadata
-        document. It performs checks which validate scope dependancies or require other elemets to
+        document. It performs checks which validate scope dependencies or require other elements to
         be parsed already.
-
-        Args:
-            None
-
-        Returns:
-            None
 
         Raises:
             SchemaError: If there is an error in validating the scope or related elements of this
@@ -5883,9 +5476,6 @@ class DynamicExpression(Element):
         Dynamic expressions are evaluated when the method is called since these can change on the
         client side.
 
-        Args:
-            None
-
         Returns:
             Value of the parsed expression.
         """
@@ -5993,9 +5583,6 @@ def main():
     """Main function for the OData Validator.
 
     Provides a user interface for this tool.
-
-    Args:
-        None
 
     Returns:
         None
