@@ -77,13 +77,15 @@ class PropertyIndexGenerator(DocFormatter):
         if output_format == 'html':
             from format_utils import HtmlUtils
             formatter = HtmlUtils()
-            output = self.format_tabular_output(formatter)
+            output = formatter.head_one("Property Index", 0)
+            output += self.format_tabular_output(formatter)
             output = self.add_html_boilerplate(output)
 
         if output_format == 'markdown':
             from format_utils import FormatUtils
             formatter = FormatUtils()
-            output = self.format_tabular_output(formatter)
+            output = formatter.head_one("Property Index", 0)
+            output += self.format_tabular_output(formatter)
 
         if output_format == 'csv':
             output = self.output_csv()
