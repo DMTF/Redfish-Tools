@@ -29,7 +29,7 @@ CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 
 # Regex strings
-NAMESPACE_VER_REGEX = "^[a-zA-Z0-9]+\.v([0-9]+)_([0-9]+)_([0-9]+)$"
+VERSION_REGEX = "v([0-9]+)_([0-9]+)_([0-9]+)$"
 PATTERN_PROP_REGEX = "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_.]+$"
 DEFAULT_VER = "v1_0_0"
 DEFAULT_ATTRIB = "UNKNOWN_ATTRIB"
@@ -225,7 +225,7 @@ class CSDLToJSON:
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
             # Check if the namespace applies based on its version number
             namespace = self.get_attrib( schema, "Namespace" )
-            if does_namespace_apply( namespace, self.namespace_under_process ):
+            if does_version_apply( namespace, self.namespace_under_process ):
                 for child in schema:
                     # Set up the top level title and $ref properties if needed
                     if child.tag == ODATA_TAG_ENTITY:
@@ -346,7 +346,7 @@ class CSDLToJSON:
                                 if oldest_version is None:
                                     oldest_version = namespace
                                 else:
-                                    if not does_namespace_apply( oldest_version, namespace ):
+                                    if not does_version_apply( oldest_version, namespace ):
                                         oldest_version = namespace
 
             # Based on the oldest version, add the mapping for all namespaces
@@ -354,7 +354,7 @@ class CSDLToJSON:
                 for schema in self.root.iter( ODATA_TAG_SCHEMA ):
                     namespace = self.get_attrib( schema, "Namespace" )
                     if namespace != self.namespace_under_process:
-                        if does_namespace_apply( oldest_version, namespace ):
+                        if does_version_apply( oldest_version, namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
@@ -1130,10 +1130,9 @@ class CSDLToJSON:
         if is_namespace_unversioned( namespace ):
             version = DEFAULT_VER
         added, deprecated, deprecated_info = self.get_version_details( definition )
-        if added is not None and added >= version:
-            # The namespace is too old
-            return False
-        return True
+        if added is None:
+            return True
+        return does_version_apply( added, version )
 
     def add_version_details( self, definition, namespace, json_def, enum_member = None ):
         """
@@ -1149,17 +1148,18 @@ class CSDLToJSON:
         if is_namespace_unversioned( namespace ):
             version = DEFAULT_VER
         added, deprecated, deprecated_info = self.get_version_details( definition )
-        if deprecated is not None and deprecated_info is not None and ( ( version >= deprecated ) or is_namespace_unversioned( self.namespace_under_process ) ):
-            if enum_member is not None:
-                if "enumVersionDeprecated" not in json_def:
-                    json_def["enumVersionDeprecated"] = {}
-                if "enumDeprecated" not in json_def:
-                    json_def["enumDeprecated"] = {}
-                json_def["enumVersionDeprecated"][enum_member] = deprecated
-                json_def["enumDeprecated"][enum_member] = deprecated_info
-            else:
-                json_def["versionDeprecated"] = deprecated
-                json_def["deprecated"] = deprecated_info
+        if deprecated is not None and deprecated_info is not None:
+            if does_version_apply( deprecated, version ) or is_namespace_unversioned( self.namespace_under_process ):
+                if enum_member is not None:
+                    if "enumVersionDeprecated" not in json_def:
+                        json_def["enumVersionDeprecated"] = {}
+                    if "enumDeprecated" not in json_def:
+                        json_def["enumDeprecated"] = {}
+                    json_def["enumVersionDeprecated"][enum_member] = deprecated
+                    json_def["enumDeprecated"][enum_member] = deprecated_info
+                else:
+                    json_def["versionDeprecated"] = deprecated
+                    json_def["deprecated"] = deprecated_info
         if added is not None:
             if enum_member is not None:
                 if "enumVersionAdded" not in json_def:
@@ -1291,55 +1291,56 @@ def is_namespace_unversioned( namespace ):
     """
 
     # Versioned namespaces match the form NAME.vX_Y_Z
-    if re.match( NAMESPACE_VER_REGEX, namespace ) is None:
+    if re.search( VERSION_REGEX, namespace ) is None:
         return True
     return False
 
-def does_namespace_apply( namespace, json_file_version ):
+def does_version_apply( version1, version2 ):
     """
-    Checks if a namespace applies to a given JSON file version
+    Checks if a version applies to another version
 
     Args:
-        namespace: The string name of the namespace
-        json_file_version: The string for the JSON file and its version
+        version1: The version in question, which may contain a namespace prepended
+        version2: The version to compare against, which may contain a namespace prepended
 
     Returns:
-        True if the namespace applies, False otherwise
+        True if the version applies, False otherwise
     """
 
     # If the base name of the namespaces do not match, then it does not apply
     # Currently the only case this happens is in RedfishExtensions_v1.xml
-    if namespace.split( "." )[0] != json_file_version.split( "." )[0]:
-        return False
+    if "." in version1:
+        if version1.split( "." )[0] != version2.split( "." )[0]:
+            return False
 
     # Unversioned namespaces always apply
-    if is_namespace_unversioned( namespace ):
+    if is_namespace_unversioned( version1 ):
         return True
 
     # Pull out the version numbers
-    namespace_ver = get_namespace_version( namespace )
-    json_ver = get_namespace_version( json_file_version )
+    version1_array = get_version_details( version1 )
+    version2_array = get_version_details( version2 )
 
     # Different major versions; not compatible
-    if namespace_ver[0] != json_ver[0]:
+    if version1_array[0] != version2_array[0]:
         return False
 
     # The namespace has a newer minor version; skip
-    if namespace_ver[1] > json_ver[1]:
+    if version1_array[1] > version2_array[1]:
         return False
 
     # The minor versions are equal, but the namespace has a newer errata version; skip
-    if ( namespace_ver[1] == json_ver[1] ) and ( namespace_ver[2] > json_ver[2] ):
+    if ( version1_array[1] == version2_array[1] ) and ( version1_array[2] > version2_array[2] ):
         return False
 
     return True
 
-def get_namespace_version( namespace ):
+def get_version_details( version ):
     """
-    Pulls the version numbers from a namespace string
+    Pulls the version numbers from a version string
 
     Args:
-        namespace: The string name of the namespace
+        version: The version string, which may contain a namespace prepended
 
     Returns:
         The major version
@@ -1347,8 +1348,8 @@ def get_namespace_version( namespace ):
         The errata version
     """
 
-    groups = re.match( NAMESPACE_VER_REGEX, namespace )
-    return groups.group( 1 ), groups.group( 2 ), groups.group( 3 )
+    groups = re.search( VERSION_REGEX, version )
+    return int( groups.group( 1 ) ), int( groups.group( 2 ) ), int( groups.group( 3 ) )
 
 if __name__ == '__main__':
     sys.exit( main() )
