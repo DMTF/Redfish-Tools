@@ -216,6 +216,10 @@ class CSDLToJSON:
                         if term == "Redfish.OwningEntity":
                             self.json_out[self.namespace_under_process]["owningEntity"] = self.get_attrib( child, "String" )
 
+                        # Release
+                        if term == "Redfish.Release":
+                            self.json_out[self.namespace_under_process]["release"] = self.get_attrib( child, "String" )
+
     def process_versioned_namespace( self ):
         """
         Adds the definitions to the JSON output for a versioned namespace
@@ -261,6 +265,15 @@ class CSDLToJSON:
                         # Owning Entity
                         if term == "Redfish.OwningEntity":
                             self.json_out[self.namespace_under_process]["owningEntity"] = self.get_attrib( child, "String" )
+
+                        # Release
+                        if term == "Redfish.Release":
+                            # Only add if the major and minor versions are the same
+                            if not is_namespace_unversioned( namespace ):
+                                version1 = get_version_details( namespace )
+                                version2 = get_version_details( self.namespace_under_process )
+                                if version1[0] == version2[0] and version1[1] == version2[1]:
+                                    self.json_out[self.namespace_under_process]["release"] = self.get_attrib( child, "String" )
 
     def generate_capabilities( self, object, json_def ):
         """
