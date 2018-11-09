@@ -94,7 +94,7 @@ class DocGenUtilities:
 
             m = re.findall('href="([^"]+)"', content)
             for href in m:
-                if re.match('\S+://', href):
+                if re.match(r'\S+://', href):
                     links.append(href)
                 elif href.startswith('/'):
                     links.append(''.join([urlpath, href]))

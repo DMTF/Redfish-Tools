@@ -15,6 +15,7 @@ import html
 import markdown
 import warnings
 from doc_gen_util import DocGenUtilities
+from format_utils import HtmlUtils
 from . import DocFormatter
 from . import ToCParser
 
@@ -32,12 +33,11 @@ class HtmlGenerator(DocFormatter):
 
     def __init__(self, property_data, traverser, config, level=0):
         super(HtmlGenerator, self).__init__(property_data, traverser, config, level)
-        self.sections = []
-        self.registry_sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '<br>'
             }
+        self.formatter = HtmlUtils()
         self.table_of_contents = ''
         self.css_content = """
 <style>
@@ -215,7 +215,7 @@ pre.code{
         # We want to modify a local copy of meta, deleting redundant version info
         meta = copy.deepcopy(meta)
 
-        name_and_version = self.bold(html.escape(prop_name, False))
+        name_and_version = self.formatter.bold(html.escape(prop_name, False))
         deprecated_descr = None
 
         version = meta.get('version')
@@ -232,16 +232,16 @@ pre.code{
             if 'version_deprecated' in meta:
                 version_depr = html.escape(meta['version_deprecated'], False)
                 deprecated_display = self.truncate_version(version_depr, 2)
-                name_and_version += ' ' + self.italic('(v' + version_display +
+                name_and_version += ' ' + self.formatter.italic('(v' + version_display +
                                                       ', deprecated v' + deprecated_display +  ')')
                 deprecated_descr = html.escape("Deprecated v" + deprecated_display + '+. ' +
                                                meta['version_deprecated_explanation'], False)
             else:
-                name_and_version += ' ' + self.italic('(v' + version_display + ')')
+                name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
         elif 'version_deprecated' in meta:
             version_depr = html.escape(meta['version_deprecated'], False)
             deprecated_display = self.truncate_version(version_depr, 2)
-            name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
+            name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
                                             meta['version_deprecated_explanation'], False)
 
@@ -303,7 +303,7 @@ pre.code{
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
 
-        formatted_details['descr'] = self.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
+        formatted_details['descr'] = self.formatter.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
@@ -322,18 +322,18 @@ pre.code{
 
 
                 if formatted_details['descr']:
-                    formatted_details['descr'] += '<br>' + self.italic(text_descr)
+                    formatted_details['descr'] += '<br>' + self.formatter.italic(text_descr)
                 else:
-                    formatted_details['descr'] = self.italic(text_descr)
+                    formatted_details['descr'] = self.formatter.italic(text_descr)
 
             # If this is an Action with details, add a note to the description:
             if formatted_details['has_action_details']:
                 anchor = schema_ref + '|action_details|' + prop_name
                 text_descr = 'For more information, see the <a href="#' + anchor + '">Action Details</a> section below.'
-                formatted_details['descr'] += '<br>' + self.italic(text_descr)
+                formatted_details['descr'] += '<br>' + self.formatter.italic(text_descr)
 
         if deprecated_descr:
-            formatted_details['descr'] += ' ' + self.italic(deprecated_descr)
+            formatted_details['descr'] += ' ' + self.formatter.italic(deprecated_descr)
 
         prop_type = html.escape(formatted_details['prop_type'], False)
         if has_enum:
@@ -371,15 +371,15 @@ pre.code{
 
         descr = formatted_details['descr']
         if formatted_details['profile_purpose']:
-            descr += '<br>' + self.bold("Profile Purpose: " + formatted_details['profile_purpose'])
+            descr += '<br>' + self.formatter.bold("Profile Purpose: " + formatted_details['profile_purpose'])
 
         # Conditional Requirements
         cond_req = formatted_details['profile_conditional_req']
         if cond_req:
             anchor = schema_ref + '|conditional_reqs|' + prop_name
             cond_req_text = 'See <a href="#' + anchor + '"> Conditional Requirements</a>, below, for more information.'
-            descr += ' ' + self.nobr(self.italic(cond_req_text))
-            profile_access += "<br>" + self.nobr(self.italic('Conditional Requirements'))
+            descr += ' ' + self.formatter.nobr(self.formatter.italic(cond_req_text))
+            profile_access += "<br>" + self.formatter.nobr(self.formatter.italic('Conditional Requirements'))
 
         if not profile_access:
             profile_access = '&nbsp;' * 10
@@ -389,7 +389,7 @@ pre.code{
             comparison_descr = ('Must be ' + formatted_details['profile_comparison'] + ' ('
                                 + ', '.join('"' + x + '"' for x in formatted_details['profile_values'])
                                 + ')')
-            profile_access += '<br>' + self.italic(comparison_descr)
+            profile_access += '<br>' + self.formatter.italic(comparison_descr)
 
         row = []
         row.append(indentation_string + name_and_version)
@@ -400,7 +400,7 @@ pre.code{
             row.append(prop_access)
         row.append(descr)
 
-        formatted.append(self.make_row(row))
+        formatted.append(self.formatter.make_row(row))
 
         if len(formatted_details['object_description']) > 0:
             formatted_object = formatted_details['object_description']
@@ -427,7 +427,7 @@ pre.code{
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
-        contents.append(self.head_four(html.escape(prop_name, False) + ':', anchor))
+        contents.append(self.formatter.head_four(html.escape(prop_name, False) + ':', self.level, anchor))
 
         parent_version = meta.get('version')
         enum_meta = meta.get('enum', {})
@@ -448,7 +448,7 @@ pre.code{
                                   + profile_recommended_values)
 
         if prop_description:
-            contents.append(self.para(prop_description))
+            contents.append(self.formatter.para(prop_description))
 
         if isinstance(prop_type, list):
             prop_type = ', '.join([html.escape(x, False) for x in prop_type])
@@ -456,13 +456,13 @@ pre.code{
             prop_type = html.escape(prop_type, False)
 
         if supplemental_details:
-            contents.append(self.markdown_to_html(supplemental_details))
+            contents.append(self.formatter.markdown_to_html(supplemental_details))
 
         if enum_details:
             headings = [prop_type, 'Description']
             if profile_mode:
                 headings.append('Profile Specifies')
-            header_row = self.make_header_row(headings)
+            header_row = self.formatter.make_header_row(headings)
             table_rows = []
             enum.sort(key=str.lower)
 
@@ -482,16 +482,16 @@ pre.code{
                     if 'version_deprecated' in enum_item_meta:
                         version_depr = html.escape(enum_item_meta['version_deprecated'], False)
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if enum_item_meta.get('version_deprecated_explanation'):
                             deprecated_descr = html.escape('Deprecated v' + deprecated_display + '+. ' +
                                                            enum_item_meta['version_deprecated_explanation'], False)
                     else:
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
                 elif 'version_deprecated' in enum_item_meta:
                     version_depr = html.escape(enum_item_meta['version_deprecated'], False)
                     deprecated_display = self.truncate_version(version_depr, 2)
-                    enum_name += ' ' + self.italic('(deprecated v' + deprecated_display + ')')
+                    enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
                     if enum_item_meta.get('version_deprecated_explanation'):
                         deprecated_descr = html.escape('Deprecated v' + deprecated_display + '+. ' +
                                                        enum_item_meta['version_deprecated_explanation'], False)
@@ -499,9 +499,9 @@ pre.code{
                 descr = html.escape(enum_details.get(enum_item, ''), False)
                 if deprecated_descr:
                     if descr:
-                        descr += ' ' + self.italic(deprecated_descr)
+                        descr += ' ' + self.formatter.italic(deprecated_descr)
                     else:
-                        descr = self.italic(deprecated_descr)
+                        descr = self.formatter.italic(deprecated_descr)
                 cells = [enum_name, descr]
 
                 if profile_mode:
@@ -516,14 +516,14 @@ pre.code{
                     else:
                         cells.append('')
 
-                table_rows.append(self.make_row(cells))
-            contents.append(self.make_table(table_rows, [header_row], 'enum enum-details'))
+                table_rows.append(self.formatter.make_row(cells))
+            contents.append(self.formatter.make_table(table_rows, [header_row], 'enum enum-details'))
 
         elif enum:
             headings = [prop_type]
             if profile_mode:
                 headings.append('Profile Specifies')
-            header_row = self.make_header_row(headings)
+            header_row = self.formatter.make_header_row(headings)
             table_rows = []
             enum.sort(key=str.lower)
             for enum_item in enum:
@@ -541,19 +541,19 @@ pre.code{
                     if 'version_deprecated' in enum_item_meta:
                         version_depr = html.escape(enum_item_meta['version_deprecated'], False)
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if enum_item_meta.get('version_deprecated_explanation'):
-                            enum_name += '<br>' + self.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
+                            enum_name += '<br>' + self.formatter.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
                                                                           enum_item_meta['version_deprecated_explanation'], False))
                     else:
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
 
                 elif 'version_deprecated' in enum_item_meta:
                     version_depr = html.escape(enum_item_meta['version_deprecated'], False)
                     deprecated_display = self.truncate_version(version_depr, 2)
-                    enum_name += ' ' + self.italic('(deprecated v' + deprecated_display + ')')
+                    enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
                     if enum_item_meta.get('version_deprecated_explanation'):
-                        enum_name += '<br>' + self.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
+                        enum_name += '<br>' + self.formatter.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
                                                                       enum_item_meta['version_deprecated_explanation'], False))
 
                 cells = [enum_name]
@@ -569,8 +569,8 @@ pre.code{
                     else:
                         cells.append('')
 
-                table_rows.append(self.make_row(cells))
-            contents.append(self.make_table(table_rows, [header_row], 'enum'))
+                table_rows.append(self.formatter.make_row(cells))
+            contents.append(self.formatter.make_table(table_rows, [header_row], 'enum'))
 
         return '\n'.join(contents) + '\n'
 
@@ -579,12 +579,12 @@ pre.code{
         """Generate a formatted Actions section from supplemental markup."""
 
         contents = []
-        contents.append(self.head_four(action_details.get('action_name', prop_name)))
-        contents.append(self.markdown_to_html(action_details.get('text', '')))
+        contents.append(self.formatter.head_four(action_details.get('action_name', prop_name), self.level))
+        contents.append(self.formatter.markdown_to_html(action_details.get('text', '')))
         if action_details.get('example'):
             example = '```json\n' + action_details['example'] + '\n```\n'
-            contents.append(self.para('Example Action POST:'))
-            contents.append(self.markdown_to_html(example))
+            contents.append(self.formatter.para('Example Action POST:'))
+            contents.append(self.formatter.markdown_to_html(example))
 
         return '\n'.join(contents) + '\n'
 
@@ -598,13 +598,13 @@ pre.code{
             prop_name_parts = prop_name.split('.')
             prop_name = prop_name_parts[-1]
 
-        formatted.append(self.head_four(prop_name, anchor))
-        formatted.append(self.para(prop_descr))
+        formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
+        formatted.append(self.formatter.para(prop_descr))
 
         if action_parameters:
             rows = []
             # Add a "start object" row for this parameter:
-            rows.append(self.make_row(['{', '','','']))
+            rows.append(self.formatter.make_row(['{', '','','']))
             param_names = [x for x in action_parameters.keys()]
             param_names.sort(key=str.lower)
             for param_name in param_names:
@@ -616,12 +616,12 @@ pre.code{
             tmp_row = self._add_closing_brace(tmp_row, '', '}')
             rows[-1] = tmp_row
 
-            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
+            formatted.append(self.formatter.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
 
-            formatted.append(self.make_table(rows))
+            formatted.append(self.formatter.make_table(rows))
 
         else:
-            formatted.append(self.para("(This action takes no parameters.)"))
+            formatted.append(self.formatter.para("(This action takes no parameters.)"))
 
         return "\n".join(formatted)
 
@@ -642,31 +642,31 @@ pre.code{
 
             # something is awry if there are no properties
             if section.get('properties'):
-                contents.append(self.make_table(section['properties'], None, 'properties'))
+                contents.append(self.formatter.make_table(section['properties'], None, 'properties'))
 
             if section.get('profile_conditional_details'):
                 # sort them now; these can be sub-properties so may not be in alpha order.
                 conditional_details = '\n'.join(sorted(section['profile_conditional_details'], key=str.lower))
                 deets = []
-                deets.append(self.head_three('Conditional Requirements'))
-                deets.append(self.make_div(conditional_details, 'property-details-content'))
-                contents.append(self.make_div('\n'.join(deets), 'property-details'))
+                deets.append(self.formatter.head_three('Conditional Requirements', self.level))
+                deets.append(self.formatter.make_div(conditional_details, 'property-details-content'))
+                contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
 
             if len(section.get('action_details', [])):
                 action_details = '\n'.join(section['action_details'])
                 deets = []
-                deets.append(self.head_three('Action Details'))
-                deets.append(self.make_div(action_details, 'property-details-content'))
-                contents.append(self.make_div('\n'.join(deets), 'property-details'))
+                deets.append(self.formatter.head_three('Action Details', self.level))
+                deets.append(self.formatter.make_div(action_details, 'property-details-content'))
+                contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
             if section.get('property_details'):
                 deets = []
-                deets.append(self.head_three('Property Details'))
-                deets.append(self.make_div('\n'.join(section['property_details']),
+                deets.append(self.formatter.head_three('Property Details', self.level))
+                deets.append(self.formatter.make_div('\n'.join(section['property_details']),
                                            'property-details-content'))
-                contents.append(self.make_div('\n'.join(deets), 'property-details'))
+                contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
 
             if section.get('json_payload'):
-                contents.append(self.head_three('Example Response'))
+                contents.append(self.formatter.head_three('Example Response', self.level))
                 contents.append(section['json_payload'])
 
         self.sections = []
@@ -676,15 +676,15 @@ pre.code{
             contents.append(section.get('heading'))
             contents.append(section.get('requirement'))
             if section.get('description'):
-                contents.append(self.para(section['description']))
+                contents.append(self.formatter.para(section['description']))
             if section.get('messages'):
-                contents.append(self.head_three('Messages'))
-                message_rows = [self.make_row(x) for x in section['messages']]
+                contents.append(self.formatter.head_three('Messages', self.level))
+                message_rows = [self.formatter.make_row(x) for x in section['messages']]
                 header_cells = ['', 'Requirement']
                 if self.config.get('profile_mode') != 'terse':
                     header_cells.append('Description')
-                header_row = self.make_row(header_cells)
-                contents.append(self.make_table(message_rows, [header_row], 'messages'))
+                header_row = self.formatter.make_row(header_cells)
+                contents.append(self.formatter.make_table(message_rows, [header_row], 'messages'))
 
         contents = '\n'.join(contents)
         return contents
@@ -704,7 +704,7 @@ pre.code{
         body += self.emit()
 
         if 'Postscript' in supplemental:
-            body += self.markdown_to_html(supplemental['Postscript'])
+            body += self.formatter.markdown_to_html(supplemental['Postscript'])
 
         common_properties = self.generate_common_properties_doc()
         marker = False
@@ -820,7 +820,7 @@ pre.code{
 
         for part in parts:
             if part['type'] == 'markdown':
-                intro.append(self.markdown_to_html(part['content']))
+                intro.append(self.formatter.markdown_to_html(part['content']))
             elif part['type'] == 'fragment':
                 intro.append(part['content'])
         return '\n'.join(intro)
@@ -840,7 +840,7 @@ pre.code{
             section_text = html.escape(text, False)
 
             self.this_section['head'] = text
-            self.this_section['heading'] = self.head_two(section_text, link_id)
+            self.this_section['heading'] = self.formatter.head_two(section_text, self.level, link_id)
             self.this_section['link_id'] = link_id
 
         self.sections.append(self.this_section)
@@ -848,7 +848,7 @@ pre.code{
 
     def add_description(self, text):
         """ Add the schema description """
-        self.this_section['description'] = self.markdown_to_html(text)
+        self.this_section['description'] = self.formatter.markdown_to_html(text)
 
 
     def add_uris(self, uris):
@@ -875,7 +875,7 @@ pre.code{
                         part = '<a href="#' + schema_name + '">' + part + '</a>'
 
                 # and italicize it
-                part = self.italic(part)
+                part = self.formatter.italic(part)
             uri_parts_highlighted.append(part)
         uri_highlighted = '/'.join(uri_parts_highlighted)
         return uri_highlighted
@@ -888,7 +888,7 @@ pre.code{
         if json_payload:
 
             self.this_section['json_payload'] = ('<div class="json-payload">' +
-                                                 self.markdown_to_html(json_payload) + '</div>')
+                                                 self.formatter.markdown_to_html(json_payload) + '</div>')
         else:
             self.this_section['json_payload'] = None
 
@@ -923,7 +923,7 @@ pre.code{
             if reg.get('current_release', reg['minversion']) != reg['minversion']:
                 heading += ' (current release: v' + reg['current_release'] + ')'
 
-            this_section['heading'] = self.head_two(heading)
+            this_section['heading'] = self.formatter.head_two(heading, self.level)
             this_section['requirement'] = 'Requirement: ' + reg.get('profile_requirement', '')
 
             msgs = reg.get('Messages', {})
@@ -984,107 +984,6 @@ pre.code{
             return 'See <a href="' + target + '" target="_blank">' + target + '</a>'
         return False
 
-
-    @staticmethod
-    def bold(text):
-        """Apply bold to text"""
-        return '<b>' + text + '</b>'
-
-    @staticmethod
-    def italic(text):
-        """Apply italic to text"""
-        return '<i>' + text + '</i>'
-
-    @staticmethod
-    def make_div(text, css_class=None):
-        """ Make a div, optionally applying a css class """
-        div = []
-        if css_class:
-            div.append('<div class="' + css_class + '">')
-        else:
-            div.append('<div>')
-        div.append(text)
-        div.append('</div>')
-        return '\n'.join(div)
-
-    def make_row(self, cells):
-        """ Make an HTML row """
-        row = ''.join(['<td>' + cell + '</td>' for cell in cells])
-        return '<tr>' + row + '</tr>'
-
-    def make_header_row(self, cells):
-        """ Make an HTML row, using table header markup """
-        row = ''.join(['<th>' + cell + '</th>' for cell in cells])
-        return '<tr>' + row + '</tr>'
-
-    def make_table(self, rows, header_rows=None, css_class=None):
-        """ Make an HTML table from the provided rows, which should be HTML markup """
-        if header_rows:
-            head = '<thead>\n' + '\n'.join(header_rows) + '\n</thead>\n'
-        else:
-            head = ''
-        body = '<tbody>\n' + '\n'.join(rows) + '\n</tbody>'
-        if css_class:
-            table_tag = '<table class="' + css_class + '">'
-        else:
-            table_tag = '<table>'
-
-        return table_tag + '\n' + head + body + '</table>'
-
-    @staticmethod
-    def para(text):
-        """ Wrap text as HTML paragraph """
-        return '<p>' + text + '</p>'
-
-    @staticmethod
-    def make_paras(text):
-        """ Split text at linebreaks and output as paragraphs """
-        return '\n'.join([HtmlGenerator.para(line) for line in '\n'.split(text) if line])
-
-    @staticmethod
-    def br():
-        return '<br>'
-
-    @staticmethod
-    def nobr(text):
-        """ Wrap a bit of text in nobr tags. """
-        return '<nobr>' + text + '</nobr>'
-
-    @staticmethod
-    def nbsp():
-        """ A non-breaking space """
-        return '&nbsp;'
-
-
-    def head_one(self, text, anchor_id=None):
-        """ Make a top-level heading, relative to the current formatter level """
-        level = str(self.level + 1)
-        return self._head_base(text, level, anchor_id)
-
-    def head_two(self, text, anchor_id=None):
-        """ Make a second-level heading, relative to the current formatter level """
-        level = str(self.level + 2)
-        return self._head_base(text, level, anchor_id)
-
-    def head_three(self, text, anchor_id=None):
-        """ Make a third-level heading, relative to the current formatter level """
-        level = str(self.level + 3)
-        return self._head_base(text, level, anchor_id)
-
-    def head_four(self, text, anchor_id=None):
-        """ Make a fourth-level heading, relative to the current formatter level """
-        level = str(self.level + 4)
-        return self._head_base(text, level, anchor_id)
-
-    @staticmethod
-    def _head_base(text, level, anchor_id=None):
-        if anchor_id:
-            open_tag = '<h' + level + ' id="' + anchor_id + '">'
-        else:
-            open_tag = '<h' + level + '>'
-        return open_tag + text + '</h' + level + '>'
-
-
     def _add_closing_brace(self, html_blob, indentation_string, brace_string):
         """ Add a closing } to the last row of this blob of rows. """
         close_str = '<br>' + indentation_string + brace_string
@@ -1092,52 +991,4 @@ pre.code{
         if (len(tmp_rows) == 2):
             tmp_rows[1] = tmp_rows[1].replace('</td>', close_str + '</td>', 1)
             html_blob = '<tr>'.join(tmp_rows)
-        return html_blob
-
-
-
-    @staticmethod
-    def markdown_to_html(markdown_blob, **args):
-        """ Convert markdown to HTML """
-        html_blob = markdown.markdown(markdown_blob,
-                                      extensions=['markdown.extensions.codehilite',
-                                                  'markdown.extensions.fenced_code',
-                                                  'markdown.extensions.tables',
-                                                  'markdown.extensions.toc'])
-        # Look for empty table rows; used to get tables without headers recognized:
-        if '<table>' in html_blob:
-            lines = []
-            html_updated = False
-            in_thead = False
-            thead_lines = []
-            discard_thead = False
-            for line in html_blob.splitlines():
-                if in_thead:
-                    if line == '</thead>':
-                        thead_lines.append(line)
-                        in_thead = False
-                        if discard_thead:
-                            html_updated = True
-                        else:
-                            [lines.append(x) for x in thead_lines]
-                    elif line not in ['<tr>', '<th></th>', '</tr>']:
-                        discard_thead = False
-                        continue
-                    else:
-                        thead_lines.append(line)
-                elif line == '<thead>':
-                    in_thead = True
-                    discard_thead = True
-                    thead_lines = [line]
-                    continue
-                else:
-                    lines.append(line)
-
-            if html_updated:
-                html_blob = '\n'.join(lines)
-
-        elif args.get('no_para'):
-            if html_blob[0:3] == '<p>':
-                html_blob = html_blob[3:-4]
-
         return html_blob

@@ -22,7 +22,6 @@ class CsvGenerator(DocFormatter):
 
     def __init__(self, property_data, traverser, config, level=0):
         super(CsvGenerator, self).__init__(property_data, traverser, config, level)
-        self.sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '\n'
@@ -305,27 +304,3 @@ class CsvGenerator(DocFormatter):
     def add_registry_reqs(self, registry_reqs):
         """ CSV output doesn't include registry requirements. """
         pass
-
-    def head_one(self, text, anchor=None):
-        """Add a top-level heading, relative to the generator's level"""
-        add_level = '' + '#' * self.level
-        return add_level + '# ' + text + "\n"
-
-    def head_two(self, text, anchor=None):
-        """Add a second-level heading, relative to the generator's level"""
-        add_level = '' + '#' * self.level
-        return add_level + '## ' + text + "\n"
-
-    def head_three(self, text, anchor=None):
-        """Add a third-level heading, relative to the generator's level"""
-        add_level = '' + '#' * self.level
-        return add_level + '### ' + text + "\n"
-
-    def head_four(self, text, anchor=None):
-        """Add a fourth-level heading, relative to the generator's level"""
-        add_level = '' + '#' * self.level
-        return add_level + '##### ' + text + "\n"
-
-    def para(self, text):
-        """Add a paragraph of text. Doesn't actually test for paragraph breaks within text"""
-        return "\n" + text + "\n"

@@ -14,6 +14,7 @@ import copy
 import warnings
 from doc_gen_util import DocGenUtilities
 from . import DocFormatter
+from format_utils import FormatUtils
 
 # Format user warnings simply
 def simple_warning_format(message, category, filename, lineno, file=None, line=None):
@@ -32,12 +33,11 @@ class MarkdownGenerator(DocFormatter):
 
     def __init__(self, property_data, traverser, config, level=0):
         super(MarkdownGenerator, self).__init__(property_data, traverser, config, level)
-        self.sections = []
-        self.registry_sections = []
         self.separators = {
             'inline': ', ',
             'linebreak': '\n'
             }
+        self.formatter = FormatUtils()
 
 
     def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
@@ -95,7 +95,7 @@ class MarkdownGenerator(DocFormatter):
         meta = copy.deepcopy(meta)
 
         if prop_name:
-            name_and_version = self.bold(self.escape_for_markdown(prop_name,
+            name_and_version = self.formatter.bold(self.escape_for_markdown(prop_name,
                                                                   self.config.get('escape_chars', [])))
         else:
             name_and_version = ''
@@ -115,15 +115,15 @@ class MarkdownGenerator(DocFormatter):
             version_display = self.truncate_version(meta['version'], 2) + '+'
             if 'version_deprecated' in meta:
                 deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
-                name_and_version += ' ' + self.italic('(v' + version_display +
+                name_and_version += ' ' + self.formatter.italic('(v' + version_display +
                                                       ', deprecated v' + deprecated_display +  ')')
                 deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
                                     self.escape_for_markdown(meta['version_deprecated_explanation'], self.config.get('escape_chars', [])))
             else:
-                name_and_version += ' ' + self.italic('(v' + version_display + ')')
+                name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
         elif 'version_deprecated' in meta:
             deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
-            name_and_version += ' ' + self.italic('(deprecated v' + deprecated_display +  ')')
+            name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
             deprecated_descr =  ("Deprecated v" + deprecated_display + '+. ' +
                                  self.escape_for_markdown(meta['version_deprecated_explanation'],
                                                           self.config.get('escape_chars', [])))
@@ -187,7 +187,7 @@ class MarkdownGenerator(DocFormatter):
         if formatted_details['profile_purpose']:
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
-            formatted_details['descr'] += self.bold(formatted_details['profile_purpose'])
+            formatted_details['descr'] += self.formatter.bold(formatted_details['profile_purpose'])
 
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
@@ -195,7 +195,7 @@ class MarkdownGenerator(DocFormatter):
         if formatted_details['profile_purpose']:
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
-            formatted_details['descr'] += self.bold(formatted_details['profile_purpose'])
+            formatted_details['descr'] += self.formatter.bold(formatted_details['profile_purpose'])
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
@@ -210,14 +210,14 @@ class MarkdownGenerator(DocFormatter):
                     text_descr = 'See ' + prop_name + ' in Property Details, below, for the possible values of this property.'
                 else:
                     text_descr = 'See Property Details, below, for more information about this property.'
-                formatted_details['descr'] += ' ' + self.italic(text_descr)
+                formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
             if formatted_details['has_action_details']:
                 text_descr = 'For more information, see the Action Details section below.'
-                formatted_details['descr'] += ' ' + self.italic(text_descr)
+                formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
         if deprecated_descr:
-            formatted_details['descr'] += ' ' + self.italic(deprecated_descr)
+            formatted_details['descr'] += ' ' + self.formatter.italic(deprecated_descr)
 
         prop_type = formatted_details['prop_type']
         if has_enum:
@@ -256,9 +256,9 @@ class MarkdownGenerator(DocFormatter):
 
         if self.config.get('profile_mode'):
             if profile_access:
-                prop_type += '<br><br>' + self.italic(profile_access)
+                prop_type += '<br><br>' + self.formatter.italic(profile_access)
         elif prop_access:
-            prop_type += '<br><br>' + self.italic(prop_access)
+            prop_type += '<br><br>' + self.formatter.italic(prop_access)
 
 
         row = []
@@ -289,7 +289,7 @@ class MarkdownGenerator(DocFormatter):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
-        contents.append(self.head_three(prop_name + ':'))
+        contents.append(self.formatter.head_three(prop_name + ':', self.level))
 
         parent_version = meta.get('version')
         enum_meta = meta.get('enum', {})
@@ -311,7 +311,7 @@ class MarkdownGenerator(DocFormatter):
                                   + profile_recommended_values)
 
         if prop_description:
-            contents.append(self.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
+            contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
 
         if isinstance(prop_type, list):
             prop_type = ', '.join(prop_type)
@@ -340,26 +340,26 @@ class MarkdownGenerator(DocFormatter):
                     if 'version_deprecated' in enum_item_meta:
                         version_depr = enum_item_meta['version_deprecated']
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if enum_item_meta.get('version_deprecated_explanation'):
                             deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
                                                 enum_item_meta['version_deprecated_explanation'])
                     else:
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
                 else:
                     if 'version_deprecated' in enum_item_meta:
                         version_depr = enum_item_meta['version_deprecated']
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.italic('(deprecated v' + deprecated_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
                         if enum_item_meta.get('version_deprecated_explanation'):
                             deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
                                                 enum_item_meta['version_deprecated_explanation'])
                 descr = enum_details.get(enum_item, '')
                 if deprecated_descr:
                     if descr:
-                        descr += ' ' + self.italic(deprecated_descr)
+                        descr += ' ' + self.formatter.italic(deprecated_descr)
                     else:
-                        descr = self.italic(deprecated_descr)
+                        descr = self.formatter.italic(deprecated_descr)
 
                 if profile_mode:
                     profile_spec = ''
@@ -395,19 +395,19 @@ class MarkdownGenerator(DocFormatter):
                     if 'version_deprecated' in enum_item_meta:
                         version_depr = enum_item_meta['version_deprecated']
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if enum_item_meta.get('version_deprecated_explanation'):
                             deprecated_descr = ('Deprecated v' + deprecated_display + '+. ' +
                                                 enum_item_meta['version_deprecated_explanation'])
                     else:
-                        enum_name += ' ' + self.italic('(v' + version_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
                 else:
                     if 'version_deprecated' in enum_item_meta:
                         version_depr = enum_item_meta['version_deprecated']
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.italic('(deprecated v' + deprecated_display + ')')
+                        enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
                         if enum_item_meta.get('version_deprecated_explanation'):
-                            enum_name += ' ' + self.italic('Deprecated v' + deprecated_display + '+. ' +
+                            enum_name += ' ' + self.formatter.italic('Deprecated v' + deprecated_display + '+. ' +
                                                            enum_item_meta['version_deprecated_explanation'])
 
                 if profile_mode:
@@ -432,7 +432,7 @@ class MarkdownGenerator(DocFormatter):
         """Generate a formatted Actions section from supplemental markup."""
 
         contents = []
-        contents.append(self.head_three(action_details.get('action_name', prop_name)))
+        contents.append(self.formatter.head_three(action_details.get('action_name', prop_name), self.level))
         if action_details.get('text'):
             contents.append(action_details.get('text'))
         if action_details.get('example'):
@@ -452,8 +452,8 @@ class MarkdownGenerator(DocFormatter):
             prop_name_parts = prop_name.split('.')
             prop_name = prop_name_parts[-1]
 
-        formatted.append(self.head_four(prop_name))
-        formatted.append(self.para(prop_descr))
+        formatted.append(self.formatter.head_four(prop_name, self.level))
+        formatted.append(self.formatter.para(prop_descr))
 
         if action_parameters:
             rows = []
@@ -472,12 +472,12 @@ class MarkdownGenerator(DocFormatter):
             # Add a closing } row:
             rows.append('| ' + ' | '.join(['}', ' ',' ',' ']) + ' |')
 
-            formatted.append(self.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
+            formatted.append(self.formatter.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
 
             formatted.append('\n'.join(rows))
 
         else:
-            formatted.append(self.para("(This action takes no parameters.)"))
+            formatted.append(self.formatter.para("(This action takes no parameters.)"))
 
         return "\n".join(formatted)
 
@@ -493,20 +493,20 @@ class MarkdownGenerator(DocFormatter):
         if not read_req:
             read_req = 'Mandatory' # This is the default if nothing is specified.
         if read_only:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read-only)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read-only)'
         elif read_req == write_req:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read/Write)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read/Write)'
         elif not write_req:
-            profile_access = self.nobr(self.text_map(read_req)) + ' (Read)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read)'
         else:
             # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-            profile_access = (self.nobr(self.text_map(read_req)) + ' (Read),' +
-                              self.nobr(self.text_map(write_req)) + ' (Read/Write)')
+            profile_access = (self.formatter.nobr(self.text_map(read_req)) + ' (Read),' +
+                              self.formatter.nobr(self.text_map(write_req)) + ' (Read/Write)')
 
         if min_count:
             if profile_access:
                 profile_access += ", "
-            profile_access += self.nobr("Minimum " + str(min_count))
+            profile_access += self.formatter.nobr("Minimum " + str(min_count))
 
         return profile_access
 
@@ -514,12 +514,12 @@ class MarkdownGenerator(DocFormatter):
     def link_to_own_schema(self, schema_ref, schema_full_uri):
         """Format a reference to a schema."""
         result = super().link_to_own_schema(schema_ref, schema_full_uri)
-        return self.italic(result)
+        return self.formatter.italic(result)
 
 
     def link_to_outside_schema(self, schema_full_uri):
         """Format a reference to a schema_uri, which should be a valid URI"""
-        return self.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
+        return self.formatter.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
 
 
     def emit(self):
@@ -544,14 +544,14 @@ class MarkdownGenerator(DocFormatter):
             if section.get('profile_conditional_details'):
                 # sort them now; these can be sub-properties so may not be in alpha order.
                 conditional_details = '\n'.join(sorted(section['profile_conditional_details'], key=str.lower))
-                contents.append('\n' + self.head_two('Conditional Requirements'))
+                contents.append('\n' + self.formatter.head_two('Conditional Requirements', self.level))
                 contents.append(conditional_details)
 
             if len(section.get('action_details', [])):
-                contents.append('\n' + self.head_two('Action Details'))
+                contents.append('\n' + self.formatter.head_two('Action Details', self.level))
                 contents.append('\n\n'.join(section.get('action_details')))
             if section.get('property_details'):
-                contents.append('\n' + self.head_two('Property Details'))
+                contents.append('\n' + self.formatter.head_two('Property Details', self.level))
                 contents.append('\n'.join(section['property_details']))
 
         self.sections = []
@@ -561,15 +561,15 @@ class MarkdownGenerator(DocFormatter):
             contents.append(section.get('heading'))
             contents.append(section.get('requirement'))
             if section.get('description'):
-                contents.append(self.para(section['description']))
+                contents.append(self.formatter.para(section['description']))
             if section.get('messages'):
-                contents.append(self.head_two('Messages'))
-                message_rows = [self.make_row(x) for x in section['messages']]
+                contents.append(self.formatter.head_two('Messages', self.level))
+                message_rows = [self.formatter.make_row(x) for x in section['messages']]
                 header_cells = ['', 'Requirement']
                 if self.config.get('profile_mode') != 'terse':
                     header_cells.append('Description')
-                header_row = self.make_row(header_cells)
-                contents.append(self.make_table(message_rows, [header_row], 'messages'))
+                header_row = self.formatter.make_row(header_cells)
+                contents.append(self.formatter.make_table(message_rows, [header_row], 'messages'))
                 contents.append('\n')
 
         return '\n'.join(contents)
@@ -665,7 +665,7 @@ search: true
     def add_section(self, text, link_id=False):
         """ Add a top-level heading """
         self.this_section = {'head': text,
-                             'heading': '\n' + self.head_one(text),
+                             'heading': '\n' + self.formatter.head_one(text, self.level),
                              'properties': [],
                              'property_details': []
                             }
@@ -724,7 +724,7 @@ search: true
             if reg.get('current_release', reg['minversion']) != reg['minversion']:
                 heading += ' (current release: v' + reg['current_release'] + ')'
 
-            this_section['heading'] = self.head_one(heading)
+            this_section['heading'] = self.formatter.head_one(heading, self.level)
             this_section['requirement'] = 'Requirement: ' + reg.get('profile_requirement', '')
 
             msgs = reg.get('Messages', {})
@@ -743,67 +743,9 @@ search: true
             self.registry_sections.append(this_section)
 
 
-
-    def head_one(self, text, anchor_id=None):
-        """Add a top-level heading, relative to the generator's level"""
-        add_level = '' + '#' * self.level
-        return add_level + '# ' + text + "\n"
-
-    def head_two(self, text, anchor_id=None):
-        """Add a second-level heading, relative to the generator's level"""
-        add_level = '' + '#' * self.level
-        return add_level + '## ' + text + "\n"
-
-    def head_three(self, text, anchor_id=None):
-        """Add a third-level heading, relative to the generator's level"""
-        add_level = '' + '#' * self.level
-        return add_level + '### ' + text + "\n"
-
-    def head_four(self, text, anchor_id=None):
-        """Add a fourth-level heading, relative to the generator's level"""
-        add_level = '' + '#' * self.level
-        return add_level + '##### ' + text + "\n"
-
-    def para(self, text):
-        """Add a paragraph of text. Doesn't actually test for paragraph breaks within text"""
-        return "\n" + text + "\n"
-
     @staticmethod
     def escape_for_markdown(text, chars):
         """Escape selected characters in text to prevent auto-formatting in markdown."""
         for char in chars:
             text = text.replace(char, '\\' + char)
         return text
-
-    @staticmethod
-    def bold(text):
-        """Apply bold to text"""
-        return '**' + text + '**'
-
-    @staticmethod
-    def italic(text):
-        """Apply italic to text"""
-        return '*' + text + '*'
-
-
-    def make_row(self, cells):
-        row = '| ' + ' | '.join(cells) + ' |'
-        return row
-
-    def make_header_row(self, cells):
-        return self.make_row(cells)
-
-    def _make_separator_row(self, num):
-        return self.make_row(['---' for x in range(0, num)])
-
-
-    def make_table(self, rows, header_rows=None, css_class=None):
-
-        # Get the number of cells from the first row.
-        firstrow = rows[0]
-        numcells = firstrow.count(' | ') + 1
-        if not header_rows:
-            header_rows = [ self.make_header_row(['   ' for x in range(0, numcells)]) ]
-        header_rows.append(self._make_separator_row(numcells))
-
-        return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
