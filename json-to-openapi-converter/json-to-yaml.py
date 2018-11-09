@@ -42,7 +42,7 @@ CONFIG_DEF_ODATA_SCHEMA_LOC = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.y
 CONFIG_DEF_OUT_FILE = "openapi.yaml"
 CONFIG_DEF_EXTENSIONS = {}
 
-class JSONToYAML():
+class JSONToYAML:
     """
     Class for managing translation data and processing
 
@@ -67,7 +67,7 @@ class JSONToYAML():
         self.action_cache = {}
 
         # Initialize the caches if extending an existing definition
-        if base_file != None:
+        if base_file is not None:
             self.load_base_file( base_file, extensions )
 
         # Create the output directory (if needed)
@@ -88,7 +88,7 @@ class JSONToYAML():
                     print( "ERROR: Could not open {}".format( filename ) )
 
                 # Translate the JSON document
-                if json_data != None:
+                if json_data is not None:
                     # Cache URI and method information (if available)
                     self.check_for_uri_info( json_data, filename )
                     self.check_for_actions( json_data, filename )
@@ -129,15 +129,15 @@ class JSONToYAML():
         service_doc["paths"] = {}
         for uri in self.uri_cache:
             service_doc["paths"][uri] = {}
-            if self.uri_cache[uri]["action"] == False:
+            if not self.uri_cache[uri]["action"]:
                 #service_doc["paths"][uri]["head"] = self.generate_operation( uri, HEAD_RESPONSES )
                 service_doc["paths"][uri]["get"] = self.generate_operation( uri, GET_RESPONSES )
-                if self.uri_cache[uri]["insertable"] == True:
+                if self.uri_cache[uri]["insertable"]:
                     service_doc["paths"][uri]["post"] = self.generate_operation( uri, CREATE_RESPONSES, True )
-                if self.uri_cache[uri]["updatable"] == True:
+                if self.uri_cache[uri]["updatable"]:
                     service_doc["paths"][uri]["patch"] = self.generate_operation( uri, PATCH_RESPONSES )
                     service_doc["paths"][uri]["put"] = self.generate_operation( uri, PUT_RESPONSES )
-                if self.uri_cache[uri]["deletable"] == True:
+                if self.uri_cache[uri]["deletable"]:
                     service_doc["paths"][uri]["delete"] = self.generate_operation( uri, DELETE_RESPONSES )
             else:
                 service_doc["paths"][uri]["post"] = self.generate_operation( uri, ACTION_RESPONSES, True )
@@ -474,7 +474,7 @@ class JSONToYAML():
 
         # Build the parameters for the operation
         parameters = self.generate_parameters( uri )
-        if parameters != None:
+        if parameters is not None:
             operation["parameters"] = parameters
 
         # Build the request body for the operation
@@ -485,7 +485,7 @@ class JSONToYAML():
         operation["responses"] = {}
         for response in responses:
             operation["responses"][str( response )] = self.generate_response( uri, response )
-        operation["responses"]["default"] = self.generate_response( uri, None )
+        operation["responses"]["default"] = self.generate_response( uri, 500 )
 
         return operation
 
@@ -525,7 +525,7 @@ class JSONToYAML():
         if http_status == 200:
             # 200 OK: Resource is returned
             response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1] )
-            if self.uri_cache[uri]["action"] == False:
+            if not self.uri_cache[uri]["action"]:
                 response["content"] = content_resource
             else:
                 response["content"] = content_error
@@ -536,7 +536,7 @@ class JSONToYAML():
         elif http_status == 202:
             # 202 Accepted: Task is returned
             response["description"] = "Accepted; a Task has been generated"
-            if content_task != None:
+            if content_task is not None:
                 response["content"] = content_task
         elif http_status == 204:
             # 204 No Content: Nothing is returned
