@@ -950,6 +950,10 @@ class CSDLToJSON:
             if term == "OData.AutoExpand":
                 json_type_def["autoExpand"] = True
 
+            # Type Filter
+            if term == "Redfish.Filter":
+                json_type_def["filter"] = self.get_attrib( annotation, "String" )
+
         # Add version info
         self.add_version_details( type_info, namespace, json_type_def )
 
