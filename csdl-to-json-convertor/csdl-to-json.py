@@ -151,6 +151,7 @@ class CSDLToJSON:
             self.json_out[namespace]["copyright"] = self.copyright
             self.json_out[namespace]["definitions"] = {}
             self.json_out[namespace]["title"] = "#" + namespace
+            self.json_out[namespace]["$id"] = self.location + namespace + ".json"
             self.errors[namespace] = False
 
     def process( self ):

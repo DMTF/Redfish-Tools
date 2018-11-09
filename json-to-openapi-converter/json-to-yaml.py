@@ -96,6 +96,7 @@ class JSONToYAML:
                     # Remove top level $schema and $ref
                     json_data.pop( "$schema", None )
                     json_data.pop( "$ref", None )
+                    json_data.pop( "$id", None )
 
                     # Replace top level copyright and definitions
                     if "copyright" in json_data:
