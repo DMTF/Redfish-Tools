@@ -20,7 +20,8 @@ import sys
 import yaml
 
 # List of terms that have a simple one to one conversion
-ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDescriptions", "enumDeprecated", "units", "requiredOnCreate", "owningEntity", "autoExpand" ]
+ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDescriptions", "enumDeprecated", "enumVersionDeprecated", "enumVersionAdded",
+                             "units", "requiredOnCreate", "owningEntity", "autoExpand", "release", "versionDeprecated", "versionAdded" ]
 
 # List of terms that are removed from the file
 REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter" ]
