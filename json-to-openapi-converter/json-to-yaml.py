@@ -24,7 +24,7 @@ ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDes
                              "units", "requiredOnCreate", "owningEntity", "autoExpand", "release", "versionDeprecated", "versionAdded", "filter" ]
 
 # List of terms that are removed from the file
-REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter" ]
+REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter", "actionResponse" ]
 
 # Responses allowed
 HEAD_RESPONSES = [ 204 ]
@@ -189,6 +189,7 @@ class JSONToYAML:
             else:
                 # This is an action
                 reference = yaml_data["paths"][uri]["post"]["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+                response = yaml_data["paths"][uri]["post"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
                 action = "#" + uri.rsplit( "/" )[-1]
                 yaml_file = re.search( "([A-Za-z0-9]+\.v\d_\d_\d\.yaml)", reference ).group( 1 )
 
@@ -196,6 +197,7 @@ class JSONToYAML:
                     self.action_cache[yaml_file] = {}
                 self.action_cache[yaml_file][action] = {}
                 self.action_cache[yaml_file][action]["reference"] = "#" + reference.rsplit( "#" )[-1]
+                self.action_cache[yaml_file][action]["actionResponse"] = response
 
     def check_for_uri_info( self, json_data, filename ):
         """
@@ -255,6 +257,7 @@ class JSONToYAML:
                         self.uri_cache[uri]["updatable"] = updatable
                         self.uri_cache[uri]["deletable"] = deletable
                         self.uri_cache[uri]["action"] = False
+                        self.uri_cache[uri]["actionResponse"] = None
                         self.uri_cache[uri]["type"] = def_name
                         self.uri_cache[uri]["reference"] = reference
                         self.uri_cache[uri]["requestBody"] = request_body
@@ -312,6 +315,11 @@ class JSONToYAML:
                     self.action_cache[yaml_file] = {}
                 self.action_cache[yaml_file][action] = {}
                 self.action_cache[yaml_file][action]["reference"] = "#/components/schemas/" + action_def + "RequestBody"
+                if "actionResponse" in json_data["definitions"][action_def]:
+                    self.action_cache[yaml_file][action]["actionResponse"] = json_data["definitions"][action_def]["actionResponse"]["$ref"]
+                else:
+                    self.action_cache[yaml_file][action]["actionResponse"] = None
+
         except:
             print( "ERROR: Malformed action found in {}".format( filename ) )
 
@@ -330,6 +338,9 @@ class JSONToYAML:
                         action_uri_cache[action_uri] = {}
                         action_uri_cache[action_uri]["reference"] = action_reference + self.action_cache[action_filename][action]["reference"]
                         action_uri_cache[action_uri]["requestBody"] = action_reference + self.action_cache[action_filename][action]["reference"]
+                        action_uri_cache[action_uri]["actionResponse"] = None
+                        if self.action_cache[action_filename][action]["actionResponse"] is not None:
+                            action_uri_cache[action_uri]["actionResponse"] = action_reference + self.action_cache[action_filename][action]["actionResponse"]
                         action_uri_cache[action_uri]["insertable"] = False
                         action_uri_cache[action_uri]["updatable"] = False
                         action_uri_cache[action_uri]["deletable"] = False
@@ -521,15 +532,20 @@ class JSONToYAML:
         content_created = { "application/json": { "schema": { "$ref": self.uri_cache[uri]["requestBody"] } } }
         content_task = { "application/json": { "schema": { "$ref": self.task_ref } } }
         content_error = { "application/json": { "schema": { "$ref": "#/components/schemas/RedfishError" } } }
+        content_action_response = { "application/json": { "schema": { "$ref": self.uri_cache[uri]["actionResponse"] } } }
 
         # Build the response descriptor based on the HTTP status code
         if http_status == 200:
             # 200 OK: Resource is returned
-            response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1] )
             if not self.uri_cache[uri]["action"]:
+                response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1] )
                 response["content"] = content_resource
             else:
-                response["content"] = content_error
+                response["description"] = "The response contains the results of the {} action".format( uri.rsplit( "." )[-1] )
+                if self.uri_cache[uri]["actionResponse"] is not None:
+                    response["content"] = content_action_response
+                else:
+                    response["content"] = content_error
         elif http_status == 201:
             # 201 Created: Resource is returned
             response["description"] = "A resource of type {} has been created".format( self.uri_cache[uri]["requestBody"].rsplit( "/" )[-1] )

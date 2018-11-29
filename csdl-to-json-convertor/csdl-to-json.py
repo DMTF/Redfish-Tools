@@ -52,6 +52,7 @@ ODATA_TAG_RECORD = "{http://docs.oasis-open.org/odata/ns/edm}Record"
 ODATA_TAG_PROP_VAL = "{http://docs.oasis-open.org/odata/ns/edm}PropertyValue"
 ODATA_TAG_COLLECTION = "{http://docs.oasis-open.org/odata/ns/edm}Collection"
 ODATA_TAG_STRING = "{http://docs.oasis-open.org/odata/ns/edm}String"
+ODATA_TAG_RETURN = "{http://docs.oasis-open.org/odata/ns/edm}ReturnType"
 
 class CSDLToJSON:
     """
@@ -467,6 +468,10 @@ class CSDLToJSON:
                 else:
                     self.generate_parameter( child, namespace, json_def[name] )
 
+            # Process action return payloads
+            if child.tag == ODATA_TAG_RETURN:
+                self.generate_action_response( child, namespace, json_def[name] )
+
         # Add OData specific properties
         self.generate_odata_properties( object, json_def[name] )
 
@@ -744,8 +749,8 @@ class CSDLToJSON:
 
         Args:
             property: The Property or NavigationProperty to process
-            namespace: The namespace where the property was found
             json_obj_def: The JSON object definition to place the property
+            namespace: The namespace where the property was found
         """
 
         # Pull out property info
@@ -793,8 +798,8 @@ class CSDLToJSON:
 
         Args:
             parameter: The Parameter to process
-            namespace: The namespace string where the parameter was found
             json_obj_def: The JSON object definition to place the property
+            namespace: The namespace string where the parameter was found
         """
 
         # Check if this action applies to the namespace under process
@@ -813,6 +818,29 @@ class CSDLToJSON:
 
         # Add the common type info
         self.add_type_info( parameter, namespace, param_type, is_array, json_obj_def["parameters"][param_name] )
+
+    def generate_action_response( self, return_type, namespace, json_obj_def ):
+        """
+        Processes a ReturnType and adds it to the JSON object definition for an action response
+
+        Args:
+            return_type: The ReturnType to process
+            json_obj_def: The JSON object definition to place the property
+            namespace: The namespace string where the parameter was found
+        """
+
+        # Pull out the return type info
+        response_type = self.get_attrib( return_type, "Type" )
+        json_obj_def["actionResponse"] = {}
+
+        # Determine if this is an array
+        # Note: For how we model things today, this should never be the case; this should always map to a singular ComplexType
+        is_array = response_type.startswith( "Collection(" )
+        if is_array:
+            response_type = response_type[11:-1]
+
+        # Add the common type info
+        self.add_type_info( return_type, namespace, response_type, is_array, json_obj_def["actionResponse"] )
 
     def generate_odata_properties( self, object, json_obj_def ):
         """
