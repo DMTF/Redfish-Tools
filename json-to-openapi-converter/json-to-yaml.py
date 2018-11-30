@@ -21,7 +21,8 @@ import yaml
 
 # List of terms that have a simple one to one conversion
 ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDescriptions", "enumDeprecated", "enumVersionDeprecated", "enumVersionAdded",
-                             "units", "requiredOnCreate", "owningEntity", "autoExpand", "release", "versionDeprecated", "versionAdded", "filter" ]
+                             "units", "requiredOnCreate", "owningEntity", "autoExpand", "release", "versionDeprecated", "versionAdded", "filter",
+                             "excerpt", "excerptCopy", "excerptCopyOnly" ]
 
 # List of terms that are removed from the file
 REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter", "actionResponse" ]
@@ -444,29 +445,45 @@ class JSONToYAML:
             An object containing the definition of the Redfish Error payload
         """
         redfish_error = {
+            "description": "Contains an error payload from a Redfish Service.",
+            "x-longDescription": "This type, as described by the Redfish Specification, shall contain an error payload from a Redfish Service.",
             "type": "object",
             "properties": {
                 "error": {
+                    "description": "Contains properties used to describe an error from a Redfish Service.",
+                    "x-longDescription": "This property, as described by the Redfish Specification, shall contain properties used to describe an error from a Redfish Service.",
                     "type": "object",
                     "properties": {
                         "code": {
-                            "type": "string",
-                            "description": "A string indicating a specific MessageId from the message registry."
+                            "description": "A string indicating a specific MessageId from the message registry.",
+                            "x-longDescription": "This property shall be a string indicating a specific MessageId from the message registry.",
+                            "readOnly": True,
+                            "type": "string"
                         },
                         "message": {
-                            "type": "string",
-                            "description": "A human-readable error message corresponding to the message in the message registry."
+                            "description": "A human-readable error message corresponding to the message in the message registry.",
+                            "x-longDescription": "This property shall be a human-readable error message corresponding to the message in the message registry.",
+                            "readOnly": True,
+                            "type": "string"
                         },
                         "@Message.ExtendedInfo": {
-                            "type": "array",
                             "description": "An array of message objects describing one or more error message(s).",
+                            "x-longDescription": "This property shall be an array of message objects describing one or more error message(s).",
+                            "type": "array",
                             "items": {
                                 "$ref": self.message_ref
                             }
                         }
-                    }
+                    },
+                    "required": [
+                        "code",
+                        "message"
+                    ]
                 }
-            }
+            },
+            "required": [
+                "error"
+            ]
         }
         return redfish_error
 
