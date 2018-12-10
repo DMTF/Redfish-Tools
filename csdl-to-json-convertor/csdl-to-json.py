@@ -906,30 +906,6 @@ class CSDLToJSON:
             if self.get_attrib( type_info, "Nullable", False, "true" ) == "false":
                 is_nullable = False
 
-        # Convert the type as needed; some types will force a format, pattern, or reference
-        json_type, ref, pattern, format = self.csdl_type_to_json_type( type, is_nullable )
-        if pattern is not None:
-            json_type_def["pattern"] = pattern
-        if format is not None:
-            json_type_def["format"] = format
-
-        # Set up the type and reference accordingly
-        if is_array:
-            json_type_def["type"] = "array"
-            if ref is None:
-                json_type_def["items"] = { "type": json_type }
-            elif ( not is_nullable ) and ( ref is not None ):
-                json_type_def["items"] = { "$ref": ref }
-            else:
-                json_type_def["items"] = { "anyOf": [ { "$ref": ref }, { "type": "null" } ] }
-        else:
-            if ref is None:
-                json_type_def["type"] = json_type
-            elif ( not is_nullable ) and ( ref is not None ):
-                json_type_def["$ref"] = ref
-            else:
-                json_type_def["anyOf"] = [ { "$ref": ref }, { "type": "null" } ]
-
         # Loop through the annotations and add other definitions as needed
         for annotation in type_info.iter( ODATA_TAG_ANNOTATION ):
             term = self.get_attrib( annotation, "Term" )
@@ -994,6 +970,33 @@ class CSDLToJSON:
             # Excerpt Copy
             if term == "Redfish.ExcerptCopy":
                 json_type_def["excerptCopy"] = type.split( "." )[0] + self.get_attrib( annotation, "String", False, "" )
+
+        # Convert the type as needed; some types will force a format, pattern, or reference
+        json_type, ref, pattern, format = self.csdl_type_to_json_type( type, is_nullable )
+        if pattern is not None:
+            json_type_def["pattern"] = pattern
+        if format is not None:
+            json_type_def["format"] = format
+        if ( ref is not None ) and ( "excerptCopy" in json_type_def ):
+            # Update the reference to point to the excerpt copy
+            ref = ref.rsplit( "/", 1 )[0] + "/" + json_type_def["excerptCopy"]
+
+        # Set up the type and reference accordingly
+        if is_array:
+            json_type_def["type"] = "array"
+            if ref is None:
+                json_type_def["items"] = { "type": json_type }
+            elif ( not is_nullable ) and ( ref is not None ):
+                json_type_def["items"] = { "$ref": ref }
+            else:
+                json_type_def["items"] = { "anyOf": [ { "$ref": ref }, { "type": "null" } ] }
+        else:
+            if ref is None:
+                json_type_def["type"] = json_type
+            elif ( not is_nullable ) and ( ref is not None ):
+                json_type_def["$ref"] = ref
+            else:
+                json_type_def["anyOf"] = [ { "$ref": ref }, { "type": "null" } ]
 
         # Add version info
         self.add_version_details( type_info, namespace, json_type_def )
