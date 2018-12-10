@@ -934,15 +934,15 @@ class CSDLToJSON:
         for annotation in type_info.iter( ODATA_TAG_ANNOTATION ):
             term = self.get_attrib( annotation, "Term" )
 
-            # Type Description
+            # Description
             if term == "OData.Description":
                 json_type_def["description"] = self.get_attrib( annotation, "String" )
 
-            # Type Long Description
+            # Long Description
             if term == "OData.LongDescription":
                 json_type_def["longDescription"] = self.get_attrib( annotation, "String" )
 
-            # Type Permissions
+            # Permissions
             if term == "OData.Permissions":
                 permissions = self.get_attrib( annotation, "EnumMember" )
                 if ( permissions == "OData.Permission/Read" ) or ( permissions == "OData.Permissions/Read" ):
@@ -950,38 +950,50 @@ class CSDLToJSON:
                 else:
                     json_type_def["readonly"] = False
 
-            # Type Format
+            # Format
             if term == "OData.IsURL":
                 if self.get_attrib( annotation, "Bool", False, "true" ) == "true":
                     json_type_def["format"] = "uri"
 
-            # Type Units
+            # Units
             if term == "Measures.Unit":
                 json_type_def["units"] = self.get_attrib( annotation, "String" )
 
-            # Type Minimum
+            # Minimum
             if term == "Validation.Minimum":
                 json_type_def["minimum"] = int( self.get_attrib( annotation, "Int" ) )
 
-            # Type Maximum
+            # Maximum
             if term == "Validation.Maximum":
                 json_type_def["maximum"] = int( self.get_attrib( annotation, "Int" ) )
 
-            # Type Pattern
+            # Pattern
             if term == "Validation.Pattern":
                 json_type_def["pattern"] = self.get_attrib( annotation, "String" )
 
-            # Type Deprecated
+            # Deprecated
             if term == "Redfish.Deprecated":
                 json_type_def["deprecated"] = self.get_attrib( annotation, "String" )
 
-            # Type Auto Expand
+            # Auto Expand
             if term == "OData.AutoExpand":
                 json_type_def["autoExpand"] = True
 
-            # Type Filter
+            # Filter
             if term == "Redfish.Filter":
                 json_type_def["filter"] = self.get_attrib( annotation, "String" )
+
+            # Excerpt Copy Only
+            if term == "Redfish.ExcerptCopyOnly":
+                json_type_def["excerptCopyOnly"] = True
+
+            # Excerpt
+            if term == "Redfish.Excerpt":
+                json_type_def["excerpt"] = self.namespace_under_process.split( "." )[0] + self.get_attrib( annotation, "String", False, "" )
+
+            # Excerpt Copy
+            if term == "Redfish.ExcerptCopy":
+                json_type_def["excerptCopy"] = type.split( "." )[0] + self.get_attrib( annotation, "String", False, "" )
 
         # Add version info
         self.add_version_details( type_info, namespace, json_type_def )
