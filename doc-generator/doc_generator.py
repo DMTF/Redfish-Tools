@@ -319,6 +319,10 @@ class DocGenerator:
             latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
             latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
             latest_data['_schema_name'] = latest_info.get('schema_name')
+
+            # If we have data in the unversioned file, we need to overlay that.
+            # We did this the same way for property_data. (Simplify?)
+            latest_data = self.apply_unversioned_data_file(normalized_uri, latest_data)
             schema_data[normalized_uri] = latest_data
 
         # Also process and version definitions in any "other" files. These are files without top-level $ref objects.
@@ -607,8 +611,8 @@ class DocGenerator:
     def apply_unversioned_data_file(self, ref, property_data):
         """ Overlay the unversioned data on this property_data.
 
-        This may include additions and updates, but properties not mentioned in the unversioned file
-        should be unaffected. """
+        Now applying additions only, at the definitions/prop_name level. So if a property is delineated in the versioned
+        file, it will not be updated here. """
 
         filename = self.schema_ref_to_filename[ref]
         normalized_uri = self.construct_uri_for_filename(filename)
@@ -631,7 +635,6 @@ class DocGenerator:
             # It will consist of an anyOf that led us to the versioned schemas.
             element_to_skip = ref[14:]
 
-
         if profile_mode:
             schema_profile = profile.get(normalized_uri)
             if not schema_profile:
@@ -644,7 +647,7 @@ class DocGenerator:
             property_data['definitions'] = {}
 
         for prop_name, prop_info in definitions.items():
-            if prop_name == element_to_skip:
+            if prop_name == element_to_skip or prop_name in property_data['definitions'].keys():
                 continue
             property_data['definitions'][prop_name] = prop_info
         meta['definitions'] = meta.get('definitions', {})
