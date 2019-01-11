@@ -882,7 +882,9 @@ class DocGenerator:
                     if enum_name not in meta[prop_name]['enum']:
                         meta[prop_name]['enum'][enum_name] = {}
                     enum_meta = meta[prop_name]['enum'][enum_name]
-                    if version and ('version' not in enum_meta) and (not workaround_errata_version):
+                    if (version and ('version' not in enum_meta)
+                        and (version != 'unversioned')
+                        and (not workaround_errata_version)):
                         enum_meta['version'] = version
 
                     if sup_enum_deprecations:
