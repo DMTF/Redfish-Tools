@@ -3275,11 +3275,12 @@ class TypeDefinition(Element, PrimitiveType):
         for annotation in self.annotation:
             terms.append(annotation.term)
 
-        if isinstance( element, Property ):
-            for annotation in element.annotation:
-                if annotation.term in terms:
-                    raise SchemaError("Term {} already applied to TypeDefinition".format(
-                        annotation.term))
+        # TODO: 4.01 removes this restriction; might want to consider finding a way of managing this if a schema is following 4.0
+        #if isinstance( element, Property ):
+        #    for annotation in element.annotation:
+        #        if annotation.term in terms:
+        #            raise SchemaError("Term {} already applied to TypeDefinition".format(
+        #                annotation.term))
 
     def check_scope(self):
         """Function for checking the scope of this element.
@@ -5221,9 +5222,9 @@ class DynamicExpression(Element):
                     raise SchemaError("Need only PropertyValues, provided {}".format(expression.name))
 
             self.target_term = None
-            if 'type' in self.raw_data.attrib:
-                self.used_attribs.append('type')
-                self.type = self.raw_data.attrib['type']
+            if 'Type' in self.raw_data.attrib:
+                self.used_attribs.append('Type')
+                self.type = self.raw_data.attrib['Type']
                 check_type(self.type, 'QualifiedName')
             else:
                 if (isinstance(self.parent, DynamicExpression) and
@@ -5427,6 +5428,9 @@ class DynamicExpression(Element):
                 term = self.find_in_scope(self.target_term)
                 self.type = term.type
 
+            if self.type is None:
+                # TODO: The type isn't explicitly called out; need to look backwards on how this Record is used to determine the correct type
+                return
             my_type = self.find_in_scope(self.type)
 
             if not (isinstance(my_type, EntityType) or isinstance(my_type, ComplexType)):

@@ -319,6 +319,10 @@ class DocGenerator:
             latest_data['_is_versioned_schema'] = latest_info.get('_is_versioned_schema')
             latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
             latest_data['_schema_name'] = latest_info.get('schema_name')
+
+            # If we have data in the unversioned file, we need to overlay that.
+            # We did this the same way for property_data. (Simplify?)
+            latest_data = self.apply_unversioned_data_file(normalized_uri, latest_data)
             schema_data[normalized_uri] = latest_data
 
         # Also process and version definitions in any "other" files. These are files without top-level $ref objects.
@@ -607,8 +611,8 @@ class DocGenerator:
     def apply_unversioned_data_file(self, ref, property_data):
         """ Overlay the unversioned data on this property_data.
 
-        This may include additions and updates, but properties not mentioned in the unversioned file
-        should be unaffected. """
+        Now applying additions only, at the definitions/prop_name level. So if a property is delineated in the versioned
+        file, it will not be updated here. """
 
         filename = self.schema_ref_to_filename[ref]
         normalized_uri = self.construct_uri_for_filename(filename)
@@ -631,7 +635,6 @@ class DocGenerator:
             # It will consist of an anyOf that led us to the versioned schemas.
             element_to_skip = ref[14:]
 
-
         if profile_mode:
             schema_profile = profile.get(normalized_uri)
             if not schema_profile:
@@ -644,7 +647,7 @@ class DocGenerator:
             property_data['definitions'] = {}
 
         for prop_name, prop_info in definitions.items():
-            if prop_name == element_to_skip:
+            if prop_name == element_to_skip or prop_name in property_data['definitions'].keys():
                 continue
             property_data['definitions'][prop_name] = prop_info
         meta['definitions'] = meta.get('definitions', {})
@@ -777,12 +780,11 @@ class DocGenerator:
                                             prop_ref = elt['$ref']
                                         if elt['$ref'].startswith('#'):
                                             prop_ref = this_schema + elt['$ref']
-                            if prop_ref:
-                                del(ref_properties[prop_name]['anyOf'])
 
                         if prop_ref:
                             child_ref = traverser.find_ref_data(prop_ref)
                             if child_ref and 'properties' in child_ref:
+                                del(ref_properties[prop_name]['anyOf']) # We're replacing this.
                                 child_ref_properties = child_ref['properties']
                                 meta[prop_name] = self.extend_metadata(meta[prop_name], child_ref_properties, this_version,
                                                                        this_ref + '/prop_name#properties')
@@ -880,7 +882,9 @@ class DocGenerator:
                     if enum_name not in meta[prop_name]['enum']:
                         meta[prop_name]['enum'][enum_name] = {}
                     enum_meta = meta[prop_name]['enum'][enum_name]
-                    if version and ('version' not in enum_meta) and (not workaround_errata_version):
+                    if (version and ('version' not in enum_meta)
+                        and (version != 'unversioned')
+                        and (not workaround_errata_version)):
                         enum_meta['version'] = version
 
                     if sup_enum_deprecations:

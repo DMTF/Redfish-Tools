@@ -3,3 +3,4 @@
 /csdl-to-json-convertor/csdl
 /*/__pycache__
 .DS_Store
+*.pyc
