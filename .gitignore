@@ -1,4 +1,6 @@
 /csdl-to-json-convertor/json
+/csdl-to-json-convertor/metadata
+/csdl-to-json-convertor/csdl
 /*/__pycache__
 .DS_Store
 *.pyc

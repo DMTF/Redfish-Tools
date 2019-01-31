@@ -13,6 +13,7 @@ Brief : This file contains the definitions and functionalities for converting
 """
 
 import argparse
+import copy
 import errno
 import json
 import os
@@ -29,8 +30,10 @@ CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 
 # Regex strings
-NAMESPACE_VER_REGEX = "^[a-zA-Z0-9]+\.v([0-9]+)_([0-9]+)_([0-9]+)$"
+VERSION_REGEX = "v([0-9]+)_([0-9]+)_([0-9]+)$"
 PATTERN_PROP_REGEX = "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_.]+$"
+DEFAULT_VER = "v1_0_0"
+DEFAULT_ATTRIB = "UNKNOWN_ATTRIB"
 
 # OData markup strings
 ODATA_TAG_REFERENCE = "{http://docs.oasis-open.org/odata/ns/edmx}Reference"
@@ -50,8 +53,9 @@ ODATA_TAG_RECORD = "{http://docs.oasis-open.org/odata/ns/edm}Record"
 ODATA_TAG_PROP_VAL = "{http://docs.oasis-open.org/odata/ns/edm}PropertyValue"
 ODATA_TAG_COLLECTION = "{http://docs.oasis-open.org/odata/ns/edm}Collection"
 ODATA_TAG_STRING = "{http://docs.oasis-open.org/odata/ns/edm}String"
+ODATA_TAG_RETURN = "{http://docs.oasis-open.org/odata/ns/edm}ReturnType"
 
-class CSDLToJSON():
+class CSDLToJSON:
     """
     Class for managing translation data and processing
 
@@ -149,6 +153,7 @@ class CSDLToJSON():
             self.json_out[namespace]["copyright"] = self.copyright
             self.json_out[namespace]["definitions"] = {}
             self.json_out[namespace]["title"] = "#" + namespace
+            self.json_out[namespace]["$id"] = self.location + namespace + ".json"
             self.errors[namespace] = False
 
     def process( self ):
@@ -164,6 +169,12 @@ class CSDLToJSON():
                 self.process_unversioned_namespace()
             else:
                 self.process_versioned_namespace()
+
+        # Find all of the excerpts and make additional definitions
+        for namespace in sorted( self.json_out ):
+            self.namespace_under_process = namespace
+            if not is_namespace_unversioned( namespace ):
+                self.process_excerpts()
 
     def process_unversioned_namespace( self ):
         """
@@ -196,14 +207,14 @@ class CSDLToJSON():
                         if is_abstract:
                             self.generate_abstract_object( child, self.json_out[self.namespace_under_process]["definitions"] )
                         else:
-                            self.generate_object( child, self.json_out[self.namespace_under_process]["definitions"] )
+                            self.generate_object( child, namespace, self.json_out[self.namespace_under_process]["definitions"] )
                         self.generate_capabilities( child, self.json_out[self.namespace_under_process]["definitions"] )
 
-                    # Process EnumType definitions if defined in versioned namespaces
+                    # Process EnumType definitions
                     if child.tag == ODATA_TAG_ENUM:
                         self.generate_enum( child, self.json_out[self.namespace_under_process]["definitions"] )
 
-                    # Process TypeDefinition definitions if the defined in versioned namespaces
+                    # Process TypeDefinition definitions
                     if child.tag == ODATA_TAG_TYPE_DEF:
                         self.generate_typedef( child, self.json_out[self.namespace_under_process]["definitions"] )
 
@@ -215,6 +226,10 @@ class CSDLToJSON():
                         if term == "Redfish.OwningEntity":
                             self.json_out[self.namespace_under_process]["owningEntity"] = self.get_attrib( child, "String" )
 
+                        # Release
+                        if term == "Redfish.Release":
+                            self.json_out[self.namespace_under_process]["release"] = self.get_attrib( child, "String" )
+
     def process_versioned_namespace( self ):
         """
         Adds the definitions to the JSON output for a versioned namespace
@@ -224,7 +239,7 @@ class CSDLToJSON():
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
             # Check if the namespace applies based on its version number
             namespace = self.get_attrib( schema, "Namespace" )
-            if does_namespace_apply( namespace, self.namespace_under_process ):
+            if does_version_apply( namespace, self.namespace_under_process ):
                 for child in schema:
                     # Set up the top level title and $ref properties if needed
                     if child.tag == ODATA_TAG_ENTITY:
@@ -236,8 +251,8 @@ class CSDLToJSON():
 
                     # Process EntityType and ComplexType definitions
                     if ( child.tag == ODATA_TAG_ENTITY ) or ( child.tag == ODATA_TAG_COMPLEX ):
-                        if is_namespace_unversioned( namespace ) == False:
-                            self.generate_object( child, self.json_out[self.namespace_under_process]["definitions"] )
+                        if not is_namespace_unversioned( namespace ):
+                            self.generate_object( child, namespace, self.json_out[self.namespace_under_process]["definitions"] )
 
                     # Process Action definitions
                     if child.tag == ODATA_TAG_ACTION:
@@ -245,12 +260,12 @@ class CSDLToJSON():
 
                     # Process EnumType definitions if defined in versioned namespaces
                     if child.tag == ODATA_TAG_ENUM:
-                        #if is_namespace_unversioned( namespace ) == False:
-                        self.generate_enum( child, self.json_out[self.namespace_under_process]["definitions"] )
+                        if not is_namespace_unversioned( namespace ):
+                            self.generate_enum( child, self.json_out[self.namespace_under_process]["definitions"] )
 
                     # Process TypeDefinition definitions if the defined in versioned namespaces
                     if child.tag == ODATA_TAG_TYPE_DEF:
-                        if is_namespace_unversioned( namespace ) == False:
+                        if not is_namespace_unversioned( namespace ):
                             self.generate_typedef( child, self.json_out[self.namespace_under_process]["definitions"] )
 
                     # Process top level annotations
@@ -260,6 +275,82 @@ class CSDLToJSON():
                         # Owning Entity
                         if term == "Redfish.OwningEntity":
                             self.json_out[self.namespace_under_process]["owningEntity"] = self.get_attrib( child, "String" )
+
+                        # Release
+                        if term == "Redfish.Release":
+                            # Only add if the major and minor versions are the same
+                            if not is_namespace_unversioned( namespace ):
+                                version1 = get_version_details( namespace )
+                                version2 = get_version_details( self.namespace_under_process )
+                                if version1[0] == version2[0] and version1[1] == version2[1]:
+                                    self.json_out[self.namespace_under_process]["release"] = self.get_attrib( child, "String" )
+
+    def process_excerpts( self ):
+        """
+        Adds the excerpt definitions to the JSON output
+        """
+
+        base_name = self.namespace_under_process.split( "." )[0]
+        if base_name not in self.json_out[self.namespace_under_process]["definitions"]:
+            # Nothing to process; this file likely does not contain a resource definition
+            return
+        base_def = self.json_out[self.namespace_under_process]["definitions"][base_name]
+        excerpt_list = [ base_name ]
+
+        # Check to see if we need to make an excerpt definition
+        count = 0
+        for prop_name, prop in base_def["properties"].items():
+            if "excerpt" in prop:
+                count = count + 1
+                if prop["excerpt"] not in excerpt_list:
+                    excerpt_list.append( prop["excerpt"] )
+            if "excerptCopyOnly" in prop:
+                count = count + 1
+        if count == 1:
+            # Exactly 1 excerpt; this happens if only the Name property is an excerpt
+            # Do not make an excerpt definition for this
+            base_def["properties"]["Name"].pop( "excerpt" )
+            return
+        elif count < 1:
+            # No excerpts at all
+            return
+
+        # Create an excerpt definition for each type of excerpt found
+        for excerpt in excerpt_list:
+            excerpt_name = excerpt + "Excerpt"
+            self.json_out[self.namespace_under_process]["definitions"][excerpt_name] = copy.deepcopy( base_def )
+            excerpt_def = self.json_out[self.namespace_under_process]["definitions"][excerpt_name]
+            excerpt_def["excerpt"] = excerpt
+
+            # Strip out properties that do not apply
+            remove_list = []
+            for prop_name, prop in excerpt_def["properties"].items():
+                if "excerpt" in prop:
+                    if ( prop["excerpt"] != excerpt ) and ( prop["excerpt"] != base_name ):
+                        remove_list.append( prop_name )
+                elif "excerptCopyOnly" not in prop:
+                    remove_list.append( prop_name )
+            for prop_name in remove_list:
+                excerpt_def["properties"].pop( prop_name )
+                if "required" in excerpt_def:
+                    if prop_name in excerpt_def["required"]:
+                        excerpt_def["required"].remove( prop_name )
+                if "requiredOnCreate" in excerpt_def:
+                    if prop_name in excerpt_def["requiredOnCreate"]:
+                        excerpt_def["requiredOnCreate"].remove( prop_name )
+
+            # Add the definition to the unversioned namespace
+            if excerpt_name not in self.json_out[base_name]["definitions"]:
+                self.json_out[base_name]["definitions"][excerpt_name] = { "anyOf": [] }
+            self.json_out[base_name]["definitions"][excerpt_name]["anyOf"].append( { "$ref": self.location + self.namespace_under_process + ".json#/definitions/" + excerpt_name } )
+
+        # Remove any excerpt copy only properties from the base definition
+        remove_list = []
+        for prop_name, prop in base_def["properties"].items():
+            if "excerptCopyOnly" in prop:
+                remove_list.append( prop_name )
+        for prop_name in remove_list:
+            base_def["properties"].pop( prop_name )
 
     def generate_capabilities( self, object, json_def ):
         """
@@ -342,18 +433,18 @@ class CSDLToJSON():
                     for child in schema:
                         if child.tag == object.tag:
                             if self.get_attrib( child, "Name" ) == name:
-                                if oldest_version == None:
+                                if oldest_version is None:
                                     oldest_version = namespace
                                 else:
-                                    if does_namespace_apply( oldest_version, namespace ) == False:
+                                    if not does_version_apply( oldest_version, namespace ):
                                         oldest_version = namespace
 
             # Based on the oldest version, add the mapping for all namespaces
-            if oldest_version != None:
+            if oldest_version is not None:
                 for schema in self.root.iter( ODATA_TAG_SCHEMA ):
                     namespace = self.get_attrib( schema, "Namespace" )
                     if namespace != self.namespace_under_process:
-                        if does_namespace_apply( oldest_version, namespace ):
+                        if does_version_apply( oldest_version, namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
@@ -369,18 +460,19 @@ class CSDLToJSON():
                 if term == "OData.LongDescription":
                     json_def[name]["longDescription"] = self.get_attrib( child, "String" )
 
-    def generate_object( self, object, json_def, name = None ):
+    def generate_object( self, object, namespace, json_def, name = None ):
         """
         Processes an EntityType or ComplexType to generate the JSON definition structure
 
         Args:
             object: The EntityType or ComplexType to process
+            namespace: The namespace string where the object was found
             json_def: The JSON Definitions body to populate
             name: The name of the object to populate
         """
 
         # If the name isn't given, pull it from the object
-        if name == None:
+        if name is None:
             name = self.get_attrib( object, "Name" )
 
         # Add the object to the definitions body if this is a new instance
@@ -430,25 +522,29 @@ class CSDLToJSON():
                                     is_nullable = True
 
                         # If it's properly defined, add it to the pattern properties for the object
-                        if ( pattern_prop != None ) and ( type != None ):
+                        if ( pattern_prop is not None ) and ( type is not None ):
                             json_def[name]["patternProperties"][pattern_prop] = {}
                             json_type, ref, pattern, format = self.csdl_type_to_json_type( type, is_nullable )
-                            if ref == None:
+                            if ref is None:
                                 json_def[name]["patternProperties"][pattern_prop]["type"] = json_type
                             else:
                                 json_def[name]["patternProperties"][pattern_prop]["$ref"] = ref
 
             # Process properties and navigation properties
             if ( child.tag == ODATA_TAG_PROPERTY ) or ( child.tag == ODATA_TAG_NAV_PROPERTY ):
-                self.generate_property( child, json_def[name] )
+                self.generate_property( child, json_def[name], namespace )
 
             # Process action parameters
             if child.tag == ODATA_TAG_PARAMETER:
                 # Filter out the first parameter; this is the binding parameter, which does not get translated to JSON
-                if first_parameter == True:
+                if first_parameter:
                     first_parameter = False
                 else:
-                    self.generate_parameter( child, json_def[name] )
+                    self.generate_parameter( child, namespace, json_def[name] )
+
+            # Process action return payloads
+            if child.tag == ODATA_TAG_RETURN:
+                self.generate_action_response( child, namespace, json_def[name] )
 
         # Add OData specific properties
         self.generate_odata_properties( object, json_def[name] )
@@ -467,8 +563,8 @@ class CSDLToJSON():
         """
 
         # Check if there is a BaseType
-        base_type = self.get_attrib( object, "BaseType", False, None )
-        if base_type == None:
+        base_type = self.get_attrib( object, "BaseType", False )
+        if base_type == DEFAULT_ATTRIB:
             return
 
         # Check if definitions from Resource need to be mapped
@@ -497,10 +593,11 @@ class CSDLToJSON():
         # Loop on the namespaces to find the matching type
         for schema in self.root.iter( ODATA_TAG_SCHEMA ):
             for base_object in schema.iter( object.tag ):
-                type_name = self.get_attrib( schema, "Namespace" ) + "." + self.get_attrib( base_object, "Name" )
+                namespace = self.get_attrib( schema, "Namespace" )
+                type_name = namespace + "." + self.get_attrib( base_object, "Name" )
                 if type_name == base_type:
-                    # Match; processs it
-                    self.generate_object( base_object, json_def, name )
+                    # Match; process it
+                    self.generate_object( base_object, namespace, json_def, name )
                     return
 
     def generate_action( self, action, json_def ):
@@ -512,14 +609,21 @@ class CSDLToJSON():
             json_def: The JSON Definitions body to populate
         """
 
+        # Check if this action applies to the namespace under process
+        if not self.does_definition_apply( action, self.namespace_under_process ):
+            return
+
         # Add the object for the Action itself
-        self.generate_object( action, json_def )
+        self.generate_object( action, self.namespace_under_process, json_def )
 
         # Hook it into the Actions object definition to be one of its properties
         name = self.get_attrib( action, "Name" )
         self.init_object_definition( "Actions", json_def )
         action_prop = "#" + self.namespace_under_process.split( "." )[0] + "." + name
         json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
+
+        # Add version details to the Action
+        self.add_version_details( action, self.namespace_under_process, json_def[name] )
 
     def generate_enum( self, enum, json_def ):
         """
@@ -536,6 +640,7 @@ class CSDLToJSON():
         name = self.get_attrib( enum, "Name" )
         json_def[name] = {}
         json_def[name]["type"] = "string"
+        self.add_version_details( enum, self.namespace_under_process, json_def[name] )
 
         # Process the items in the enum
         for child in enum:
@@ -555,6 +660,10 @@ class CSDLToJSON():
 
             # Enum members
             if child.tag == ODATA_TAG_MEMBER:
+                # Check if the member should be skipped
+                if not self.does_definition_apply( child, self.namespace_under_process ) and not is_namespace_unversioned( self.namespace_under_process ):
+                    continue
+
                 # Add to the enum list
                 member_name = self.get_attrib( child, "Name" )
                 if "enum" not in json_def[name]:
@@ -583,6 +692,9 @@ class CSDLToJSON():
                             json_def[name]["enumDeprecated"] = {}
                         json_def[name]["enumDeprecated"][member_name] = self.get_attrib( annotation, "String" )
 
+                # Add version details for the member
+                self.add_version_details( child, self.namespace_under_process, json_def[name], member_name )
+
     def generate_typedef( self, typedef, json_def ):
         """
         Processes a TypeDefinition and adds it to the JSON output
@@ -606,14 +718,14 @@ class CSDLToJSON():
         json_def[name] = {}
 
         # Add the common type info
-        self.add_type_info( typedef, type, False, json_def[name] )
+        self.add_type_info( typedef, self.namespace_under_process, type, False, json_def[name] )
 
     def generate_redfish_enum( self, enum, json_def ):
         """
         Processes a TypeDefinition that contains a Redfish Enum definition
 
         Args:
-            typedef: The Redfish Enum to process
+            enum: The Redfish Enum to process
             json_def: The JSON Definitions body to populate
         """
 
@@ -632,11 +744,11 @@ class CSDLToJSON():
 
                 # Enum Description
                 if term == "OData.Description":
-                    json_def[name]["description"] = self.get_attrib( annotation, "String" )
+                    json_def[name]["description"] = self.get_attrib( child, "String" )
 
                 # Enum Long Description
                 if term == "OData.LongDescription":
-                    json_def[name]["longDescription"] = self.get_attrib( annotation, "String" )
+                    json_def[name]["longDescription"] = self.get_attrib( child, "String" )
 
                 # Enum Members
                 if term == "Redfish.Enumeration":
@@ -649,7 +761,11 @@ class CSDLToJSON():
                                 member_name = self.get_attrib( prop_val, "String" )
 
                         # If we were successful in getting the member name, add it to the list and process its annotations
-                        if member_name != None:
+                        if member_name is not None:
+                            # Check if the member should be skipped
+                            if not self.does_definition_apply( record, self.namespace_under_process ):
+                                continue
+
                             # Add the member to the list
                             if "enum" not in json_def[name]:
                                 json_def[name]["enum"] = []
@@ -677,6 +793,9 @@ class CSDLToJSON():
                                         json_def[name]["enumDeprecated"] = {}
                                     json_def[name]["enumDeprecated"][member_name] = self.get_attrib( rec_annotation, "String" )
 
+                            # Add version details for the member
+                            self.add_version_details( record, self.namespace_under_process, json_def[name], member_name )
+
     def init_object_definition( self, name, json_def ):
         """
         Initializes an object definition
@@ -698,13 +817,14 @@ class CSDLToJSON():
             json_def[name]["patternProperties"][PATTERN_PROP_REGEX]["description"] = "This property shall specify a valid odata or Redfish property."
             json_def[name]["properties"] = {}
 
-    def generate_property( self, property, json_obj_def ):
+    def generate_property( self, property, json_obj_def, namespace = "Resource" ):
         """
         Processes a Property or NavigationProperty and adds it to the JSON object definition
 
         Args:
             property: The Property or NavigationProperty to process
             json_obj_def: The JSON object definition to place the property
+            namespace: The namespace where the property was found
         """
 
         # Pull out property info
@@ -712,13 +832,20 @@ class CSDLToJSON():
         prop_type = self.get_attrib( property, "Type" )
         json_obj_def["properties"][prop_name] = {}
 
+        # Properties don't use the Revision annotation for adding new properties; need to add it manually
+        version = namespace.rsplit( "." )[-1]
+        if is_namespace_unversioned( namespace ):
+            version = DEFAULT_VER
+        if version != DEFAULT_VER:
+            json_obj_def["properties"][prop_name]["versionAdded"] = version
+
         # Determine if this is an array
         is_array = prop_type.startswith( "Collection(" )
         if is_array:
             prop_type = prop_type[11:-1]
 
         # Add the common type info
-        self.add_type_info( property, prop_type, is_array, json_obj_def["properties"][prop_name] )
+        self.add_type_info( property, namespace, prop_type, is_array, json_obj_def["properties"][prop_name] )
 
         # Check for required annotations on the property
         for annotation in property.iter( ODATA_TAG_ANNOTATION ):
@@ -736,17 +863,22 @@ class CSDLToJSON():
                     json_obj_def["requiredOnCreate"].append( prop_name )
 
         # If this is a collection of navigation properties, add the @odata.count property
-        if ( property.tag == ODATA_TAG_NAV_PROPERTY ) and ( is_array == True ):
+        if ( property.tag == ODATA_TAG_NAV_PROPERTY ) and is_array:
             json_obj_def["properties"][prop_name + "@odata.count"] = { "$ref": self.odata_schema + "#/definitions/count" }
 
-    def generate_parameter( self, parameter, json_obj_def ):
+    def generate_parameter( self, parameter, namespace, json_obj_def ):
         """
         Processes a Parameter and adds it to the JSON object definition
 
         Args:
             parameter: The Parameter to process
             json_obj_def: The JSON object definition to place the property
+            namespace: The namespace string where the parameter was found
         """
+
+        # Check if this action applies to the namespace under process
+        if not self.does_definition_apply( parameter, namespace ):
+            return
 
         # Pull out parameter info
         param_name = self.get_attrib( parameter, "Name" )
@@ -759,7 +891,30 @@ class CSDLToJSON():
             param_type = param_type[11:-1]
 
         # Add the common type info
-        self.add_type_info( parameter, param_type, is_array, json_obj_def["parameters"][param_name] )
+        self.add_type_info( parameter, namespace, param_type, is_array, json_obj_def["parameters"][param_name] )
+
+    def generate_action_response( self, return_type, namespace, json_obj_def ):
+        """
+        Processes a ReturnType and adds it to the JSON object definition for an action response
+
+        Args:
+            return_type: The ReturnType to process
+            json_obj_def: The JSON object definition to place the property
+            namespace: The namespace string where the parameter was found
+        """
+
+        # Pull out the return type info
+        response_type = self.get_attrib( return_type, "Type" )
+        json_obj_def["actionResponse"] = {}
+
+        # Determine if this is an array
+        # Note: For how we model things today, this should never be the case; this should always map to a singular ComplexType
+        is_array = response_type.startswith( "Collection(" )
+        if is_array:
+            response_type = response_type[11:-1]
+
+        # Add the common type info
+        self.add_type_info( return_type, namespace, response_type, is_array, json_obj_def["actionResponse"] )
 
     def generate_odata_properties( self, object, json_obj_def ):
         """
@@ -771,10 +926,10 @@ class CSDLToJSON():
         """
 
         name = self.get_attrib( object, "Name" )
-        base_type = self.get_attrib( object, "BaseType", False, None )
+        base_type = self.get_attrib( object, "BaseType", False )
 
         # If the object is the Resource or ResourceCollection object, or is derived from them, then we add the OData properties
-        if ( name == "Resource" or name == "ResourceCollection" or 
+        if ( name == "Resource" or name == "ResourceCollection" or
              base_type == "Resource.v1_0_0.Resource" or base_type == "Resource.v1_0_0.ResourceCollection" ):
             json_obj_def["properties"]["@odata.context"] = { "$ref": self.odata_schema + "#/definitions/context" }
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
@@ -788,7 +943,7 @@ class CSDLToJSON():
                 json_obj_def["required"].append( "@odata.type" )
 
         # If the object is the ReferenceableMember, or is derived from it, then we add the OData properties
-        if ( name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember" ):
+        if name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember":
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             if "required" not in json_obj_def:
                 json_obj_def["required"] = []
@@ -799,12 +954,13 @@ class CSDLToJSON():
         if base_type == "Resource.v1_0_0.ResourceCollection":
             json_obj_def["properties"]["Members@odata.nextLink"] = { "$ref": self.odata_schema + "#/definitions/nextLink" }
 
-    def add_type_info( self, type_info, type, is_array, json_type_def ):
+    def add_type_info( self, type_info, namespace, type, is_array, json_type_def ):
         """
         Adds common type information for a given definition
 
         Args:
-            type_info: The structure to process; can be Property, NavigationProperty, or TypeDefinition
+            type_info: The structure to process; can be Property, NavigationProperty, TypeDefinition, or Parameter
+            namespace: The namespace where the structure was found
             type: The type for the structure
             is_array: Flag if this definition is an array of some sorts
             json_type_def: The JSON object or property definition to populate
@@ -813,7 +969,7 @@ class CSDLToJSON():
         # Determine if this is nullable
         if type_info.tag == ODATA_TAG_TYPE_DEF:
             is_nullable = False
-        elif ( type_info.tag == ODATA_TAG_NAV_PROPERTY ) and ( is_array == True ):
+        elif ( type_info.tag == ODATA_TAG_NAV_PROPERTY ) and is_array:
             is_nullable = False
         elif type_info.tag == ODATA_TAG_PARAMETER:
             is_nullable = False
@@ -824,43 +980,19 @@ class CSDLToJSON():
             if self.get_attrib( type_info, "Nullable", False, "true" ) == "false":
                 is_nullable = False
 
-        # Convert the type as needed; some types will force a format, pattern, or reference
-        json_type, ref, pattern, format = self.csdl_type_to_json_type( type, is_nullable )
-        if pattern != None:
-            json_type_def["pattern"] = pattern
-        if format != None:
-            json_type_def["format"] = format
-
-        # Set up the type and reference accordingly
-        if is_array:
-            json_type_def["type"] = "array"
-            if ref == None:
-                json_type_def["items"] = { "type": json_type }
-            elif ( is_nullable == False ) and ( ref != None ):
-                json_type_def["items"] = { "$ref": ref }
-            else:
-                json_type_def["items"] = { "anyOf": [ { "$ref": ref }, { "type": "null" } ] }
-        else:
-            if ref == None:
-                json_type_def["type"] = json_type
-            elif ( is_nullable == False ) and ( ref != None ):
-                json_type_def["$ref"] = ref
-            else:
-                json_type_def["anyOf"] = [ { "$ref": ref }, { "type": "null" } ]
-
         # Loop through the annotations and add other definitions as needed
         for annotation in type_info.iter( ODATA_TAG_ANNOTATION ):
             term = self.get_attrib( annotation, "Term" )
 
-            # Type Description
+            # Description
             if term == "OData.Description":
                 json_type_def["description"] = self.get_attrib( annotation, "String" )
 
-            # Type Long Description
+            # Long Description
             if term == "OData.LongDescription":
                 json_type_def["longDescription"] = self.get_attrib( annotation, "String" )
 
-            # Type Permissions
+            # Permissions
             if term == "OData.Permissions":
                 permissions = self.get_attrib( annotation, "EnumMember" )
                 if ( permissions == "OData.Permission/Read" ) or ( permissions == "OData.Permissions/Read" ):
@@ -868,34 +1000,80 @@ class CSDLToJSON():
                 else:
                     json_type_def["readonly"] = False
 
-            # Type Format
+            # Format
             if term == "OData.IsURL":
                 if self.get_attrib( annotation, "Bool", False, "true" ) == "true":
                     json_type_def["format"] = "uri"
 
-            # Type Units
+            # Units
             if term == "Measures.Unit":
                 json_type_def["units"] = self.get_attrib( annotation, "String" )
 
-            # Type Minimum
+            # Minimum
             if term == "Validation.Minimum":
                 json_type_def["minimum"] = int( self.get_attrib( annotation, "Int" ) )
 
-            # Type Maximum
+            # Maximum
             if term == "Validation.Maximum":
                 json_type_def["maximum"] = int( self.get_attrib( annotation, "Int" ) )
 
-            # Type Pattern
+            # Pattern
             if term == "Validation.Pattern":
                 json_type_def["pattern"] = self.get_attrib( annotation, "String" )
 
-            # Type Deprecated
+            # Deprecated
             if term == "Redfish.Deprecated":
                 json_type_def["deprecated"] = self.get_attrib( annotation, "String" )
 
-            # Type Auto Expand
+            # Auto Expand
             if term == "OData.AutoExpand":
                 json_type_def["autoExpand"] = True
+
+            # Filter
+            if term == "Redfish.Filter":
+                json_type_def["filter"] = self.get_attrib( annotation, "String" )
+
+            # Excerpt Copy Only
+            if term == "Redfish.ExcerptCopyOnly":
+                json_type_def["excerptCopyOnly"] = True
+
+            # Excerpt
+            if term == "Redfish.Excerpt":
+                json_type_def["excerpt"] = self.namespace_under_process.split( "." )[0] + self.get_attrib( annotation, "String", False, "" )
+
+            # Excerpt Copy
+            if term == "Redfish.ExcerptCopy":
+                json_type_def["excerptCopy"] = type.split( "." )[0] + self.get_attrib( annotation, "String", False, "" )
+
+        # Convert the type as needed; some types will force a format, pattern, or reference
+        json_type, ref, pattern, format = self.csdl_type_to_json_type( type, is_nullable )
+        if pattern is not None:
+            json_type_def["pattern"] = pattern
+        if format is not None:
+            json_type_def["format"] = format
+        if ( ref is not None ) and ( "excerptCopy" in json_type_def ):
+            # Update the reference to point to the excerpt copy
+            ref = ref.rsplit( "/", 1 )[0] + "/" + json_type_def["excerptCopy"]
+
+        # Set up the type and reference accordingly
+        if is_array:
+            json_type_def["type"] = "array"
+            if ref is None:
+                json_type_def["items"] = { "type": json_type }
+            elif ( not is_nullable ) and ( ref is not None ):
+                json_type_def["items"] = { "$ref": ref }
+            else:
+                json_type_def["items"] = { "anyOf": [ { "$ref": ref }, { "type": "null" } ] }
+        else:
+            if ref is None:
+                json_type_def["type"] = json_type
+            elif ( not is_nullable ) and ( ref is not None ):
+                json_type_def["$ref"] = ref
+            else:
+                json_type_def["anyOf"] = [ { "$ref": ref }, { "type": "null" } ]
+
+        # Add version info
+        self.add_version_details( type_info, namespace, json_type_def )
 
     def csdl_type_to_json_type( self, type, is_nullable ):
         """
@@ -995,7 +1173,7 @@ class CSDLToJSON():
 
         return json_type, ref, pattern, format
 
-    def get_attrib( self, element, name, required = True, default = "UNKNOWN_ATTRIB" ):
+    def get_attrib( self, element, name, required = True, default = DEFAULT_ATTRIB ):
         """
         Gets a given attribute from an ET element in a safe manner, and provides warnings
 
@@ -1017,25 +1195,131 @@ class CSDLToJSON():
 
         return default
 
-def main( argv ):
+    def get_version_details( self, object ):
+        """
+        Gets the version info for a given object
+
+        Args:
+            object: The object to parse
+
+        Returns:
+            The version added string
+            The version deprecated string
+            The deprecated info string
+        """
+        version_added = None
+        version_deprecated = None
+        deprecated_info = None
+
+        # Go through each annotation and find the Redfish.Revisions term
+        for child in object:
+            if child.tag == ODATA_TAG_ANNOTATION:
+                term = self.get_attrib( child, "Term" )
+                if term == "Redfish.Revisions":
+                    for collection in child.iter( ODATA_TAG_COLLECTION ):
+                        for record in collection.iter( ODATA_TAG_RECORD ):
+                            revision_kind = None
+                            revision_description = None
+                            revision_string = None
+                            for prop_val in record.iter( ODATA_TAG_PROP_VAL ):
+                                property = self.get_attrib( prop_val, "Property" )
+                                if property == "Kind":
+                                    revision_kind = self.get_attrib( prop_val, "EnumMember" )
+                                elif property == "Version":
+                                    revision_string = self.get_attrib( prop_val, "String" )
+                                elif property == "Description":
+                                    revision_description = self.get_attrib( prop_val, "String" )
+                            if revision_kind is None:
+                                print( "-- ERROR: Missing \"Kind\" attribute for revision info for \"{}\"".format( self.get_attrib( object, "Name" ) ) )
+                                self.errors[self.namespace_under_process] = True
+                            elif revision_kind == "Redfish.RevisionKind/Added":
+                                if revision_string is None:
+                                    print( "-- ERROR: Missing \"Version\" attribute for revision info for \"{}\"".format( self.get_attrib( object, "Name" ) ) )
+                                    self.errors[self.namespace_under_process] = True
+                                else:
+                                    version_added = revision_string
+                            elif revision_kind == "Redfish.RevisionKind/Deprecated":
+                                if revision_string is None or revision_description is None:
+                                    print( "-- ERROR: Missing \"Version\" or \"Description\" attribute for revision info for \"{}\"".format( self.get_attrib( object, "Name" ) ) )
+                                    self.errors[self.namespace_under_process] = True
+                                else:
+                                    version_deprecated = revision_string
+                                    deprecated_info = revision_description
+                            else:
+                                print( "-- ERROR: Unknown \"Kind\" attribute for revision info for \"{}\"".format( self.get_attrib( object, "Name" ) ) )
+                                self.errors[self.namespace_under_process] = True
+
+        return version_added, version_deprecated, deprecated_info
+
+    def does_definition_apply( self, definition, namespace ):
+        """
+        Determines if a given definition applies to a namespace being processed
+
+        Args:
+            definition: The definition to check
+            namespace: The namespace in question
+
+        Returns:
+            True if the definition applies, false otherwise
+        """
+        version = namespace.rsplit( "." )[-1]
+        if is_namespace_unversioned( namespace ):
+            version = DEFAULT_VER
+        added, deprecated, deprecated_info = self.get_version_details( definition )
+        if added is None:
+            return True
+        return does_version_apply( added, version )
+
+    def add_version_details( self, definition, namespace, json_def, enum_member = None ):
+        """
+        Adds version details to a given definition
+
+        Args:
+            definition: The definition to check
+            namespace: The namespace in question
+            json_def: The JSON term to populate
+            enum_member: The name of the enum member with the version info
+        """
+        version = namespace.rsplit( "." )[-1]
+        if is_namespace_unversioned( namespace ):
+            version = DEFAULT_VER
+        added, deprecated, deprecated_info = self.get_version_details( definition )
+        if deprecated is not None and deprecated_info is not None:
+            if does_version_apply( deprecated, version ) or is_namespace_unversioned( self.namespace_under_process ):
+                if enum_member is not None:
+                    if "enumVersionDeprecated" not in json_def:
+                        json_def["enumVersionDeprecated"] = {}
+                    if "enumDeprecated" not in json_def:
+                        json_def["enumDeprecated"] = {}
+                    json_def["enumVersionDeprecated"][enum_member] = deprecated
+                    json_def["enumDeprecated"][enum_member] = deprecated_info
+                else:
+                    json_def["versionDeprecated"] = deprecated
+                    json_def["deprecated"] = deprecated_info
+        if added is not None:
+            if enum_member is not None:
+                if "enumVersionAdded" not in json_def:
+                    json_def["enumVersionAdded"] = {}
+                json_def["enumVersionAdded"][enum_member] = added
+            else:
+                json_def["versionAdded"] = added
+
+def main():
     """
     Main entry point for the script
-
-    Args:
-        argv: Command line arguments from the user
     """
 
     # Get the input arguments
-    argget = argparse.ArgumentParser( description = "A tool used to convert Redfish CSDL files to Redfish JSON Schema files" )
-    argget.add_argument( "--input", "-I", type = str, required = True, help = "The folder containing the CSDL files to convert" )
-    argget.add_argument( "--output", "-O",  type = str, required = True, help = "The folder to write the converted JSON files" )
-    argget.add_argument( "--config", "-C", type = str, help = "The configuration file containing definitions for various links and user strings" )
-    argget.add_argument( "--overwrite", "-W", type = str, help = "Overwrite the versioned files in the output directory if they already exist (default is True)" )
-    args = argget.parse_args()
+    arg_get = argparse.ArgumentParser( description = "A tool used to convert Redfish CSDL files to Redfish JSON Schema files" )
+    arg_get.add_argument( "--input", "-I", type = str, required = True, help = "The folder containing the CSDL files to convert" )
+    arg_get.add_argument( "--output", "-O",  type = str, required = True, help = "The folder to write the converted JSON files" )
+    arg_get.add_argument( "--config", "-C", type = str, help = "The configuration file containing definitions for various links and user strings" )
+    arg_get.add_argument( "--overwrite", "-W", type = str, help = "Overwrite the versioned files in the output directory if they already exist (default is True)" )
+    args = arg_get.parse_args()
 
     # Get the overwrite flag
     overwrite = True
-    if args.overwrite != None:
+    if args.overwrite is not None:
         if ( args.overwrite == "False" ) or ( args.overwrite == "false" ):
             overwrite = False
 
@@ -1045,7 +1329,7 @@ def main( argv ):
 
     # Read the configuration file
     config_data = {}
-    if args.config != None:
+    if args.config is not None:
         try:
             with open( args.config ) as config_file:
                 config_data = json.load( config_file )
@@ -1071,6 +1355,7 @@ def main( argv ):
     # Get the definition for Resource
     resource_file = args.input + os.path.sep + "Resource_v1.xml"
     resource_uri = config_data["ResourceLocation"] + "Resource_v1.xml"
+    resource_root = None
     if os.path.isfile( resource_file ):
         # Local copy of Resource; use it
         try:
@@ -1093,7 +1378,7 @@ def main( argv ):
                 resource_data = response.read()
                 resource_root = ET.fromstring( resource_data )
                 break
-            except Exception as e:
+            except OSError as e:
                 if e.errno != errno.ECONNRESET:
                     print( "Could not open " + resource_uri )
                     print( e )
@@ -1116,16 +1401,16 @@ def main( argv ):
                 print( "ERROR: {} contains a malformed XML document".format( in_filename ) )
             except:
                 print( "ERROR: Could not open {}".format( in_filename ) )
-            if root != None:
+            if root is not None:
                 # Translate and write the JSON files
                 translator = CSDLToJSON( config_data["Copyright"], config_data["RedfishSchema"], config_data["ODataSchema"], config_data["Location"], config_data["ResourceLocation"], root, resource_root )
                 translator.process()
                 for namespace in translator.json_out:
                     out_filename = args.output + os.path.sep + namespace + ".json"
-                    if translator.errors[namespace] == True:
+                    if translator.errors[namespace]:
                         print( "-- Errors detected while generating {}; not creating file".format( out_filename ) )
                     else:
-                        if ( overwrite == True ) or is_namespace_unversioned( namespace ) or ( os.path.isfile( out_filename ) == False ):
+                        if overwrite or is_namespace_unversioned( namespace ) or ( not os.path.isfile( out_filename ) ):
                             out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
                             with open( out_filename, "w" ) as file:
                                 file.write( out_string )
@@ -1142,55 +1427,56 @@ def is_namespace_unversioned( namespace ):
     """
 
     # Versioned namespaces match the form NAME.vX_Y_Z
-    if re.match( NAMESPACE_VER_REGEX, namespace ) == None:
+    if re.search( VERSION_REGEX, namespace ) is None:
         return True
     return False
 
-def does_namespace_apply( namespace, json_file_version ):
+def does_version_apply( version1, version2 ):
     """
-    Checks if a namespace applies to a given JSON file version
+    Checks if a version applies to another version
 
     Args:
-        namespace: The string name of the namespace
-        json_file_version: The string for the JSON file and its version
+        version1: The version in question, which may contain a namespace prepended
+        version2: The version to compare against, which may contain a namespace prepended
 
     Returns:
-        True if the namespace applies, False otherwise
+        True if the version applies, False otherwise
     """
 
     # If the base name of the namespaces do not match, then it does not apply
     # Currently the only case this happens is in RedfishExtensions_v1.xml
-    if namespace.split( "." )[0] != json_file_version.split( "." )[0]:
-        return False
+    if "." in version1:
+        if version1.split( "." )[0] != version2.split( "." )[0]:
+            return False
 
     # Unversioned namespaces always apply
-    if is_namespace_unversioned( namespace ):
+    if is_namespace_unversioned( version1 ):
         return True
 
     # Pull out the version numbers
-    namespace_ver = get_namespace_version( namespace )
-    json_ver = get_namespace_version( json_file_version )
+    version1_array = get_version_details( version1 )
+    version2_array = get_version_details( version2 )
 
     # Different major versions; not compatible
-    if namespace_ver[0] != json_ver[0]:
+    if version1_array[0] != version2_array[0]:
         return False
 
     # The namespace has a newer minor version; skip
-    if namespace_ver[1] > json_ver[1]:
+    if version1_array[1] > version2_array[1]:
         return False
 
     # The minor versions are equal, but the namespace has a newer errata version; skip
-    if ( namespace_ver[1] == json_ver[1] ) and ( namespace_ver[2] > json_ver[2] ):
+    if ( version1_array[1] == version2_array[1] ) and ( version1_array[2] > version2_array[2] ):
         return False
 
     return True
 
-def get_namespace_version( namespace ):
+def get_version_details( version ):
     """
-    Pulls the version numbers from a namespace string
+    Pulls the version numbers from a version string
 
     Args:
-        namespace: The string name of the namespace
+        version: The version string, which may contain a namespace prepended
 
     Returns:
         The major version
@@ -1198,8 +1484,8 @@ def get_namespace_version( namespace ):
         The errata version
     """
 
-    groups = re.match( NAMESPACE_VER_REGEX, namespace )
-    return groups.group( 1 ), groups.group( 2 ), groups.group( 3 )
+    groups = re.search( VERSION_REGEX, version )
+    return int( groups.group( 1 ) ), int( groups.group( 2 ) ), int( groups.group( 3 ) )
 
 if __name__ == '__main__':
-    sys.exit( main( sys.argv ) )
+    sys.exit( main() )

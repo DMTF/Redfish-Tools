@@ -20,10 +20,12 @@ import sys
 import yaml
 
 # List of terms that have a simple one to one conversion
-ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDescriptions", "enumDeprecated", "units", "requiredOnCreate", "owningEntity", "autoExpand" ]
+ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDescriptions", "enumDeprecated", "enumVersionDeprecated", "enumVersionAdded",
+                             "units", "requiredOnCreate", "owningEntity", "autoExpand", "release", "versionDeprecated", "versionAdded", "filter",
+                             "excerpt", "excerptCopy", "excerptCopyOnly" ]
 
 # List of terms that are removed from the file
-REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter" ]
+REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter", "actionResponse" ]
 
 # Responses allowed
 HEAD_RESPONSES = [ 204 ]
@@ -41,7 +43,7 @@ CONFIG_DEF_ODATA_SCHEMA_LOC = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.y
 CONFIG_DEF_OUT_FILE = "openapi.yaml"
 CONFIG_DEF_EXTENSIONS = {}
 
-class JSONToYAML():
+class JSONToYAML:
     """
     Class for managing translation data and processing
 
@@ -66,7 +68,7 @@ class JSONToYAML():
         self.action_cache = {}
 
         # Initialize the caches if extending an existing definition
-        if base_file != None:
+        if base_file is not None:
             self.load_base_file( base_file, extensions )
 
         # Create the output directory (if needed)
@@ -87,7 +89,7 @@ class JSONToYAML():
                     print( "ERROR: Could not open {}".format( filename ) )
 
                 # Translate the JSON document
-                if json_data != None:
+                if json_data is not None:
                     # Cache URI and method information (if available)
                     self.check_for_uri_info( json_data, filename )
                     self.check_for_actions( json_data, filename )
@@ -95,6 +97,7 @@ class JSONToYAML():
                     # Remove top level $schema and $ref
                     json_data.pop( "$schema", None )
                     json_data.pop( "$ref", None )
+                    json_data.pop( "$id", None )
 
                     # Replace top level copyright and definitions
                     if "copyright" in json_data:
@@ -128,15 +131,15 @@ class JSONToYAML():
         service_doc["paths"] = {}
         for uri in self.uri_cache:
             service_doc["paths"][uri] = {}
-            if self.uri_cache[uri]["action"] == False:
+            if not self.uri_cache[uri]["action"]:
                 #service_doc["paths"][uri]["head"] = self.generate_operation( uri, HEAD_RESPONSES )
                 service_doc["paths"][uri]["get"] = self.generate_operation( uri, GET_RESPONSES )
-                if self.uri_cache[uri]["insertable"] == True:
+                if self.uri_cache[uri]["insertable"]:
                     service_doc["paths"][uri]["post"] = self.generate_operation( uri, CREATE_RESPONSES, True )
-                if self.uri_cache[uri]["updatable"] == True:
+                if self.uri_cache[uri]["updatable"]:
                     service_doc["paths"][uri]["patch"] = self.generate_operation( uri, PATCH_RESPONSES )
                     service_doc["paths"][uri]["put"] = self.generate_operation( uri, PUT_RESPONSES )
-                if self.uri_cache[uri]["deletable"] == True:
+                if self.uri_cache[uri]["deletable"]:
                     service_doc["paths"][uri]["delete"] = self.generate_operation( uri, DELETE_RESPONSES )
             else:
                 service_doc["paths"][uri]["post"] = self.generate_operation( uri, ACTION_RESPONSES, True )
@@ -187,6 +190,7 @@ class JSONToYAML():
             else:
                 # This is an action
                 reference = yaml_data["paths"][uri]["post"]["requestBody"]["content"]["application/json"]["schema"]["$ref"]
+                response = yaml_data["paths"][uri]["post"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
                 action = "#" + uri.rsplit( "/" )[-1]
                 yaml_file = re.search( "([A-Za-z0-9]+\.v\d_\d_\d\.yaml)", reference ).group( 1 )
 
@@ -194,6 +198,7 @@ class JSONToYAML():
                     self.action_cache[yaml_file] = {}
                 self.action_cache[yaml_file][action] = {}
                 self.action_cache[yaml_file][action]["reference"] = "#" + reference.rsplit( "#" )[-1]
+                self.action_cache[yaml_file][action]["actionResponse"] = response
 
     def check_for_uri_info( self, json_data, filename ):
         """
@@ -253,6 +258,7 @@ class JSONToYAML():
                         self.uri_cache[uri]["updatable"] = updatable
                         self.uri_cache[uri]["deletable"] = deletable
                         self.uri_cache[uri]["action"] = False
+                        self.uri_cache[uri]["actionResponse"] = None
                         self.uri_cache[uri]["type"] = def_name
                         self.uri_cache[uri]["reference"] = reference
                         self.uri_cache[uri]["requestBody"] = request_body
@@ -310,6 +316,11 @@ class JSONToYAML():
                     self.action_cache[yaml_file] = {}
                 self.action_cache[yaml_file][action] = {}
                 self.action_cache[yaml_file][action]["reference"] = "#/components/schemas/" + action_def + "RequestBody"
+                if "actionResponse" in json_data["definitions"][action_def]:
+                    self.action_cache[yaml_file][action]["actionResponse"] = json_data["definitions"][action_def]["actionResponse"]["$ref"]
+                else:
+                    self.action_cache[yaml_file][action]["actionResponse"] = None
+
         except:
             print( "ERROR: Malformed action found in {}".format( filename ) )
 
@@ -328,6 +339,9 @@ class JSONToYAML():
                         action_uri_cache[action_uri] = {}
                         action_uri_cache[action_uri]["reference"] = action_reference + self.action_cache[action_filename][action]["reference"]
                         action_uri_cache[action_uri]["requestBody"] = action_reference + self.action_cache[action_filename][action]["reference"]
+                        action_uri_cache[action_uri]["actionResponse"] = None
+                        if self.action_cache[action_filename][action]["actionResponse"] is not None:
+                            action_uri_cache[action_uri]["actionResponse"] = action_reference + self.action_cache[action_filename][action]["actionResponse"]
                         action_uri_cache[action_uri]["insertable"] = False
                         action_uri_cache[action_uri]["updatable"] = False
                         action_uri_cache[action_uri]["deletable"] = False
@@ -431,29 +445,45 @@ class JSONToYAML():
             An object containing the definition of the Redfish Error payload
         """
         redfish_error = {
+            "description": "Contains an error payload from a Redfish Service.",
+            "x-longDescription": "This type, as described by the Redfish Specification, shall contain an error payload from a Redfish Service.",
             "type": "object",
             "properties": {
                 "error": {
+                    "description": "Contains properties used to describe an error from a Redfish Service.",
+                    "x-longDescription": "This property, as described by the Redfish Specification, shall contain properties used to describe an error from a Redfish Service.",
                     "type": "object",
                     "properties": {
                         "code": {
-                            "type": "string",
-                            "description": "A string indicating a specific MessageId from the message registry."
+                            "description": "A string indicating a specific MessageId from the message registry.",
+                            "x-longDescription": "This property shall be a string indicating a specific MessageId from the message registry.",
+                            "readOnly": True,
+                            "type": "string"
                         },
                         "message": {
-                            "type": "string",
-                            "description": "A human-readable error message corresponding to the message in the message registry."
+                            "description": "A human-readable error message corresponding to the message in the message registry.",
+                            "x-longDescription": "This property shall be a human-readable error message corresponding to the message in the message registry.",
+                            "readOnly": True,
+                            "type": "string"
                         },
                         "@Message.ExtendedInfo": {
-                            "type": "array",
                             "description": "An array of message objects describing one or more error message(s).",
+                            "x-longDescription": "This property shall be an array of message objects describing one or more error message(s).",
+                            "type": "array",
                             "items": {
                                 "$ref": self.message_ref
                             }
                         }
-                    }
+                    },
+                    "required": [
+                        "code",
+                        "message"
+                    ]
                 }
-            }
+            },
+            "required": [
+                "error"
+            ]
         }
         return redfish_error
 
@@ -473,7 +503,7 @@ class JSONToYAML():
 
         # Build the parameters for the operation
         parameters = self.generate_parameters( uri )
-        if parameters != None:
+        if parameters is not None:
             operation["parameters"] = parameters
 
         # Build the request body for the operation
@@ -484,7 +514,7 @@ class JSONToYAML():
         operation["responses"] = {}
         for response in responses:
             operation["responses"][str( response )] = self.generate_response( uri, response )
-        operation["responses"]["default"] = self.generate_response( uri, None )
+        operation["responses"]["default"] = self.generate_response( uri, 500 )
 
         return operation
 
@@ -519,15 +549,20 @@ class JSONToYAML():
         content_created = { "application/json": { "schema": { "$ref": self.uri_cache[uri]["requestBody"] } } }
         content_task = { "application/json": { "schema": { "$ref": self.task_ref } } }
         content_error = { "application/json": { "schema": { "$ref": "#/components/schemas/RedfishError" } } }
+        content_action_response = { "application/json": { "schema": { "$ref": self.uri_cache[uri]["actionResponse"] } } }
 
         # Build the response descriptor based on the HTTP status code
         if http_status == 200:
             # 200 OK: Resource is returned
-            response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1] )
-            if self.uri_cache[uri]["action"] == False:
+            if not self.uri_cache[uri]["action"]:
+                response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1] )
                 response["content"] = content_resource
             else:
-                response["content"] = content_error
+                response["description"] = "The response contains the results of the {} action".format( uri.rsplit( "." )[-1] )
+                if self.uri_cache[uri]["actionResponse"] is not None:
+                    response["content"] = content_action_response
+                else:
+                    response["content"] = content_error
         elif http_status == 201:
             # 201 Created: Resource is returned
             response["description"] = "A resource of type {} has been created".format( self.uri_cache[uri]["requestBody"].rsplit( "/" )[-1] )
@@ -535,7 +570,7 @@ class JSONToYAML():
         elif http_status == 202:
             # 202 Accepted: Task is returned
             response["description"] = "Accepted; a Task has been generated"
-            if content_task != None:
+            if content_task is not None:
                 response["content"] = content_task
         elif http_status == 204:
             # 204 No Content: Nothing is returned
