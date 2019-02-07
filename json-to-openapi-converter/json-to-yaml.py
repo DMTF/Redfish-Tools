@@ -317,7 +317,7 @@ class JSONToYAML:
                 self.action_cache[yaml_file][action] = {}
                 self.action_cache[yaml_file][action]["reference"] = "#/components/schemas/" + action_def + "RequestBody"
                 if "actionResponse" in json_data["definitions"][action_def]:
-                    self.action_cache[yaml_file][action]["actionResponse"] = json_data["definitions"][action_def]["actionResponse"]["$ref"]
+                    self.action_cache[yaml_file][action]["actionResponse"] = "#/components/schemas/" + json_data["definitions"][action_def]["actionResponse"]["$ref"].rsplit( "/" )[-1]
                 else:
                     self.action_cache[yaml_file][action]["actionResponse"] = None
 
