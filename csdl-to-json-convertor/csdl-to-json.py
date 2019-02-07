@@ -927,23 +927,28 @@ class CSDLToJSON:
 
         name = self.get_attrib( object, "Name" )
         base_type = self.get_attrib( object, "BaseType", False )
+        # These objects are not actual resources since they just belong in messages sent asynchronously to a client
+        id_etag_skip = False
+        if self.namespace_under_process.startswith( "Event." ):
+            id_etag_skip = True
 
         # If the object is the Resource or ResourceCollection object, or is derived from them, then we add the OData properties
         if ( name == "Resource" or name == "ResourceCollection" or
              base_type == "Resource.v1_0_0.Resource" or base_type == "Resource.v1_0_0.ResourceCollection" ):
             json_obj_def["properties"]["@odata.context"] = { "$ref": self.odata_schema + "#/definitions/context" }
-            json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             json_obj_def["properties"]["@odata.type"] = { "$ref": self.odata_schema + "#/definitions/type" }
-            json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
+            if not id_etag_skip:
+                json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
+                json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
             if "required" not in json_obj_def:
                 json_obj_def["required"] = []
-            if "@odata.id" not in json_obj_def["required"]:
+            if "@odata.id" not in json_obj_def["required"] and not id_etag_skip:
                 json_obj_def["required"].append( "@odata.id" )
             if "@odata.type" not in json_obj_def["required"]:
                 json_obj_def["required"].append( "@odata.type" )
 
         # If the object is the ReferenceableMember, or is derived from it, then we add the OData properties
-        if name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember":
+        if ( name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember" ) and not id_etag_skip:
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             if "required" not in json_obj_def:
                 json_obj_def["required"] = []
