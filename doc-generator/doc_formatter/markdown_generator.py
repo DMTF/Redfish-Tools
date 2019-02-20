@@ -610,6 +610,9 @@ search: true
             collections_doc = self.generate_collections_doc()
             output = output.replace('[insert_collections]', collections_doc, 1)
 
+        # Replace pagebreak markers with HTML pagebreak markup
+        output = output.replace('~pagebreak~', '<p style="page-break-before: always"></p>')
+
         return output
 
 

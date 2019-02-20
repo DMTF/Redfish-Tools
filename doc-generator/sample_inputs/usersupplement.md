@@ -20,6 +20,10 @@ The supplement is split into several major sections, noted by first-level headin
 
 Text at the top of the supplement, like this text, is ignored up until the first recognized section header.
 
+You can add an explicit page break (HTML paragraph with style="page-break-before: always") anywhere by putting the word pagebreak, surrounded by tildes, in the supplemental document:
+
+~pagebreak~
+
 
 # Schema URI Mapping
 

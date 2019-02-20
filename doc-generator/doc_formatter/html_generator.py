@@ -735,6 +735,9 @@ pre.code{
             else:
                 body = toc + body
 
+        # Replace pagebreak markers with pagebreak markup
+        body = body.replace('~pagebreak~', '<p style="page-break-before: always"></p>')
+
         doc_title = supplemental.get('Title')
         if not doc_title:
             doc_title = ''

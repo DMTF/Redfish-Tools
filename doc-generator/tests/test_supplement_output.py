@@ -31,6 +31,10 @@ schema_supplement = {
     },
     }
 
+supplemental = {
+    'Introduction': "# Common Objects\n\n[insert_common_objects]\n\ntext1\n~pagebreak~\ntext2\n"
+    }
+
 property_description_overrides = {
     "Oem": "This is a description override for the Oem object."
     }
@@ -53,7 +57,7 @@ base_config = {
     'escape_chars': [],
     'schema_supplement': schema_supplement,
     'property_description_overrides': property_description_overrides,
-    'supplemental': { 'Introduction': "# Common Objects\n\n[insert_common_objects]\n" }
+    'supplemental': supplemental,
     }
 
 
@@ -89,8 +93,15 @@ def test_supplement_output_html (mockRequest):
     assert 'SUPPLEMENT-SUPPLIED INTRO for Endpoint' in endpoint_section, "Schema Object (Endpoint) output is missing supplement-supplied intro"
     assert 'SUPPLEMENT-SUPPLIED JSON for Endpoint' in endpoint_section, "Schema Object (Endpoint) output is missing supplement-supplied json payload"
 
+
     oem_failed_overrides = [x for x in oem_rows if "This is a description override for the Oem object." not in x]
     assert len(oem_failed_overrides) == 0, "Property description override failed for " + str(len(oem_failed_overrides)) + " mentions of Oem"
+
+    # Check for ~pagebreak~ converted to <p style="page-break-before: always">
+    pbrk_location = output[output.find('text1') : output.find('text2')]
+    assert '<p style="page-break-before: always"></p>' in pbrk_location, "HTML output lacked expected page break markup"
+
+
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
@@ -144,3 +155,22 @@ def test_supplement_description_vs_full_html (mockRequest):
     # Verify that the full description overrides DID NOT retain the reference to the common property:
     ipv6_failed_overrides = [x for x in ipv6_rows if "for details on this property" in x]
     assert len(ipv6_failed_overrides) == 0, "Property full description override incorrectly included reference to common property " + str(len(ipv6_failed_overrides)) + " mentions of Ipv6Address"
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_supplement_output_markdown (mockRequest):
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'ipaddresses'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # Check for ~pagebreak~ converted to <p style="page-break-before: always">
+    pbrk_location = output[output.find('text1') : output.find('text2')]
+    assert '<p style="page-break-before: always"></p>' in pbrk_location, "HTML output lacked expected page break markup"
