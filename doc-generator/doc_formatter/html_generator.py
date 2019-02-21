@@ -35,7 +35,8 @@ class HtmlGenerator(DocFormatter):
         super(HtmlGenerator, self).__init__(property_data, traverser, config, level)
         self.separators = {
             'inline': ', ',
-            'linebreak': '<br>'
+            'linebreak': '<br>',
+            'pattern': '<br>'
             }
         self.formatter = HtmlUtils()
         self.table_of_contents = ''
@@ -352,7 +353,7 @@ pre.code{
                 prop_type += '<br>(' + item_list + ')'
 
         prop_access = ''
-        if not formatted_details['prop_is_object']:
+        if not meta.get('is_pattern') and not formatted_details['prop_is_object']:
             if formatted_details['read_only']:
                 prop_access = '<nobr>read-only</nobr>'
             else:

@@ -35,7 +35,8 @@ class MarkdownGenerator(DocFormatter):
         super(MarkdownGenerator, self).__init__(property_data, traverser, config, level)
         self.separators = {
             'inline': ', ',
-            'linebreak': '\n'
+            'linebreak': '\n',
+            'pattern': ', '
             }
         self.formatter = FormatUtils()
 
@@ -237,7 +238,7 @@ class MarkdownGenerator(DocFormatter):
                 prop_type += ' (' + item_list + ')'
 
         prop_access = ''
-        if not formatted_details['prop_is_object']:
+        if not meta.get('is_pattern') and not formatted_details['prop_is_object']:
             if formatted_details['read_only']:
                 prop_access = 'read-only'
             else:

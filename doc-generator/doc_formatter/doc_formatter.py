@@ -61,7 +61,8 @@ class DocFormatter:
 
         self.separators = {
             'inline': ', ',
-            'linebreak': '\n'
+            'linebreak': '\n',
+            'pattern': ', '
             }
 
         # Properties to carry through from parent when a ref is extended:
@@ -1456,6 +1457,21 @@ class DocFormatter:
         parent_requires = prop_info.get('parent_requires', [])
         parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
 
+        prop_names = patterns = False
+
+        if prop_info.get('patternProperties'):
+            patterns = prop_info['patternProperties'].keys()
+            detail_info = {
+                'description': self.separators['pattern'].join(patterns),
+                '_doc_generator_meta': {
+                    'within_action': False,
+                    'is_pattern': True
+                    }
+                }
+            formatted = self.format_property_row(schema_ref, '(pattern)', detail_info, prop_path)
+            if formatted:
+                output.append(formatted['row'])
+
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
@@ -1473,10 +1489,15 @@ class DocFormatter:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
 
-
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
 
+
+        if patterns:
+            for pattern in patterns:
+                pass
+
+        if properties:
             for prop_name in prop_names:
                 base_detail_info = properties[prop_name]
                 base_detail_info['prop_required'] = prop_name in parent_requires
