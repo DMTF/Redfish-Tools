@@ -181,7 +181,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, patterns=[]):
         """Generate a formatted Actions section from parameters data"""
         raise NotImplementedError
 

@@ -46,4 +46,4 @@ def test_csv_basic_output(mockRequest):
     lines = output.split('\n')
 
     assert lines[0].startswith('Schema Name')
-    assert len(lines) == 10
+    assert len(lines) == 11
