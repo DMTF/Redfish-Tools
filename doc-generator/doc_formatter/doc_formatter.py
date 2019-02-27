@@ -181,7 +181,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, patterns=[]):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
         """Generate a formatted Actions section from parameters data"""
         raise NotImplementedError
 
@@ -1170,15 +1170,13 @@ class DocFormatter:
         add_link_text = prop_info.get('add_link_text', '')
 
         if within_action:
-            patterns = prop_info.get('patternProperties', {}).keys()
-
             # Extend and parse parameter info
             for action_param in action_parameters.keys():
                 params = action_parameters[action_param]
                 params = self.extend_property_info(schema_ref, params, {})
                 action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param], {})
 
-            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters, patterns)
+            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
 
             formatted_action_rows = []
 
@@ -1461,22 +1459,6 @@ class DocFormatter:
 
         prop_names = patterns = False
 
-
-        if prop_info.get('patternProperties'):
-            # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
-            if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
-                patterns = prop_info['patternProperties'].keys()
-                detail_info = {
-                    'description': self.separators['pattern'].join(patterns),
-                    '_doc_generator_meta': {
-                       'within_action': False,
-                       'is_pattern': True
-                       }
-                    }
-                formatted = self.format_property_row(schema_ref, '(pattern)', detail_info, prop_path)
-                if formatted:
-                    output.append(formatted['row'])
-
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
@@ -1524,6 +1506,22 @@ class DocFormatter:
                         action_details[prop_name] = formatted['action_details']
                     if formatted.get('profile_conditional_details'):
                         conditional_details.update(formatted['profile_conditional_details'])
+        else:
+            if prop_info.get('patternProperties'):
+                # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
+                if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
+                    patterns = prop_info['patternProperties'].keys()
+                    detail_info = {
+                        'description': self.separators['pattern'].join(patterns),
+                        '_doc_generator_meta': {
+                           'within_action': False,
+                           'is_pattern': True
+                           }
+                        }
+                    formatted = self.format_property_row(schema_ref, '(pattern)', detail_info, prop_path)
+                    if formatted:
+                        output.append(formatted['row'])
+
 
         if len(conditional_details):
             cond_names = [x for x in conditional_details.keys()]
