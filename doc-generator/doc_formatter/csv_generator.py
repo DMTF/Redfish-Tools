@@ -24,8 +24,7 @@ class CsvGenerator(DocFormatter):
         super(CsvGenerator, self).__init__(property_data, traverser, config, level)
         self.separators = {
             'inline': ', ',
-            'linebreak': '\n',
-            'pattern': ', '
+            'linebreak': '\n'
             }
         self.output = io.StringIO()
         self.writer = csv.writer(self.output)
@@ -145,11 +144,7 @@ class CsvGenerator(DocFormatter):
         elif formatted_details['prop_required']:
             required = 'required'
 
-        if isinstance(prop_info, list):
-            p_i = prop_info[0]
-        else:
-            p_i = prop_info
-
+        p_i = prop_info[0]
         min_val = p_i.get('minimum', '')
         max_val = p_i.get('maximum', '')
         pattern = ''
