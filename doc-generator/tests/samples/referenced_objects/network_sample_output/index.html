@@ -3,19 +3,15 @@
 <p>Oem extension object.</p>
 <table class="properties">
 <tbody>
-<tr><td><nobr><b>(pattern)</b></nobr></td><td></td><td></td><td>[A-Za-z0-9_.:]+</p>
-<p>^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message).[a-zA-Z_][a-zA-Z0-9_.]+$</td></tr>
+
 </tbody></table>
 <h2 id="common-properties-Status">Status</h2>
 <p>This type describes the status and health of a resource and its children.</p>
 <table class="properties">
 <tbody>
-<tr><td><nobr><b>(pattern)</b></nobr></td><td></td><td></td><td>^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message).[a-zA-Z_][a-zA-Z0-9_.]+$</td></tr>
 <tr><td><nobr><b>Health</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-only</nobr> (null)</td><td>This represents the health state of this resource in the absence of its dependent resources.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/Resource.json|details|Health">Health</a> in Property Details, below, for the possible values of this property.</i></td></tr>
 <tr><td><nobr><b>HealthRollup</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-only</nobr> (null)</td><td>This represents the overall health state from the view of this resource.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/Resource.json|details|HealthRollup">HealthRollup</a> in Property Details, below, for the possible values of this property.</i></td></tr>
-<tr><td><nobr><b>Oem</b> {</nobr></td><td>object</td><td></td><td>Oem extension object.</td></tr>
-<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>(pattern)</b></nobr><br>}</td><td></td><td></td><td>[A-Za-z0-9_.:]+</p>
-<p>^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message).[a-zA-Z_][a-zA-Z0-9_.]+$</td></tr>
+<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>Oem extension object.</td></tr>
 <tr><td><nobr><b>State</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-only</nobr> (null)</td><td>This indicates the known state of the resource, such as if it is enabled.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/Resource.json|details|State">State</a> in Property Details, below, for the possible values of this property.</i></td></tr>
 </tbody></table>
 <div class="property-details">

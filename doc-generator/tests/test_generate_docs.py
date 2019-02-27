@@ -49,9 +49,6 @@ def _strip_styles(htmlstring):
     We know there is just one <style> block, so we can keep this simple.
     """
     startblock = htmlstring.find('<style>')
-    if startblock == -1:
-        # Didn't find it! Assume styles are already stripped.
-        return htmlstring
     endblock = htmlstring.find('</style>') + len('</style>')
     return htmlstring[0:startblock] + htmlstring[endblock:]
 
@@ -101,7 +98,6 @@ def test_markdown_output(mockRequest):
         output = output.strip()
 
         assert output == expected_output, "Failed on: " + name
-
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_normative_html_output(mockRequest):

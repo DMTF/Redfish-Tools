@@ -4,7 +4,7 @@ Oem extension object.
 
 |     |     |     |
 | --- | --- | --- |
-| **(pattern)** |  | [A-Za-z0-9_.:]+, ^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$ |
+
 
 # Status
 
@@ -12,12 +12,9 @@ This type describes the status and health of a resource and its children.
 
 |     |     |     |
 | --- | --- | --- |
-| **(pattern)** |  | ^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$ |
 | **Health** | string<br>(enum)<br><br>*read-only<br>(null)* | This represents the health state of this resource in the absence of its dependent resources. *See Health in Property Details, below, for the possible values of this property.* |
 | **HealthRollup** | string<br>(enum)<br><br>*read-only<br>(null)* | This represents the overall health state from the view of this resource. *See HealthRollup in Property Details, below, for the possible values of this property.* |
-| **Oem** { | object | Oem extension object. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**(pattern)** |  | [A-Za-z0-9_.:]+, ^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$ |
-| } |   |   |
+| **Oem** {} | object | Oem extension object. |
 | **State** | string<br>(enum)<br><br>*read-only<br>(null)* | This indicates the known state of the resource, such as if it is enabled. *See State in Property Details, below, for the possible values of this property.* |
 
 ## Property Details
