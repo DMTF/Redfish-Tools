@@ -444,7 +444,7 @@ class MarkdownGenerator(DocFormatter):
         return '\n'.join(contents) + '\n'
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, patterns=[]):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -456,7 +456,7 @@ class MarkdownGenerator(DocFormatter):
         formatted.append(self.formatter.head_four(prop_name, self.level))
         formatted.append(self.formatter.para(prop_descr))
 
-        if action_parameters:
+        if action_parameters or patterns:
             rows = []
             # Table start:
             rows.append("|     |     |     |")
@@ -464,6 +464,20 @@ class MarkdownGenerator(DocFormatter):
 
             # Add a "start object" row for this parameter:
             rows.append('| ' + ' | '.join(['{', ' ',' ',' ']) + ' |')
+
+        if patterns:
+            # Mock up a definition so we can use format_property_row on the patterns:
+            pattern_info = {
+                'description': self.separators['pattern'].join(patterns),
+                '_doc_generator_meta': {
+                'within_action': False,
+                'is_pattern': True
+                }
+                }
+            formatted_patterns = self.format_property_row(schema_ref, '(pattern)', pattern_info, ['Actions', 'patterns'])
+            rows.append(formatted_patterns.get('row'));
+
+        if action_parameters:
             param_names = [x for x in action_parameters.keys()]
             param_names.sort(key=str.lower)
             for param_name in param_names:
