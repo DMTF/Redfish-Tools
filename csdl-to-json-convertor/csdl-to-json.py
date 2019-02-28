@@ -481,7 +481,7 @@ class CSDLToJSON:
         # If this object is an Action, add the predefined title and target properties, as well as the parameters block
         if object.tag == ODATA_TAG_ACTION:
             json_def[name]["properties"]["title"] = { "type": "string", "description": "Friendly action name" }
-            json_def[name]["properties"]["target"] = { "type": "string", "format": "uri", "description": "Link to invoke action" }
+            json_def[name]["properties"]["target"] = { "type": "string", "format": "uri-reference", "description": "Link to invoke action" }
             json_def[name]["parameters"] = {}
 
         # Process the items in the object
@@ -1006,7 +1006,7 @@ class CSDLToJSON:
             # Format
             if term == "OData.IsURL":
                 if self.get_attrib( annotation, "Bool", False, "true" ) == "true":
-                    json_type_def["format"] = "uri"
+                    json_type_def["format"] = "uri-reference"
 
             # Units
             if term == "Measures.Unit":
