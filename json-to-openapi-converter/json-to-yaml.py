@@ -137,8 +137,8 @@ class JSONToYAML:
                 if self.uri_cache[uri]["insertable"]:
                     service_doc["paths"][uri]["post"] = self.generate_operation( uri, CREATE_RESPONSES, True )
                 if self.uri_cache[uri]["updatable"]:
-                    service_doc["paths"][uri]["patch"] = self.generate_operation( uri, PATCH_RESPONSES )
-                    service_doc["paths"][uri]["put"] = self.generate_operation( uri, PUT_RESPONSES )
+                    service_doc["paths"][uri]["patch"] = self.generate_operation( uri, PATCH_RESPONSES, True )
+                    service_doc["paths"][uri]["put"] = self.generate_operation( uri, PUT_RESPONSES, True )
                 if self.uri_cache[uri]["deletable"]:
                     service_doc["paths"][uri]["delete"] = self.generate_operation( uri, DELETE_RESPONSES )
             else:
