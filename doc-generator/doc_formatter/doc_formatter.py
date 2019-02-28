@@ -1275,7 +1275,7 @@ class DocFormatter:
                 prop_details.update(object_formatted['details'])
 
         # embedded items:
-        if prop_is_array:
+        if prop_is_array and (list_of_objects or list_of_simple_type or prop_item):
             new_path = prop_path.copy()
             new_path.append(prop_name)
             if list_of_objects:
@@ -1307,7 +1307,7 @@ class DocFormatter:
                     item_formatted = self.format_non_object_descr(schema_ref, prop_items[0], new_path)
                     item_formatted['promote_me'] = False
 
-            else:
+            elif prop_item:
                 item_formatted = self.format_non_object_descr(schema_ref, prop_item, new_path)
 
             promote_me = item_formatted.get('promote_me', False)
@@ -1506,19 +1506,25 @@ class DocFormatter:
                         action_details[prop_name] = formatted['action_details']
                     if formatted.get('profile_conditional_details'):
                         conditional_details.update(formatted['profile_conditional_details'])
-        else:
-            if prop_info.get('patternProperties'):
-                # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
-                if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
-                    patterns = prop_info['patternProperties'].keys()
-                    detail_info = {
-                        'description': self.separators['pattern'].join(patterns),
-                        '_doc_generator_meta': {
-                           'within_action': False,
-                           'is_pattern': True
-                           }
-                        }
-                    formatted = self.format_property_row(schema_ref, '(pattern)', detail_info, prop_path)
+        elif prop_info.get('patternProperties'):
+            # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
+            if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
+                for pattern in prop_info['patternProperties'].keys(): # we expect just one
+                    prop_name = '(pattern)'
+                    base_pattern_info = prop_info['patternProperties'][pattern]
+                    base_pattern_info['prop_required'] = False
+                    base_pattern_info['prop_required_on_create'] = False
+                    base_pattern_info = self.apply_overrides(base_pattern_info, schema_name, None)
+
+                    # Override description with this string, identifying the pattern:
+                    description = 'Property names follow regular expression pattern "' + pattern + '"'
+                    base_pattern_info['description'] = base_pattern_info['longDescription'] = description
+
+                    meta = self.merge_metadata(prop_name, base_pattern_info.get('_doc_generator_meta', {}), context_meta)
+                    pattern_info = self.extend_property_info(schema_ref, base_pattern_info, meta)
+                    meta = self.merge_full_metadata(pattern_info[0].get('_doc_generator_meta', {}), meta)
+
+                    formatted = self.format_property_row(schema_ref, prop_name, pattern_info, prop_path)
                     if formatted:
                         output.append(formatted['row'])
 
