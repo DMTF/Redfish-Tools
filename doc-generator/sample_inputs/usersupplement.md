@@ -16,6 +16,7 @@ The supplement is split into several major sections, noted by first-level headin
 - Excluded Properties
 - Excluded Annotations
 - Excluded Schemas
+- Excluded patternProperties
 - Schema Supplement
 
 Text at the top of the supplement, like this text, is ignored up until the first recognized section header.
@@ -176,6 +177,12 @@ Partial match is supported; prepend '*' to indicate partial matches.
 ## *Collection
 
 (Wildcard removal of anything with "Collection" in the name)
+
+# Excluded patternProperties
+
+You'll probably want to exclude this and only this:
+
+## ^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$
 
 
 # Schema Supplement

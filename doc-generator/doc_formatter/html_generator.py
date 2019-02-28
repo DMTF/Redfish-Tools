@@ -304,7 +304,10 @@ pre.code{
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
 
-        formatted_details['descr'] = self.formatter.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
+        # TODO: this is a special case to avoid stomping on RegExs in patterns. Need a verbatim description field
+        # or, a reliable way of escaping RegEx to protect it in markdown_to_html conversion.
+        if prop_name != '(pattern)':
+            formatted_details['descr'] = self.formatter.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:

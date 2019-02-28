@@ -51,6 +51,12 @@ Schemas listed here are excluded from the output document.  This can be used to 
 
 Wildcard removal of anything with "Collection" in the name
 
+# Excluded patternProperties
+
+You'll probably want to exclude this and only this:
+
+## ^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$
+
 
 # Schema Supplement
 

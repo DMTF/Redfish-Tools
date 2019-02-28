@@ -979,6 +979,8 @@ def main():
         'excluded_by_match': [],
         'excluded_schemas': [],
         'excluded_schemas_by_match': [],
+        'excluded_pattern_props': [],
+        'excluded_pattern_props_by_match': [],
         'expand_defs_from_non_output_schemas': False,
         'schema_supplement': None,
         'normative': False,
@@ -1154,6 +1156,10 @@ def main():
     if 'Excluded Schemas' in config['supplemental']:
         config['excluded_schemas'] = config['supplemental']['Excluded Schemas'].get('exact_match')
         config['excluded_schemas_by_match'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
+
+    if 'Excluded patternProperties' in config['supplemental']:
+        config['excluded_pattern_props'] = config['supplemental']['Excluded patternProperties'].get('exact_match')
+        config['excluded_pattern_props_by_match'] = config['supplemental']['Excluded patternProperties'].get('wildcard_match')
 
     if 'Description Overrides' in config['supplemental']:
         config['property_description_overrides'] = config['supplemental']['Description Overrides']

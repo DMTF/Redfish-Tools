@@ -42,6 +42,10 @@ class DocFormatter:
         self.collapse_list_of_simple_type = True
         self.formatter = FormatUtils() # Non-markdown formatters will override this.
 
+        # Extend config with some defaults.
+        self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
+        self.config['excluded_pattern_props_by_match'] = self.config.get('excluded_pattern_props_by_match', [])
+
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
         self.documented_schemas = []
@@ -66,7 +70,7 @@ class DocFormatter:
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
+        self.parent_props = ['description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
 
 
     def emit(self):
@@ -1509,20 +1513,28 @@ class DocFormatter:
         elif prop_info.get('patternProperties'):
             # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
             if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
-                for pattern in prop_info['patternProperties'].keys(): # we expect just one
+                patterns = prop_info['patternProperties'].keys()
+                patterns_to_include = self.exclude_prop_names(patterns, self.config['excluded_pattern_props'],
+                                                              self.config['excluded_pattern_props_by_match'])
+
+                for pattern in patterns_to_include:
                     prop_name = '(pattern)'
                     base_pattern_info = prop_info['patternProperties'][pattern]
                     base_pattern_info['prop_required'] = False
                     base_pattern_info['prop_required_on_create'] = False
+
                     base_pattern_info = self.apply_overrides(base_pattern_info, schema_name, None)
 
-                    # Override description with this string, identifying the pattern:
+                    # Override the description, if any, with a line describing the pattern.
                     description = 'Property names follow regular expression pattern "' + pattern + '"'
                     base_pattern_info['description'] = base_pattern_info['longDescription'] = description
 
                     meta = self.merge_metadata(prop_name, base_pattern_info.get('_doc_generator_meta', {}), context_meta)
                     pattern_info = self.extend_property_info(schema_ref, base_pattern_info, meta)
                     meta = self.merge_full_metadata(pattern_info[0].get('_doc_generator_meta', {}), meta)
+
+
+
 
                     formatted = self.format_property_row(schema_ref, prop_name, pattern_info, prop_path)
                     if formatted:
