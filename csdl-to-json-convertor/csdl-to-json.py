@@ -544,7 +544,7 @@ class CSDLToJSON:
 
             # Process action return payloads
             if child.tag == ODATA_TAG_RETURN:
-                self.generate_action_response( child, namespace, json_def[name] )
+                self.generate_action_response( child, json_def[name] )
 
         # Add OData specific properties
         self.generate_odata_properties( object, json_def[name] )
@@ -623,7 +623,7 @@ class CSDLToJSON:
         json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
 
         # Add version details to the Action
-        self.add_version_details( action, self.namespace_under_process, json_def[name] )
+        self.add_version_details( action, json_def[name] )
 
     def generate_enum( self, enum, json_def ):
         """
@@ -640,7 +640,7 @@ class CSDLToJSON:
         name = self.get_attrib( enum, "Name" )
         json_def[name] = {}
         json_def[name]["type"] = "string"
-        self.add_version_details( enum, self.namespace_under_process, json_def[name] )
+        self.add_version_details( enum, json_def[name] )
 
         # Process the items in the enum
         for child in enum:
@@ -693,7 +693,7 @@ class CSDLToJSON:
                         json_def[name]["enumDeprecated"][member_name] = self.get_attrib( annotation, "String" )
 
                 # Add version details for the member
-                self.add_version_details( child, self.namespace_under_process, json_def[name], member_name )
+                self.add_version_details( child, json_def[name], member_name )
 
     def generate_typedef( self, typedef, json_def ):
         """
@@ -718,7 +718,7 @@ class CSDLToJSON:
         json_def[name] = {}
 
         # Add the common type info
-        self.add_type_info( typedef, self.namespace_under_process, type, False, json_def[name] )
+        self.add_type_info( typedef, type, False, json_def[name] )
 
     def generate_redfish_enum( self, enum, json_def ):
         """
@@ -794,7 +794,7 @@ class CSDLToJSON:
                                     json_def[name]["enumDeprecated"][member_name] = self.get_attrib( rec_annotation, "String" )
 
                             # Add version details for the member
-                            self.add_version_details( record, self.namespace_under_process, json_def[name], member_name )
+                            self.add_version_details( record, json_def[name], member_name )
 
     def init_object_definition( self, name, json_def ):
         """
@@ -845,7 +845,7 @@ class CSDLToJSON:
             prop_type = prop_type[11:-1]
 
         # Add the common type info
-        self.add_type_info( property, namespace, prop_type, is_array, json_obj_def["properties"][prop_name] )
+        self.add_type_info( property, prop_type, is_array, json_obj_def["properties"][prop_name] )
 
         # Check for required annotations on the property
         for annotation in property.iter( ODATA_TAG_ANNOTATION ):
@@ -891,16 +891,15 @@ class CSDLToJSON:
             param_type = param_type[11:-1]
 
         # Add the common type info
-        self.add_type_info( parameter, namespace, param_type, is_array, json_obj_def["parameters"][param_name] )
+        self.add_type_info( parameter, param_type, is_array, json_obj_def["parameters"][param_name] )
 
-    def generate_action_response( self, return_type, namespace, json_obj_def ):
+    def generate_action_response( self, return_type, json_obj_def ):
         """
         Processes a ReturnType and adds it to the JSON object definition for an action response
 
         Args:
             return_type: The ReturnType to process
             json_obj_def: The JSON object definition to place the property
-            namespace: The namespace string where the parameter was found
         """
 
         # Pull out the return type info
@@ -914,7 +913,7 @@ class CSDLToJSON:
             response_type = response_type[11:-1]
 
         # Add the common type info
-        self.add_type_info( return_type, namespace, response_type, is_array, json_obj_def["actionResponse"] )
+        self.add_type_info( return_type, response_type, is_array, json_obj_def["actionResponse"] )
 
     def generate_odata_properties( self, object, json_obj_def ):
         """
@@ -959,13 +958,12 @@ class CSDLToJSON:
         if base_type == "Resource.v1_0_0.ResourceCollection":
             json_obj_def["properties"]["Members@odata.nextLink"] = { "$ref": self.odata_schema + "#/definitions/nextLink" }
 
-    def add_type_info( self, type_info, namespace, type, is_array, json_type_def ):
+    def add_type_info( self, type_info, type, is_array, json_type_def ):
         """
         Adds common type information for a given definition
 
         Args:
             type_info: The structure to process; can be Property, NavigationProperty, TypeDefinition, or Parameter
-            namespace: The namespace where the structure was found
             type: The type for the structure
             is_array: Flag if this definition is an array of some sorts
             json_type_def: The JSON object or property definition to populate
@@ -1078,7 +1076,7 @@ class CSDLToJSON:
                 json_type_def["anyOf"] = [ { "$ref": ref }, { "type": "null" } ]
 
         # Add version info
-        self.add_version_details( type_info, namespace, json_type_def )
+        self.add_version_details( type_info, json_type_def )
 
     def csdl_type_to_json_type( self, type, is_nullable ):
         """
@@ -1275,18 +1273,17 @@ class CSDLToJSON:
             return True
         return does_version_apply( added, version )
 
-    def add_version_details( self, definition, namespace, json_def, enum_member = None ):
+    def add_version_details( self, definition, json_def, enum_member = None ):
         """
         Adds version details to a given definition
 
         Args:
             definition: The definition to check
-            namespace: The namespace in question
             json_def: The JSON term to populate
             enum_member: The name of the enum member with the version info
         """
-        version = namespace.rsplit( "." )[-1]
-        if is_namespace_unversioned( namespace ):
+        version = self.namespace_under_process.rsplit( "." )[-1]
+        if is_namespace_unversioned( self.namespace_under_process ):
             version = DEFAULT_VER
         added, deprecated, deprecated_info = self.get_version_details( definition )
         if deprecated is not None and deprecated_info is not None:
