@@ -982,6 +982,8 @@ def main():
         'excluded_pattern_props': [],
         'excluded_pattern_props_by_match': [],
         'expand_defs_from_non_output_schemas': False,
+        'omit_version_in_headers': False,
+        'actions_in_property_table': True,
         'schema_supplement': None,
         'normative': False,
         'escape_chars': [],
@@ -1188,7 +1190,10 @@ def main():
     config['wants_common_objects'] = config['supplemental'].get('wants_common_objects', False)
 
     if 'keywords' in config['schema_supplement']:
-        config['add_toc'] = config['supplemental']['keywords'].get('add_toc')
+        config['add_toc'] = config['supplemental']['keywords'].get('add_toc', False)
+        config['actions_in_property_table'] = config['supplemental']['keywords'].get('actions_in_property_table', True)
+        config['omit_version_in_headers'] = config['supplemental']['keywords'].get('omit_version_in_headers', False)
+        config['expand_defs_from_non_output_schemas'] = config['supplemental']['keywords'].get('expand_defs_from_non_output_schemas', False)
 
     config['normative'] = args.normative
 

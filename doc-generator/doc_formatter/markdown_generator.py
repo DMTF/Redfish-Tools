@@ -68,7 +68,7 @@ class MarkdownGenerator(DocFormatter):
         else:
             indentation_string = '&nbsp;' * 6 * current_depth
 
-        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Action Details
+        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Actions
         # section and should dial back the indentation by one level.
         if len(prop_path) > 1 and prop_path[0] == 'Actions':
             indentation_string = '&nbsp;' * 6 * (current_depth -1)
@@ -214,7 +214,7 @@ class MarkdownGenerator(DocFormatter):
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
             if formatted_details['has_action_details']:
-                text_descr = 'For more information, see the Action Details section below.'
+                text_descr = 'For more information, see the Actions section below.'
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
         if deprecated_descr:
@@ -456,6 +456,9 @@ class MarkdownGenerator(DocFormatter):
         formatted.append(self.formatter.head_four(prop_name, self.level))
         formatted.append(self.formatter.para(prop_descr))
 
+        # Add the URIs for this action.
+        formatted.append(self.format_uri_block_for_action(prop_name, self.current_uris));
+
         if action_parameters:
             rows = []
             # Table start:
@@ -550,7 +553,7 @@ class MarkdownGenerator(DocFormatter):
                 contents.append(conditional_details)
 
             if len(section.get('action_details', [])):
-                contents.append('\n' + self.formatter.head_two('Action Details', self.level))
+                contents.append('\n' + self.formatter.head_two('Actions', self.level))
                 contents.append('\n\n'.join(section.get('action_details')))
             if section.get('property_details'):
                 contents.append('\n' + self.formatter.head_two('Property Details', self.level))
@@ -689,6 +692,16 @@ search: true
             uri_block += "\n" + self.format_uri(uri)
 
         self.this_section['uris'] = uri_block + "\n"
+
+
+    def format_uri_block_for_action(self, action, uris):
+        """ Create a URI block for this action & the resource's URIs """
+        uri_block = "**URIs**:\n"
+        for uri in sorted(uris, key=str.lower):
+            uri = uri + "/" + action
+            uri_block += "\n" + self.format_uri(uri)
+
+        return uri_block
 
 
     def add_json_payload(self, json_payload):

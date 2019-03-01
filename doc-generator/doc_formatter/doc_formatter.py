@@ -377,6 +377,9 @@ class DocFormatter:
 
             if len(uris):
                 self.add_uris(uris)
+                self.current_uris = uris
+            else:
+                self.current_uris = []
 
             self.add_json_payload(supplemental.get('jsonpayload'))
 
@@ -402,7 +405,9 @@ class DocFormatter:
 
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
-                        self.add_property_row(formatted['row'])
+                        # Skip "Actions" if requested. Everything else is output.
+                        if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                            self.add_property_row(formatted['row'])
                         if formatted['details']:
                             prop_details.update(formatted['details'])
                         if formatted['action_details']:

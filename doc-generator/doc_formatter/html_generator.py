@@ -189,7 +189,7 @@ pre.code{
         else:
             indentation_string = '&nbsp;' * 6 * current_depth
 
-        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Action Details
+        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Actions
         # section and should dial back the indentation by one level.
         if len(prop_path) > 1 and prop_path[0] == 'Actions':
             indentation_string = '&nbsp;' * 6 * (current_depth -1)
@@ -333,7 +333,7 @@ pre.code{
             # If this is an Action with details, add a note to the description:
             if formatted_details['has_action_details']:
                 anchor = schema_ref + '|action_details|' + prop_name
-                text_descr = 'For more information, see the <a href="#' + anchor + '">Action Details</a> section below.'
+                text_descr = 'For more information, see the <a href="#' + anchor + '">Actions</a> section below.'
                 formatted_details['descr'] += '<br>' + self.formatter.italic(text_descr)
 
         if deprecated_descr:
@@ -605,6 +605,9 @@ pre.code{
         formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
         formatted.append(self.formatter.para(prop_descr))
 
+        # Add the URIs for this action.
+        formatted.append(self.format_uri_block_for_action(prop_name, self.current_uris));
+
         if action_parameters:
             rows = []
             # Add a "start object" row for this parameter:
@@ -660,7 +663,7 @@ pre.code{
             if len(section.get('action_details', [])):
                 action_details = '\n'.join(section['action_details'])
                 deets = []
-                deets.append(self.formatter.head_three('Action Details', self.level))
+                deets.append(self.formatter.head_three('Actions', self.level))
                 deets.append(self.formatter.make_div(action_details, 'property-details-content'))
                 contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
             if section.get('property_details'):
@@ -868,6 +871,18 @@ pre.code{
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h4>URIs:</h4>' + uri_block
         self.this_section['uris'] = uri_content
+
+
+    def format_uri_block_for_action(self, action, uris):
+        """ Create a URI block for this action & the resource's URIs """
+        uri_strings = []
+        for uri in sorted(uris, key=str.lower):
+            uri = uri + "/" + action
+            uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
+
+        uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
+        uri_content = '<h5>URIs:</h5>' + uri_block
+        return uri_content
 
 
     def format_uri(self, uri):

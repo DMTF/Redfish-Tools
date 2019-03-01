@@ -57,8 +57,11 @@ omit_version_in_headers, boolean. Default false. If false, schema sections in th
 
 add_toc, boolean. Default false. Add a Table of Contents (relevant for HTML output only)
 
+actions_in_property_table, boolean. Default true. Include an "Actions" row in the property table. (Actions will appear below the table regardless.)
+
 - omit_version_in_headers: false
 - add_toc: true
+- actions_in_property_table: false
 
 Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output.
 

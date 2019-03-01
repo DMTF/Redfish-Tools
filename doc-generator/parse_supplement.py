@@ -124,7 +124,8 @@ def parse_configuration(markdown_blob):
 
     Values may be coerced as needed. So far, expected booleans are coerced.
     """
-    boolean_settings = ['omit_version_in_headers', 'expand_defs_from_non_output_schemas', 'add_toc']
+    boolean_settings = ['omit_version_in_headers', 'expand_defs_from_non_output_schemas', 'add_toc',
+                        'actions_in_property_table']
     config = {}
     pattern = re.compile(r'\s*-\s+(\S+)\s*:\s*(\S+)')
 
