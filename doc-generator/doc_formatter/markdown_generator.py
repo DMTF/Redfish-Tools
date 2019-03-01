@@ -449,15 +449,18 @@ class MarkdownGenerator(DocFormatter):
 
         formatted = []
 
+        action_name = prop_name
         if prop_name.startswith('#'): # expected
+            # Example: from #Bios.ResetBios, we want prop_name "ResetBios" and action_name "Bios.ResetBios"
             prop_name_parts = prop_name.split('.')
             prop_name = prop_name_parts[-1]
+            action_name = action_name[1:]
 
         formatted.append(self.formatter.head_four(prop_name, self.level))
         formatted.append(self.formatter.para(prop_descr))
 
         # Add the URIs for this action.
-        formatted.append(self.format_uri_block_for_action(prop_name, self.current_uris));
+        formatted.append(self.format_uri_block_for_action(action_name, self.current_uris));
 
         if action_parameters:
             rows = []
@@ -646,6 +649,7 @@ search: true
             'profile_mode': self.config.get('profile_mode'),
             'profile_resources': self.config.get('profile_resources', {}),
             'wants_common_objects': self.config.get('wants_common_objects'),
+            'actions_in_property_table': self.config.get('actions_in_property_table', True),
             }
 
         for line in intro_blob.splitlines():
@@ -698,7 +702,7 @@ search: true
         """ Create a URI block for this action & the resource's URIs """
         uri_block = "**URIs**:\n"
         for uri in sorted(uris, key=str.lower):
-            uri = uri + "/" + action
+            uri = uri + "/Actions/" + action
             uri_block += "\n" + self.format_uri(uri)
 
         return uri_block

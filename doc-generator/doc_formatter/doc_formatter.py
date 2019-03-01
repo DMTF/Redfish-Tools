@@ -489,7 +489,9 @@ class DocFormatter:
             frag_gen.add_section('')
             frag_gen.current_version = {}
 
-            frag_gen.add_property_row(formatted['row'])
+            # Skip "Actions" if requested. Everything else is output.
+            if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                frag_gen.add_property_row(formatted['row'])
             if len(formatted['details']):
                 prop_details = {}
                 prop_details.update(formatted['details'])
@@ -574,7 +576,9 @@ class DocFormatter:
                     cp_gen.add_description(description)
                 cp_gen.current_version = {}
 
-                cp_gen.add_property_row(formatted['row'])
+                # Skip "Actions" if requested. Everything else is output.
+                if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                    cp_gen.add_property_row(formatted['row'])
                 if len(formatted['details']):
                     prop_details = {}
                     prop_details.update(formatted['details'])
