@@ -165,3 +165,75 @@ def test_uris_in_regular_schema_html_output (mockRequest):
 
     for x in expected_strings:
         assert x in output
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_action_uris (mockRequest):
+    """ Action URIs are based on URIs and action names,
+    and should be output as part of the Actions section in HTML and markdown output.
+    """
+    config = copy.deepcopy(base_config)
+    config['excluded_schemas_by_match'] = [ 'Collection' ]
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'actions'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # Links should appear with asterisks around {} path parts to highlight them.
+    expected_strings = [
+        "/redfish/v1/CompositionService/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ChangePassword",
+        "/redfish/v1/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ChangePassword",
+        "/redfish/v1/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ChangePassword",
+        "/redfish/v1/CompositionService/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ResetBios",
+        "/redfish/v1/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ResetBios",
+        "/redfish/v1/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ResetBios",
+        ]
+
+    for x in expected_strings:
+        assert x in output
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_actions_not_suppressed (mockRequest):
+    """ By default, "Actions" appear in property tables. """
+    config = copy.deepcopy(base_config)
+    config['excluded_schemas_by_match'] = [ 'Collection' ]
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'actions'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # This is what the start of an "Actions" object looks like in a markdown table.
+    assert "| **Actions** { | object |" in output
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_actions_suppressed (mockRequest):
+    """ The "actions_in_property_table" config setting, if false, should suppress
+    "Actions" from appearing in property tables.
+    """
+    config = copy.deepcopy(base_config)
+    config['excluded_schemas_by_match'] = [ 'Collection' ]
+    config['output_format'] = 'markdown'
+    config['actions_in_property_table'] = False
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'actions'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # This is what the start of an "Actions" object looks like in a markdown table.
+    assert "| **Actions** { | object |" not in output
