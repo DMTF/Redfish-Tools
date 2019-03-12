@@ -1100,7 +1100,7 @@ class DocFormatter:
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
         'normative_descr', 'non_normative_descr', 'pattern', 'prop_required', 'prop_required_on_create',
-        'required_parameter'
+        'required_parameter', 'verbatim_description'
         """
         traverser = self.traverser
 
@@ -1120,6 +1120,7 @@ class DocFormatter:
         profile_conditional_details = {}
         profile_values = False
         profile_comparison = False
+        verbatim_description = prop_info.get('verbatim_description', False)
         schema_name = traverser.get_schema_name(schema_ref)
 
         # Get the profile if we are in profile mode.
@@ -1381,7 +1382,8 @@ class DocFormatter:
                        'profile_conditional_req': None,
                        'profile_conditional_details': None,
                        'profile_values': None,
-                       'profile_comparison': None
+                       'profile_comparison': None,
+                       'verbatim_description': verbatim_description,
                        }
 
         if profile is not None:
@@ -1537,6 +1539,7 @@ class DocFormatter:
                     # Override the description, if any, with a line describing the pattern.
                     description = 'Property names follow regular expression pattern "' + self.escape_regexp(pattern) + '"'
                     base_pattern_info['description'] = base_pattern_info['longDescription'] = description
+                    base_pattern_info['verbatim_description'] = True
 
                     meta = self.merge_metadata(prop_name, base_pattern_info.get('_doc_generator_meta', {}), context_meta)
                     pattern_info = self.extend_property_info(schema_ref, base_pattern_info, meta)
