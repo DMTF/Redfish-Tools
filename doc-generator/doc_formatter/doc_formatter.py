@@ -1542,12 +1542,15 @@ class DocFormatter:
                     pattern_info = self.extend_property_info(schema_ref, base_pattern_info, meta)
                     meta = self.merge_full_metadata(pattern_info[0].get('_doc_generator_meta', {}), meta)
 
-
-
-
                     formatted = self.format_property_row(schema_ref, prop_name, pattern_info, prop_path)
                     if formatted:
                         output.append(formatted['row'])
+                        if formatted['details']:
+                            details.update(formatted['details'])
+                        if formatted['action_details']:
+                            action_details[prop_name] = formatted['action_details']
+                        if formatted.get('profile_conditional_details'):
+                            conditional_details.update(formatted['profile_conditional_details'])
 
 
         if len(conditional_details):

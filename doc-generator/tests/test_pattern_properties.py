@@ -44,7 +44,8 @@ def test_html_output(mockRequest):
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
-    expected_output = open(os.path.join(dirpath, 'expected_output', 'MessagesProperty.html')).read().strip()
+    expected_output_main = open(os.path.join(dirpath, 'expected_output', 'MessagesProperty.html')).read().strip()
+    expected_output_details = open(os.path.join(dirpath, 'expected_output', 'MessagesPropertyDetails.html')).read().strip()
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
@@ -55,7 +56,8 @@ def test_html_output(mockRequest):
     # The first is more focused, though.
     assert pattern1 in output, "Expected pattern " + pattern1 + " not found in output"
     assert pattern2 in output, "Expected pattern " + pattern2 + " not in output. Was its backslash-escape changed by markdown-to-html conversion?"
-    assert expected_output in output
+    assert expected_output_main in output
+    assert expected_output_details in output
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
@@ -70,7 +72,8 @@ def test_markdown_output(mockRequest):
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
-    expected_output = open(os.path.join(dirpath, 'expected_output', 'MessagesProperty.md')).read().strip()
+    expected_output_main = open(os.path.join(dirpath, 'expected_output', 'MessagesProperty.md')).read().strip()
+    expected_output_details = open(os.path.join(dirpath, 'expected_output', 'MessagesPropertyDetails.md')).read().strip()
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
@@ -83,4 +86,5 @@ def test_markdown_output(mockRequest):
     assert pattern1 in output, "Expected pattern " + pattern1 + " not found in output"
     assert pattern3 in output, "Expected pattern " + pattern3 + " not in output. Was " + pattern2 + " escaped properly?"
 
-    assert expected_output in output
+    assert expected_output_main in output
+    assert expected_output_details in output
