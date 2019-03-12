@@ -771,3 +771,16 @@ search: true
         for char in chars:
             text = text.replace(char, '\\' + char)
         return text
+
+    @staticmethod
+    def escape_regexp(text):
+        """If escaping is necessary to protect patterns when output format is rendered, do that."""
+        chars_to_escape = r'\`*_{}[]()#+-.!|'
+        escaped_text = ''
+        for char in text:
+            if char in chars_to_escape:
+                escaped_text += '\\' + char
+            else:
+                escaped_text += char
+
+        return escaped_text

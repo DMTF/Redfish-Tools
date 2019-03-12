@@ -1,0 +1,52 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.json",
+    "$ref": "#/definitions/MessageRegistry",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2018 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "MessageRegistry": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_0_0.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_0_2.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_0_3.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_0_4.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_0_5.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_0_6.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_1_0.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_1_1.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_1_2.json#/definitions/MessageRegistry"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistry.v1_2_0.json#/definitions/MessageRegistry"
+                }
+            ],
+            "deletable": false,
+            "description": "This is the schema definition for all Message Registries.  It represents the properties for the registries themselves.  The MessageId is formed per the Redfish specification.  It consists of the RegistryPrefix concatenated with the version concatenated with the unique identifier for the message registry entry.",
+            "insertable": false,
+            "longDescription": "This resource shall be used to represent a message registry for a Redfish implementation.",
+            "updatable": false
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#MessageRegistry.MessageRegistry"
+}

@@ -1535,7 +1535,7 @@ class DocFormatter:
                     base_pattern_info = self.apply_overrides(base_pattern_info, schema_name, None)
 
                     # Override the description, if any, with a line describing the pattern.
-                    description = 'Property names follow regular expression pattern "' + pattern + '"'
+                    description = 'Property names follow regular expression pattern "' + self.escape_regexp(pattern) + '"'
                     base_pattern_info['description'] = base_pattern_info['longDescription'] = description
 
                     meta = self.merge_metadata(prop_name, base_pattern_info.get('_doc_generator_meta', {}), context_meta)
@@ -1809,3 +1809,8 @@ class DocFormatter:
             'Conditional': 'Conditional Requirements',
             }
         return output_map.get(text, text)
+
+    @staticmethod
+    def escape_regexp(text):
+        """If escaping is necessary to protect patterns when output format is rendered, do that. """
+        return text

@@ -13,7 +13,7 @@ Oem extension object.
 
 |     |     |     |
 | --- | --- | --- |
-| **(pattern)** {} | object | Property names follow regular expression pattern "[A-Za-z0-9_.:]+" |
+| **(pattern)** {} | object | Property names follow regular expression pattern "\[A\-Za\-z0\-9\_\.:\]\+" |
 
 # Status
 
@@ -24,7 +24,7 @@ This type describes the status and health of a resource and its children.
 | **Health** | string<br>(enum)<br><br>*read-only<br>(null)* | This represents the health state of this resource in the absence of its dependent resources. *See Health in Property Details, below, for the possible values of this property.* |
 | **HealthRollup** | string<br>(enum)<br><br>*read-only<br>(null)* | This represents the overall health state from the view of this resource. *See HealthRollup in Property Details, below, for the possible values of this property.* |
 | **Oem** { | object | Oem extension object. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**(pattern)** {} | object | Property names follow regular expression pattern "[A-Za-z0-9_.:]+" |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**(pattern)** {} | object | Property names follow regular expression pattern "\[A\-Za\-z0\-9\_\.:\]\+" |
 | } |   |   |
 | **State** | string<br>(enum)<br><br>*read-only<br>(null)* | This indicates the known state of the resource, such as if it is enabled. *See State in Property Details, below, for the possible values of this property.* |
 
