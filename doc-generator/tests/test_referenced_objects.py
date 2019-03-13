@@ -24,6 +24,7 @@ base_config = {
     'excluded_annotations_by_match': ['@odata.count', '@odata.navigationLink'],
     'excluded_schemas': [],
     'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
+    'excluded_pattern_props': [r'^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$'],
     'uri_replacements': {},
     'wants_common_objects': True,
     'profile': {},

@@ -42,6 +42,10 @@ class DocFormatter:
         self.collapse_list_of_simple_type = True
         self.formatter = FormatUtils() # Non-markdown formatters will override this.
 
+        # Extend config with some defaults.
+        self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
+        self.config['excluded_pattern_props_by_match'] = self.config.get('excluded_pattern_props_by_match', [])
+
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
         self.documented_schemas = []
@@ -61,11 +65,12 @@ class DocFormatter:
 
         self.separators = {
             'inline': ', ',
-            'linebreak': '\n'
+            'linebreak': '\n',
+            'pattern': ', '
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
+        self.parent_props = ['description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
 
 
     def emit(self):
@@ -372,6 +377,9 @@ class DocFormatter:
 
             if len(uris):
                 self.add_uris(uris)
+                self.current_uris = uris
+            else:
+                self.current_uris = []
 
             self.add_json_payload(supplemental.get('jsonpayload'))
 
@@ -397,7 +405,9 @@ class DocFormatter:
 
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
-                        self.add_property_row(formatted['row'])
+                        # Skip "Actions" if requested. Everything else is output.
+                        if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                            self.add_property_row(formatted['row'])
                         if formatted['details']:
                             prop_details.update(formatted['details'])
                         if formatted['action_details']:
@@ -479,7 +489,9 @@ class DocFormatter:
             frag_gen.add_section('')
             frag_gen.current_version = {}
 
-            frag_gen.add_property_row(formatted['row'])
+            # Skip "Actions" if requested. Everything else is output.
+            if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                frag_gen.add_property_row(formatted['row'])
             if len(formatted['details']):
                 prop_details = {}
                 prop_details.update(formatted['details'])
@@ -564,7 +576,9 @@ class DocFormatter:
                     cp_gen.add_description(description)
                 cp_gen.current_version = {}
 
-                cp_gen.add_property_row(formatted['row'])
+                # Skip "Actions" if requested. Everything else is output.
+                if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                    cp_gen.add_property_row(formatted['row'])
                 if len(formatted['details']):
                     prop_details = {}
                     prop_details.update(formatted['details'])
@@ -1086,7 +1100,7 @@ class DocFormatter:
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
         'normative_descr', 'non_normative_descr', 'pattern', 'prop_required', 'prop_required_on_create',
-        'required_parameter'
+        'required_parameter', 'verbatim_description'
         """
         traverser = self.traverser
 
@@ -1106,6 +1120,7 @@ class DocFormatter:
         profile_conditional_details = {}
         profile_values = False
         profile_comparison = False
+        verbatim_description = prop_info.get('verbatim_description', False)
         schema_name = traverser.get_schema_name(schema_ref)
 
         # Get the profile if we are in profile mode.
@@ -1274,7 +1289,7 @@ class DocFormatter:
                 prop_details.update(object_formatted['details'])
 
         # embedded items:
-        if prop_is_array:
+        if prop_is_array and (list_of_objects or list_of_simple_type or prop_item):
             new_path = prop_path.copy()
             new_path.append(prop_name)
             if list_of_objects:
@@ -1306,7 +1321,7 @@ class DocFormatter:
                     item_formatted = self.format_non_object_descr(schema_ref, prop_items[0], new_path)
                     item_formatted['promote_me'] = False
 
-            else:
+            elif prop_item:
                 item_formatted = self.format_non_object_descr(schema_ref, prop_item, new_path)
 
             promote_me = item_formatted.get('promote_me', False)
@@ -1367,7 +1382,8 @@ class DocFormatter:
                        'profile_conditional_req': None,
                        'profile_conditional_details': None,
                        'profile_values': None,
-                       'profile_comparison': None
+                       'profile_comparison': None,
+                       'verbatim_description': verbatim_description,
                        }
 
         if profile is not None:
@@ -1456,6 +1472,8 @@ class DocFormatter:
         parent_requires = prop_info.get('parent_requires', [])
         parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
 
+        prop_names = patterns = False
+
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
@@ -1472,7 +1490,6 @@ class DocFormatter:
                 for k in prop_names:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
-
 
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
@@ -1504,6 +1521,40 @@ class DocFormatter:
                         action_details[prop_name] = formatted['action_details']
                     if formatted.get('profile_conditional_details'):
                         conditional_details.update(formatted['profile_conditional_details'])
+        elif prop_info.get('patternProperties'):
+            # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
+            if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
+                patterns = prop_info['patternProperties'].keys()
+                patterns_to_include = self.exclude_prop_names(patterns, self.config['excluded_pattern_props'],
+                                                              self.config['excluded_pattern_props_by_match'])
+
+                for pattern in patterns_to_include:
+                    prop_name = '(pattern)'
+                    base_pattern_info = prop_info['patternProperties'][pattern]
+                    base_pattern_info['prop_required'] = False
+                    base_pattern_info['prop_required_on_create'] = False
+
+                    base_pattern_info = self.apply_overrides(base_pattern_info, schema_name, None)
+
+                    # Override the description, if any, with a line describing the pattern.
+                    description = 'Property names follow regular expression pattern "' + self.escape_regexp(pattern) + '"'
+                    base_pattern_info['description'] = base_pattern_info['longDescription'] = description
+                    base_pattern_info['verbatim_description'] = True
+
+                    meta = self.merge_metadata(prop_name, base_pattern_info.get('_doc_generator_meta', {}), context_meta)
+                    pattern_info = self.extend_property_info(schema_ref, base_pattern_info, meta)
+                    meta = self.merge_full_metadata(pattern_info[0].get('_doc_generator_meta', {}), meta)
+
+                    formatted = self.format_property_row(schema_ref, prop_name, pattern_info, prop_path)
+                    if formatted:
+                        output.append(formatted['row'])
+                        if formatted['details']:
+                            details.update(formatted['details'])
+                        if formatted['action_details']:
+                            action_details[prop_name] = formatted['action_details']
+                        if formatted.get('profile_conditional_details'):
+                            conditional_details.update(formatted['profile_conditional_details'])
+
 
         if len(conditional_details):
             cond_names = [x for x in conditional_details.keys()]
@@ -1764,3 +1815,8 @@ class DocFormatter:
             'Conditional': 'Conditional Requirements',
             }
         return output_map.get(text, text)
+
+    @staticmethod
+    def escape_regexp(text):
+        """If escaping is necessary to protect patterns when output format is rendered, do that. """
+        return text

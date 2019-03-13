@@ -35,7 +35,8 @@ class HtmlGenerator(DocFormatter):
         super(HtmlGenerator, self).__init__(property_data, traverser, config, level)
         self.separators = {
             'inline': ', ',
-            'linebreak': '<br>'
+            'linebreak': '<br>',
+            'pattern': '\n\n' # This separator is applied prior to applying markdown_to_html
             }
         self.formatter = HtmlUtils()
         self.table_of_contents = ''
@@ -188,7 +189,7 @@ pre.code{
         else:
             indentation_string = '&nbsp;' * 6 * current_depth
 
-        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Action Details
+        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Actions
         # section and should dial back the indentation by one level.
         if len(prop_path) > 1 and prop_path[0] == 'Actions':
             indentation_string = '&nbsp;' * 6 * (current_depth -1)
@@ -303,7 +304,8 @@ pre.code{
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
 
-        formatted_details['descr'] = self.formatter.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
+        if not formatted_details.get('verbatim_description', False):
+            formatted_details['descr'] = self.formatter.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
@@ -329,7 +331,7 @@ pre.code{
             # If this is an Action with details, add a note to the description:
             if formatted_details['has_action_details']:
                 anchor = schema_ref + '|action_details|' + prop_name
-                text_descr = 'For more information, see the <a href="#' + anchor + '">Action Details</a> section below.'
+                text_descr = 'For more information, see the <a href="#' + anchor + '">Actions</a> section below.'
                 formatted_details['descr'] += '<br>' + self.formatter.italic(text_descr)
 
         if deprecated_descr:
@@ -352,7 +354,7 @@ pre.code{
                 prop_type += '<br>(' + item_list + ')'
 
         prop_access = ''
-        if not formatted_details['prop_is_object']:
+        if not meta.get('is_pattern') and not formatted_details['prop_is_object']:
             if formatted_details['read_only']:
                 prop_access = '<nobr>read-only</nobr>'
             else:
@@ -594,17 +596,24 @@ pre.code{
         formatted = []
         anchor = schema_ref + '|action_details|' + prop_name
 
+        action_name = prop_name
         if prop_name.startswith('#'): # expected
+            # Example: from #Bios.ResetBios, we want prop_name "ResetBios" and action_name "Bios.ResetBios"
             prop_name_parts = prop_name.split('.')
             prop_name = prop_name_parts[-1]
+            action_name = action_name[1:]
 
         formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
         formatted.append(self.formatter.para(prop_descr))
+
+        # Add the URIs for this action.
+        formatted.append(self.format_uri_block_for_action(action_name, self.current_uris));
 
         if action_parameters:
             rows = []
             # Add a "start object" row for this parameter:
             rows.append(self.formatter.make_row(['{', '','','']))
+
             param_names = [x for x in action_parameters.keys()]
             param_names.sort(key=str.lower)
             for param_name in param_names:
@@ -655,7 +664,7 @@ pre.code{
             if len(section.get('action_details', [])):
                 action_details = '\n'.join(section['action_details'])
                 deets = []
-                deets.append(self.formatter.head_three('Action Details', self.level))
+                deets.append(self.formatter.head_three('Actions', self.level))
                 deets.append(self.formatter.make_div(action_details, 'property-details-content'))
                 contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
             if section.get('property_details'):
@@ -735,6 +744,9 @@ pre.code{
             else:
                 body = toc + body
 
+        # Replace pagebreak markers with pagebreak markup
+        body = body.replace('~pagebreak~', '<p style="page-break-before: always"></p>')
+
         doc_title = supplemental.get('Title')
         if not doc_title:
             doc_title = ''
@@ -802,6 +814,7 @@ pre.code{
             'profile_mode': self.config.get('profile_mode'),
             'profile_resources': self.config.get('profile_resources', {}),
             'wants_common_objects': self.config.get('wants_common_objects'),
+            'actions_in_property_table': self.config.get('actions_in_property_table', True),
             }
 
         for line in intro_blob.splitlines():
@@ -860,6 +873,18 @@ pre.code{
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h4>URIs:</h4>' + uri_block
         self.this_section['uris'] = uri_content
+
+
+    def format_uri_block_for_action(self, action, uris):
+        """ Create a URI block for this action & the resource's URIs """
+        uri_strings = []
+        for uri in sorted(uris, key=str.lower):
+            uri = uri + "/Actions/" + action
+            uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
+
+        uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
+        uri_content = '<h5>URIs:</h5>' + uri_block
+        return uri_content
 
 
     def format_uri(self, uri):

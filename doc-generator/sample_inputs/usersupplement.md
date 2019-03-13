@@ -16,9 +16,14 @@ The supplement is split into several major sections, noted by first-level headin
 - Excluded Properties
 - Excluded Annotations
 - Excluded Schemas
+- Excluded patternProperties
 - Schema Supplement
 
 Text at the top of the supplement, like this text, is ignored up until the first recognized section header.
+
+You can add an explicit page break (HTML paragraph with style="page-break-before: always") anywhere by putting the word pagebreak, surrounded by tildes, in the supplemental document:
+
+~pagebreak~
 
 
 # Schema URI Mapping
@@ -52,8 +57,11 @@ omit_version_in_headers, boolean. Default false. If false, schema sections in th
 
 add_toc, boolean. Default false. Add a Table of Contents (relevant for HTML output only)
 
+actions_in_property_table, boolean. Default true. Include an "Actions" row in the property table. (Actions will appear below the table regardless.)
+
 - omit_version_in_headers: false
 - add_toc: true
+- actions_in_property_table: false
 
 Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output.
 
@@ -172,6 +180,12 @@ Partial match is supported; prepend '*' to indicate partial matches.
 ## *Collection
 
 (Wildcard removal of anything with "Collection" in the name)
+
+# Excluded patternProperties
+
+You'll probably want to exclude this and only this:
+
+## ^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$
 
 
 # Schema Supplement

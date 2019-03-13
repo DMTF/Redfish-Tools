@@ -31,6 +31,7 @@ def parse_file(filehandle):
         '# Excluded Properties',   # parse out properties (## headings) to exclude (top-level only).
         '# Excluded Annotations',  # parse out properties (## headings) to exclude.
         '# Excluded Schemas',      # parse out schemas (## headings) to exclude.
+        '# Excluded patternProperties', # parse out patternProperties (## headings) to exclude.
         '# Schema Supplement',     # parse out for schema-specific details (see below)
         '# Schema Documentation',  # list of search/replace patterns for links
         '# Description Overrides', # list of property name:description to substitute throughout the doc
@@ -74,6 +75,9 @@ def parse_file(filehandle):
     if 'Excluded Schemas' in parsed:
         parsed['Excluded Schemas'] = parse_excluded_properties(parsed['Excluded Schemas'])
 
+    if 'Excluded patternProperties' in parsed:
+        parsed['Excluded patternProperties'] = parse_excluded_properties(parsed['Excluded patternProperties'])
+
     if 'Description Overrides' in parsed:
         parsed['Description Overrides'] = parse_description_overrides(parsed['Description Overrides'])
 
@@ -112,7 +116,6 @@ def parse_file(filehandle):
     if 'Units Translation' in parsed:
         parsed['units_translation'] = parse_units_translation(parsed['Units Translation'])
 
-
     return parsed
 
 
@@ -121,7 +124,8 @@ def parse_configuration(markdown_blob):
 
     Values may be coerced as needed. So far, expected booleans are coerced.
     """
-    boolean_settings = ['omit_version_in_headers', 'expand_defs_from_non_output_schemas', 'add_toc']
+    boolean_settings = ['omit_version_in_headers', 'expand_defs_from_non_output_schemas', 'add_toc',
+                        'actions_in_property_table']
     config = {}
     pattern = re.compile(r'\s*-\s+(\S+)\s*:\s*(\S+)')
 

@@ -35,7 +35,8 @@ class MarkdownGenerator(DocFormatter):
         super(MarkdownGenerator, self).__init__(property_data, traverser, config, level)
         self.separators = {
             'inline': ', ',
-            'linebreak': '\n'
+            'linebreak': '\n',
+            'pattern': ', '
             }
         self.formatter = FormatUtils()
 
@@ -67,7 +68,7 @@ class MarkdownGenerator(DocFormatter):
         else:
             indentation_string = '&nbsp;' * 6 * current_depth
 
-        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Action Details
+        # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Actions
         # section and should dial back the indentation by one level.
         if len(prop_path) > 1 and prop_path[0] == 'Actions':
             indentation_string = '&nbsp;' * 6 * (current_depth -1)
@@ -213,7 +214,7 @@ class MarkdownGenerator(DocFormatter):
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
             if formatted_details['has_action_details']:
-                text_descr = 'For more information, see the Action Details section below.'
+                text_descr = 'For more information, see the Actions section below.'
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
         if deprecated_descr:
@@ -237,7 +238,7 @@ class MarkdownGenerator(DocFormatter):
                 prop_type += ' (' + item_list + ')'
 
         prop_access = ''
-        if not formatted_details['prop_is_object']:
+        if not meta.get('is_pattern') and not formatted_details['prop_is_object']:
             if formatted_details['read_only']:
                 prop_access = 'read-only'
             else:
@@ -448,12 +449,18 @@ class MarkdownGenerator(DocFormatter):
 
         formatted = []
 
+        action_name = prop_name
         if prop_name.startswith('#'): # expected
+            # Example: from #Bios.ResetBios, we want prop_name "ResetBios" and action_name "Bios.ResetBios"
             prop_name_parts = prop_name.split('.')
             prop_name = prop_name_parts[-1]
+            action_name = action_name[1:]
 
         formatted.append(self.formatter.head_four(prop_name, self.level))
         formatted.append(self.formatter.para(prop_descr))
+
+        # Add the URIs for this action.
+        formatted.append(self.format_uri_block_for_action(action_name, self.current_uris));
 
         if action_parameters:
             rows = []
@@ -463,6 +470,7 @@ class MarkdownGenerator(DocFormatter):
 
             # Add a "start object" row for this parameter:
             rows.append('| ' + ' | '.join(['{', ' ',' ',' ']) + ' |')
+
             param_names = [x for x in action_parameters.keys()]
             param_names.sort(key=str.lower)
             for param_name in param_names:
@@ -548,7 +556,7 @@ class MarkdownGenerator(DocFormatter):
                 contents.append(conditional_details)
 
             if len(section.get('action_details', [])):
-                contents.append('\n' + self.formatter.head_two('Action Details', self.level))
+                contents.append('\n' + self.formatter.head_two('Actions', self.level))
                 contents.append('\n\n'.join(section.get('action_details')))
             if section.get('property_details'):
                 contents.append('\n' + self.formatter.head_two('Property Details', self.level))
@@ -610,6 +618,9 @@ search: true
             collections_doc = self.generate_collections_doc()
             output = output.replace('[insert_collections]', collections_doc, 1)
 
+        # Replace pagebreak markers with HTML pagebreak markup
+        output = output.replace('~pagebreak~', '<p style="page-break-before: always"></p>')
+
         return output
 
 
@@ -638,6 +649,7 @@ search: true
             'profile_mode': self.config.get('profile_mode'),
             'profile_resources': self.config.get('profile_resources', {}),
             'wants_common_objects': self.config.get('wants_common_objects'),
+            'actions_in_property_table': self.config.get('actions_in_property_table', True),
             }
 
         for line in intro_blob.splitlines():
@@ -684,6 +696,16 @@ search: true
             uri_block += "\n" + self.format_uri(uri)
 
         self.this_section['uris'] = uri_block + "\n"
+
+
+    def format_uri_block_for_action(self, action, uris):
+        """ Create a URI block for this action & the resource's URIs """
+        uri_block = "**URIs**:\n"
+        for uri in sorted(uris, key=str.lower):
+            uri = uri + "/Actions/" + action
+            uri_block += "\n" + self.format_uri(uri)
+
+        return uri_block
 
 
     def add_json_payload(self, json_payload):
@@ -749,3 +771,16 @@ search: true
         for char in chars:
             text = text.replace(char, '\\' + char)
         return text
+
+    @staticmethod
+    def escape_regexp(text):
+        """If escaping is necessary to protect patterns when output format is rendered, do that."""
+        chars_to_escape = r'\`*_{}[]()#+-.!|'
+        escaped_text = ''
+        for char in text:
+            if char in chars_to_escape:
+                escaped_text += '\\' + char
+            else:
+                escaped_text += char
+
+        return escaped_text

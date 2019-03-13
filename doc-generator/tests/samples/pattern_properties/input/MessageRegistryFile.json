@@ -1,0 +1,46 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.json",
+    "$ref": "#/definitions/MessageRegistryFile",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2018 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "MessageRegistryFile": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_0.json#/definitions/MessageRegistryFile"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_2.json#/definitions/MessageRegistryFile"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_3.json#/definitions/MessageRegistryFile"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_4.json#/definitions/MessageRegistryFile"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_5.json#/definitions/MessageRegistryFile"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_1_0.json#/definitions/MessageRegistryFile"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_1_1.json#/definitions/MessageRegistryFile"
+                }
+            ],
+            "deletable": false,
+            "description": "This is the schema definition for the Schema File locator resource.",
+            "insertable": false,
+            "longDescription": "This resource shall be used to represent the Schema File locator resource for a Redfish implementation.",
+            "updatable": false,
+            "uris": [
+                "/redfish/v1/Registries/{MessageRegistryFileId}"
+            ]
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#MessageRegistryFile.MessageRegistryFile"
+}
