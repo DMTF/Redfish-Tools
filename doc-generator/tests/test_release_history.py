@@ -3,9 +3,9 @@
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
-File: test_version_history.py
+File: test_release_history.py
 
-Brief: test(s) for correct generation of "Version History" information from "release" annotations.
+Brief: test(s) for correct generation of "Release History" information from "release" annotations.
 """
 
 import os
@@ -37,13 +37,13 @@ base_config = {
 @pytest.mark.filterwarnings("ignore:Unable to find data")
 @pytest.mark.filterwarnings("ignore:Unable to read")
 @pytest.mark.filterwarnings("ignore:Unable to retrieve")
-def test_version_history(mockRequest):
+def test_release_history(mockRequest):
     """ TODO
     """
 
     config = copy.deepcopy(base_config)
     config['output_format'] = 'html'
-    input_dir = os.path.abspath(os.path.join(testcase_path, 'version_history', 'input'))
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'release_history', 'input'))
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
