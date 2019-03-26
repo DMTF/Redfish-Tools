@@ -537,6 +537,9 @@ class MarkdownGenerator(DocFormatter):
 
         for section in self.sections:
             contents.append(section.get('heading'))
+            if section.get('release_history'):
+                contents.append(section['release_history'])
+                contents.append('\n')
             if section.get('description'):
                 contents.append(section['description'])
             if section.get('uris'):

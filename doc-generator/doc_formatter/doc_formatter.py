@@ -92,6 +92,17 @@ class DocFormatter:
         """ Add the uris """
         raise NotImplementedError
 
+    def add_release_history(self, release_history):
+        """ Add the release history. """
+        summarized = self.summarize_release_history(release_history)
+        versions = []
+        releases = []
+        for elt in summarized:
+            versions.append(self.formatter.italic(elt['version']))
+            releases.append(elt['release'])
+        formatted = self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)])
+        self.this_section['release_history'] = formatted
+
 
     def format_uri(self, uri):
         """ Format a URI for output. """
@@ -380,6 +391,9 @@ class DocFormatter:
                 self.current_uris = uris
             else:
                 self.current_uris = []
+
+            if details.get('release_history'):
+                self.add_release_history(details['release_history'])
 
             self.add_json_payload(supplemental.get('jsonpayload'))
 
@@ -1830,6 +1844,7 @@ class DocFormatter:
         * versions to major/minor only
         * ordered latest-to-earliest
         """
+        max_entries = 6
         summarized = []
         all = copy.deepcopy(release_history)
         all.reverse()
@@ -1841,7 +1856,10 @@ class DocFormatter:
             latest_release = elt['release']
             version = DocFormatter.truncate_version(elt['version'], 2, True)
             summarized.append({"version": version, "release": latest_release})
-            if len(summarized) == 6:
+            if len(summarized) == max_entries:
                 break
+
+        if len(release_history) > max_entries:
+            summarized.append({"version": "...", "release": "..."})
 
         return summarized

@@ -643,6 +643,9 @@ pre.code{
         for section in self.sections:
             contents.append(section.get('heading'))
 
+            if section.get('release_history'):
+                contents.append(section['release_history'])
+
             if section.get('description'):
                 contents.append(section['description'])
 
