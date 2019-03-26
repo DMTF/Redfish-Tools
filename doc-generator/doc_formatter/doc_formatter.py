@@ -1787,10 +1787,10 @@ class DocFormatter:
 
 
     @staticmethod
-    def truncate_version(version_string, num_parts):
+    def truncate_version(version_string, num_parts, with_prejudice=False):
         """Truncate the version string to at least the specified number of parts.
 
-        Maintains additional part(s) if non-zero.
+        Maintains additional part(s) if non-zero, unless with_prejudice is True
         """
 
         parts = version_string.split('.')
@@ -1798,7 +1798,7 @@ class DocFormatter:
         for part in parts:
             if len(keep) < num_parts:
                 keep.append(part)
-            elif part != '0':
+            elif part != '0' and not with_prejudice:
                 keep.append(part)
             else:
                 break
@@ -1820,3 +1820,28 @@ class DocFormatter:
     def escape_regexp(text):
         """If escaping is necessary to protect patterns when output format is rendered, do that. """
         return text
+
+
+    @staticmethod
+    def summarize_release_history(release_history):
+        """ Create a summary of the given release history, which is assumed to be ordered oldest-first:
+
+        * last 6 entries by major/minor version
+        * versions to major/minor only
+        * ordered latest-to-earliest
+        """
+        summarized = []
+        all = copy.deepcopy(release_history)
+        all.reverse()
+        latest_release = ''
+
+        for elt in all:
+            if elt['release'] == latest_release:
+                continue
+            latest_release = elt['release']
+            version = DocFormatter.truncate_version(elt['version'], 2, True)
+            summarized.append({"version": version, "release": latest_release})
+            if len(summarized) == 6:
+                break
+
+        return summarized

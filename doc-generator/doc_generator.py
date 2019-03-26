@@ -550,6 +550,13 @@ class DocGenerator:
         property_data['normalized_uri'] = normalized_uri
         property_data['latest_version'] = version
 
+        if data.get('release'):
+            release_history = property_data.get('release_history')
+            if not release_history:
+                property_data['release_history'] = []
+                release_history = property_data.get('release_history')
+            release_history.append({'version': version, 'release': data.get('release')})
+
         min_version = False
         if profile_mode:
             schema_profile = profile.get(generalized_uri)

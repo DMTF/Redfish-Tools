@@ -13,6 +13,7 @@ import copy
 from unittest.mock import patch
 import pytest
 from doc_generator import DocGenerator
+from doc_formatter import DocFormatter
 
 testcase_path = os.path.join('tests', 'samples')
 
@@ -32,17 +33,51 @@ base_config = {
     'output_format': 'markdown',
 }
 
+expected_release_history = [
+    {
+    "version": "1.0.6",
+    "release": "2016.1"
+    },
+    {
+    "version": "1.1.5",
+    "release": "2016.2"
+    },
+    {
+    "version": "1.2.3",
+    "release": "2017.1"
+    },
+    {
+    "version": "1.3.3",
+    "release": "2017.2"
+    },
+    {
+    "version": "1.4.2",
+    "release": "2017.3"
+    },
+    {
+    "version": "1.5.1",
+    "release": "2018.2"
+    },
+    {
+    "version": "1.6.0",
+    "release": "2018.3"
+    }
+]
+
+
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 # The test sample is incomplete, so we will be warned of unavailable resources (odata, Resource, and more).
 @pytest.mark.filterwarnings("ignore:Unable to find data")
 @pytest.mark.filterwarnings("ignore:Unable to read")
 @pytest.mark.filterwarnings("ignore:Unable to retrieve")
-def test_release_history(mockRequest):
-    """ TODO
+def test_release_history_data_collection(mockRequest):
+    """ Verify that the correct release data is collected in the DocGenerator property_data.
+
+    This data includes full versions (including errata).
     """
 
     config = copy.deepcopy(base_config)
-    config['output_format'] = 'html'
+
     input_dir = os.path.abspath(os.path.join(testcase_path, 'release_history', 'input'))
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
@@ -51,4 +86,57 @@ def test_release_history(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    assert False
+    assert docGen.property_data['redfish.dmtf.org/schemas/v1/Storage.json'].get('release_history') == expected_release_history
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+# The test sample is incomplete, so we will be warned of unavailable resources (odata, Resource, and more).
+@pytest.mark.filterwarnings("ignore:Unable to find data")
+@pytest.mark.filterwarnings("ignore:Unable to read")
+@pytest.mark.filterwarnings("ignore:Unable to retrieve")
+def test_release_history_summary_data(mockRequest):
+    """ Verify that we summarize our sample data correctly:
+
+    * last 6 entries
+    * versions to major/minor only
+    * ordered latest-to-earliest
+    """
+
+    # Insert a few additional version entries, as we can expect future schemas to include
+    # release data from day 1 -- meaning we will see the same release repeated a few times.
+    release_history = copy.deepcopy(expected_release_history)
+    release_history.insert(4, {"version": "1.4.1", "release": "2017.3"})
+    release_history.insert(4, {"version": "1.4.0", "release": "2017.3"})
+    release_history.insert(3, {"version": "1.3.2", "release": "2017.2"})
+    release_history.insert(3, {"version": "1.3.1", "release": "2017.2"})
+    release_history.insert(3, {"version": "1.3.0", "release": "2017.2"})
+
+    summary = DocFormatter.summarize_release_history(release_history)
+
+    expected_summary = [
+        {
+        "version": "1.6",
+        "release": "2018.3",
+        },
+        {
+        "version": "1.5",
+        "release": "2018.2"
+        },
+        {
+        "version": "1.4",
+        "release": "2017.3"
+        },
+        {
+        "version": "1.3",
+        "release": "2017.2"
+        },
+        {
+        "version": "1.2",
+        "release": "2017.1"
+        },
+        {
+        "version": "1.1",
+        "release": "2016.2"
+        },
+        ]
+    assert summary == expected_summary
