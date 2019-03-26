@@ -115,28 +115,75 @@ def test_release_history_summary_data(mockRequest):
 
     expected_summary = [
         {
-        "version": "1.6",
+        "version": "v1.6",
         "release": "2018.3",
         },
         {
-        "version": "1.5",
+        "version": "v1.5",
         "release": "2018.2"
         },
         {
-        "version": "1.4",
+        "version": "v1.4",
         "release": "2017.3"
         },
         {
-        "version": "1.3",
+        "version": "v1.3",
         "release": "2017.2"
         },
         {
-        "version": "1.2",
+        "version": "v1.2",
         "release": "2017.1"
         },
         {
-        "version": "1.1",
+        "version": "v1.1",
         "release": "2016.2"
         },
+        {
+        "version": "...",
+        "release": "..."
+        }
         ]
     assert summary == expected_summary
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+# The test sample is incomplete, so we will be warned of unavailable resources (odata, Resource, and more).
+@pytest.mark.filterwarnings("ignore:Unable to find data")
+@pytest.mark.filterwarnings("ignore:Unable to read")
+@pytest.mark.filterwarnings("ignore:Unable to retrieve")
+def test_release_history_output_markdown(mockRequest):
+    """ Verify that the release history output is correct.
+    """
+
+    config = copy.deepcopy(base_config)
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'release_history', 'input'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    assert False
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+# The test sample is incomplete, so we will be warned of unavailable resources (odata, Resource, and more).
+@pytest.mark.filterwarnings("ignore:Unable to find data")
+@pytest.mark.filterwarnings("ignore:Unable to read")
+@pytest.mark.filterwarnings("ignore:Unable to retrieve")
+def test_release_history_output_html(mockRequest):
+    """ Verify that the release history output is correct.
+    """
+
+    config = copy.deepcopy(base_config)
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'release_history', 'input'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+    config['output_format'] = 'html'
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    assert False

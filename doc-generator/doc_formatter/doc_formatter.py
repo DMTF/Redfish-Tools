@@ -1855,7 +1855,7 @@ class DocFormatter:
                 continue
             latest_release = elt['release']
             version = DocFormatter.truncate_version(elt['version'], 2, True)
-            summarized.append({"version": version, "release": latest_release})
+            summarized.append({"version": "v" + version, "release": latest_release})
             if len(summarized) == max_entries:
                 break
 
