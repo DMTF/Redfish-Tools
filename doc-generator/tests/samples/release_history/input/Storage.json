@@ -1,0 +1,200 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/Storage.json",
+    "$ref": "#/definitions/Storage",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2018 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "Storage": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_0.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_1.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_2.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_3.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_4.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_5.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_6.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_0.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_1.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_2.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_3.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_4.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_5.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_2_0.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_2_1.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_2_2.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_2_3.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_3_0.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_3_1.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_3_2.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_3_3.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_4_0.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_4_1.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_4_2.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_5_0.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_5_1.json#/definitions/Storage"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_6_0.json#/definitions/Storage"
+                }
+            ],
+            "deletable": false,
+            "description": "Storage defines a storage subsystem and its respective properties.  A storage subsystem represents a set of storage controllers (physical or virtual) and the resources such as volumes that can be accessed from that subsystem.",
+            "insertable": false,
+            "longDescription": "This resource shall be used to represent resources that represent a storage subsystem in the Redfish specification.",
+            "updatable": true,
+            "uris": [
+                "/redfish/v1/Systems/{ComputerSystemId}/Storage/{StorageId}",
+                "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Storage/{StorageId}",
+                "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/Storage/{StorageId}",
+                "/redfish/v1/ResourceBlocks/{ResourceBlockId}/Storage/{StorageId}",
+                "/redfish/v1/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/Storage/{StorageId}"
+            ]
+        },
+        "StorageController": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_0.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_1.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_2.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_3.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_4.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_5.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_0_6.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_0.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_1.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_2.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_3.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_4.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_1_5.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_2_0.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_2_1.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_2_2.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_2_3.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_3_0.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_3_1.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_3_2.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_3_3.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_4_0.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_4_1.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_4_2.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_5_0.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_5_1.json#/definitions/StorageController"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Storage.v1_6_0.json#/definitions/StorageController"
+                }
+            ],
+            "description": "This schema defines a storage controller and its respective properties.  A storage controller represents a storage device (physical or virtual) that produces Volumes.",
+            "longDescription": "This resource shall be used to represent a resource that represents a storage controller in the Redfish specification."
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#Storage.Storage"
+}

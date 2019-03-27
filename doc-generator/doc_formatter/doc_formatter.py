@@ -92,6 +92,17 @@ class DocFormatter:
         """ Add the uris """
         raise NotImplementedError
 
+    def add_release_history(self, release_history):
+        """ Add the release history. """
+        summarized = self.summarize_release_history(release_history)
+        versions = []
+        releases = []
+        for elt in summarized:
+            versions.append(self.formatter.italic(elt['version']))
+            releases.append(elt['release'])
+        formatted = self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)])
+        self.this_section['release_history'] = formatted
+
 
     def format_uri(self, uri):
         """ Format a URI for output. """
@@ -380,6 +391,9 @@ class DocFormatter:
                 self.current_uris = uris
             else:
                 self.current_uris = []
+
+            if details.get('release_history'):
+                self.add_release_history(details['release_history'])
 
             self.add_json_payload(supplemental.get('jsonpayload'))
 
@@ -1787,10 +1801,10 @@ class DocFormatter:
 
 
     @staticmethod
-    def truncate_version(version_string, num_parts):
+    def truncate_version(version_string, num_parts, with_prejudice=False):
         """Truncate the version string to at least the specified number of parts.
 
-        Maintains additional part(s) if non-zero.
+        Maintains additional part(s) if non-zero, unless with_prejudice is True
         """
 
         parts = version_string.split('.')
@@ -1798,7 +1812,7 @@ class DocFormatter:
         for part in parts:
             if len(keep) < num_parts:
                 keep.append(part)
-            elif part != '0':
+            elif part != '0' and not with_prejudice:
                 keep.append(part)
             else:
                 break
@@ -1820,3 +1834,32 @@ class DocFormatter:
     def escape_regexp(text):
         """If escaping is necessary to protect patterns when output format is rendered, do that. """
         return text
+
+
+    @staticmethod
+    def summarize_release_history(release_history):
+        """ Create a summary of the given release history, which is assumed to be ordered oldest-first:
+
+        * last 6 entries by major/minor version
+        * versions to major/minor only
+        * ordered latest-to-earliest
+        """
+        max_entries = 10
+        summarized = []
+        all = copy.deepcopy(release_history)
+        all.reverse()
+        latest_release = ''
+
+        for elt in all:
+            if elt['release'] == latest_release:
+                continue
+            latest_release = elt['release']
+            version = DocFormatter.truncate_version(elt['version'], 2, True)
+            summarized.append({"version": "v" + version, "release": latest_release})
+            if len(summarized) == max_entries:
+                break
+
+        if len(release_history) > max_entries:
+            summarized.append({"version": "...", "release": "..."})
+
+        return summarized
