@@ -1849,17 +1849,18 @@ class DocFormatter:
         all = copy.deepcopy(release_history)
         all.reverse()
         latest_release = ''
+        num_releases = 0
 
         for elt in all:
             if elt['release'] == latest_release:
                 continue
             latest_release = elt['release']
-            version = DocFormatter.truncate_version(elt['version'], 2, True)
-            summarized.append({"version": "v" + version, "release": latest_release})
-            if len(summarized) == max_entries:
-                break
+            num_releases = num_releases + 1
+            if len(summarized) <= max_entries:
+                version = DocFormatter.truncate_version(elt['version'], 2, True)
+                summarized.append({"version": "v" + version, "release": latest_release})
 
-        if len(release_history) > max_entries:
+        if num_releases > max_entries:
             summarized.append({"version": "...", "release": "..."})
 
         return summarized

@@ -139,9 +139,9 @@ def test_release_history_summary_data(mockRequest):
         "release": "2016.2"
         },
         {
-        "version": "...",
-        "release": "..."
-        }
+        "version": "v1.0",
+        "release": "2016.1"
+        },
         ]
     assert summary == expected_summary
 
@@ -165,8 +165,8 @@ def test_release_history_output_markdown(mockRequest):
     output = docGen.generate_docs()
     expected_output = """|     |     |     |     |     |     |     |
 | --- | --- | --- | --- | --- | --- | --- |
-| *v1.6* | *v1.5* | *v1.4* | *v1.3* | *v1.2* | *v1.1* | *...* |
-| 2018.3 | 2018.2 | 2017.3 | 2017.2 | 2017.1 | 2016.2 | ... |"""
+| *v1.6* | *v1.5* | *v1.4* | *v1.3* | *v1.2* | *v1.1* | *v1.0* |
+| 2018.3 | 2018.2 | 2017.3 | 2017.2 | 2017.1 | 2016.2 | 2016.1 |"""
 
     assert expected_output in output
 
@@ -190,7 +190,7 @@ def test_release_history_output_html(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    expected_output = """<table><tbody><tr><td><i>v1.6</i></td><td><i>v1.5</i></td><td><i>v1.4</i></td><td><i>v1.3</i></td><td><i>v1.2</i></td><td><i>v1.1</i></td><td><i>...</i></td></tr><tr><td>2018.3</td><td>2018.2</td><td>2017.3</td><td>2017.2</td><td>2017.1</td><td>2016.2</td><td>...</td></tr></tbody></table>"""
+    expected_output = "<table><tbody><tr><td><i>v1.6</i></td><td><i>v1.5</i></td><td><i>v1.4</i></td><td><i>v1.3</i></td><td><i>v1.2</i></td><td><i>v1.1</i></td><td><i>v1.0</i></td></tr><tr><td>2018.3</td><td>2018.2</td><td>2017.3</td><td>2017.2</td><td>2017.1</td><td>2016.2</td><td>2016.1</td></tr></tbody></table>"
 
     output = output.replace('\n', '')
 
