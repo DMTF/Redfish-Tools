@@ -1844,7 +1844,7 @@ class DocFormatter:
         * versions to major/minor only
         * ordered latest-to-earliest
         """
-        max_entries = 6
+        max_entries = 10
         summarized = []
         all = copy.deepcopy(release_history)
         all.reverse()
