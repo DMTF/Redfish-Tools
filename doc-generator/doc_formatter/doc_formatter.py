@@ -785,8 +785,6 @@ class DocFormatter:
                                             append_ref = ('See the ' + self.link_to_common_property(ref_key) +
                                                           ' for details on this property.')
 
-
-
                         new_ref_info = {
                             'description': ref_description,
                             'longDescription': ref_longDescription,
@@ -816,7 +814,26 @@ class DocFormatter:
                 for x in prop_info.keys():
                     if x in self.parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
+
+                # Pull in any "require" from parent:
+                parent_requires = prop_info.get('parent_requires', [])
+                parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
+                ref_info['prop_required'] = prop_name in parent_requires
+                ref_info['prop_required_on_create'] = prop_name in parent_requires_on_create
+
                 prop_info = ref_info
+
+                # Annotate required properties.
+                props = prop_info.get('properties')
+                if (props):
+                    required = prop_info.get('required', [])
+                    required_on_create = prop_info.get('requiredOnCreate', [])
+                    for x in props.keys():
+                        props[x]['prop_required'] = x in required
+                        props[x]['prop_required_on_create'] = x in required_on_create
+                        props[x]['parent_requires'] = required
+                        props[x]['parent_requires_on_create'] = required_on_create
+                        props[x]['required_parameter'] = props[x].get('requiredParameter') == True
 
                 # override metadata with merged metadata from above.
                 prop_info['_doc_generator_meta'] = meta
@@ -1535,6 +1552,7 @@ class DocFormatter:
                         action_details[prop_name] = formatted['action_details']
                     if formatted.get('profile_conditional_details'):
                         conditional_details.update(formatted['profile_conditional_details'])
+
         elif prop_info.get('patternProperties'):
             # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
             if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
@@ -1575,8 +1593,6 @@ class DocFormatter:
             cond_names.sort(key=str.lower)
             for cond_name in cond_names:
                 self.add_profile_conditional_details(conditional_details[cond_name])
-
-
 
         return {'rows': output, 'details': details, 'action_details': action_details }
 
