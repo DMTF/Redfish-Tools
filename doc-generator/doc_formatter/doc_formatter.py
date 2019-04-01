@@ -407,9 +407,8 @@ class DocFormatter:
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
-
-                    prop_info['prop_required'] = prop_name in required
-                    prop_info['prop_required_on_create'] = prop_name in required_on_create
+                    prop_info['prop_required'] = prop_info.get('prop_required') or prop_name in required
+                    prop_info['prop_required_on_create'] = prop_info.get('prop_required_on_create') or prop_name in required_on_create
                     prop_info['parent_requires'] = required
                     prop_info['parent_requires_on_create'] = required_on_create
                     prop_info['required_parameter'] = prop_info.get('requiredParameter') == True
@@ -496,6 +495,7 @@ class DocFormatter:
         meta = prop_info.get('_doc_generator_meta')
         if not meta:
             meta = {}
+
         prop_infos = frag_gen.extend_property_info(schema_ref, prop_info)
 
         formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
@@ -818,8 +818,8 @@ class DocFormatter:
                 # Pull in any "require" from parent:
                 parent_requires = prop_info.get('parent_requires', [])
                 parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
-                ref_info['prop_required'] = prop_name in parent_requires
-                ref_info['prop_required_on_create'] = prop_name in parent_requires_on_create
+                ref_info['prop_required'] = ref_info.get('prop_required') or prop_name in parent_requires
+                ref_info['prop_required_on_create'] = ref_info.get('prop_required_on_create') or prop_name in parent_requires_on_create
 
                 prop_info = ref_info
 
@@ -829,8 +829,8 @@ class DocFormatter:
                     required = prop_info.get('required', [])
                     required_on_create = prop_info.get('requiredOnCreate', [])
                     for x in props.keys():
-                        props[x]['prop_required'] = x in required
-                        props[x]['prop_required_on_create'] = x in required_on_create
+                        props[x]['prop_required'] = props[x].get('prop_required') or x in required
+                        props[x]['prop_required_on_create'] = props[x].get('prop_required_on_create') or x in required_on_create
                         props[x]['parent_requires'] = required
                         props[x]['parent_requires_on_create'] = required_on_create
                         props[x]['required_parameter'] = props[x].get('requiredParameter') == True
@@ -1201,8 +1201,8 @@ class DocFormatter:
 
         read_only = prop_info.get('readonly')
 
-        prop_required = prop_info.get('prop_required')
-        prop_required_on_create = prop_info.get('prop_required_on_create')
+        prop_required = prop_info.get('prop_required') or prop_name in prop_info.get('parent_requires', [])
+        prop_required_on_create = prop_info.get('prop_required_on_create') or prop_name in prop_info.get('parent_requires_on_create', [])
         required_parameter = prop_info.get('requiredParameter')
 
         descr = self.get_property_description(prop_info)
@@ -1527,8 +1527,9 @@ class DocFormatter:
 
             for prop_name in prop_names:
                 base_detail_info = properties[prop_name]
-                base_detail_info['prop_required'] = prop_name in parent_requires
-                base_detail_info['prop_required_on_create'] = prop_name in parent_requires_on_create
+                base_detail_info['prop_required'] = base_detail_info.get('prop_required') or prop_name in parent_requires
+                base_detail_info['prop_required_on_create'] = (base_detail_info.get('prop_required_on_create') or
+                                                                   prop_name in parent_requires_on_create)
                 base_detail_info = self.apply_overrides(base_detail_info, schema_name, prop_name)
                 meta = self.merge_metadata(prop_name, base_detail_info.get('_doc_generator_meta', {}), context_meta)
                 detail_info = self.extend_property_info(schema_ref, base_detail_info, meta)
