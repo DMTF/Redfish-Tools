@@ -1554,7 +1554,7 @@ class DocFormatter:
                     if formatted.get('profile_conditional_details'):
                         conditional_details.update(formatted['profile_conditional_details'])
 
-        elif prop_info.get('patternProperties'):
+        elif prop_info.get('patternProperties') and (self.config.get('output_content') != 'property_index'):
             # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
             if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
                 patterns = prop_info['patternProperties'].keys()
