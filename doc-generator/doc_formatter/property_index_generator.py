@@ -112,10 +112,14 @@ class PropertyIndexGenerator(DocFormatter):
             # We've drilled down to a simple type.
             return
 
+        has_enum = False
+
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
+            has_enum = 'enum' in prop_info[0]
         elif isinstance(prop_info, dict):
             meta = prop_info.get('_doc_generator_meta')
+            has_enum = 'enum' in prop_info
         if not meta:
             meta = {}
 
@@ -137,6 +141,9 @@ class PropertyIndexGenerator(DocFormatter):
             prop_type_values = []
             self.append_unique_values(prop_type, prop_type_values)
             prop_type = ', '.join(sorted(prop_type_values))
+
+        if has_enum:
+            prop_type += " (enum)"
 
         description_entry = {
             'schemas': [ schema_path ], 'prop_type': prop_type,
