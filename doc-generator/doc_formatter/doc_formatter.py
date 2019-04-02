@@ -41,6 +41,7 @@ class DocFormatter:
         self.registry_sections = []
         self.collapse_list_of_simple_type = True
         self.formatter = FormatUtils() # Non-markdown formatters will override this.
+        self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
 
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
@@ -117,6 +118,11 @@ class DocFormatter:
         return uri_highlighted
 
 
+    def format_json_payload(self, json_payload):
+        """ Format a json payload for output. """
+        return json_payload
+
+
     def add_action_details(self, action_details):
         """ Add the action details (which should already be formatted) """
         if 'action_details' not in self.this_section:
@@ -133,7 +139,10 @@ class DocFormatter:
 
     def add_json_payload(self, json_payload):
         """ Add a JSON payload for the current section """
-        raise NotImplementedError
+        if json_payload:
+            self.this_section['json_payload'] = self.format_json_payload(json_payload)
+        else:
+            self.this_section['json_payload'] = None
 
 
     def add_property_row(self, formatted_row):
@@ -1231,6 +1240,23 @@ class DocFormatter:
                 action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param], {})
 
             action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
+
+            if self.config.get('payloads'):
+                version = prop_info['_doc_generator_meta']['version']
+                short_name = prop_name
+                if prop_name.startswith('#'): # expected
+                    # Example: from #Bios.ResetBios, we want "ResetBios"
+                    prop_name_parts = prop_name.split('.')
+                    short_name = prop_name_parts[-1]
+
+                payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name)
+                payload = self.config['payloads'].get(payload_key)
+                if payload:
+                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    if self.layout_payloads == 'top':
+                        action_details = self.format_json_payload(json_payload) + action_details
+                    else:
+                        action_details += self.format_json_payload(json_payload)
 
             formatted_action_rows = []
 

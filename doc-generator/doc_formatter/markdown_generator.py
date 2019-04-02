@@ -39,6 +39,7 @@ class MarkdownGenerator(DocFormatter):
             'pattern': ', '
             }
         self.formatter = FormatUtils()
+        self.layout_payloads = 'top'
 
 
     def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
@@ -710,12 +711,9 @@ search: true
         return uri_block
 
 
-    def add_json_payload(self, json_payload):
-        """ Add a JSON payload for the current section """
-        if json_payload:
-            self.this_section['json_payload'] = '\n' + json_payload + '\n'
-        else:
-            self.this_section['json_payload'] = None
+    def format_json_payload(self, json_payload):
+        """ Format a json payload for output. """
+        return '\n' + json_payload + '\n'
 
 
     def add_property_row(self, formatted_text):
