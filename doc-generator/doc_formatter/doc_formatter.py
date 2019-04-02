@@ -347,6 +347,15 @@ class DocFormatter:
             supplemental = schema_supplement.get(schema_key,
                                                  schema_supplement.get(schema_name, {}))
 
+            json_payload = None
+            if self.config.get('payloads'):
+                payload_key = DocGenUtilities.get_payload_name(schema_name, version)
+                payload = self.config['payloads'].get(payload_key)
+                if payload:
+                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+            else:
+                json_payload = supplemental.get('jsonpayload')
+
             definitions = details['definitions']
 
             if config.get('omit_version_in_headers'):
@@ -395,7 +404,7 @@ class DocFormatter:
             if details.get('release_history'):
                 self.add_release_history(details['release_history'])
 
-            self.add_json_payload(supplemental.get('jsonpayload'))
+            self.add_json_payload(json_payload)
 
             if 'properties' in details.keys():
                 prop_details = {}

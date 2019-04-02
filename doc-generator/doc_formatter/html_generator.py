@@ -914,7 +914,6 @@ pre.code{
 
         This may include comments as well as a ```json block. """
         if json_payload:
-
             self.this_section['json_payload'] = ('<div class="json-payload">' +
                                                  self.formatter.markdown_to_html(json_payload) + '</div>')
         else:

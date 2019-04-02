@@ -1,0 +1,25 @@
+{
+    "@odata.type": "#ActionInfo.v1_1_0.ActionInfo",
+    "Id": "ResetActionInfo",
+    "Name": "Reset Action Info",
+    "Parameters": [
+        {
+            "Name": "ResetType",
+            "Required": true,
+            "DataType": "String",
+            "AllowableValues": [
+                "On",
+                "ForceOff",
+                "GracefulShutdown",
+                "GracefulRestart",
+                "ForceRestart",
+                "Nmi",
+                "ForceOn",
+                "PushPowerButton"
+            ]
+        }
+    ],
+    "Oem": {},
+    "@odata.context": "/redfish/v1/$metadata#ActionInfo.ActionInfo",
+    "@odata.id": "/redfish/v1/Systems/1/ResetActionInfo"
+}

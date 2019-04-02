@@ -169,3 +169,16 @@ class DocGenUtilities:
             version_string = match.group(1)
             version_string = version_string.replace('_', '.')
         return version_string
+
+
+    @staticmethod
+    def get_payload_name(schema_name, version, action_name=None):
+
+        major_version = version.split('.')[0]
+        payload_name = schema_name + '-v' + major_version + '-'
+        if action_name:
+            payload_name += 'action-' + action_name + '.json'
+        else:
+            payload_name += 'example.json'
+
+        return payload_name
