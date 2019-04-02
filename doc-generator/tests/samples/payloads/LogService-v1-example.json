@@ -1,0 +1,28 @@
+{
+    "@odata.type": "#LogService.v1_1_1.LogService",
+    "Id": "Log1",
+    "Name": "System Log Service",
+    "Description": "This log contains entries related to the operation of the host Computer System.",
+    "MaxNumberOfRecords": 1000,
+    "OverWritePolicy": "WrapsWhenFull",
+    "DateTime": "2015-03-13T04:14:33+06:00",
+    "DateTimeLocalOffset": "+06:00",
+    "ServiceEnabled": true,
+    "LogEntryType": "Event",
+    "Status": {
+        "State": "Enabled",
+        "Health": "OK"
+    },
+    "Oem": {},
+    "Actions": {
+        "#LogService.ClearLog": {
+            "target": "/redfish/v1/Managers/1/LogServices/Log1/Actions/LogService.ClearLog"
+        },
+        "Oem": {}
+    },
+    "Entries": {
+        "@odata.id": "/redfish/v1/Managers/1/LogServices/Log1/Entries"
+    },
+    "@odata.context": "/redfish/v1/$metadata#LogService.LogService",
+    "@odata.id": "/redfish/v1/Managers/1/LogServices/Log1"
+}

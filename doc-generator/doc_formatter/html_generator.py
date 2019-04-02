@@ -909,16 +909,10 @@ pre.code{
         return uri_highlighted
 
 
-    def add_json_payload(self, json_payload):
-        """ Add a JSON payload for the current section
-
-        This may include comments as well as a ```json block. """
-        if json_payload:
-
-            self.this_section['json_payload'] = ('<div class="json-payload">' +
-                                                 self.formatter.markdown_to_html(json_payload) + '</div>')
-        else:
-            self.this_section['json_payload'] = None
+    def format_json_payload(self, json_payload):
+        """ Format a json payload for output. """
+        return ('<div class="json-payload">' +
+                    self.formatter.markdown_to_html(json_payload) + '</div>')
 
 
     def add_property_row(self, formatted_text):

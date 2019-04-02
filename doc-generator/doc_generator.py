@@ -41,6 +41,17 @@ class DocGenerator:
         self.outfile = outfile
         self.property_data = {} # This is an object property for ease of testing.
         self.schema_ref_to_filename = {}
+        self.config['payloads'] = None
+
+        if config.get('payload_dir'):
+            payload_dir = config.get('payload_dir')
+            config['payloads'] = {}
+            payload_filenames = [x for x in os.listdir(payload_dir) if x.endswith('.json')]
+            for name in payload_filenames:
+                f = open(os.path.join(payload_dir, name), 'r')
+                data = f.read()
+                if data:
+                    config['payloads'][name] = data
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
@@ -1018,11 +1029,6 @@ def main():
                         help='Produce normative (developer-focused) output')
     parser.add_argument('--format', dest='format', default='markdown',
                         choices=['markdown', 'html', 'csv'], help='Output format')
-    parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
-                        help='Produce Property Index output.')
-    parser.add_argument('--property_index_config_out', dest='property_index_config_out',
-                        metavar='CONFIG_FILE_OUT',
-                        default=False, help='Generate updated config file, with specified filename (property_index mode only).')
     parser.add_argument('--out', dest='outfile', default='output.md',
                         help=('Output file (default depends on output format: '
                               'output.md for Markdown, index.html for HTML, output.csv for CSV'))
@@ -1030,6 +1036,11 @@ def main():
                         help=('Path to the supplemental material document. '
                               'Default is usersupplement.md for user-focused documentation, '
                               'and devsupplement.md for normative documentation.'))
+    parser.add_argument('--payload_dir', metavar='payload_dir',
+                        help=('Directory location for JSON payload and Action examples. Optional.'
+                              'Within this directory, use the following naming scheme for example files: '
+                              '<schema_name>-v<major_version>-example.json for JSON payloads, '
+                              '<schema_name-v<major_version>-action-<action_name>.json for action examples.'))
     parser.add_argument('--config', dest="config_file",
                         help=('Path to a config file, containing configuration '
                               ' in JSON format. '
@@ -1042,6 +1053,12 @@ def main():
                               'profile requirements. "Terse" output is intended for use by '
                               'Service developers, including only the subset of properties with '
                               'profile requirements.'))
+
+    parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
+                        help='Produce Property Index output.')
+    parser.add_argument('--property_index_config_out', dest='property_index_config_out',
+                        metavar='CONFIG_FILE_OUT',
+                        default=False, help='Generate updated config file, with specified filename (property_index mode only).')
     parser.add_argument('--escape', dest='escape_chars',
                         help=("Characters to escape (\\) in generated Markdown. "
                               "For example, --escape=@#. Use --escape=@ if strings with embedded @ "
@@ -1082,6 +1099,19 @@ def main():
         outfile = open(outfile_name, 'w', encoding="utf8")
     except (OSError) as ex:
         warnings.warn('Unable to open ' + outfile_name + ' to write: ' + str(ex))
+        exit();
+
+    # If payload_dir was provided, verify that it is a readable directory:
+    if args.payload_dir:
+        try:
+            if os.path.isdir(args.payload_dir):
+                config['payload_dir'] = args.payload_dir
+            else:
+                warnings.warn('"' + args.payload_dir + '" is not a directory. Exiting.')
+                exit();
+        except (Exception) as ex:
+            warnings.warn('Unable to read payload_dir "' + payload_dir + '"; ' + str(ex))
+            exit();
 
 
     # If property_index mode was specified, get config from args.config_file:
