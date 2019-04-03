@@ -41,6 +41,11 @@ class DocFormatter:
         self.registry_sections = []
         self.collapse_list_of_simple_type = True
         self.formatter = FormatUtils() # Non-markdown formatters will override this.
+        self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
+
+        # Extend config with some defaults.
+        self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
+        self.config['excluded_pattern_props_by_match'] = self.config.get('excluded_pattern_props_by_match', [])
 
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
@@ -61,11 +66,12 @@ class DocFormatter:
 
         self.separators = {
             'inline': ', ',
-            'linebreak': '\n'
+            'linebreak': '\n',
+            'pattern': ', '
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
+        self.parent_props = ['description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
 
 
     def emit(self):
@@ -87,6 +93,17 @@ class DocFormatter:
         """ Add the uris """
         raise NotImplementedError
 
+    def add_release_history(self, release_history):
+        """ Add the release history. """
+        summarized = self.summarize_release_history(release_history)
+        versions = []
+        releases = []
+        for elt in summarized:
+            versions.append(self.formatter.italic(elt['version']))
+            releases.append(elt['release'])
+        formatted = self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)])
+        self.this_section['release_history'] = formatted
+
 
     def format_uri(self, uri):
         """ Format a URI for output. """
@@ -99,6 +116,11 @@ class DocFormatter:
             uri_parts_highlighted.append(part)
         uri_highlighted = '/'.join(uri_parts_highlighted)
         return uri_highlighted
+
+
+    def format_json_payload(self, json_payload):
+        """ Format a json payload for output. """
+        return json_payload
 
 
     def add_action_details(self, action_details):
@@ -117,7 +139,10 @@ class DocFormatter:
 
     def add_json_payload(self, json_payload):
         """ Add a JSON payload for the current section """
-        raise NotImplementedError
+        if json_payload:
+            self.this_section['json_payload'] = self.format_json_payload(json_payload)
+        else:
+            self.this_section['json_payload'] = None
 
 
     def add_property_row(self, formatted_row):
@@ -331,6 +356,15 @@ class DocFormatter:
             supplemental = schema_supplement.get(schema_key,
                                                  schema_supplement.get(schema_name, {}))
 
+            json_payload = None
+            if self.config.get('payloads'):
+                payload_key = DocGenUtilities.get_payload_name(schema_name, version)
+                payload = self.config['payloads'].get(payload_key)
+                if payload:
+                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+            else:
+                json_payload = supplemental.get('jsonpayload')
+
             definitions = details['definitions']
 
             if config.get('omit_version_in_headers'):
@@ -372,8 +406,14 @@ class DocFormatter:
 
             if len(uris):
                 self.add_uris(uris)
+                self.current_uris = uris
+            else:
+                self.current_uris = []
 
-            self.add_json_payload(supplemental.get('jsonpayload'))
+            if details.get('release_history'):
+                self.add_release_history(details['release_history'])
+
+            self.add_json_payload(json_payload)
 
             if 'properties' in details.keys():
                 prop_details = {}
@@ -385,9 +425,8 @@ class DocFormatter:
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
-
-                    prop_info['prop_required'] = prop_name in required
-                    prop_info['prop_required_on_create'] = prop_name in required_on_create
+                    prop_info['prop_required'] = prop_info.get('prop_required') or prop_name in required
+                    prop_info['prop_required_on_create'] = prop_info.get('prop_required_on_create') or prop_name in required_on_create
                     prop_info['parent_requires'] = required
                     prop_info['parent_requires_on_create'] = required_on_create
                     prop_info['required_parameter'] = prop_info.get('requiredParameter') == True
@@ -397,7 +436,9 @@ class DocFormatter:
 
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
-                        self.add_property_row(formatted['row'])
+                        # Skip "Actions" if requested. Everything else is output.
+                        if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                            self.add_property_row(formatted['row'])
                         if formatted['details']:
                             prop_details.update(formatted['details'])
                         if formatted['action_details']:
@@ -472,6 +513,7 @@ class DocFormatter:
         meta = prop_info.get('_doc_generator_meta')
         if not meta:
             meta = {}
+
         prop_infos = frag_gen.extend_property_info(schema_ref, prop_info)
 
         formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
@@ -479,7 +521,9 @@ class DocFormatter:
             frag_gen.add_section('')
             frag_gen.current_version = {}
 
-            frag_gen.add_property_row(formatted['row'])
+            # Skip "Actions" if requested. Everything else is output.
+            if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                frag_gen.add_property_row(formatted['row'])
             if len(formatted['details']):
                 prop_details = {}
                 prop_details.update(formatted['details'])
@@ -564,7 +608,9 @@ class DocFormatter:
                     cp_gen.add_description(description)
                 cp_gen.current_version = {}
 
-                cp_gen.add_property_row(formatted['row'])
+                # Skip "Actions" if requested. Everything else is output.
+                if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                    cp_gen.add_property_row(formatted['row'])
                 if len(formatted['details']):
                     prop_details = {}
                     prop_details.update(formatted['details'])
@@ -757,8 +803,6 @@ class DocFormatter:
                                             append_ref = ('See the ' + self.link_to_common_property(ref_key) +
                                                           ' for details on this property.')
 
-
-
                         new_ref_info = {
                             'description': ref_description,
                             'longDescription': ref_longDescription,
@@ -788,7 +832,26 @@ class DocFormatter:
                 for x in prop_info.keys():
                     if x in self.parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
+
+                # Pull in any "require" from parent:
+                parent_requires = prop_info.get('parent_requires', [])
+                parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
+                ref_info['prop_required'] = ref_info.get('prop_required') or prop_name in parent_requires
+                ref_info['prop_required_on_create'] = ref_info.get('prop_required_on_create') or prop_name in parent_requires_on_create
+
                 prop_info = ref_info
+
+                # Annotate required properties.
+                props = prop_info.get('properties')
+                if (props):
+                    required = prop_info.get('required', [])
+                    required_on_create = prop_info.get('requiredOnCreate', [])
+                    for x in props.keys():
+                        props[x]['prop_required'] = props[x].get('prop_required') or x in required
+                        props[x]['prop_required_on_create'] = props[x].get('prop_required_on_create') or x in required_on_create
+                        props[x]['parent_requires'] = required
+                        props[x]['parent_requires_on_create'] = required_on_create
+                        props[x]['required_parameter'] = props[x].get('requiredParameter') == True
 
                 # override metadata with merged metadata from above.
                 prop_info['_doc_generator_meta'] = meta
@@ -1086,7 +1149,7 @@ class DocFormatter:
         'is_in_profile', 'profile_read_req', 'profile_write_req', 'profile_mincount', 'profile_purpose',
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
         'normative_descr', 'non_normative_descr', 'pattern', 'prop_required', 'prop_required_on_create',
-        'required_parameter'
+        'required_parameter', 'verbatim_description'
         """
         traverser = self.traverser
 
@@ -1106,6 +1169,7 @@ class DocFormatter:
         profile_conditional_details = {}
         profile_values = False
         profile_comparison = False
+        verbatim_description = prop_info.get('verbatim_description', False)
         schema_name = traverser.get_schema_name(schema_ref)
 
         # Get the profile if we are in profile mode.
@@ -1155,8 +1219,8 @@ class DocFormatter:
 
         read_only = prop_info.get('readonly')
 
-        prop_required = prop_info.get('prop_required')
-        prop_required_on_create = prop_info.get('prop_required_on_create')
+        prop_required = prop_info.get('prop_required') or prop_name in prop_info.get('parent_requires', [])
+        prop_required_on_create = prop_info.get('prop_required_on_create') or prop_name in prop_info.get('parent_requires_on_create', [])
         required_parameter = prop_info.get('requiredParameter')
 
         descr = self.get_property_description(prop_info)
@@ -1176,6 +1240,23 @@ class DocFormatter:
                 action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param], {})
 
             action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
+
+            if self.config.get('payloads'):
+                version = prop_info['_doc_generator_meta']['version']
+                short_name = prop_name
+                if prop_name.startswith('#'): # expected
+                    # Example: from #Bios.ResetBios, we want "ResetBios"
+                    prop_name_parts = prop_name.split('.')
+                    short_name = prop_name_parts[-1]
+
+                payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name)
+                payload = self.config['payloads'].get(payload_key)
+                if payload:
+                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    if self.layout_payloads == 'top':
+                        action_details = self.format_json_payload(json_payload) + action_details
+                    else:
+                        action_details += self.format_json_payload(json_payload)
 
             formatted_action_rows = []
 
@@ -1274,7 +1355,7 @@ class DocFormatter:
                 prop_details.update(object_formatted['details'])
 
         # embedded items:
-        if prop_is_array:
+        if prop_is_array and (list_of_objects or list_of_simple_type or prop_item):
             new_path = prop_path.copy()
             new_path.append(prop_name)
             if list_of_objects:
@@ -1306,7 +1387,7 @@ class DocFormatter:
                     item_formatted = self.format_non_object_descr(schema_ref, prop_items[0], new_path)
                     item_formatted['promote_me'] = False
 
-            else:
+            elif prop_item:
                 item_formatted = self.format_non_object_descr(schema_ref, prop_item, new_path)
 
             promote_me = item_formatted.get('promote_me', False)
@@ -1367,7 +1448,8 @@ class DocFormatter:
                        'profile_conditional_req': None,
                        'profile_conditional_details': None,
                        'profile_values': None,
-                       'profile_comparison': None
+                       'profile_comparison': None,
+                       'verbatim_description': verbatim_description,
                        }
 
         if profile is not None:
@@ -1456,6 +1538,8 @@ class DocFormatter:
         parent_requires = prop_info.get('parent_requires', [])
         parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
 
+        prop_names = patterns = False
+
         if properties:
             prop_names = [x for x in properties.keys()]
             prop_names = self.exclude_annotations(prop_names)
@@ -1473,14 +1557,14 @@ class DocFormatter:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
 
-
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
 
             for prop_name in prop_names:
                 base_detail_info = properties[prop_name]
-                base_detail_info['prop_required'] = prop_name in parent_requires
-                base_detail_info['prop_required_on_create'] = prop_name in parent_requires_on_create
+                base_detail_info['prop_required'] = base_detail_info.get('prop_required') or prop_name in parent_requires
+                base_detail_info['prop_required_on_create'] = (base_detail_info.get('prop_required_on_create') or
+                                                                   prop_name in parent_requires_on_create)
                 base_detail_info = self.apply_overrides(base_detail_info, schema_name, prop_name)
                 meta = self.merge_metadata(prop_name, base_detail_info.get('_doc_generator_meta', {}), context_meta)
                 detail_info = self.extend_property_info(schema_ref, base_detail_info, meta)
@@ -1505,13 +1589,46 @@ class DocFormatter:
                     if formatted.get('profile_conditional_details'):
                         conditional_details.update(formatted['profile_conditional_details'])
 
+        elif prop_info.get('patternProperties') and (self.config.get('output_content') != 'property_index'):
+            # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
+            if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
+                patterns = prop_info['patternProperties'].keys()
+                patterns_to_include = self.exclude_prop_names(patterns, self.config['excluded_pattern_props'],
+                                                              self.config['excluded_pattern_props_by_match'])
+
+                for pattern in patterns_to_include:
+                    prop_name = '(pattern)'
+                    base_pattern_info = prop_info['patternProperties'][pattern]
+                    base_pattern_info['prop_required'] = False
+                    base_pattern_info['prop_required_on_create'] = False
+
+                    base_pattern_info = self.apply_overrides(base_pattern_info, schema_name, None)
+
+                    # Override the description, if any, with a line describing the pattern.
+                    description = 'Property names follow regular expression pattern "' + self.escape_regexp(pattern) + '"'
+                    base_pattern_info['description'] = base_pattern_info['longDescription'] = description
+                    base_pattern_info['verbatim_description'] = True
+
+                    meta = self.merge_metadata(prop_name, base_pattern_info.get('_doc_generator_meta', {}), context_meta)
+                    pattern_info = self.extend_property_info(schema_ref, base_pattern_info, meta)
+                    meta = self.merge_full_metadata(pattern_info[0].get('_doc_generator_meta', {}), meta)
+
+                    formatted = self.format_property_row(schema_ref, prop_name, pattern_info, prop_path)
+                    if formatted:
+                        output.append(formatted['row'])
+                        if formatted['details']:
+                            details.update(formatted['details'])
+                        if formatted['action_details']:
+                            action_details[prop_name] = formatted['action_details']
+                        if formatted.get('profile_conditional_details'):
+                            conditional_details.update(formatted['profile_conditional_details'])
+
+
         if len(conditional_details):
             cond_names = [x for x in conditional_details.keys()]
             cond_names.sort(key=str.lower)
             for cond_name in cond_names:
                 self.add_profile_conditional_details(conditional_details[cond_name])
-
-
 
         return {'rows': output, 'details': details, 'action_details': action_details }
 
@@ -1736,10 +1853,10 @@ class DocFormatter:
 
 
     @staticmethod
-    def truncate_version(version_string, num_parts):
+    def truncate_version(version_string, num_parts, with_prejudice=False):
         """Truncate the version string to at least the specified number of parts.
 
-        Maintains additional part(s) if non-zero.
+        Maintains additional part(s) if non-zero, unless with_prejudice is True
         """
 
         parts = version_string.split('.')
@@ -1747,7 +1864,7 @@ class DocFormatter:
         for part in parts:
             if len(keep) < num_parts:
                 keep.append(part)
-            elif part != '0':
+            elif part != '0' and not with_prejudice:
                 keep.append(part)
             else:
                 break
@@ -1764,3 +1881,38 @@ class DocFormatter:
             'Conditional': 'Conditional Requirements',
             }
         return output_map.get(text, text)
+
+    @staticmethod
+    def escape_regexp(text):
+        """If escaping is necessary to protect patterns when output format is rendered, do that. """
+        return text
+
+
+    @staticmethod
+    def summarize_release_history(release_history):
+        """ Create a summary of the given release history, which is assumed to be ordered oldest-first:
+
+        * last 6 entries by major/minor version
+        * versions to major/minor only
+        * ordered latest-to-earliest
+        """
+        max_entries = 10
+        summarized = []
+        all = copy.deepcopy(release_history)
+        all.reverse()
+        latest_release = ''
+        num_releases = 0
+
+        for elt in all:
+            if elt['release'] == latest_release:
+                continue
+            latest_release = elt['release']
+            num_releases = num_releases + 1
+            if len(summarized) <= max_entries:
+                version = DocFormatter.truncate_version(elt['version'], 2, True)
+                summarized.append({"version": "v" + version, "release": latest_release})
+
+        if num_releases > max_entries:
+            summarized.append({"version": "...", "release": "..."})
+
+        return summarized

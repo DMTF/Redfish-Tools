@@ -1047,7 +1047,7 @@ class CSDLToJSON:
 
             # Excerpt Copy
             if term == "Redfish.ExcerptCopy":
-                json_type_def["excerptCopy"] = type.split( "." )[0] + self.get_attrib( annotation, "String", False, "" )
+                json_type_def["excerptCopy"] = type.split( "." )[0] + self.get_attrib( annotation, "String", False, "" ) + "Excerpt"
 
         # Convert the type as needed; some types will force a format, pattern, or reference
         json_type, ref, pattern, format = self.csdl_type_to_json_type( type, is_nullable )
