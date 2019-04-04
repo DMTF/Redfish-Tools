@@ -1380,7 +1380,8 @@ class MetaData(Element):
             self.check_scope_iterate()
         except SchemaError as error:
             # Workaround where OData 4.0 Errata 3 schemas point back to broken core schema from the original release
-            if "http://docs.oasis-open.org/odata/odata/v4.0/os/vocabularies/Org.OData.Core.V1.xml" not in error.message:
+            if ( "http://docs.oasis-open.org/odata/odata/v4.0/os/vocabularies/Org.OData.Core.V1.xml" not in error.message and
+                "http://docs.oasis-open.org/odata/odata/v4.0/cs01/vocabularies/Org.OData.Core.V1.xml" not in error.message ):
                 print(error.message)
                 sys.exit(0)
         except Exception:
