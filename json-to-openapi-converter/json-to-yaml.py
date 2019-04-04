@@ -50,6 +50,7 @@ class JSONToYAML:
     Args:
         input: The folder containing the input JSON files
         output: The folder to store the resulting YAML files
+        overwrite: Whether or not to overwrite versioned files
         base_file: The filename of the base OpenAPI Service Document
         service_file: The filename for the OpenAPI Service Document
         odata_schema: The location for the Redfish OData Schema file
@@ -59,7 +60,7 @@ class JSONToYAML:
         extensions: The URI extensions to apply to given resource types
     """
 
-    def __init__( self, input, output, base_file, service_file, odata_schema, message_ref, task_ref, info_block, extensions ):
+    def __init__( self, input, output, overwrite, base_file, service_file, odata_schema, message_ref, task_ref, info_block, extensions ):
         self.odata_schema = odata_schema
         self.message_ref = message_ref
         self.task_ref = task_ref
@@ -109,9 +110,10 @@ class JSONToYAML:
                     self.update_object( json_data )
 
                     out_filename = output + os.path.sep + filename.rsplit( ".", 1 )[0] + ".yaml"
-                    out_string = yaml.dump( json_data, default_flow_style = False )
-                    with open( out_filename, "w" ) as file:
-                        file.write( out_string )
+                    if overwrite or is_unversioned( filename ) or ( not os.path.isfile( out_filename ) ):
+                        out_string = yaml.dump( json_data, default_flow_style = False )
+                        with open( out_filename, "w" ) as file:
+                            file.write( out_string )
 
         # Update the URI information with the action information collected
         self.update_uri_info_with_actions()
@@ -645,6 +647,22 @@ class JSONToYAML:
 
         return False
 
+def is_unversioned( name ):
+    """
+    Checks if a JSON Schema file name is unversioned
+
+    Args:
+        name: The string name of the file
+
+    Returns:
+        True if the file is unversioned, False otherwise
+    """
+
+    # Versioned filename match the form NAME.vX_Y_Z.json
+    if re.search( "v([0-9]+)_([0-9]+)_([0-9]+).json$", name ) is None:
+        return True
+    return False
+
 if __name__ == '__main__':
 
     # Get the input arguments
@@ -653,7 +671,14 @@ if __name__ == '__main__':
     argget.add_argument( "--output", "-O",  type = str, required = True, help = "The folder to write the converted YAML files" )
     argget.add_argument( "--config", "-C", type = str, required = True, help = "The JSON file that describes configuration options for the output" )
     argget.add_argument( "--base", "-B", type = str, required = False, help = "The base OpenAPI Service Document if extending an existing one" )
+    argget.add_argument( "--overwrite", "-W", type = str, help = "Overwrite the versioned files in the output directory if they already exist (default is True)" )
     args = argget.parse_args()
+
+    # Get the overwrite flag
+    overwrite = True
+    if args.overwrite is not None:
+        if ( args.overwrite == "False" ) or ( args.overwrite == "false" ):
+            overwrite = False
 
     # Read the configuration file
     config_data = {}
@@ -683,6 +708,6 @@ if __name__ == '__main__':
         sys.exit( 1 )
 
     # Funnel everything to the translator
-    JSONToYAML( args.input, args.output, args.base, config_data["OutputFile"], config_data["ODataSchema"], config_data["MessageRef"], config_data["TaskRef"], config_data["info"], config_data["Extensions"] )
+    JSONToYAML( args.input, args.output, overwrite, args.base, config_data["OutputFile"], config_data["ODataSchema"], config_data["MessageRef"], config_data["TaskRef"], config_data["info"], config_data["Extensions"] )
 
     sys.exit( 0 )

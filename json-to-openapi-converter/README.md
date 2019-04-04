@@ -18,7 +18,7 @@ The tool will process all files found in the folder specified by the *input* arg
 
 ```
 usage: json-to-yaml.py [-h] --input INPUT --output OUTPUT --config CONFIG
-                       [--base BASE]
+                       [--base BASE] [--overwrite OVERWRITE]
 
 A tool used to convert Redfish JSON Schema files to Redfish OpenAPI YAML files
 along with the OpenAPI Service Document
@@ -36,6 +36,9 @@ optional arguments:
   -h, --help            show this help message and exit
   --base BASE, -B BASE  The base OpenAPI Service Document if extending an
                         existing one
+  --overwrite OVERWRITE, -W OVERWRITE
+                        Overwrite the versioned files in the output directory
+                        if they already exist (default is True)
 ```
 
 ### Config File
