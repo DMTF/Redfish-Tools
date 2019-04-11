@@ -1371,7 +1371,7 @@ class DocFormatter:
                     combined_prop_item = prop_items[0]
                     combined_prop_item['_prop_name'] = prop_name
                     combined_prop_item['readonly'] = prop_info.get('readonly', False)
-                    if self.config.get('normative') and 'longDescription' in combined_prop_item:
+                    if self.config.get('normative') and combined_prop_item.get('longDescription'):
                         descr = descr + ' ' + combined_prop_item['longDescription']
                         combined_prop_item['longDescription'] = descr
                     else:
