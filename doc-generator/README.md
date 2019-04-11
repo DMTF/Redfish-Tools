@@ -38,10 +38,11 @@ referenced data from local files or over the Internet. See [The Supplemental Mat
 
 ```
 usage: doc_generator.py [-h] [-n] [--format {markdown,html,csv}]
-                        [--property_index]
+                        [--out OUTFILE] [--sup SUPFILE]
+                        [--payload_dir payload_dir] [--config CONFIG_FILE]
+                        [--profile PROFILE_DOC] [-t] [--property_index]
                         [--property_index_config_out CONFIG_FILE_OUT]
-                        [--out OUTFILE] [--sup SUPFILE] [--config CONFIG_FILE]
-                        [--profile PROFILE_DOC] [-t] [--escape ESCAPE_CHARS]
+                        [--escape ESCAPE_CHARS]
                         [import_from [import_from ...]]
 
 Generate documentation for Redfish JSON schema files.
@@ -55,16 +56,19 @@ optional arguments:
   -n, --normative       Produce normative (developer-focused) output
   --format {markdown,html,csv}
                         Output format
-  --property_index      Produce Property Index output.
-  --property_index_config_out CONFIG_FILE_OUT
-                        Generate updated config file, with specified filename
-                        (property_index mode only).
   --out OUTFILE         Output file (default depends on output format:
                         output.md for Markdown, index.html for HTML,
                         output.csv for CSV
   --sup SUPFILE         Path to the supplemental material document. Default is
                         usersupplement.md for user-focused documentation, and
                         devsupplement.md for normative documentation.
+  --payload_dir payload_dir
+                        Directory location for JSON payload and Action
+                        examples. Optional.Within this directory, use the
+                        following naming scheme for example files:
+                        <schema_name>-v<major_version>-example.json for JSON
+                        payloads, <schema_name-v<major_version>-action-<action
+                        _name>.json for action examples.
   --config CONFIG_FILE  Path to a config file, containing configuration in
                         JSON format. Used in property_index mode only.
   --profile PROFILE_DOC
@@ -75,6 +79,10 @@ optional arguments:
                         output is intended for use by Service developers,
                         including only the subset of properties with profile
                         requirements.
+  --property_index      Produce Property Index output.
+  --property_index_config_out CONFIG_FILE_OUT
+                        Generate updated config file, with specified filename
+                        (property_index mode only).
   --escape ESCAPE_CHARS
                         Characters to escape (\) in generated Markdown. For
                         example, --escape=@#. Use --escape=@ if strings with
