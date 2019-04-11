@@ -1,0 +1,25 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/Outlet.json",
+    "$ref": "#/definitions/Outlet",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2019 DMTF. These documents represent a Work in Progress. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "Outlet": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Outlet.v0_9_0.json#/definitions/Outlet"
+                }
+            ],
+            "deletable": false,
+            "description": "This is the schema definition for an electrical outlet.",
+            "insertable": false,
+            "longDescription": "This resource shall be used to represent an electrical outlet for a Redfish implementation.",
+            "updatable": true
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#Outlet.Outlet"
+}
