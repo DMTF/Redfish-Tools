@@ -750,6 +750,7 @@ class DocFormatter:
                     if excerpt_copy_name:
                         ref_info['add_link_text'] = ("This object is an excerpt of the " + excerpt_copy_name
                                                           + " resource located at the URI shown in DataSourceURI")
+                        ref_info['_is_excerpt'] = True
 
                     # If an object, include just the definition and description, and append a reference if possible:
                     else:

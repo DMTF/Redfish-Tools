@@ -50,7 +50,7 @@ def test_excerpt(mockRequest):
     description2 = "This object is an excerpt of the SensorPower resource located at the URI shown in DataSourceURI"
 
     # Verify one of the expanded excerpts was output.
-    expected_excerpt = """| **Current** *(v0.9+)* { | object | The current sensor for this circuit. This object is an excerpt of the Sensor resource located at the URI shown in DataSourceURI |
+    expected_excerpt = """| **Current** *(v0.9+)* { | object<br>(excerpt) | The current sensor for this circuit. This object is an excerpt of the Sensor resource located at the URI shown in DataSourceURI |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**DataSourceUri** | string<br><br>*read-only<br>(null)* | A link to the resource that provides the data for this object. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PeakReading** | number<br><br>*read-only<br>(null)* | The peak reading value for this sensor. |
