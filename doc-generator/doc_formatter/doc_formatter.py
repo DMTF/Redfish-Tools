@@ -716,6 +716,7 @@ class DocFormatter:
                 # Update version info from the ref, provided that it is within the same schema.
                 # Make the comparison by unversioned ref, in respect of the way common_properties are keyed
                 from_schema_ref = ref_info.get('_from_schema_ref')
+                from_schema_uri, _, _ = ref_info.get('_ref_uri', '').partition('#')
                 unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
                 is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref)
                                                                or (schema_ref == unversioned_schema_ref))
@@ -748,9 +749,14 @@ class DocFormatter:
                 if ref_info.get('type') == 'object':
                     # If this is an excerpt, it will also be an object, and we want to expand-in-place:
                     if excerpt_copy_name:
-                        ref_info['add_link_text'] = ("This object is an excerpt of the " + excerpt_copy_name
-                                                          + " resource located at the URI shown in DataSourceURI")
                         ref_info['_is_excerpt'] = True
+                        if is_documented_schema:
+                            excerpt_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
+                        else: # This is not expected.
+                            excerpt_link = self.link_to_outside_schema(from_schema_uri)
+                        ref_info['add_link_text'] = ("This object is an excerpt of the "
+                                                         + excerpt_link +
+                                                         " resource located at the URI shown in DataSourceUri.")
 
                     # If an object, include just the definition and description, and append a reference if possible:
                     else:
@@ -760,8 +766,6 @@ class DocFormatter:
                         ref_pattern = ref_info.get('pattern')
                         link_detail = ''
                         append_ref = ''
-
-                        from_schema_uri, _, _ = ref_info.get('_ref_uri', '').partition('#')
 
                         # Links to other Redfish resources are a special case.
                         if is_other_schema or is_ref_to_same_schema:

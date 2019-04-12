@@ -32,12 +32,13 @@ base_config = {
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_excerpt(mockRequest):
+def test_excerpt_circuit(mockRequest):
+    """ The Circuit schema contains many references to excerpts """
 
     config = copy.deepcopy(base_config)
     config['output_format'] = 'markdown'
 
-    input_dir = os.path.abspath(os.path.join(testcase_path, 'input'))
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'circuit'))
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
@@ -46,11 +47,10 @@ def test_excerpt(mockRequest):
     output = docGen.generate_docs()
 
     # Looking for the generated description line is an easy way to check that excerpts were detected:
-    description1 = "This object is an excerpt of the Sensor resource located at the URI shown in DataSourceURI"
-    description2 = "This object is an excerpt of the SensorPower resource located at the URI shown in DataSourceURI"
+    description1 = "This object is an excerpt of the *Sensor* resource located at the URI shown in DataSourceUri."
 
     # Verify one of the expanded excerpts was output.
-    expected_excerpt = """| **Current** *(v0.9+)* { | object<br>(excerpt) | The current sensor for this circuit. This object is an excerpt of the Sensor resource located at the URI shown in DataSourceURI |
+    expected_excerpt = """| **Current** *(v0.9+)* { | object<br>(excerpt) | The current sensor for this circuit. This object is an excerpt of the *Sensor* resource located at the URI shown in DataSourceUri. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**DataSourceUri** | string<br><br>*read-only<br>(null)* | A link to the resource that provides the data for this object. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PeakReading** | number<br><br>*read-only<br>(null)* | The peak reading value for this sensor. |
@@ -61,6 +61,53 @@ def test_excerpt(mockRequest):
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |
 | } |   |   |"""
 
-    assert output.count(description1) == 42
-    assert output.count(description2) == 14
+    assert output.count(description1) == 56
     assert expected_excerpt in output
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_excerpt_html_links(mockRequest):
+    """ Markdown doesn't include links to the excerpted schema, so we need to test this in HTML """
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'html'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'circuit'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # Looking for the generated description line is an easy way to check that excerpts were detected:
+    description1 = 'This object is an excerpt of the <a href="#Sensor">Sensor</a> resource located at the URI shown in DataSourceUri.'
+
+    assert output.count(description1) == 56
+
+
+@pytest.mark.skip(reason="Unimplemented")
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_excerpt_pdm(mockRequest):
+    """ The Power Distribution Metrics schema includes arrays of excerpts """
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'power_distribution_metrics'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # Looking for the generated description line is an easy way to check that excerpts were detected:
+    description1 = "This object is an excerpt of the Sensor resource located at the URI shown in DataSourceUri"
+    description2 = "This object is an excerpt of the SensorPower resource located at the URI shown in DataSourceUri"
+
+
+    # assert output.count(description1) == 42
+    # assert output.count(description2) == 14
+    # assert expected_excerpt in output
+    assert False
