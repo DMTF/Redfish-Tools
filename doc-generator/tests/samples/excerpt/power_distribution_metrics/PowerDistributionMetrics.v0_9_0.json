@@ -1,0 +1,223 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/PowerDistributionMetrics.v0_9_0.json",
+    "$ref": "#/definitions/PowerDistributionMetrics",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2019 DMTF. These documents represent a Work in Progress. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "Actions": {
+            "additionalProperties": false,
+            "description": "The available actions for this resource.",
+            "longDescription": "This type shall contain the available actions for this resource.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_.]+$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "#PowerDistributionMetrics.ResetStatistics": {
+                    "$ref": "#/definitions/ResetStatistics"
+                },
+                "Oem": {
+                    "$ref": "#/definitions/OemActions",
+                    "description": "This property contains the available OEM specific actions for this resource.",
+                    "longDescription": "This property shall contain any additional OEM actions for this resource.",
+                    "versionAdded": "v0_9_0"
+                }
+            },
+            "type": "object"
+        },
+        "OemActions": {
+            "additionalProperties": true,
+            "description": "The available OEM specific actions for this resource.",
+            "longDescription": "This type shall contain any additional OEM actions for this resource.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_.]+$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {},
+            "type": "object"
+        },
+        "PowerDistributionMetrics": {
+            "additionalProperties": false,
+            "description": "This is the schema definition for a Rack Power Distribution Unit - PowerDistributionMetrics.",
+            "longDescription": "This resource shall be used to represent a Power Distribution component or unit for a Redfish implementation.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_.]+$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "@odata.context": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/context"
+                },
+                "@odata.etag": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/etag"
+                },
+                "@odata.id": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/id"
+                },
+                "@odata.type": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/type"
+                },
+                "Actions": {
+                    "$ref": "#/definitions/Actions",
+                    "description": "The available actions for this resource.",
+                    "longDescription": "The Actions property shall contain the available actions for this resource.",
+                    "versionAdded": "v0_9_0"
+                },
+                "Description": {
+                    "anyOf": [
+                        {
+                            "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Description"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "readonly": true
+                },
+                "EnergykWh": {
+                    "anyOf": [
+                        {
+                            "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.json#/definitions/SensorExcerpt"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "The energy consumption of this unit.",
+                    "excerptCopy": "SensorExcerpt",
+                    "longDescription": "This object shall contain the total energy, measured in kilowatt-hours (units of kilowatts), for this unit, which represents the 'Total' ElectricalContext sensor when multiple energy sensors exist.",
+                    "readonly": true,
+                    "versionAdded": "v0_9_0"
+                },
+                "HumidityReadings": {
+                    "description": "Contains the humidity sensors.",
+                    "excerptCopy": "SensorExcerpt",
+                    "filter": "ReadingType eq 'Humidity'",
+                    "items": {
+                        "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.json#/definitions/SensorExcerpt"
+                    },
+                    "longDescription": "The value of this property shall be an array of sensors that measure humidity.",
+                    "type": "array",
+                    "versionAdded": "v0_9_0"
+                },
+                "HumidityReadings@odata.count": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/count"
+                },
+                "Id": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Id",
+                    "readonly": true
+                },
+                "Name": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Name",
+                    "readonly": true
+                },
+                "Oem": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem",
+                    "description": "This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections.",
+                    "longDescription": "The value of this string shall be of the format for the reserved word *Oem*."
+                },
+                "PowerReading": {
+                    "anyOf": [
+                        {
+                            "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.json#/definitions/SensorPowerExcerpt"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "The total power reading for this equipment.",
+                    "excerptCopy": "SensorPowerExcerpt",
+                    "longDescription": "This object shall contain the total power, measured in Watts, for this unit, which represents the 'Total' ElectricalContext sensor when multiple power sensors exist.",
+                    "readonly": true,
+                    "versionAdded": "v0_9_0"
+                },
+                "Temperatures": {
+                    "description": "Contains the array of 1 or more temperature sensors.",
+                    "excerptCopy": "SensorExcerpt",
+                    "filter": "ReadingType eq 'Temperature'",
+                    "items": {
+                        "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.json#/definitions/SensorExcerpt"
+                    },
+                    "longDescription": "The value of this property shall be an array of sensors that measure temperature.",
+                    "type": "array",
+                    "versionAdded": "v0_9_0"
+                },
+                "Temperatures@odata.count": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/count"
+                }
+            },
+            "required": [
+                "@odata.id",
+                "@odata.type",
+                "Id",
+                "Name"
+            ],
+            "type": "object"
+        },
+        "ResetStatistics": {
+            "additionalProperties": false,
+            "description": "This action is used to reset the summary statistics related to this equipment.",
+            "longDescription": "This action shall perform a reset of any time intervals or counted values for this equipment.",
+            "parameters": {},
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_.]+$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "target": {
+                    "description": "Link to invoke action",
+                    "format": "uri-reference",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Friendly action name",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "owningEntity": "DMTF",
+    "release": "TBD",
+    "title": "#PowerDistributionMetrics.v0_9_0.PowerDistributionMetrics"
+}

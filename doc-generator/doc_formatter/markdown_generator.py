@@ -87,9 +87,11 @@ class MarkdownGenerator(DocFormatter):
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
             has_enum = 'enum' in prop_info[0]
+            is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
         elif isinstance(prop_info, dict):
             meta = prop_info.get('_doc_generator_meta')
             has_enum = 'enum' in prop_info
+            is_excerpt = prop_info[0].get('_is_excerpt')
         if not meta:
             meta = {}
 
@@ -227,6 +229,9 @@ class MarkdownGenerator(DocFormatter):
 
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
+
+        if is_excerpt:
+            prop_type += '<br>(excerpt)'
 
         if in_array:
             prop_type = 'array (' + prop_type + ')'

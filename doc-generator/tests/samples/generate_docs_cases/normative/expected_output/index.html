@@ -4,124 +4,7 @@
 <meta charset="utf-8">
 <title></title>
 
-<style>
- * {margin: 0; padding: 0;}
- body {font: 0.8125em Helvetica, sans-serif; color: #222; background: #FFF; width: 90%; margin: 2em auto;}
- h1, h3, h4{margin:1em 0 .5em;}
- h2 {margin: 2em 0 .5em;}
- h3 {
-    border-bottom: 1px solid #000000
- }
- h4 {
-    text-decoration: underline #000000
- }
- ul, ol {margin-left: 2em;}
- li {margin: 0 0 0.5em;}
- p {margin: 0 0 0.5em;}
- div.toc {margin: 0 0 2em 0;}
- .toc ul {list-style-type: none;}
- ul.nobullet { list-style-type: none }
- table{
-    max-width: 100%;
-    background-color: transparent;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-bottom: 1.25em;
-    border: 1px solid #999999;
-    border-width: 0 1px 1px 0;
- }
- td, th{
-    padding: .5em;
-    text-align: left;
-    vertical-align: top;
-    border: 1px solid #999999;
-    border-width: 1px 0 0 1px;
-}
-table.properties{
-    width: 100%;
-}
-table.uris tr td:nth-child(2) {
-    word-break: break-all;
-}
-.property-details-content {
-    margin-left: 5em;
-}
-pre.code{
-    font-size: 1em;
-    margin-left: 5em;
-    color: #0000FF
-}
 
-.codehilite .hll { background-color: #ffffcc }
-.codehilite  { background: #f8f8f8; }
-.codehilite .c { color: #408080; font-style: italic } /* Comment */
-.codehilite .err { border: 1px solid #FF0000 } /* Error */
-.codehilite .k { color: #008000; font-weight: bold } /* Keyword */
-.codehilite .o { color: #666666 } /* Operator */
-.codehilite .ch { color: #408080; font-style: italic } /* Comment.Hashbang */
-.codehilite .cm { color: #408080; font-style: italic } /* Comment.Multiline */
-.codehilite .cp { color: #BC7A00 } /* Comment.Preproc */
-.codehilite .cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
-.codehilite .c1 { color: #408080; font-style: italic } /* Comment.Single */
-.codehilite .cs { color: #408080; font-style: italic } /* Comment.Special */
-.codehilite .gd { color: #A00000 } /* Generic.Deleted */
-.codehilite .ge { font-style: italic } /* Generic.Emph */
-.codehilite .gr { color: #FF0000 } /* Generic.Error */
-.codehilite .gh { color: #000080; font-weight: bold } /* Generic.Heading */
-.codehilite .gi { color: #00A000 } /* Generic.Inserted */
-.codehilite .go { color: #888888 } /* Generic.Output */
-.codehilite .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
-.codehilite .gs { font-weight: bold } /* Generic.Strong */
-.codehilite .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
-.codehilite .gt { color: #0044DD } /* Generic.Traceback */
-.codehilite .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
-.codehilite .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
-.codehilite .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
-.codehilite .kp { color: #008000 } /* Keyword.Pseudo */
-.codehilite .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
-.codehilite .kt { color: #B00040 } /* Keyword.Type */
-.codehilite .m { color: #666666 } /* Literal.Number */
-.codehilite .s { color: #BA2121 } /* Literal.String */
-.codehilite .na { color: #7D9029 } /* Name.Attribute */
-.codehilite .nb { color: #008000 } /* Name.Builtin */
-.codehilite .nc { color: #0000FF; font-weight: bold } /* Name.Class */
-.codehilite .no { color: #880000 } /* Name.Constant */
-.codehilite .nd { color: #AA22FF } /* Name.Decorator */
-.codehilite .ni { color: #999999; font-weight: bold } /* Name.Entity */
-.codehilite .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
-.codehilite .nf { color: #0000FF } /* Name.Function */
-.codehilite .nl { color: #A0A000 } /* Name.Label */
-.codehilite .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
-.codehilite .nt { color: #008000; font-weight: bold } /* Name.Tag */
-.codehilite .nv { color: #19177C } /* Name.Variable */
-.codehilite .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
-.codehilite .w { color: #bbbbbb } /* Text.Whitespace */
-.codehilite .mb { color: #666666 } /* Literal.Number.Bin */
-.codehilite .mf { color: #666666 } /* Literal.Number.Float */
-.codehilite .mh { color: #666666 } /* Literal.Number.Hex */
-.codehilite .mi { color: #666666 } /* Literal.Number.Integer */
-.codehilite .mo { color: #666666 } /* Literal.Number.Oct */
-.codehilite .sa { color: #BA2121 } /* Literal.String.Affix */
-.codehilite .sb { color: #BA2121 } /* Literal.String.Backtick */
-.codehilite .sc { color: #BA2121 } /* Literal.String.Char */
-.codehilite .dl { color: #BA2121 } /* Literal.String.Delimiter */
-.codehilite .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
-.codehilite .s2 { color: #BA2121 } /* Literal.String.Double */
-.codehilite .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
-.codehilite .sh { color: #BA2121 } /* Literal.String.Heredoc */
-.codehilite .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
-.codehilite .sx { color: #008000 } /* Literal.String.Other */
-.codehilite .sr { color: #BB6688 } /* Literal.String.Regex */
-.codehilite .s1 { color: #BA2121 } /* Literal.String.Single */
-.codehilite .ss { color: #19177C } /* Literal.String.Symbol */
-.codehilite .bp { color: #008000 } /* Name.Builtin.Pseudo */
-.codehilite .fm { color: #0000FF } /* Name.Function.Magic */
-.codehilite .vc { color: #19177C } /* Name.Variable.Class */
-.codehilite .vg { color: #19177C } /* Name.Variable.Global */
-.codehilite .vi { color: #19177C } /* Name.Variable.Instance */
-.codehilite .vm { color: #19177C } /* Name.Variable.Magic */
-.codehilite .il { color: #666666 } /* Literal.Number.Integer.Long */
-</style>
 
 </head>
 <body>
@@ -132,7 +15,7 @@ pre.code{
 <tr><td><nobr><b>@odata.etag</b></nobr></td><td>string</td><td><nobr>read-only</nobr></td><td>The value of this property shall be a string that is defined by the ETag HTTP header definition in RFC7232.</td></tr>
 <tr><td><nobr><b>Actions</b> <i>(v1.1+)</i> { }</nobr></td><td>object</td><td></td><td>The Actions property shall contain the available actions for this resource.</td></tr>
 <tr><td><nobr><b>AssignablePhysicalPorts</b> [ {</nobr></td><td>array</td><td><nobr>read-only</nobr></td><td>The value of this property shall be an array of physical port references that this network device function may be assigned to.</td></tr>
-<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td>Link to a NetworkPort resource. See the Links section and the <a href="#NetworkPort">NetworkPort</a> schema for details.</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td><i>Link to a NetworkPort resource. See the Links section and the <a href="#NetworkPort">NetworkPort</a> schema for details.</i></td></tr>
 <tr><td><nobr><b>BootMode</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-write</nobr> (null)</td><td>The value of this property shall be the boot mode configured for this network device function.  If the value is not quot;Disabled", this network device function shall be configured for boot using the specified technology.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/NetworkDeviceFunction.json|details|BootMode">BootMode</a> in Property Details, below, for the possible values of this property.</i></td></tr>
 <tr><td><nobr><b>Description</b></nobr></td><td>string</td><td><nobr>read-only</nobr> (null)</td><td>This object represents the Description property.  All values for resources described by this schema shall comply to the requirements as described in the Redfish specification.</td></tr>
 <tr><td><nobr><b>DeviceEnabled</b></nobr></td><td>boolean</td><td><nobr>read-write</nobr> (null)</td><td>The value of this property shall be a boolean indicating whether the network device function is enabled.  Disabled network device functions shall not be enumerated or seen by the operating system.</td></tr>
@@ -186,11 +69,11 @@ pre.code{
 <tr><td><nobr><b>Name</b></nobr></td><td>string</td><td><nobr>read-only</nobr> <nobr>required</nobr></td><td>This object represents the Name property.  All values for resources described by this schema shall comply to the requirements as described in the Redfish specification. The value of this string shall be of the format for the reserved word <em>Name</em>.</td></tr>
 <tr><td><nobr><b>NetDevFuncCapabilities</b> <i>(v1.2+)</i> [ ] </nobr></td><td>array (string<br>(enum))</td><td><nobr>read-only</nobr> (null)</td><td>This object shall contain an array of capabilities of this network device function.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/NetworkDeviceFunction.json|details|NetDevFuncCapabilities">NetDevFuncCapabilities</a> in Property Details, below, for the possible values of this property.</i></td></tr>
 <tr><td><nobr><b>NetDevFuncType</b> <i>(v1.2+)</i></nobr></td><td>string<br>(enum)</td><td><nobr>read-write</nobr> (null)</td><td>The value of this property shall be the configured capability of this network device function.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/NetworkDeviceFunction.json|details|NetDevFuncType">NetDevFuncType</a> in Property Details, below, for the possible values of this property.</i></td></tr>
-<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>The value of this string shall be of the format for the reserved word <em>Oem</em>. See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</td></tr>
-<tr><td><nobr><b>PhysicalPortAssignment</b> {</nobr></td><td>object</td><td></td><td>The value of this property shall be the physical port that this network device function is currently assigned to. This value shall be one of the AssignablePhysicalPorts array members. See the <a href="#NetworkPort">NetworkPort</a> schema for details on this property.</td></tr>
-<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>}</td><td>string</td><td><nobr>read-only</nobr></td><td>Link to a NetworkPort resource. See the Links section and the <a href="#NetworkPort">NetworkPort</a> schema for details.</td></tr>
+<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>The value of this string shall be of the format for the reserved word <em>Oem</em>.<br><i>See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</i></td></tr>
+<tr><td><nobr><b>PhysicalPortAssignment</b> {</nobr></td><td>object</td><td></td><td>The value of this property shall be the physical port that this network device function is currently assigned to. This value shall be one of the AssignablePhysicalPorts array members.<br><i>See the <a href="#NetworkPort">NetworkPort</a> schema for details on this property.</i></td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>}</td><td>string</td><td><nobr>read-only</nobr></td><td><i>Link to a NetworkPort resource. See the Links section and the <a href="#NetworkPort">NetworkPort</a> schema for details.</i></td></tr>
 <tr><td><nobr><b>PropertyWithAPattern</b></nobr></td><td>string</td><td><nobr>read-write</nobr></td><td>This is a fake property, introduced to show how a pattern is included in generated documentation. Pattern: ([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})</td></tr>
-<tr><td><nobr><b>Status</b> { }</nobr></td><td>object</td><td> (null)</td><td>This type shall contain any status or health properties of a resource. See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</td></tr>
+<tr><td><nobr><b>Status</b> { }</nobr></td><td>object</td><td> (null)</td><td>This type shall contain any status or health properties of a resource.<br><i>See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</i></td></tr>
 <tr><td><nobr><b>VirtualFunctionsEnabled</b></nobr></td><td>boolean</td><td><nobr>read-only</nobr> (null)</td><td>The value of this property shall be a boolean indicating whether Single Root I/O Virtualization (SR-IOV) Virual Functions (VFs) are enabled for this Network Device Function.</td></tr>
 </tbody></table>
 <div class="property-details">
@@ -280,9 +163,9 @@ pre.code{
 <tr><td><nobr><b>@odata.etag</b></nobr></td><td>string</td><td><nobr>read-only</nobr></td><td>The value of this property shall be a string that is defined by the ETag HTTP header definition in RFC7232.</td></tr>
 <tr><td><nobr><b>Description</b></nobr></td><td>string</td><td><nobr>read-only</nobr> (null)</td><td>This object represents the Description property.  All values for resources described by this schema shall comply to the requirements as described in the Redfish specification.</td></tr>
 <tr><td><nobr><b>Members</b> [ {</nobr></td><td>array</td><td><nobr>read-only</nobr></td><td>Contains the members of this collection.</td></tr>
-<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td>Link to a NetworkDeviceFunction resource. See the Links section and the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details.</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td><i>Link to a NetworkDeviceFunction resource. See the Links section and the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details.</i></td></tr>
 <tr><td><nobr><b>Name</b></nobr></td><td>string</td><td><nobr>read-only</nobr></td><td>This object represents the Name property.  All values for resources described by this schema shall comply to the requirements as described in the Redfish specification. The value of this string shall be of the format for the reserved word <em>Name</em>.</td></tr>
-<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>The value of this string shall be of the format for the reserved word <em>Oem</em>. See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</td></tr>
+<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>The value of this string shall be of the format for the reserved word <em>Oem</em>.<br><i>See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</i></td></tr>
 </tbody></table>
 <h2 id="NetworkPort">NetworkPort 1.1.0</h2>
 <p>A Network Port represents a discrete physical port capable of connecting to a network.</p>
@@ -300,17 +183,17 @@ pre.code{
 <tr><td><nobr><b>Name</b></nobr></td><td>string</td><td><nobr>read-only</nobr> <nobr>required</nobr></td><td>This object represents the Name property.  All values for resources described by this schema shall comply to the requirements as described in the Redfish specification. The value of this string shall be of the format for the reserved word <em>Name</em>.</td></tr>
 <tr><td><nobr><b>NetDevFuncMaxBWAlloc</b> [ {</nobr></td><td>array</td><td><nobr>read-write</nobr></td><td>The value of this property shall be an array of maximum bandwidth allocation percentages for the Network Device Functions associated with this port.</td></tr>
 <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>MaxBWAllocPercent</b></nobr></td><td>number</td><td><nobr>read-write</nobr> (null)</td><td>The value of this property shall be the maximum bandwidth percentage allocation for the associated network device function.</td></tr>
-<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>NetworkDeviceFunction</b> {</nobr></td><td>object</td><td></td><td>A Network Device Function represents a logical interface exposed by the network adapter. See the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details on this property.</td></tr>
-<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td>Link to a NetworkDeviceFunction resource. See the Links section and the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details.</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>NetworkDeviceFunction</b> {</nobr></td><td>object</td><td></td><td>A Network Device Function represents a logical interface exposed by the network adapter.<br><i>See the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details on this property.</i></td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td><i>Link to a NetworkDeviceFunction resource. See the Links section and the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details.</i></td></tr>
 <tr><td><nobr><b>NetDevFuncMinBWAlloc</b> [ {</nobr></td><td>array</td><td><nobr>read-write</nobr></td><td>The value of this property shall be an array of minimum bandwidth percentage allocations for each of the network device functions associated with this port.</td></tr>
 <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>MinBWAllocPercent</b></nobr></td><td>number</td><td><nobr>read-write</nobr> (null)</td><td>The value of this property shall be the minimum bandwidth percentage allocation for the associated network device function.  The sum total of all minimum percentages shall not exceed 100.</td></tr>
-<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>NetworkDeviceFunction</b> {</nobr></td><td>object</td><td></td><td>A Network Device Function represents a logical interface exposed by the network adapter. See the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details on this property.</td></tr>
-<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td>Link to a NetworkDeviceFunction resource. See the Links section and the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details.</td></tr>
-<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>The value of this string shall be of the format for the reserved word <em>Oem</em>. See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>NetworkDeviceFunction</b> {</nobr></td><td>object</td><td></td><td>A Network Device Function represents a logical interface exposed by the network adapter.<br><i>See the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details on this property.</i></td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>} ]</td><td>string</td><td><nobr>read-only</nobr></td><td><i>Link to a NetworkDeviceFunction resource. See the Links section and the <a href="#NetworkDeviceFunction">NetworkDeviceFunction</a> schema for details.</i></td></tr>
+<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>The value of this string shall be of the format for the reserved word <em>Oem</em>.<br><i>See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</i></td></tr>
 <tr><td><nobr><b>PhysicalPortNumber</b></nobr></td><td>string</td><td><nobr>read-only</nobr> (null)</td><td>The value of this property shall be the physical port number on the network adapter hardware that this Network Port corresponds to.  This value should match a value visible on the hardware.  When HostPortEnabled and ManagementPortEnabled are both "false", the port shall not establish physical link.</td></tr>
 <tr><td><nobr><b>PortMaximumMTU</b></nobr></td><td>number</td><td><nobr>read-only</nobr> (null)</td><td>The value of this property shall be the largest maximum transmission unit (MTU) that can be configured for this network port.</td></tr>
 <tr><td><nobr><b>SignalDetected</b></nobr></td><td>boolean</td><td><nobr>read-only</nobr> (null)</td><td>The value of this property shall be a boolean indicating whether the port has detected enough signal on enough lanes to establish link.</td></tr>
-<tr><td><nobr><b>Status</b> { }</nobr></td><td>object</td><td> (null)</td><td>This type shall contain any status or health properties of a resource. See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</td></tr>
+<tr><td><nobr><b>Status</b> { }</nobr></td><td>object</td><td> (null)</td><td>This type shall contain any status or health properties of a resource.<br><i>See the <a href="http://redfish.dmtf.org/schemas/v1/Resource.json" target="_blank">Resource</a> schema for details on this property.</i></td></tr>
 <tr><td><nobr><b>SupportedEthernetCapabilities</b> [ ] </nobr></td><td>array (string<br>(enum))</td><td><nobr>read-only</nobr> (null)</td><td>The value of this property shall be an array of zero or more Ethernet capabilities supported by this port.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/NetworkPort.json|details|SupportedEthernetCapabilities">SupportedEthernetCapabilities</a> in Property Details, below, for the possible values of this property.</i></td></tr>
 <tr><td><nobr><b>SupportedLinkCapabilities</b> [ {</nobr></td><td>array</td><td><nobr>read-write</nobr></td><td>This object shall describe the static capabilities of the port, irrespective of transient conditions such as cabling, interface module presence, or remote link parter status or configuration.</td></tr>
 <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>LinkNetworkTechnology</b></nobr></td><td>string<br>(enum)</td><td><nobr>read-only</nobr> (null)</td><td>The value of this property shall be a network technology capability of this port.<br><i>See <a href="#redfish.dmtf.org/schemas/v1/NetworkPort.json|details|LinkNetworkTechnology">LinkNetworkTechnology</a> in Property Details, below, for the possible values of this property.</i></td></tr>

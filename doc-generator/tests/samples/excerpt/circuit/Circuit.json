@@ -1,0 +1,34 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/Circuit.json",
+    "$ref": "#/definitions/Circuit",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2019 DMTF. These documents represent a Work in Progress. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "Circuit": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Circuit.v0_9_0.json#/definitions/Circuit"
+                }
+            ],
+            "deletable": false,
+            "description": "This is the schema definition for an electrical circuit.",
+            "insertable": false,
+            "longDescription": "This resource shall be used to represent an electrical circuit for a Redfish implementation.",
+            "updatable": true,
+            "uris": [
+                "/redfish/v1/PowerEquipment/RackPDUs/{PowerDistributionId}/Inputs/{CircuitId}",
+                "/redfish/v1/PowerEquipment/RackPDUs/{PowerDistributionId}/Branches/{CircuitId}",
+                "/redfish/v1/PowerEquipment/FloorPDUs/{PowerDistributionId}/Inputs/{CircuitId}",
+                "/redfish/v1/PowerEquipment/FloorPDUs/{PowerDistributionId}/Branches/{CircuitId}",
+                "/redfish/v1/PowerEquipment/FloorPDUs/{PowerDistributionId}/Subfeeds/{CircuitId}",
+                "/redfish/v1/PowerEquipment/TransferSwitches/{PowerDistributionId}/Inputs/{CircuitId}",
+                "/redfish/v1/PowerEquipment/TransferSwitches/{PowerDistributionId}/Feeders/{CircuitId}"
+            ]
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#Circuit.Circuit"
+}

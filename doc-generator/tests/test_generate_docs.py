@@ -48,9 +48,12 @@ def _strip_styles(htmlstring):
     The <style> block is boilerplate, we don't test it, and it gets tweaked periodically.
     We know there is just one <style> block, so we can keep this simple.
     """
-    startblock = htmlstring.find('<style>')
-    endblock = htmlstring.find('</style>') + len('</style>')
-    return htmlstring[0:startblock] + htmlstring[endblock:]
+    if '<style>' in htmlstring:
+        startblock = htmlstring.find('<style>')
+        endblock = htmlstring.find('</style>') + len('</style>')
+        return htmlstring[0:startblock] + htmlstring[endblock:]
+    else:
+        return htmlstring
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.

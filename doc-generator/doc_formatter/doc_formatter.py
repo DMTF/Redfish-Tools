@@ -672,12 +672,20 @@ class DocFormatter:
         outside_ref = None
         schema_name = traverser.get_schema_name(schema_ref)
 
+        excerpt_copy_name = prop_info.get('excerptCopy')
+        if excerpt_copy_name and excerpt_copy_name.endswith('Excerpt'): # It should.
+            excerpt_copy_name = excerpt_copy_name[:-7]
+
         # Check for anyOf with a $ref to odata.4.0.0 idRef, and replace it with that ref.
+        # Alternatively, if there is an excerptCopy property, use the (hopefully only) ref and expand it in place.
         if prop_anyof:
             for elt in prop_anyof:
                 if '$ref' in elt:
                     this_ref = elt.get('$ref')
-                    if this_ref.endswith('#/definitions/idRef'):
+                    if excerpt_copy_name:
+                        prop_ref = this_ref
+                        break
+                    elif this_ref.endswith('#/definitions/idRef'):
                         is_link = True
                         prop_ref = this_ref
                         prop_anyof = None
@@ -703,14 +711,15 @@ class DocFormatter:
                 warnings.warn("Unable to find data for " + prop_ref)
 
             else:
-
                 prop_meta = prop_info.get('_doc_generator_meta', {})
 
                 # Update version info from the ref, provided that it is within the same schema.
                 # Make the comparison by unversioned ref, in respect of the way common_properties are keyed
                 from_schema_ref = ref_info.get('_from_schema_ref')
+                from_schema_uri, _, _ = ref_info.get('_ref_uri', '').partition('#')
                 unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
-                is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref) or (schema_ref == unversioned_schema_ref))
+                is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref)
+                                                               or (schema_ref == unversioned_schema_ref))
 
                 if not is_other_schema:
                     ref_meta = ref_info.get('_doc_generator_meta', {})
@@ -737,96 +746,107 @@ class DocFormatter:
                             ref_info = idref_info
                 ref_info = self.apply_overrides(ref_info)
 
-                # If an object, include just the definition and description, and append a reference if possible:
                 if ref_info.get('type') == 'object':
-                    ref_description = ref_info.get('description')
-                    ref_longDescription = ref_info.get('longDescription')
-                    ref_fulldescription_override = ref_info.get('fulldescription_override')
-                    ref_pattern = ref_info.get('pattern')
-                    link_detail = ''
-                    append_ref = ''
+                    # If this is an excerpt, it will also be an object, and we want to expand-in-place:
+                    if excerpt_copy_name:
+                        ref_info['_is_excerpt'] = True
+                        if is_documented_schema:
+                            excerpt_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
+                        else: # This is not expected.
+                            excerpt_link = self.link_to_outside_schema(from_schema_uri)
+                        ref_info['add_link_text'] = ("This object is an excerpt of the "
+                                                         + excerpt_link +
+                                                         " resource located at the URI shown in DataSourceUri.")
 
-                    from_schema_uri, _, _ = ref_info.get('_ref_uri', '').partition('#')
+                    # If an object, include just the definition and description, and append a reference if possible:
+                    else:
+                        ref_description = ref_info.get('description')
+                        ref_longDescription = ref_info.get('longDescription')
+                        ref_fulldescription_override = ref_info.get('fulldescription_override')
+                        ref_pattern = ref_info.get('pattern')
+                        link_detail = ''
+                        append_ref = ''
 
-                    # Links to other Redfish resources are a special case.
-                    if is_other_schema or is_ref_to_same_schema:
-                        if is_collection_of:
-                            append_ref = 'Contains a link to a resource.'
-                            ref_schema_name = self.traverser.get_schema_name(is_collection_of)
+                        # Links to other Redfish resources are a special case.
+                        if is_other_schema or is_ref_to_same_schema:
+                            if is_collection_of:
+                                append_ref = 'Contains a link to a resource.'
+                                ref_schema_name = self.traverser.get_schema_name(is_collection_of)
 
-                            if 'redfish.dmtf.org/schemas/v1/odata' in from_schema_uri:
-                                from_schema_uri = 'http://' + is_collection_of
+                                if 'redfish.dmtf.org/schemas/v1/odata' in from_schema_uri:
+                                    from_schema_uri = 'http://' + is_collection_of
 
-                            link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of, from_schema_uri)
-                                           + '. See the ' + ref_schema_name + ' schema for details.')
-
-                        else:
-                            if is_documented_schema:
-                                link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
-                                               + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                               ' schema for details.')
-
-                            if is_ref_to_same_schema:
-                                # e.g., a Chassis is contained by another Chassis
-                                link_detail = ('Link to another ' + prop_name + ' resource.')
+                                link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of, from_schema_uri)
+                                               + '. See the ' + ref_schema_name + ' schema for details.')
 
                             else:
-                                wants_common_objects = self.config.get('wants_common_objects')
-                                if is_documented_schema or not wants_common_objects:
-                                    append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                                  ' schema for details on this property.')
+                                if is_documented_schema:
+                                    link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
+                                                   + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
+                                                   ' schema for details.')
+
+                                if is_ref_to_same_schema:
+                                    # e.g., a Chassis is contained by another Chassis
+                                    link_detail = ('Link to another ' + prop_name + ' resource.')
+
                                 else:
-                                    # This looks like a Common Object! We should have an unversioned ref for this.
-                                    requested_ref_uri = ref_info['_ref_uri']
-                                    ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
-                                    if ref_key:
-                                        parent_info = traverser.find_ref_data(ref_key)
-                                        if parent_info:
-                                            ref_info = self.apply_overrides(parent_info)
+                                    wants_common_objects = self.config.get('wants_common_objects')
+                                    if is_documented_schema or not wants_common_objects:
+                                        append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
+                                                      ' schema for details on this property.')
                                     else:
-                                        ref_key = ref_info['_ref_uri']
-
-                                    if self.common_properties.get(ref_key) is None:
-                                        self.common_properties[ref_key] = ref_info
-
-                                    if not self.skip_schema(ref_info.get('_prop_name')):
-                                        specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
-                                        if 'type' not in ref_info:
-                                            # This clause papers over a bug; somehow we never get to the bottom
-                                            # of IPv6GatewayStaticAddress.
-                                            ref_info['type'] = 'object'
-                                        if specific_version:
-                                            append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
-                                                          + '(v' + str(specific_version) + ')' +
-                                                          ' for details on this property.')
+                                        # This looks like a Common Object! We should have an unversioned ref for this.
+                                        requested_ref_uri = ref_info['_ref_uri']
+                                        ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
+                                        if ref_key:
+                                            parent_info = traverser.find_ref_data(ref_key)
+                                            if parent_info:
+                                                ref_info = self.apply_overrides(parent_info)
                                         else:
-                                            append_ref = ('See the ' + self.link_to_common_property(ref_key) +
-                                                          ' for details on this property.')
+                                            ref_key = ref_info['_ref_uri']
 
-                        new_ref_info = {
-                            'description': ref_description,
-                            'longDescription': ref_longDescription,
-                            'fulldescription_override': ref_fulldescription_override,
-                            'pattern': ref_pattern,
-                            }
-                        props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly']
-                        for x in props_to_add:
-                            if ref_info.get(x):
-                                new_ref_info[x] = ref_info[x]
+                                        if self.common_properties.get(ref_key) is None:
+                                            self.common_properties[ref_key] = ref_info
 
-                        if not ref_fulldescription_override:
-                            new_ref_info['add_link_text'] = append_ref
+                                        if not self.skip_schema(ref_info.get('_prop_name')):
+                                            specific_version = DocGenUtilities.get_ref_version(requested_ref_uri)
+                                            if 'type' not in ref_info:
+                                                # This clause papers over a bug; somehow we never get to the bottom
+                                                # of IPv6GatewayStaticAddress.
+                                                ref_info['type'] = 'object'
+                                            if specific_version:
+                                                append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
+                                                              + '(v' + str(specific_version) + ')' +
+                                                              ' for details on this property.')
+                                            else:
+                                                append_ref = ('See the ' + self.link_to_common_property(ref_key) +
+                                                              ' for details on this property.')
 
-                        if link_detail:
-                            link_props = {'type': 'string',
-                                          'readonly': True,
-                                          'description': '',
-                                          }
+                            new_ref_info = {
+                                'description': ref_description,
+                                'longDescription': ref_longDescription,
+                                'fulldescription_override': ref_fulldescription_override,
+                                'pattern': ref_pattern,
+                                }
+
+                            props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly']
+                            for x in props_to_add:
+                                if ref_info.get(x):
+                                    new_ref_info[x] = ref_info[x]
+
                             if not ref_fulldescription_override:
-                                link_props['add_link_text'] = link_detail
-                            new_ref_info['properties'] = {'@odata.id': link_props}
+                                new_ref_info['add_link_text'] = append_ref
 
-                        ref_info = new_ref_info
+                            if link_detail:
+                                link_props = {'type': 'string',
+                                              'readonly': True,
+                                              'description': '',
+                                              }
+                                if not ref_fulldescription_override:
+                                    link_props['add_link_text'] = link_detail
+                                new_ref_info['properties'] = {'@odata.id': link_props}
+
+                            ref_info = new_ref_info
 
                 # if parent_props were specified in prop_info, they take precedence:
                 for x in prop_info.keys():
@@ -1291,7 +1311,20 @@ class DocFormatter:
                 prop_items = [prop_item]
                 collapse_description = True
             else:
+                # Pass "excerptCopy" along with the prop_item, if present:
+                excerpt_copy_name = prop_info.get('excerptCopy')
+                excerpt_Ref_uri = None
+                if excerpt_copy_name:
+                    if excerpt_copy_name.endswith('Excerpt'): # It should.
+                        excerpt_copy_name = excerpt_copy_name[:-7]
+                    prop_item['excerptCopy'] = excerpt_copy_name
+
                 prop_items = self.extend_property_info(schema_ref, prop_item, prop_info.get('_doc_generator_meta'))
+                if excerpt_copy_name:
+                    excerpt_ref_uri = prop_items[0].get('_ref_uri')
+                    excerpt_schema_ref = prop_items[0].get('_from_schema_ref')
+                    add_link_text = prop_items[0].get('add_link_text', add_link_text)
+
                 array_of_objects = True
 
                 if len(prop_items) == 1:
