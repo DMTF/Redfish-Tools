@@ -86,10 +86,11 @@ def test_excerpt_html_links(mockRequest):
     assert output.count(description1) == 56
 
 
-@pytest.mark.skip(reason="Unimplemented")
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_excerpt_pdm(mockRequest):
-    """ The Power Distribution Metrics schema includes arrays of excerpts """
+    """ The Power Distribution Metrics schema includes arrays of excerpts
+    (which the initial implementation missed).
+    """
 
     config = copy.deepcopy(base_config)
     config['output_format'] = 'markdown'
@@ -103,11 +104,8 @@ def test_excerpt_pdm(mockRequest):
     output = docGen.generate_docs()
 
     # Looking for the generated description line is an easy way to check that excerpts were detected:
-    description1 = "This object is an excerpt of the Sensor resource located at the URI shown in DataSourceUri"
-    description2 = "This object is an excerpt of the SensorPower resource located at the URI shown in DataSourceUri"
+    description1 = 'Contains the humidity sensors. This object is an excerpt of the *Sensor* resource located at the URI shown in DataSourceUri.'
+    description2 = 'Contains the array of 1 or more temperature sensors. This object is an excerpt of the *Sensor* resource located at the URI shown in DataSourceUri.'
 
-
-    # assert output.count(description1) == 42
-    # assert output.count(description2) == 14
-    # assert expected_excerpt in output
-    assert False
+    assert description1 in output
+    assert description2 in output

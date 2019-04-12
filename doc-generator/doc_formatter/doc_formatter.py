@@ -1311,7 +1311,20 @@ class DocFormatter:
                 prop_items = [prop_item]
                 collapse_description = True
             else:
+                # Pass "excerptCopy" along with the prop_item, if present:
+                excerpt_copy_name = prop_info.get('excerptCopy')
+                excerpt_Ref_uri = None
+                if excerpt_copy_name:
+                    if excerpt_copy_name.endswith('Excerpt'): # It should.
+                        excerpt_copy_name = excerpt_copy_name[:-7]
+                    prop_item['excerptCopy'] = excerpt_copy_name
+
                 prop_items = self.extend_property_info(schema_ref, prop_item, prop_info.get('_doc_generator_meta'))
+                if excerpt_copy_name:
+                    excerpt_ref_uri = prop_items[0].get('_ref_uri')
+                    excerpt_schema_ref = prop_items[0].get('_from_schema_ref')
+                    add_link_text = prop_items[0].get('add_link_text', add_link_text)
+
                 array_of_objects = True
 
                 if len(prop_items) == 1:
