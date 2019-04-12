@@ -373,12 +373,18 @@ class PropertyIndexGenerator(DocFormatter):
         for prop_name in property_names:
             info = self.coalesced_properties[prop_name]
             prop_types = sorted(info.keys())
+            first_row = True
 
             for prop_type in prop_types:
                 descriptions = sorted(info[prop_type].keys())
                 for description in descriptions:
                     schema_list = [self.format_schema_path(x) for x in info[prop_type][description] ]
-                    rows.append(formatter.make_row([formatter.bold(prop_name),
+                    if first_row:
+                        first_col = formatter.bold(prop_name)
+                        first_row = False
+                    else:
+                        first_col = ''
+                    rows.append(formatter.make_row([first_col,
                                                     self.format_schema_list(schema_list, formatter),
                                                     prop_type, description]))
 
