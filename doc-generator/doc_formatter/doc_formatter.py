@@ -251,12 +251,12 @@ class DocFormatter:
             profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read)'
         else:
             # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-            profile_access = (self.formatter.nobr(self.text_map(read_req)) + ' (Read)' + self.br() +
+            profile_access = (self.formatter.nobr(self.text_map(read_req)) + ' (Read)' + self.formatter.br() +
                               self.formatter.nobr(self.text_map(write_req)) + ' (Read/Write)')
 
         if min_count:
             if profile_access:
-                profile_access += self.br()
+                profile_access += self.formatter.br()
 
             profile_access += self.formatter.nobr("Minimum " + str(min_count))
 
