@@ -13,7 +13,7 @@ A Network Device Function represents a logical interface exposed by the network 
 | --- | --- | --- |
 | **@odata.etag** | string<br><br>*read-only* | The current ETag of the resource. |
 | **Actions** *(v1.1+)* {} | object | The available actions for this resource. |
-| **AssignablePhysicalPorts** [ { | array<br><br>*read-only* | The array of physical port references that this network device function may be assigned to. |
+| **AssignablePhysicalPorts** [ { | array | The array of physical port references that this network device function may be assigned to. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |
 | } ] |   |   |
 | **BootMode** | string<br>(enum)<br><br>*read-write<br>(null)* | The boot mode configured for this network device function. *See BootMode in Property Details, below, for the possible values of this property.* |
@@ -26,7 +26,7 @@ A Network Device Function represents a logical interface exposed by the network 
 | } |   |   |
 | **FibreChannel** { | object<br><br>*<br>(null)* | Fibre Channel. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**AllowFIPVLANDiscovery** | boolean<br><br>*read-write<br>(null)* | Whether the FCoE Initialization Protocol (FIP) is used for populating the FCoE VLAN Id. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**BootTargets** [ { | array<br><br>*read-write* | An array of Fibre Channel boot targets configured for this network device function. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**BootTargets** [ { | array | An array of Fibre Channel boot targets configured for this network device function. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**BootPriority** | number<br><br>*read-write<br>(null)* | The relative priority for this entry in the boot targets array. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**LUNID** | string<br><br>*read-write<br>(null)* | The Logical Unit Number (LUN) ID to boot from on the device referred to by the corresponding WWPN. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**WWPN** | string<br><br>*read-write<br>(null)* | The World-Wide Port Name to boot from. |
@@ -159,7 +159,7 @@ The configuration source of the WWNs for this connection (WWPN and WWNN).
 | --- | --- | --- |
 | **@odata.etag** | string<br><br>*read-only* | The current ETag of the resource. |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
-| **Members** [ { | array<br><br>*read-only* | Contains the members of this collection. |
+| **Members** [ { | array | Contains the members of this collection. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkDeviceFunction resource. See the Links section and the *NetworkDeviceFunction* schema for details. |
 | } ] |   |   |
 | **Name** | string<br><br>*read-only* | The name of the resource or array element. |
@@ -181,13 +181,13 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 | **Id** | string<br><br>*read-only required* | Uniquely identifies the resource within the collection of like resources. |
 | **LinkStatus** | string<br>(enum)<br><br>*read-only<br>(null)* | The status of the link between this port and its link partner. *See LinkStatus in Property Details, below, for the possible values of this property.* |
 | **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
-| **NetDevFuncMaxBWAlloc** [ { | array<br><br>*read-write* | The array of maximum bandwidth allocation percentages for the Network Device Functions associated with this port. |
+| **NetDevFuncMaxBWAlloc** [ { | array | The array of maximum bandwidth allocation percentages for the Network Device Functions associated with this port. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**MaxBWAllocPercent** | number<br><br>*read-write<br>(null)* | The maximum bandwidth allocation percentage allocated to the corresponding network device function instance. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**NetworkDeviceFunction** { | object | Contains the members of this collection. See the *NetworkDeviceFunction* schema for details on this property. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkDeviceFunction resource. See the Links section and the *NetworkDeviceFunction* schema for details. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} |   |   |
 | } ] |   |   |
-| **NetDevFuncMinBWAlloc** [ { | array<br><br>*read-write* | The array of minimum bandwidth allocation percentages for the Network Device Functions associated with this port. |
+| **NetDevFuncMinBWAlloc** [ { | array | The array of minimum bandwidth allocation percentages for the Network Device Functions associated with this port. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**MinBWAllocPercent** | number<br><br>*read-write<br>(null)* | The minimum bandwidth allocation percentage allocated to the corresponding network device function instance. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**NetworkDeviceFunction** { | object | Contains the members of this collection. See the *NetworkDeviceFunction* schema for details on this property. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkDeviceFunction resource. See the Links section and the *NetworkDeviceFunction* schema for details. |
@@ -199,7 +199,7 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 | **SignalDetected** | boolean<br><br>*read-only<br>(null)* | Whether or not the port has detected enough signal on enough lanes to establish link. |
 | **Status** {} | object<br><br>*<br>(null)* | This type describes the status and health of a resource and its children. See the *Resource* schema for details on this property. |
 | **SupportedEthernetCapabilities** [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | The set of Ethernet capabilities that this port supports. *See SupportedEthernetCapabilities in Property Details, below, for the possible values of this property.* |
-| **SupportedLinkCapabilities** [ { | array<br><br>*read-write* | The self-described link capabilities of this port. |
+| **SupportedLinkCapabilities** [ { | array | The self-described link capabilities of this port. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**LinkNetworkTechnology** | string<br>(enum)<br><br>*read-only<br>(null)* | The self-described link network technology capabilities of this port. *See LinkNetworkTechnology in Property Details, below, for the possible values of this property.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**LinkSpeedMbps** | number<br><br>*read-only<br>(null)* | The speed of the link in Mbps when this link network technology is active. |
 | } ] |   |   |
