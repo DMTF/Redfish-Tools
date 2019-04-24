@@ -277,7 +277,7 @@ class DocFormatter:
             subordinate_to = creq.get('SubordinateToResource')
             compare_property = creq.get('CompareProperty')
             comparison = creq.get('Comparison')
-            values = creq.get('Values')
+            values = creq.get('Values', [])
             req = self.format_conditional_access(creq)
 
             if creq.get('BaseRequirement'):
