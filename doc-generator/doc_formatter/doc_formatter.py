@@ -42,6 +42,7 @@ class DocFormatter:
         self.collapse_list_of_simple_type = True
         self.formatter = FormatUtils() # Non-markdown formatters will override this.
         self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
+        self.current_uris = []
 
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
