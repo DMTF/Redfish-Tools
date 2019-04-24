@@ -359,7 +359,8 @@ pre.code{
                 prop_type += '<br>(' + item_list + ')'
 
         prop_access = ''
-        if not meta.get('is_pattern') and not formatted_details['prop_is_object']:
+        if (not meta.get('is_pattern') and not formatted_details['prop_is_object']
+                and not formatted_details.get('array_of_objects')):
             if formatted_details['read_only']:
                 prop_access = '<nobr>read-only</nobr>'
             else:
