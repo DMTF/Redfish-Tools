@@ -802,7 +802,8 @@ class DocGenerator:
                         if prop_ref:
                             child_ref = traverser.find_ref_data(prop_ref)
                             if child_ref and 'properties' in child_ref:
-                                del(ref_properties[prop_name]['anyOf']) # We're replacing this.
+                                if ref_properties[prop_name].get('anyOf'):
+                                    del(ref_properties[prop_name]['anyOf']) # We're replacing this.
                                 child_ref_properties = child_ref['properties']
                                 meta[prop_name] = self.extend_metadata(meta[prop_name], child_ref_properties, this_version,
                                                                        this_ref + '/prop_name#properties')
