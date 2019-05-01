@@ -1,0 +1,21 @@
+---
+language: node_js
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libxml2-utils
+sudo: false
+node_js:
+  - lts/*
+branches:
+  only:
+    - master
+cache:
+  bundler: true
+  directories:
+  - node_modules # NPM packages
+script:
+  - xmllint --noout metadata/*.xml
+  - npm test -- --reporter dot

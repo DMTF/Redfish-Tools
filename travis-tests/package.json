@@ -1,0 +1,40 @@
+{
+  "name": "<Your project name here>",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "fixjson": "node ./test/helpers/fixjson.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "<Your repo here>.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "<Your repo here>/issues"
+  },
+  "homepage": "<Your repo here>",
+  "dependencies": {
+    "CSDLParser": "^0.2.0",
+    "config": "^3.0.1",
+    "fuzzy": "^0.1.1",
+    "glob": "^7.0.0",
+    "jquery": "^3.3.0",
+    "js-yaml": "^3.12.0",
+    "jsdom": "^13.2.0",
+    "json8-pointer": "^0.7.0",
+    "jsonlint": "^1.6.2",
+    "jsonschema": "^1.1.1",
+    "marked": "^0.6.0",
+    "request": "^2.69",
+    "swagger-parser": "^6.0.5",
+    "traverse": "^0.6.6",
+    "yaml-lint": "^1.2.4"
+  },
+  "devDependencies": {
+    "mocha": "^6.0.2"
+  }
+}
