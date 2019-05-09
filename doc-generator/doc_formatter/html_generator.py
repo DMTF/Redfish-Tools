@@ -206,10 +206,12 @@ pre.code{
 
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
+            version_added = prop_info[0].get('versionAdded')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
         elif isinstance(prop_info, dict):
             meta = prop_info.get('_doc_generator_meta')
+            version_added = prop_info.get('versionAdded')
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
 
@@ -222,16 +224,26 @@ pre.code{
         name_and_version = self.formatter.bold(html.escape(prop_name, False))
         deprecated_descr = None
 
-        version = meta.get('version')
+        # version = meta.get('version')
+        version = None
+        if version_added:
+            version = self.format_version(version_added)
         self.current_version[current_depth] = version
 
-        # Don't display version if there is a parent version and this is not newer:
-        if self.current_version.get(parent_depth) and version:
-            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
-                del meta['version']
+        if prop_name == 'MaintenanceWindowResource':
+            import pdb; pdb.set_trace()
 
-        if meta.get('version', '1.0.0') != '1.0.0':
-            version_text = html.escape(meta['version'], False)
+        # Don't display version if there is a parent version and this is not newer:
+        if version and self.current_version.get(parent_depth):
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+                version = None
+                if 'version' in meta:
+                    del meta['version']
+
+        # if meta.get('version', '1.0.0') != '1.0.0':
+        if version and version != '1.0.0':
+            # html.escape(meta['version'], False)
+            version_text = html.escape(version, False)
             version_display = self.truncate_version(version_text, 2) + '+'
             if 'version_deprecated' in meta:
                 version_depr = html.escape(meta['version_deprecated'], False)

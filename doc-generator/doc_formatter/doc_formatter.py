@@ -72,7 +72,11 @@ class DocFormatter:
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
+        self.parent_props = [
+            'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
+            'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter', 'versionAdded', 'versionDeprecated',
+            'enumVersionAdded', 'enumVersionDeprecated' # TODO: verify these last two make sense, or remove
+            ]
 
 
     def emit(self):
@@ -1405,6 +1409,11 @@ class DocFormatter:
                     combined_prop_item = prop_items[0]
                     combined_prop_item['_prop_name'] = prop_name
                     combined_prop_item['readonly'] = prop_info.get('readonly', False)
+
+                    if prop_info.get('versionAdded'):
+                        combined_prop_item['versionAdded'] = prop_info['versionAdded']
+                    if prop_info.get('versionDeprecated'):
+                        combined_prop_item['versionDeprecated'] = prop_info['versionDeprecated']
                     if self.config.get('normative') and combined_prop_item.get('longDescription'):
                         descr = descr + ' ' + combined_prop_item['longDescription']
                         combined_prop_item['longDescription'] = descr
@@ -1884,6 +1893,16 @@ class DocFormatter:
                 prop_reqs = prop_profile.get('PropertyRequirements', prop_profile.get('Parameters', {}))
 
         return prop_profile
+
+
+    @staticmethod
+    def format_version(version_string):
+        """ version_string may be in the form "v1_5_0" or "1.5.0". We want the latter; this gives it to us. """
+        if version_string.startswith('v'):
+            version_string = version_string[1:]
+        if '_' in version_string:
+            version_string = version_string.replace('_', '.')
+        return version_string
 
 
     @staticmethod
