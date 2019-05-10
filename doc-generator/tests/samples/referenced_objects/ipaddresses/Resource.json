@@ -89,6 +89,9 @@
                 },
                 {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.v1_6_0.json#/definitions/Identifier"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.v1_8_1.json#/definitions/Identifier"
                 }
             ],
             "description": "This type describes any additional identifiers for a resource.",
@@ -221,6 +224,9 @@
                 },
                 {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.v1_6_0.json#/definitions/Location"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.v1_8_1.json#/definitions/Location"
                 }
             ],
             "description": "This type describes the location of a resource.",
