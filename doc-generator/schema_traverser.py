@@ -11,6 +11,7 @@ Brief : Provides utilities for resolving references in a set of Redfish json sch
 Initial author: Second Rise LLC.
 """
 
+import copy
 import warnings
 from doc_gen_util import DocGenUtilities
 
@@ -81,6 +82,7 @@ class SchemaTraverser:
             else:
                 return None
 
+        schema = copy.deepcopy(schema)
         schema['_from_schema_ref'] = schema_ref
         if '_schema_name' not in schema:
             schema['_schema_name'] = self.get_schema_name(schema_ref)

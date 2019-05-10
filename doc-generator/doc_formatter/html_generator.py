@@ -204,6 +204,7 @@ pre.code{
         self.current_depth = current_depth
         parent_depth = current_depth - 1
 
+        version_added = None
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
             version_added = prop_info[0].get('versionAdded')
@@ -229,9 +230,6 @@ pre.code{
         if version_added:
             version = self.format_version(version_added)
         self.current_version[current_depth] = version
-
-        if prop_name == 'MaintenanceWindowResource':
-            import pdb; pdb.set_trace()
 
         # Don't display version if there is a parent version and this is not newer:
         if version and self.current_version.get(parent_depth):

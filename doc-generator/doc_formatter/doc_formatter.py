@@ -858,6 +858,11 @@ class DocFormatter:
                     if x in self.parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
 
+                # If we're getting version information from the $ref, it's not the version info we're looking for!
+                for x in ['versionAdded', 'versionDeprecated', 'enumVersionAdded', 'enumVersionDeprecated']:
+                    if ref_info.get(x) and not prop_info.get(x):
+                        del ref_info[x]
+
                 # Pull in any "require" from parent:
                 parent_requires = prop_info.get('parent_requires', [])
                 parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
@@ -1409,11 +1414,8 @@ class DocFormatter:
                     combined_prop_item = prop_items[0]
                     combined_prop_item['_prop_name'] = prop_name
                     combined_prop_item['readonly'] = prop_info.get('readonly', False)
-
-                    if prop_info.get('versionAdded'):
-                        combined_prop_item['versionAdded'] = prop_info['versionAdded']
-                    if prop_info.get('versionDeprecated'):
-                        combined_prop_item['versionDeprecated'] = prop_info['versionDeprecated']
+                    combined_prop_item['versionAdded'] = prop_info.get('versionAdded')
+                    combined_prop_item['versionDeprecated'] = prop_info.get('versionDeprecated')
                     if self.config.get('normative') and combined_prop_item.get('longDescription'):
                         descr = descr + ' ' + combined_prop_item['longDescription']
                         combined_prop_item['longDescription'] = descr
