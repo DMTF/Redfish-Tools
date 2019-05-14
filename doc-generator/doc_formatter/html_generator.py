@@ -206,16 +206,19 @@ pre.code{
 
         version_added = None
         version_deprecated = None
+        version_deprecated_explanation = ''
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
             version_added = prop_info[0].get('versionAdded')
             version_deprecated = prop_info[0].get('versionDeprecated')
+            version_deprecated_explanation = prop_info[0].get('deprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
         elif isinstance(prop_info, dict):
             meta = prop_info.get('_doc_generator_meta')
             version_added = prop_info.get('versionAdded')
             version_deprecated = prop_info.get('versionDeprecated')
+            version_deprecated_explanation = prop_info.get('deprecated')
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
 
@@ -253,7 +256,7 @@ pre.code{
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display +
                                                       ', deprecated v' + deprecated_display +  ')')
                 deprecated_descr = html.escape("Deprecated v" + deprecated_display + '+. ' +
-                                                   meta.get('version_deprecated_explanation', ''), False)
+                                                   version_deprecated_explanation, False)
             else:
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
         elif version_deprecated:
@@ -261,7 +264,7 @@ pre.code{
             deprecated_display = self.truncate_version(version_depr_text, 2)
             name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
-                                                meta.get('version_deprecated_explanation', ''), False)
+                                                version_deprecated_explanation, False)
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))

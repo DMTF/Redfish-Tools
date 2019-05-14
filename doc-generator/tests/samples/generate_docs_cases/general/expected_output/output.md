@@ -84,7 +84,7 @@ A Network Device Function represents a logical interface exposed by the network 
 | **NetDevFuncCapabilities** [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | Capabilities of this network device function. *See NetDevFuncCapabilities in Property Details, below, for the possible values of this property.* |
 | **NetDevFuncType** | string<br>(enum)<br><br>*read-write<br>(null)* | The configured capability of this network device function. *See NetDevFuncType in Property Details, below, for the possible values of this property.* |
 | **Oem** {} | object | This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections. See the *Resource* schema for details on this property. |
-| **PhysicalPortAssignment** *(deprecated v1.3)* { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. *Deprecated v1.3+. * |
+| **PhysicalPortAssignment** *(deprecated v1.3)* { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. *Deprecated v1.3+. This property has been deprecated and moved to the Links section to avoid loops on expand.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |
 | } |   |   |
 | **Status** {} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |

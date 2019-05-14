@@ -75,7 +75,7 @@ class DocFormatter:
         self.parent_props = [
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
             'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter', 'versionAdded', 'versionDeprecated',
-            'enumVersionAdded', 'enumVersionDeprecated' # TODO: verify these last two make sense, or remove
+            'deprecated', 'enumVersionAdded', 'enumVersionDeprecated' # TODO: verify these last two make sense, or remove
             ]
 
 
@@ -859,7 +859,7 @@ class DocFormatter:
                         ref_info[x] = prop_info[x]
 
                 # If we're getting version information from the $ref, it's not the version info we're looking for!
-                for x in ['versionAdded', 'versionDeprecated', 'enumVersionAdded', 'enumVersionDeprecated']:
+                for x in ['versionAdded', 'versionDeprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'deprecated']:
                     if ref_info.get(x) and not prop_info.get(x):
                         del ref_info[x]
 
@@ -1416,6 +1416,7 @@ class DocFormatter:
                     combined_prop_item['readonly'] = prop_info.get('readonly', False)
                     combined_prop_item['versionAdded'] = prop_info.get('versionAdded')
                     combined_prop_item['versionDeprecated'] = prop_info.get('versionDeprecated')
+                    combined_prop_item['deprecated'] = prop_info.get('deprecated')
                     if self.config.get('normative') and combined_prop_item.get('longDescription'):
                         descr = descr + ' ' + combined_prop_item['longDescription']
                         combined_prop_item['longDescription'] = descr
