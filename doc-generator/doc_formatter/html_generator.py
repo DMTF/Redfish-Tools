@@ -225,7 +225,6 @@ pre.code{
         name_and_version = self.formatter.bold(html.escape(prop_name, False))
         deprecated_descr = None
 
-        # version = meta.get('version')
         version = None
         if version_added:
             version = self.format_version(version_added)
@@ -238,7 +237,7 @@ pre.code{
                 if 'version' in meta:
                     del meta['version']
 
-        # if meta.get('version', '1.0.0') != '1.0.0':
+
         if version and version != '1.0.0':
             # html.escape(meta['version'], False)
             version_text = html.escape(version, False)

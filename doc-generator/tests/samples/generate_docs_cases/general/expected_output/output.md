@@ -37,7 +37,7 @@ A Network Device Function represents a logical interface exposed by the network 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} ] |   |   |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FCoEActiveVLANId** | integer<br><br>*read-only<br>(null)* | The active FCoE VLAN ID. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FCoELocalVLANId** | integer<br><br>*read-write<br>(null)* | The locally configured FCoE VLAN ID. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FibreChannelId** | string<br><br>*read-only<br>(null)* | The Fibre Channel Id assigned by the switch for this interface. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FibreChannelId** *(v1.3+)* | string<br><br>*read-only<br>(null)* | The Fibre Channel Id assigned by the switch for this interface. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PermanentWWNN** | string<br><br>*read-only<br>(null)* | This is the permanent WWNN address assigned to this network device function (physical function). |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PermanentWWPN** | string<br><br>*read-only<br>(null)* | This is the permanent WWPN address assigned to this network device function (physical function). |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**WWNN** | string<br><br>*read-write<br>(null)* | This is the currently configured WWNN address of the network device function (physical function). |
@@ -75,14 +75,14 @@ A Network Device Function represents a logical interface exposed by the network 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**TargetInfoViaDHCP** | boolean<br><br>*read-write<br>(null)* | Whether the iSCSI boot target name, LUN, IP address, and netmask should be obtained from DHCP. |
 | } |   |   |
 | **Links** { | object | Links. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalPortAssignment** { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalPortAssignment** *(v1.3+)* { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} |   |   |
 | } |   |   |
 | **MaxVirtualFunctions** | integer<br><br>*read-only<br>(null)* | The number of virtual functions (VFs) that are available for this Network Device Function. |
 | **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
-| **NetDevFuncCapabilities** *(v1.2+)* [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | Capabilities of this network device function. *See NetDevFuncCapabilities in Property Details, below, for the possible values of this property.* |
-| **NetDevFuncType** *(v1.2+)* | string<br>(enum)<br><br>*read-write<br>(null)* | The configured capability of this network device function. *See NetDevFuncType in Property Details, below, for the possible values of this property.* |
+| **NetDevFuncCapabilities** [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | Capabilities of this network device function. *See NetDevFuncCapabilities in Property Details, below, for the possible values of this property.* |
+| **NetDevFuncType** | string<br>(enum)<br><br>*read-write<br>(null)* | The configured capability of this network device function. *See NetDevFuncType in Property Details, below, for the possible values of this property.* |
 | **Oem** {} | object | This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections. See the *Resource* schema for details on this property. |
 | **PhysicalPortAssignment** { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |
@@ -181,7 +181,7 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 
 |     |     |     |
 | --- | --- | --- |
-| **Actions** *(v1.1+)* {} | object | The available actions for this resource. |
+| **Actions** {} | object | The available actions for this resource. |
 | **ActiveLinkTechnology** | string<br>(enum)<br><br>*read-write<br>(null)* | Network Port Active Link Technology. *See ActiveLinkTechnology in Property Details, below, for the possible values of this property.* |
 | **AssociatedNetworkAddresses** [ ] | array (string, null)<br><br>*read-only* | The array of configured network addresses (MAC or WWN) that are associated with this Network Port, including the programmed address of the lowest numbered Network Device Function, the configured but not active address if applicable, the address for hardware port teaming, or other network addresses. |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
