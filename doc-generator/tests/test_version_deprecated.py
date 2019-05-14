@@ -139,7 +139,7 @@ def test_version_deprecated_output_Event(mockRequest):
     input_dir = os.path.abspath(os.path.join(testcase_path, 'version_deprecated', 'Event'))
 
     expected_version_strings = ['| **Events** [ { |', '| **Links** { |',  # string to match property without version
-                                '**Context** *(deprecated v1.2)* |',
+                                '**Context** *(deprecated v1.1)* |',
                                 '**EventType** *(deprecated v1.3)* |',
                                 ]
 
