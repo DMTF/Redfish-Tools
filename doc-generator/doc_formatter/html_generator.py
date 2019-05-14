@@ -205,14 +205,17 @@ pre.code{
         parent_depth = current_depth - 1
 
         version_added = None
+        version_deprecated = None
         if isinstance(prop_info, list):
             meta = prop_info[0].get('_doc_generator_meta')
             version_added = prop_info[0].get('versionAdded')
+            version_deprecated = prop_info[0].get('versionDeprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
         elif isinstance(prop_info, dict):
             meta = prop_info.get('_doc_generator_meta')
             version_added = prop_info.get('versionAdded')
+            version_deprecated = prop_info.get('versionDeprecated')
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
 
@@ -228,6 +231,8 @@ pre.code{
         version = None
         if version_added:
             version = self.format_version(version_added)
+        if version_deprecated:
+            version_depr = self.format_version(version_deprecated)
         self.current_version[current_depth] = version
 
         # Don't display version if there is a parent version and this is not newer:
@@ -242,21 +247,21 @@ pre.code{
             # html.escape(meta['version'], False)
             version_text = html.escape(version, False)
             version_display = self.truncate_version(version_text, 2) + '+'
-            if 'version_deprecated' in meta:
-                version_depr = html.escape(meta['version_deprecated'], False)
-                deprecated_display = self.truncate_version(version_depr, 2)
+            if version_deprecated:
+                version_depr_text = html.escape(version_depr, False)
+                deprecated_display = self.truncate_version(version_depr_text, 2)
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display +
                                                       ', deprecated v' + deprecated_display +  ')')
                 deprecated_descr = html.escape("Deprecated v" + deprecated_display + '+. ' +
-                                               meta['version_deprecated_explanation'], False)
+                                                   meta.get('version_deprecated_explanation', ''), False)
             else:
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
-        elif 'version_deprecated' in meta:
-            version_depr = html.escape(meta['version_deprecated'], False)
-            deprecated_display = self.truncate_version(version_depr, 2)
+        elif version_deprecated:
+            version_depr_text = html.escape(version_depr, False)
+            deprecated_display = self.truncate_version(version_depr_text, 2)
             name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
             deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
-                                            meta['version_deprecated_explanation'], False)
+                                                meta.get('version_deprecated_explanation', ''), False)
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
                                                      meta.get('within_action'))
