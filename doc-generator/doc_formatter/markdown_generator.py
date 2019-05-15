@@ -309,7 +309,7 @@ class MarkdownGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None, profile=None):
+                                supplemental_details, meta, parent_prop_info, anchor=None, profile=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []

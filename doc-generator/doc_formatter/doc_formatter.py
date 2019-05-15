@@ -75,7 +75,7 @@ class DocFormatter:
         self.parent_props = [
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
             'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter', 'versionAdded', 'versionDeprecated',
-            'deprecated', 'enumVersionAdded', 'enumVersionDeprecated' # TODO: verify these last two make sense, or remove
+            'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated'
             ]
 
 
@@ -178,7 +178,7 @@ class DocFormatter:
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None, profile={}):
+                                supplemental_details, meta, parent_prop_info, anchor=None, profile={}):
         """Generate a formatted table of enum information for inclusion in Property Details."""
         raise NotImplementedError
 
@@ -858,10 +858,13 @@ class DocFormatter:
                     if x in self.parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
 
-                # If we're getting version information from the $ref, it's not the version info we're looking for!
-                for x in ['versionAdded', 'versionDeprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'deprecated']:
-                    if ref_info.get(x) and not prop_info.get(x):
-                        del ref_info[x]
+                # If we're getting prop-level version information from the $ref, use it only if the $ref
+                # is in the same schema:
+                if is_other_schema:
+                    for x in ['versionAdded', 'versionDeprecated', 'deprecated',
+                                  'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated']:
+                        if ref_info.get(x) and not prop_info.get(x):
+                            del ref_info[x]
 
                 # Pull in any "require" from parent:
                 parent_requires = prop_info.get('parent_requires', [])
@@ -1363,7 +1366,8 @@ class DocFormatter:
             prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
                                                                    prop_enum, prop_enum_details,
                                                                    supplemental_details,
-                                                                   prop_info.get('_doc_generator_meta', {}),
+                                                                   prop_info.get('_doc_generator_meta', {}), # TODO: eliminate
+                                                                   prop_info,
                                                                    anchor, profile)
 
         # Action details may be supplied as markdown in the supplemental doc.
@@ -1417,6 +1421,9 @@ class DocFormatter:
                     combined_prop_item['versionAdded'] = prop_info.get('versionAdded')
                     combined_prop_item['versionDeprecated'] = prop_info.get('versionDeprecated')
                     combined_prop_item['deprecated'] = prop_info.get('deprecated')
+                    combined_prop_item['enumVersionAdded'] = prop_info.get('enumVersionAdded')
+                    combined_prop_item['enumVersionDeprecated'] = prop_info.get('enumVersionDeprecated')
+                    combined_prop_item['enumDeprecated'] = prop_info.get('enumDeprecated')
                     if self.config.get('normative') and combined_prop_item.get('longDescription'):
                         descr = descr + ' ' + combined_prop_item['longDescription']
                         combined_prop_item['longDescription'] = descr
