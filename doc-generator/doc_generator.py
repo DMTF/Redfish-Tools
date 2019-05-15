@@ -339,7 +339,7 @@ class DocGenerator:
         # Also process and version definitions in any "other" files. These are files without top-level $ref objects.
         schema_data = self.process_unversioned_files(schema_data, doc_generator_meta, self.config['uri_to_local'])
 
-        traverser = SchemaTraverser(schema_data, doc_generator_meta, self.config['uri_to_local'])
+        traverser = SchemaTraverser(schema_data, self.config['uri_to_local'])
 
         # Generate output
         if self.config.get('output_content') == 'property_index':
@@ -680,7 +680,7 @@ class DocGenerator:
         That complicated rule catches some of the "referenced objects."
         """
 
-        interim_traverser = SchemaTraverser(schema_data, doc_generator_meta, uri_to_local)
+        interim_traverser = SchemaTraverser(schema_data, uri_to_local)
         for filename, data in schema_data.items():
             if '$ref' in data:
                 continue

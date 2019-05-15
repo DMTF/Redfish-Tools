@@ -493,7 +493,6 @@ pre.code{
 
             for enum_item in enum:
                 enum_name = html.escape(enum_item, False)
-                # enum_item_meta = enum_meta.get(enum_item, {})
                 version = version_depr = deprecated_descr = None
                 version_display = None
                 if parent_prop_info.get('enumVersionAdded'):
