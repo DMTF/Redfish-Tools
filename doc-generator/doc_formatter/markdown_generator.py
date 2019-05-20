@@ -58,6 +58,7 @@ class MarkdownGenerator(DocFormatter):
         traverser = self.traverser
         formatted = []     # The row itself
 
+        within_action = prop_path == ['Actions']
         current_depth = len(prop_path)
         if in_array:
             current_depth = current_depth -1
@@ -84,19 +85,21 @@ class MarkdownGenerator(DocFormatter):
         self.current_depth = current_depth
         parent_depth = current_depth - 1
 
+        version_added = None
+        version_deprecated = None
+        version_deprecated_explanation = ''
         if isinstance(prop_info, list):
-            meta = prop_info[0].get('_doc_generator_meta')
+            version_added = prop_info[0].get('versionAdded')
+            version_deprecated = prop_info[0].get('versionDeprecated')
+            version_deprecated_explanation = prop_info[0].get('deprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
         elif isinstance(prop_info, dict):
-            meta = prop_info.get('_doc_generator_meta')
+            version_added = prop_info.get('versionAdded')
+            version_deprecated = prop_info.get('versionDeprecated')
+            version_deprecated_explanation = prop_info.get('deprecated')
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info[0].get('_is_excerpt')
-        if not meta:
-            meta = {}
-
-        # We want to modify a local copy of meta, deleting redundant version info
-        meta = copy.deepcopy(meta)
 
         if prop_name:
             name_and_version = self.formatter.bold(self.escape_for_markdown(prop_name,
@@ -106,34 +109,38 @@ class MarkdownGenerator(DocFormatter):
 
         deprecated_descr = None
 
-        version = meta.get('version')
+        version = None
+        if version_added:
+            version = self.format_version(version_added)
+        if version_deprecated:
+            version_depr = self.format_version(version_deprecated)
         self.current_version[current_depth] = version
 
-        # Don't display version if there is a parent version and this is not newer:
-        if self.current_version.get(parent_depth) and version:
-            version = meta.get('version')
-            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
-                del meta['version']
 
-        if meta.get('version', '1.0.0') != '1.0.0':
-            version_display = self.truncate_version(meta['version'], 2) + '+'
-            if 'version_deprecated' in meta:
-                deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
+        # Don't display version if there is a parent version and this is not newer:
+        if version and self.current_version.get(parent_depth):
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+                version = None
+
+        if version and version != '1.0.0':
+            version_display = self.truncate_version(version, 2) + '+'
+            if version_deprecated:
+                deprecated_display = self.truncate_version(version_depr, 2)
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display +
-                                                      ', deprecated v' + deprecated_display +  ')')
+                                                        ', deprecated v' + deprecated_display +  ')')
                 deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
-                                    self.escape_for_markdown(meta['version_deprecated_explanation'], self.config.get('escape_chars', [])))
+                                    self.escape_for_markdown(version_deprecated_explanation,
+                                                                 self.config.get('escape_chars', [])))
             else:
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
-        elif 'version_deprecated' in meta:
-            deprecated_display = self.truncate_version(meta['version_deprecated'], 2)
+        elif version_deprecated:
+            deprecated_display = self.truncate_version(version_depr, 2)
             name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
             deprecated_descr =  ("Deprecated v" + deprecated_display + '+. ' +
-                                 self.escape_for_markdown(meta['version_deprecated_explanation'],
+                                 self.escape_for_markdown(version_deprecated_explanation,
                                                           self.config.get('escape_chars', [])))
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
-                                                     meta.get('within_action'))
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
         if formatted_details.get('promote_me'):
             return({'row': '\n'.join(formatted_details['item_description']), 'details':formatted_details['prop_details'],
@@ -244,7 +251,7 @@ class MarkdownGenerator(DocFormatter):
                 prop_type += ' (' + item_list + ')'
 
         prop_access = ''
-        if (not meta.get('is_pattern') and not formatted_details['prop_is_object']
+        if (not formatted_details['prop_is_object']
                 and not formatted_details.get('array_of_objects')):
             if formatted_details['read_only']:
                 prop_access = 'read-only'
@@ -293,14 +300,15 @@ class MarkdownGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None, profile=None):
+                                supplemental_details, parent_prop_info, anchor=None, profile=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
         contents.append(self.formatter.head_three(prop_name + ':', self.level))
 
-        parent_version = meta.get('version')
-        enum_meta = meta.get('enum', {})
+        parent_version = parent_prop_info.get('versionAdded')
+        if parent_version:
+            parent_version = self.format_version(parent_version)
 
         # Are we in profile mode? If so, consult the profile passed in for this property.
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
@@ -337,31 +345,37 @@ class MarkdownGenerator(DocFormatter):
             enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = enum_item
-                enum_item_meta = enum_meta.get(enum_item, {})
+                version = version_depr = deprecated_descr = None
                 version_display = None
-                deprecated_descr = None
-                if 'version' in enum_item_meta:
-                    version = enum_item_meta['version']
+                if parent_prop_info.get('enumVersionAdded'):
+                    version_added = parent_prop_info.get('enumVersionAdded').get(enum_name)
+                    if version_added:
+                        version = self.format_version(version_added)
+                if parent_prop_info.get('enumVersionDeprecated'):
+                    version_deprecated = parent_prop_info.get('enumVersionDeprecated').get(enum_name)
+                    if version_deprecated:
+                        version_depr = self.format_version(version_deprecated)
+                if parent_prop_info.get('enumDeprecated'):
+                    deprecated_descr = parent_prop_info.get('enumDeprecated').get(enum_name)
+
+                if version:
                     if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_display = self.truncate_version(version, 2) + '+'
+
                 if version_display:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
+                    if version_depr:
                         deprecated_display = self.truncate_version(version_depr, 2)
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
-                                                enum_item_meta['version_deprecated_explanation'])
+                        if deprecated_descr:
+                            deprecated_descr = 'Deprecated v' + deprecated_display + '+. ' + deprecated_descr
                     else:
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
-                else:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
-                        deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
-                                                enum_item_meta['version_deprecated_explanation'])
+                elif version_depr:
+                    deprecated_display = self.truncate_version(version_depr, 2)
+                    enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
+                    if deprecated_descr:
+                        deprecated_descr = 'Deprecated v' + deprecated_display + '+. ' + deprecated_descr
+
                 descr = enum_details.get(enum_item, '')
                 if deprecated_descr:
                     if descr:
@@ -392,31 +406,46 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('| --- |')
             for enum_item in enum:
                 enum_name = enum_item
-                enum_item_meta = enum_meta.get(enum_item, {})
+                version = version_depr = deprecated_descr = None
                 version_display = None
 
-                if 'version' in enum_item_meta:
-                    version = enum_item_meta['version']
+                if parent_prop_info.get('enumVersionAdded'):
+                    version_added = parent_prop_info.get('enumVersionAdded').get(enum_name)
+                    if version_added:
+                        version = self.format_version(version_added)
+
+                if parent_prop_info('enumVersionDeprecated'):
+                    version_deprecated = parent_prop_info.get('enumVersionDeprecated').get(enum_name)
+                    if version_deprecated:
+                        version_depr = self.format_version(version_deprecated)
+
+
+                if parent_prop_info.get('enumDeprecated'):
+                    deprecated_descr = parent_prop_info.get('enumDeprecated').get(enum_name)
+
+                if version:
                     if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
-                        version_display = self.truncate_version(version, 2) + '+'
+                        version_text = html.escape(version, False)
+                        version_display = self.truncate_version(version_text, 2) + '+'
+
                 if version_display:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
+                    if version_depr:
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = ('Deprecated v' + deprecated_display + '+. ' +
-                                                enum_item_meta['version_deprecated_explanation'])
+                        if deprecated_descr:
+                            enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display +
+                                                                         '+. ' + deprecated_descr)
+                        else:
+                            enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
+
                     else:
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
                 else:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = enum_item_meta['version_deprecated']
+                    if version_depr:
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            enum_name += ' ' + self.formatter.italic('Deprecated v' + deprecated_display + '+. ' +
-                                                           enum_item_meta['version_deprecated_explanation'])
+                        if deprecated_descr:
+                            enum_name += ' ' + self.formatter.italic('Deprecated v' + deprecated_display + '+. ' + deprecated_descr)
+                        else:
+                            enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
 
                 if profile_mode:
                     profile_spec = ''

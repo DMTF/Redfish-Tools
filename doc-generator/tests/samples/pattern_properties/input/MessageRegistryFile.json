@@ -10,24 +10,6 @@
                     "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
                 },
                 {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_0.json#/definitions/MessageRegistryFile"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_2.json#/definitions/MessageRegistryFile"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_3.json#/definitions/MessageRegistryFile"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_4.json#/definitions/MessageRegistryFile"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_0_5.json#/definitions/MessageRegistryFile"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_1_0.json#/definitions/MessageRegistryFile"
-                },
-                {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/MessageRegistryFile.v1_1_1.json#/definitions/MessageRegistryFile"
                 }
             ],

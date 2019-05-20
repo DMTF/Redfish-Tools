@@ -5,8 +5,12 @@ search: true
 ---
 
 
-# NetworkDeviceFunction 1.2.1
+# NetworkDeviceFunction 1.3.2
 
+|     |
+| --- |
+| *v1.3* |
+| 2018.2 |
 A Network Device Function represents a logical interface exposed by the network adapter.
 
 |     |     |     |
@@ -19,20 +23,21 @@ A Network Device Function represents a logical interface exposed by the network 
 | **BootMode** | string<br>(enum)<br><br>*read-write<br>(null)* | The boot mode configured for this network device function. *See BootMode in Property Details, below, for the possible values of this property.* |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
 | **DeviceEnabled** | boolean<br><br>*read-write<br>(null)* | Whether the network device function is enabled. |
-| **Ethernet** { | object<br><br>*<br>(null)* | Ethernet. |
+| **Ethernet** { | object | Ethernet. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**MACAddress** | string<br><br>*read-write<br>(null)* | This is the currently configured MAC address of the (logical port) network device function. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**MTUSize** | number<br><br>*read-write<br>(null)* | The Maximum Transmission Unit (MTU) configured for this network device function. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**MTUSize** | integer<br><br>*read-write<br>(null)* | The Maximum Transmission Unit (MTU) configured for this network device function. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PermanentMACAddress** | string<br><br>*read-only<br>(null)* | This is the permanent MAC address assigned to this network device function (physical function). |
 | } |   |   |
-| **FibreChannel** { | object<br><br>*<br>(null)* | Fibre Channel. |
+| **FibreChannel** { | object | Fibre Channel. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**AllowFIPVLANDiscovery** | boolean<br><br>*read-write<br>(null)* | Whether the FCoE Initialization Protocol (FIP) is used for populating the FCoE VLAN Id. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**BootTargets** [ { | array | An array of Fibre Channel boot targets configured for this network device function. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**BootPriority** | number<br><br>*read-write<br>(null)* | The relative priority for this entry in the boot targets array. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**BootPriority** | integer<br><br>*read-write<br>(null)* | The relative priority for this entry in the boot targets array. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**LUNID** | string<br><br>*read-write<br>(null)* | The Logical Unit Number (LUN) ID to boot from on the device referred to by the corresponding WWPN. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**WWPN** | string<br><br>*read-write<br>(null)* | The World-Wide Port Name to boot from. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} ] |   |   |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FCoEActiveVLANId** | number<br><br>*read-only<br>(null)* | The active FCoE VLAN ID. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FCoELocalVLANId** | number<br><br>*read-write<br>(null)* | The locally configured FCoE VLAN ID. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FCoEActiveVLANId** | integer<br><br>*read-only<br>(null)* | The active FCoE VLAN ID. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FCoELocalVLANId** | integer<br><br>*read-write<br>(null)* | The locally configured FCoE VLAN ID. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FibreChannelId** *(v1.3+)* | string<br><br>*read-only<br>(null)* | The Fibre Channel Id assigned by the switch for this interface. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PermanentWWNN** | string<br><br>*read-only<br>(null)* | This is the permanent WWNN address assigned to this network device function (physical function). |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PermanentWWPN** | string<br><br>*read-only<br>(null)* | This is the permanent WWPN address assigned to this network device function (physical function). |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**WWNN** | string<br><br>*read-write<br>(null)* | This is the currently configured WWNN address of the network device function (physical function). |
@@ -40,7 +45,7 @@ A Network Device Function represents a logical interface exposed by the network 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**WWPN** | string<br><br>*read-write<br>(null)* | This is the currently configured WWPN address of the network device function (physical function). |
 | } |   |   |
 | **Id** | string<br><br>*read-only required* | Uniquely identifies the resource within the collection of like resources. |
-| **iSCSIBoot** { | object<br><br>*<br>(null)* | iSCSI Boot. |
+| **iSCSIBoot** { | object | iSCSI Boot. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**AuthenticationMethod** | string<br>(enum)<br><br>*read-write<br>(null)* | The iSCSI boot authentication method for this network device function. *See AuthenticationMethod in Property Details, below, for the possible values of this property.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CHAPSecret** | string<br><br>*read-write<br>(null)* | The shared secret for CHAP authentication. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CHAPUsername** | string<br><br>*read-write<br>(null)* | The username for CHAP authentication. |
@@ -53,31 +58,36 @@ A Network Device Function represents a logical interface exposed by the network 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**MutualCHAPSecret** | string<br><br>*read-write<br>(null)* | The CHAP Secret for 2-way CHAP authentication. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**MutualCHAPUsername** | string<br><br>*read-write<br>(null)* | The CHAP Username for 2-way CHAP authentication. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryDNS** | string<br><br>*read-write<br>(null)* | The IPv6 or IPv4 address of the primary DNS server for the iSCSI boot initiator. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryLUN** | number<br><br>*read-write<br>(null)* | The logical unit number (LUN) for the primary iSCSI boot target. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryLUN** | integer<br><br>*read-write<br>(null)* | The logical unit number (LUN) for the primary iSCSI boot target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryTargetIPAddress** | string<br><br>*read-write<br>(null)* | The IP address (IPv6 or IPv4) for the primary iSCSI boot target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryTargetName** | string<br><br>*read-write<br>(null)* | The name of the iSCSI primary boot target. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryTargetTCPPort** | number<br><br>*read-write<br>(null)* | The TCP port for the primary iSCSI boot target. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryTargetTCPPort** | integer<br><br>*read-write<br>(null)* | The TCP port for the primary iSCSI boot target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryVLANEnable** | boolean<br><br>*read-write<br>(null)* | This indicates if the primary VLAN is enabled. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryVLANId** | number<br><br>*read-write<br>(null)* | The 802.1q VLAN ID to use for iSCSI boot from the primary target. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PrimaryVLANId** | integer<br><br>*read-write<br>(null)* | The 802.1q VLAN ID to use for iSCSI boot from the primary target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**RouterAdvertisementEnabled** | boolean<br><br>*read-write<br>(null)* | Whether IPv6 router advertisement is enabled for the iSCSI boot target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryDNS** | string<br><br>*read-write<br>(null)* | The IPv6 or IPv4 address of the secondary DNS server for the iSCSI boot initiator. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryLUN** | number<br><br>*read-write<br>(null)* | The logical unit number (LUN) for the secondary iSCSI boot target. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryLUN** | integer<br><br>*read-write<br>(null)* | The logical unit number (LUN) for the secondary iSCSI boot target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryTargetIPAddress** | string<br><br>*read-write<br>(null)* | The IP address (IPv6 or IPv4) for the secondary iSCSI boot target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryTargetName** | string<br><br>*read-write<br>(null)* | The name of the iSCSI secondary boot target. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryTargetTCPPort** | number<br><br>*read-write<br>(null)* | The TCP port for the secondary iSCSI boot target. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryTargetTCPPort** | integer<br><br>*read-write<br>(null)* | The TCP port for the secondary iSCSI boot target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryVLANEnable** | boolean<br><br>*read-write<br>(null)* | This indicates if the secondary VLAN is enabled. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryVLANId** | number<br><br>*read-write<br>(null)* | The 802.1q VLAN ID to use for iSCSI boot from the secondary target. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**SecondaryVLANId** | integer<br><br>*read-write<br>(null)* | The 802.1q VLAN ID to use for iSCSI boot from the secondary target. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**TargetInfoViaDHCP** | boolean<br><br>*read-write<br>(null)* | Whether the iSCSI boot target name, LUN, IP address, and netmask should be obtained from DHCP. |
 | } |   |   |
-| **MaxVirtualFunctions** | number<br><br>*read-only<br>(null)* | The number of virtual functions (VFs) that are available for this Network Device Function. |
+| **Links** { | object | Links. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalPortAssignment** *(v1.3+)* { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} |   |   |
+| } |   |   |
+| **MaxVirtualFunctions** | integer<br><br>*read-only<br>(null)* | The number of virtual functions (VFs) that are available for this Network Device Function. |
 | **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
-| **NetDevFuncCapabilities** *(v1.2+)* [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | Capabilities of this network device function. *See NetDevFuncCapabilities in Property Details, below, for the possible values of this property.* |
-| **NetDevFuncType** *(v1.2+)* | string<br>(enum)<br><br>*read-write<br>(null)* | The configured capability of this network device function. *See NetDevFuncType in Property Details, below, for the possible values of this property.* |
+| **NetDevFuncCapabilities** [ ] | array (string<br>(enum))<br><br>*read-only<br>(null)* | Capabilities of this network device function. *See NetDevFuncCapabilities in Property Details, below, for the possible values of this property.* |
+| **NetDevFuncType** | string<br>(enum)<br><br>*read-write<br>(null)* | The configured capability of this network device function. *See NetDevFuncType in Property Details, below, for the possible values of this property.* |
 | **Oem** {} | object | This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections. See the *Resource* schema for details on this property. |
-| **PhysicalPortAssignment** { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. |
+| **PhysicalPortAssignment** *(deprecated v1.3)* { | object | The physical port that this network device function is currently assigned to. See the *NetworkPort* schema for details on this property. *Deprecated v1.3+. This property has been deprecated and moved to the Links section to avoid loops on expand.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to a NetworkPort resource. See the Links section and the *NetworkPort* schema for details. |
 | } |   |   |
-| **Status** {} | object<br><br>*<br>(null)* | This type describes the status and health of a resource and its children. See the *Resource* schema for details on this property. |
+| **Status** {} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |
 | **VirtualFunctionsEnabled** | boolean<br><br>*read-only<br>(null)* | Whether Single Root I/O Virtualization (SR-IOV) Virual Functions (VFs) are enabled for this Network Device Function. |
 
 ## Property Details
@@ -171,7 +181,7 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 
 |     |     |     |
 | --- | --- | --- |
-| **Actions** *(v1.1+)* {} | object | The available actions for this resource. |
+| **Actions** {} | object | The available actions for this resource. |
 | **ActiveLinkTechnology** | string<br>(enum)<br><br>*read-write<br>(null)* | Network Port Active Link Technology. *See ActiveLinkTechnology in Property Details, below, for the possible values of this property.* |
 | **AssociatedNetworkAddresses** [ ] | array (string, null)<br><br>*read-only* | The array of configured network addresses (MAC or WWN) that are associated with this Network Port, including the programmed address of the lowest numbered Network Device Function, the configured but not active address if applicable, the address for hardware port teaming, or other network addresses. |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |

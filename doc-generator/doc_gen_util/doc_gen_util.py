@@ -141,6 +141,7 @@ class DocGenUtilities:
                     return -1
             return 0
 
+
     @staticmethod
     def make_unversioned_ref(this_ref):
         """Get the un-versioned string based on a (possibly versioned) ref"""

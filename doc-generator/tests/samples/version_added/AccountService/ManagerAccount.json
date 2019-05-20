@@ -9,30 +9,6 @@
                     "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_2.json#/definitions/idRef"
                 },
                 {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_0_0.json#/definitions/ManagerAccount"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_0_2.json#/definitions/ManagerAccount"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_0_3.json#/definitions/ManagerAccount"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_0_4.json#/definitions/ManagerAccount"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_0_5.json#/definitions/ManagerAccount"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_0_6.json#/definitions/ManagerAccount"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_1_0.json#/definitions/ManagerAccount"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_1_1.json#/definitions/ManagerAccount"
-                },
-                {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/ManagerAccount.v1_1_2.json#/definitions/ManagerAccount"
                 }
             ],
