@@ -5,21 +5,6 @@
         "IPv4Address": {
             "anyOf": [
                 {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_0.json#/definitions/IPv4Address"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_2.json#/definitions/IPv4Address"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_3.json#/definitions/IPv4Address"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_4.json#/definitions/IPv4Address"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_5.json#/definitions/IPv4Address"
-                },
-                {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_6.json#/definitions/IPv4Address"
                 }
             ],
@@ -29,21 +14,6 @@
         "IPv6Address": {
             "anyOf": [
                 {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_0.json#/definitions/IPv6Address"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_2.json#/definitions/IPv6Address"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_3.json#/definitions/IPv6Address"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_4.json#/definitions/IPv6Address"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_5.json#/definitions/IPv6Address"
-                },
-                {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_6.json#/definitions/IPv6Address"
                 }
             ],
@@ -52,21 +22,6 @@
         },
         "IPv6StaticAddress": {
             "anyOf": [
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_0.json#/definitions/IPv6StaticAddress"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_2.json#/definitions/IPv6StaticAddress"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_3.json#/definitions/IPv6StaticAddress"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_4.json#/definitions/IPv6StaticAddress"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_5.json#/definitions/IPv6StaticAddress"
-                },
                 {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/IPAddresses.v1_0_6.json#/definitions/IPv6StaticAddress"
                 }

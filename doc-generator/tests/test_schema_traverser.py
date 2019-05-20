@@ -10,7 +10,7 @@ class TestSchemaTraverser(unittest.TestCase):
 
     def setUp(self):
         """Build a SchemaTraverser with a limited schema"""
-        self.schemaTraverser = schema_traverser.SchemaTraverser(simple_schema, {}, {})
+        self.schemaTraverser = schema_traverser.SchemaTraverser(simple_schema, {})
 
     def test_find_ref_data(self):
         ref_data = self.schemaTraverser.find_ref_data('Resource#/definitions/Oem')

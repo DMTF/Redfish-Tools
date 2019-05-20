@@ -112,19 +112,15 @@ class PropertyIndexGenerator(DocFormatter):
             # We've drilled down to a simple type.
             return
 
+        within_action = prop_path == ['Actions']
         has_enum = False
 
         if isinstance(prop_info, list):
-            meta = prop_info[0].get('_doc_generator_meta')
             has_enum = 'enum' in prop_info[0]
         elif isinstance(prop_info, dict):
-            meta = prop_info.get('_doc_generator_meta')
             has_enum = 'enum' in prop_info
-        if not meta:
-            meta = {}
 
-
-        if meta.get('within_action'):
+        if within_action:
             prop_name_parts = prop_name.split('.')
             if len(prop_name_parts) == 2:
                 prop_name = prop_name_parts[1] + ' (Action)'
@@ -191,7 +187,7 @@ class PropertyIndexGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None, profile=None):
+                                supplemental_details, parent_prop_info, anchor=None, profile=None):
         """ Handle enum information """
         pass
 

@@ -9,18 +9,6 @@
                     "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_2.json#/definitions/idRef"
                 },
                 {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Endpoint.v1_0_0.json#/definitions/Endpoint"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Endpoint.v1_0_1.json#/definitions/Endpoint"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Endpoint.v1_0_2.json#/definitions/Endpoint"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Endpoint.v1_0_3.json#/definitions/Endpoint"
-                },
-                {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/Endpoint.v1_1_0.json#/definitions/Endpoint"
                 }
             ],
