@@ -77,9 +77,6 @@ class HtmlGenerator(DocFormatter):
 table.properties{
     width: 100%;
 }
-table.uris tr td:nth-child(2) {
-    word-break: break-all;
-}
 .property-details-content {
     margin-left: 5em;
 }
@@ -916,6 +913,7 @@ pre.code{
         uri_strings = []
         for uri in sorted(uris, key=str.lower):
             uri = uri + "/Actions/" + action
+            uri = uri.replace('/', '/\u200b')
             uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
@@ -925,6 +923,7 @@ pre.code{
 
     def format_uri(self, uri):
         """ Format a URI for output. Includes creating links to Id'd schemas """
+
         uri_parts = uri.split('/')
         uri_parts_highlighted = []
         for part in uri_parts:
@@ -938,7 +937,7 @@ pre.code{
                 # and italicize it
                 part = self.formatter.italic(part)
             uri_parts_highlighted.append(part)
-        uri_highlighted = '/'.join(uri_parts_highlighted)
+        uri_highlighted = '/\u200b'.join(uri_parts_highlighted)
         return uri_highlighted
 
 

@@ -650,7 +650,7 @@ class DocFormatter:
             [preamble, collection_file_name] = x.rsplit('/', 1)
             [collection_name, rest] = collection_file_name.split('.', 1)
             uris = sorted(self.property_data[x].get('uris', []), key=str.lower)
-            data[collection_name] = [self.format_uri(x) for x in uris]
+            data[collection_name] = uris
         return data
 
 
