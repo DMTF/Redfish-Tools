@@ -54,6 +54,10 @@ class HtmlGenerator(DocFormatter):
  }
  ul, ol {margin-left: 2em;}
  li {margin: 0 0 0.5em;}
+ .hanging-indent {
+      padding-left: 1em;
+      text-indent: -1em;
+ }
  p {margin: 0 0 0.5em;}
  div.toc {margin: 0 0 2em 0;}
  .toc ul {list-style-type: none;}
@@ -901,7 +905,7 @@ pre.code{
         """ Add the URIs (which should be a list) """
         uri_strings = []
         for uri in sorted(uris, key=str.lower):
-            uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
+            uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h4>URIs:</h4>' + uri_block
@@ -914,7 +918,7 @@ pre.code{
         for uri in sorted(uris, key=str.lower):
             uri = uri + "/Actions/" + action
             uri = uri.replace('/', '/\u200b')
-            uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
+            uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h5>URIs:</h5>' + uri_block
@@ -939,6 +943,12 @@ pre.code{
             uri_parts_highlighted.append(part)
         uri_highlighted = '/\u200b'.join(uri_parts_highlighted)
         return uri_highlighted
+
+
+    def format_uris_for_table(self, uris):
+        """ Format a bunch of uris to go into a table cell """
+        return ''.join(['<div class="hanging-indent">' + self.format_uri(x) + '</div>'
+                            for x in sorted(uris, key=str.lower)])
 
 
     def format_json_payload(self, json_payload):

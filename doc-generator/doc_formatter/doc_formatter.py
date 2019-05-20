@@ -123,6 +123,11 @@ class DocFormatter:
         return uri_highlighted
 
 
+    def format_uris_for_table(self, uris):
+        """ Format a bunch of uris to go into a table cell """
+        return '<br>'.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
+
+
     def format_json_payload(self, json_payload):
         """ Format a json payload for output. """
         return json_payload
@@ -634,7 +639,7 @@ class DocFormatter:
         header = self.formatter.make_header_row(['Collection Type', 'URIs'])
         rows = []
         for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
-            item_text = '<br>'.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
+            item_text = self.format_uris_for_table(uris)
             rows.append(self.formatter.make_row([collection_name, item_text]))
         doc = self.formatter.make_table(rows, [header], 'uris')
         return doc
