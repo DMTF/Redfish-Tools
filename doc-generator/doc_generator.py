@@ -1019,7 +1019,7 @@ def main():
 
     # If property_index mode was specified, get config from args.config_file:
     if config['output_content'] == 'property_index':
-        args.supfile = False
+
         if args.config_file:
             config_file= open(args.config_file, 'r', encoding="utf8")
             config_data = json.load(config_file)
@@ -1034,6 +1034,17 @@ def main():
         else:
             config['property_index_config'] = {'DescriptionOverrides': {},
                                                'ExcludedProperties': []}
+        if args.supfile:
+            try:
+                with open(args.supfile, 'r', encoding="utf8") as supfile:
+                    boilerplate = supfile.read()
+                    if '[insert property index]' in boilerplate:
+                        config['property_index_boilerplate'] = boilerplate
+                    else:
+                        warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
+            except (OSError) as ex:
+                warnings.warn('Unable to open ' + args.supfile + ' to read: ' +  str(ex))
+
 
     else:
         # In any mode other than property_index, we should have a supplemental file.
@@ -1050,6 +1061,7 @@ def main():
         try:
             supfile = open(supfile, 'r', encoding="utf8")
             config['supplemental'] = parse_supplement.parse_file(supfile)
+            supfile.close()
         except (OSError) as ex:
             if supfile_expected:
                 warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))

@@ -29,6 +29,12 @@ optional arguments:
   --out OUTFILE         Output file (default depends on output format:
                         output.md for Markdown, index.html for HTML,
                         output.csv for CSV
+  --sup SUPFILE         Path to the supplemental material document. For
+                        Property Index mode, this document should simply be
+                        an HTML or markdown file containing any content
+                        you want to include before/after the property index, and
+                        a marker "[insert property index]" where the property index
+                        output should go.
   --config CONFIG_FILE  Path to a config file, containing configuration in
                         JSON format. Used in property_index mode only.
 
