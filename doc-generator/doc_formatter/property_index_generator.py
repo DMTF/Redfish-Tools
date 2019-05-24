@@ -74,18 +74,30 @@ class PropertyIndexGenerator(DocFormatter):
         self.coalesce_properties()
         output_format = self.config.get('output_format', 'markdown')
         output = ''
+        frontmatter = backmatter = ''
+        if 'property_index_boilerplate' in self.config:
+            boilerplate = self.config['property_index_boilerplate']
+            frontmatter, backmatter = boilerplate.split('[insert property index]')
         if output_format == 'html':
             from format_utils import HtmlUtils
             formatter = HtmlUtils()
-            output = formatter.head_one("Property Index", 0)
+            if frontmatter:
+                output = frontmatter
+            else:
+                output = formatter.head_one("Property Index", 0)
             output += self.format_tabular_output(formatter)
+            output += backmatter
             output = self.add_html_boilerplate(output)
 
         if output_format == 'markdown':
             from format_utils import FormatUtils
             formatter = FormatUtils()
-            output = formatter.head_one("Property Index", 0)
+            if frontmatter:
+                output = frontmatter
+            else:
+                output = formatter.head_one("Property Index", 0)
             output += self.format_tabular_output(formatter)
+            output += backmatter
 
         if output_format == 'csv':
             output = self.output_csv()
@@ -189,6 +201,11 @@ class PropertyIndexGenerator(DocFormatter):
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
                                 supplemental_details, parent_prop_info, anchor=None, profile=None):
         """ Handle enum information """
+        pass
+
+
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+        """Generate a formatted Actions section from parameters data"""
         pass
 
 
