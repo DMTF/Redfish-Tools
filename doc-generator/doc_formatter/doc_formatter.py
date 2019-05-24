@@ -1290,7 +1290,7 @@ class DocFormatter:
                 formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], new_path)
 
                 # Capture the enum details and merge them into the ones for the overall properties:
-                if formatted_action.get('details'):
+                if formatted_action and formatted_action.get('details'):
                     has_prop_details = True
                     prop_details.update(formatted_action['details'])
 
