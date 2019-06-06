@@ -31,10 +31,12 @@ optional arguments:
                         output.csv for CSV
   --sup SUPFILE         Path to the supplemental material document. For
                         Property Index mode, this document should simply be
-                        an HTML or markdown file containing any content
+                        a markdown file containing any content
                         you want to include before/after the property index, and
                         a marker "[insert property index]" where the property index
-                        output should go.
+                        output should go, and, for HTML output only,  "[add_toc]" where
+                        you want a table of contents. No configuration will be read from the
+                        supplemental material document.
   --config CONFIG_FILE  Path to a config file, containing configuration in
                         JSON format. Used in property_index mode only.
 

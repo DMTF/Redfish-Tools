@@ -82,11 +82,15 @@ class PropertyIndexGenerator(DocFormatter):
             from format_utils import HtmlUtils
             formatter = HtmlUtils()
             if frontmatter:
-                output = frontmatter
+                output = formatter.markdown_to_html(frontmatter)
             else:
                 output = formatter.head_one("Property Index", 0)
             output += self.format_tabular_output(formatter)
-            output += backmatter
+            output += formatter.markdown_to_html(backmatter)
+            toc = self.generate_toc(output)
+            if '[add_toc]' in output:
+                output = output.replace('[add_toc]', toc, 1)
+
             output = self.add_html_boilerplate(output)
 
         if output_format == 'markdown':
@@ -212,6 +216,36 @@ class PropertyIndexGenerator(DocFormatter):
     def add_registry_reqs(self, registry_reqs):
         """ output doesn't include registry requirements. """
         pass
+
+
+    # TODO: generate_toc is the same as in html_generator and could probably be moved to HtmlUtils
+    def generate_toc(self, html_blob):
+        """ Generate a TOC for an HTML blob (probably the body of this document) """
+
+        toc = ''
+        levels = ['h1', 'h2']
+        parser = ToCParser(levels)
+        parser.feed(html_blob)
+        toc_data = parser.close()
+
+        current_level = 0
+        for entry in toc_data:
+            level = levels.index(entry['level'])
+            if level > current_level:
+                toc += "<ul>\n"
+            if level < current_level:
+                toc += "</ul>\n"
+            current_level = level
+
+            toc += "<li>" + '<a href="#' + entry['link_id'] +'">' + entry['text'] + "</a></li>\n"
+
+        while current_level > 0:
+            current_level = current_level - 1
+            toc += "</ul>\n"
+
+        toc = '<div class="toc">' + "<ul>\n" + toc + "</ul>\n</div>\n"
+
+        return toc
 
 
     def is_excluded(self, prop_name):
