@@ -680,6 +680,9 @@ pre.code{
             if section.get('release_history'):
                 contents.append(section['release_history'])
 
+            if section.get('conditional_requirements'):
+                contents.append(section['conditional_requirements'])
+
             if section.get('description'):
                 contents.append(section['description'])
 
@@ -910,6 +913,11 @@ pre.code{
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h4>URIs:</h4>' + uri_block
         self.this_section['uris'] = uri_content
+
+
+    def add_conditional_requirements(self, text):
+        """ Add a conditional requirements, which should already be formatted """
+        self.this_section['conditional_requirements'] = '<h4>Conditional Requirements:</h4>' + text
 
 
     def format_uri_block_for_action(self, action, uris):

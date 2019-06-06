@@ -55,12 +55,14 @@ class DocGenerator:
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            profile_resources = {}
+            # profile_resources = {}
+            # profile_protocol = {}
+            profile_merged = {}
 
             if 'RequiredProfiles' in config['profile']:
                 for req_profile_name in config['profile']['RequiredProfiles'].keys():
-                    profile_resources = self.merge_required_profile(
-                        profile_resources, req_profile_name,
+                    profile_merged = self.merge_required_profile(
+                        profile_merged, req_profile_name,
                         config['profile']['RequiredProfiles'][req_profile_name])
 
             if 'Registries' in config['profile']:
@@ -70,7 +72,10 @@ class DocGenerator:
                                                              config['profile']['Registries'][registry_name])
                     config['profile']['registries_annotated'][registry_name] = registry_summary
 
-            profile_resources = self.merge_dicts(profile_resources, self.config.get('profile', {}).get('Resources', {}))
+            profile_resources = self.merge_dicts(profile_merged.get('Resources', {}),
+                                                     self.config.get('profile', {}).get('Resources', {}))
+            profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
+                                                     self.config.get('profile', {}).get('Protocol', {}))
 
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
@@ -86,6 +91,7 @@ class DocGenerator:
                 profile_resources_indexed[normalized_uri] = profile_data
 
             self.config['profile_resources'] = profile_resources_indexed
+            self.config['profile_protocol'] = profile_protocol
 
 
     def generate_doc(self):
@@ -193,8 +199,8 @@ class DocGenerator:
         return versioned_uri
 
 
-    def merge_required_profile(self, profile_resources, req_profile_name, req_profile_info):
-        """ Merge a required profile into profile_resources (a dict). May result in recursive calls. """
+    def merge_required_profile(self, merged_data, req_profile_name, req_profile_info):
+        """ Merge a required profile into merged_data (a dict). May result in recursive calls. """
 
         req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
         req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
@@ -226,7 +232,7 @@ class DocGenerator:
         if not req_profile_uri:
             warnings.warn("Unable to find Profile for " + req_profile_repo + ", " +
                           req_profile_name + ", minimum version: " + req_profile_minversion)
-            return profile_resources
+            return merged_data
 
 
         if is_local_file:
@@ -237,12 +243,15 @@ class DocGenerator:
         if req_profile_data:
             if 'RequiredProfiles' in req_profile_data:
                 for req_profile_name in req_profile_data['RequiredProfiles'].keys():
-                    profile_resources = self.merge_required_profile(
-                        profile_resources, req_profile_name, req_profile_data['RequiredProfiles'][req_profile_name])
+                    merged_data = self.merge_required_profile(
+                        merged_data, req_profile_name, req_profile_data['RequiredProfiles'][req_profile_name])
 
-            profile_resources = self.merge_dicts(profile_resources, req_profile_data.get('Resources', {}))
+            merged_data = {
+                'Resources': self.merge_dicts(merged_data.get('Resources', {}), req_profile_data.get('Resources', {})),
+                'Protocol': self.merge_dicts(merged_data.get('Protocol', {}), req_profile_data.get('Protocol', {}))
+                }
 
-        return profile_resources
+        return merged_data
 
 
     def merge_dicts(self, dict1, dict2):

@@ -575,6 +575,8 @@ class MarkdownGenerator(DocFormatter):
             contents.append(section.get('heading'))
             if section.get('release_history'):
                 contents.append(section['release_history'])
+            if section.get('conditional_requirements'):
+                contents.append(section['conditional_requirements'])
             if section.get('description'):
                 contents.append(section['description'])
             if section.get('uris'):
@@ -732,8 +734,12 @@ search: true
         uri_block = "**URIs**:\n"
         for uri in sorted(uris, key=str.lower):
             uri_block += "\n" + self.format_uri(uri)
-
         self.this_section['uris'] = uri_block + "\n"
+
+
+    def add_conditional_requirements(self, text):
+        """ Add a conditional requirements, which should already be formatted """
+        self.this_section['conditional_requirements'] = "\n**Conditional Requirements:**\n\n" + text + "\n"
 
 
     def format_uri_block_for_action(self, action, uris):
