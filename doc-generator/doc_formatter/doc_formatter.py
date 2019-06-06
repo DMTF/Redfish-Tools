@@ -44,6 +44,15 @@ class DocFormatter:
         self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
         self.current_uris = []
 
+        if self.config.get('profile_mode'):
+            # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
+            minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
+            compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
+            if compare < 0:
+                self.config['MinVersionLT1.6'] = True
+            else:
+                self.config['MinVersionLT1.6'] = False
+
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
         self.config['excluded_pattern_props_by_match'] = self.config.get('excluded_pattern_props_by_match', [])
@@ -97,6 +106,12 @@ class DocFormatter:
     def add_uris(self, uris):
         """ Add the uris """
         raise NotImplementedError
+
+
+    def add_conditional_requirements(self, text):
+        """ Add a conditional requirements, which should already be formatted """
+        raise NotImplementedError
+
 
     def add_release_history(self, release_history):
         """ Add the release history. """
@@ -276,9 +291,10 @@ class DocFormatter:
     def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
         """Generate a formatted Conditional Details section from profile data"""
         formatted = []
-        anchor = schema_ref + '|conditional_reqs|' + prop_name
 
-        formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
+        if prop_name:
+            anchor = schema_ref + '|conditional_reqs|' + prop_name
+            formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
 
         rows = []
         for creq in conditional_reqs:
@@ -288,14 +304,19 @@ class DocFormatter:
             compare_property = creq.get('CompareProperty')
             comparison = creq.get('Comparison')
             values = creq.get('Values', [])
+            uris = creq.get('URIs')
+            uri_protocol_note = ''
             req = self.format_conditional_access(creq)
 
             if creq.get('BaseRequirement'):
                 # Don't output the base requirement
                 continue
-
             elif subordinate_to:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
+            elif uris:
+                req_desc = "Resource URI is: " + self.format_uris_for_table(uris)
+                if self.config['MinVersionLT1.6']:
+                    purpose = "Applies if Protocol version is 1.6+"
 
             if compare_property:
                 compare_to = creq.get('CompareType', '')
@@ -384,7 +405,15 @@ class DocFormatter:
             self.add_section(section_name, schema_name)
             self.current_version = {}
 
-            uris = details['uris']
+            if profile.get('URIs'):
+                uris = profile['URIs']
+            else:
+                uris = details['uris']
+
+            conditional_details = None
+            if profile.get('ConditionalRequirements'):
+                conditional_reqs = profile.get('ConditionalRequirements')
+                conditional_details = self.format_conditional_details(schema_ref, None, conditional_reqs)
 
             # Normative docs prefer longDescription to description
             if config.get('normative') and 'longDescription' in definitions[schema_name]:
@@ -422,6 +451,9 @@ class DocFormatter:
 
             if details.get('release_history'):
                 self.add_release_history(details['release_history'])
+
+            if conditional_details:
+                self.add_conditional_requirements(conditional_details)
 
             self.add_json_payload(json_payload)
 

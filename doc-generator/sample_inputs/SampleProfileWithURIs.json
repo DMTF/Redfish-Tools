@@ -15,7 +15,7 @@
         }
     },
     "Protocol": {
-        "MinVersion": "1.2",
+        "MinVersion": "1.6",
         "Discovery": "Recommended",
         "HostInterface": "Mandatory",
         "ExpandQuery": "Recommended",
@@ -96,8 +96,9 @@
         "EthernetInterface": {
             "MinVersion": "1.2.0",
             "ReadRequirement": "Recommended",
+            "URIs": ["/redfish/v1/Systems/{ComputerSystemId}/EthernetInterfaces/{EthernetInterfaceId}"],
 	    "ConditionalRequirements": [{
-                "SubordinateToResource": ["Manager", "EthernetInterfaceCollection"],
+                "URIs": ["/redfish/v1/Managers/{ManagerId}/EthernetInterfaces/{EthernetInterfaceId}"],
                 "ReadRequirement": "Mandatory"
             }],
             "PropertyRequirements": {
@@ -116,7 +117,12 @@
                         "SubordinateToResource": ["ComputerSystem", "EthernetInterfaceCollection"],
                         "ReadRequirement": "Mandatory",
                         "Purpose": "Host Name is used to match this instance to other data sources."
-                    }]
+                    },
+                    {
+                        "URIs": ["/redfish/v1/Managers/{ManagerId}/EthernetInterfaces/{EthernetInterfaceId}"],
+                        "ReadRequirement": "Mandatory"
+                    }
+                   ]
                 },
                 "IPv6Addresses": {
                     "ReadRequirement": "Mandatory",
