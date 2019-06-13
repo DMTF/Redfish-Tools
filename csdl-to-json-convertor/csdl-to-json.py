@@ -927,28 +927,42 @@ class CSDLToJSON:
 
         name = self.get_attrib( object, "Name" )
         base_type = self.get_attrib( object, "BaseType", False )
-        # These objects are not actual resources since they just belong in messages sent asynchronously to a client
-        id_etag_skip = False
+
+        # These objects are not actual resources; not all OData properties apply
+        id_skip = False
+        context_skip = False
+        etag_skip = False
         if self.namespace_under_process.startswith( "Event." ):
-            id_etag_skip = True
+            # Events are just asynchronous notifications; there's no way for a client to perform a GET or PATCH on an event
+            id_skip = True
+            etag_skip = True
+        if ( self.namespace_under_process.startswith( "AttributeRegistry." ) or
+             self.namespace_under_process.startswith( "MessageRegistry." ) or
+             self.namespace_under_process.startswith( "PrivilegeRegistry." ) ):
+            # Registries do not contain any properties beyond the type since they are simply copied from the author as is
+            id_skip = True
+            context_skip = True
+            etag_skip = True
 
         # If the object is the Resource or ResourceCollection object, or is derived from them, then we add the OData properties
         if ( name == "Resource" or name == "ResourceCollection" or
              base_type == "Resource.v1_0_0.Resource" or base_type == "Resource.v1_0_0.ResourceCollection" ):
-            json_obj_def["properties"]["@odata.context"] = { "$ref": self.odata_schema + "#/definitions/context" }
             json_obj_def["properties"]["@odata.type"] = { "$ref": self.odata_schema + "#/definitions/type" }
-            if not id_etag_skip:
+            if not id_skip:
                 json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
+            if not context_skip:
+                json_obj_def["properties"]["@odata.context"] = {"$ref": self.odata_schema + "#/definitions/context"}
+            if not etag_skip:
                 json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
             if "required" not in json_obj_def:
                 json_obj_def["required"] = []
-            if "@odata.id" not in json_obj_def["required"] and not id_etag_skip:
+            if "@odata.id" not in json_obj_def["required"] and not id_skip:
                 json_obj_def["required"].append( "@odata.id" )
             if "@odata.type" not in json_obj_def["required"]:
                 json_obj_def["required"].append( "@odata.type" )
 
         # If the object is the ReferenceableMember, or is derived from it, then we add the OData properties
-        if ( name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember" ) and not id_etag_skip:
+        if ( name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember" ) and not id_skip:
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             if "required" not in json_obj_def:
                 json_obj_def["required"] = []
