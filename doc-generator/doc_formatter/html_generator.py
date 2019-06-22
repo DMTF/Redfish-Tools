@@ -245,7 +245,7 @@ pre.code{
                 deprecated_display = self.truncate_version(version_depr_text, 2)
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display +
                                                       ', deprecated v' + deprecated_display +  ')')
-                deprecated_descr = html.escape("Deprecated v" + deprecated_display + '+. ' +
+                deprecated_descr = html.escape("Deprecated in v" + deprecated_display + ' and later. ' +
                                                    version_deprecated_explanation, False)
             else:
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
@@ -253,7 +253,7 @@ pre.code{
             version_depr_text = html.escape(version_depr, False)
             deprecated_display = self.truncate_version(version_depr_text, 2)
             name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
-            deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
+            deprecated_descr = html.escape( "Deprecated in v" + deprecated_display + ' and later. ' +
                                                 version_deprecated_explanation, False)
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
@@ -327,11 +327,9 @@ pre.code{
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 if has_enum:
                     anchor = schema_ref + '|details|' + prop_name
-                    text_descr = 'See <a href="#' + anchor + '">' + prop_name + '</a> in Property Details, below, for the possible values of this property.'
+                    text_descr = 'For the possible property values, see <a href="#' + anchor + '">' + prop_name + '</a> in Property Details.'
                 else:
-                    text_descr = 'See Property Details, below, for more information about this property.'
-
-
+                    text_descr = 'For more information about this property, see Property Details.'
                 if formatted_details['descr']:
                     formatted_details['descr'] += '<br>' + self.formatter.italic(text_descr)
                 else:
@@ -507,8 +505,8 @@ pre.code{
                         deprecated_display = self.truncate_version(version_depr_text, 2)
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if deprecated_descr:
-                            deprecated_descr_text = html.escape('Deprecated v' + deprecated_display + '+. ' +
-                                                           deprecated_descr)
+                            deprecated_descr_text = html.escape('Deprecated in v' + deprecated_display
+                                                                    + ' and later. ' + deprecated_descr)
                     else:
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
                 elif version_depr:
@@ -516,7 +514,7 @@ pre.code{
                     deprecated_display = self.truncate_version(version_depr_text, 2)
                     enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
                     if deprecated_descr:
-                        deprecated_descr_text = html.escape('Deprecated v' + deprecated_display + '+. ' +
+                        deprecated_descr_text = html.escape('Deprecated in v' + deprecated_display + ' and later. ' +
                                                         deprecated_descr)
 
                 descr = html.escape(enum_details.get(enum_item, ''), False)
@@ -578,8 +576,9 @@ pre.code{
                         deprecated_display = self.truncate_version(version_depr_text, 2)
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if deprecated_descr:
-                            enum_name += '<br>' + self.formatter.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
-                                                                          deprecated_descr))
+                            enum_name += '<br>' + self.formatter.italic(html.escape(
+                                'Deprecated in v' + deprecated_display
+                                + ' and later. ' + deprecated_descr))
                     else:
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
 
@@ -588,8 +587,9 @@ pre.code{
                     deprecated_display = self.truncate_version(version_depr_text, 2)
                     enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
                     if deprecated_descr:
-                        enum_name += '<br>' + self.formatter.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
-                                                                                    deprecated_descr))
+                        enum_name += '<br>' + self.formatter.italic(html.escape(
+                            'Deprecated in v' + deprecated_display + ' and later. ' +
+                            deprecated_descr))
 
 
                 cells = [enum_name]
@@ -1039,7 +1039,7 @@ pre.code{
                 version = DocGenUtilities.get_ref_version(ref_info.get('_ref_uri', ''))
             if version:
                 ref_id += '_v' + version
-            return '<a href="#' + ref_id + '">' + ref_info.get('_prop_name') + ' object' + '</a>'
+            return '<a href="#' + ref_id + '">' + ref_info.get('_prop_name') + '</a>'
         return ref_key
 
 

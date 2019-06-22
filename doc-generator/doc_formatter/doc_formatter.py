@@ -839,12 +839,10 @@ class DocFormatter:
                                                 # of IPv6GatewayStaticAddress.
                                                 ref_info['type'] = 'object'
                                             if specific_version:
-                                                append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
-                                                              + '(v' + str(specific_version) + ')' +
-                                                              ' for details on this property.')
+                                                append_ref = ('For property details, see ' + self.link_to_common_property(ref_key) + ' '
+                                                              + '(v' + str(specific_version) + ').')
                                             else:
-                                                append_ref = ('See the ' + self.link_to_common_property(ref_key) +
-                                                              ' for details on this property.')
+                                                append_ref = ('For property details, see ' + self.link_to_common_property(ref_key) + '.' )
 
                             new_ref_info = {
                                 'description': ref_description,
@@ -1723,7 +1721,7 @@ class DocFormatter:
         """ String for output. Override in HTML formatter to get actual links. """
         ref_info = self.common_properties.get(ref_key)
         if ref_info and ref_info.get('_prop_name'):
-            return ref_info.get('_prop_name') + ' object'
+            return ref_info.get('_prop_name')
         return ref_key
 
     def link_to_outside_schema(self, schema_full_uri):
