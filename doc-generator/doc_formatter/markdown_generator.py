@@ -128,7 +128,7 @@ class MarkdownGenerator(DocFormatter):
                 deprecated_display = self.truncate_version(version_depr, 2)
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display +
                                                         ', deprecated v' + deprecated_display +  ')')
-                deprecated_descr = ("Deprecated v" + deprecated_display + '+. ' +
+                deprecated_descr = ("Deprecated in v" + deprecated_display + ' and later. ' +
                                     self.escape_for_markdown(version_deprecated_explanation,
                                                                  self.config.get('escape_chars', [])))
             else:
@@ -136,7 +136,7 @@ class MarkdownGenerator(DocFormatter):
         elif version_deprecated:
             deprecated_display = self.truncate_version(version_depr, 2)
             name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
-            deprecated_descr =  ("Deprecated v" + deprecated_display + '+. ' +
+            deprecated_descr =  ("Deprecated in v" + deprecated_display + ' and later. ' +
                                  self.escape_for_markdown(version_deprecated_explanation,
                                                           self.config.get('escape_chars', [])))
 
@@ -218,9 +218,9 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 # If there are prop_details (enum details), add a note to the description:
                 if has_enum:
-                    text_descr = 'See ' + prop_name + ' in Property Details, below, for the possible values of this property.'
+                    text_descr = 'For the possible property values, see ' + prop_name + ' in Property Details.'
                 else:
-                    text_descr = 'See Property Details, below, for more information about this property.'
+                    text_descr = 'For more information about this property, see Property Details.'
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
             if formatted_details['has_action_details']:
@@ -367,14 +367,14 @@ class MarkdownGenerator(DocFormatter):
                         deprecated_display = self.truncate_version(version_depr, 2)
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
                         if deprecated_descr:
-                            deprecated_descr = 'Deprecated v' + deprecated_display + '+. ' + deprecated_descr
+                            deprecated_descr = 'Deprecated in v' + deprecated_display + ' and later. ' + deprecated_descr
                     else:
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
                 elif version_depr:
                     deprecated_display = self.truncate_version(version_depr, 2)
                     enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
                     if deprecated_descr:
-                        deprecated_descr = 'Deprecated v' + deprecated_display + '+. ' + deprecated_descr
+                        deprecated_descr = 'Deprecated in v' + deprecated_display + ' and later. ' + deprecated_descr
 
                 descr = enum_details.get(enum_item, '')
                 if deprecated_descr:
@@ -443,9 +443,9 @@ class MarkdownGenerator(DocFormatter):
                     if version_depr:
                         deprecated_display = self.truncate_version(version_depr, 2)
                         if deprecated_descr:
-                            enum_name += ' ' + self.formatter.italic('Deprecated v' + deprecated_display + '+. ' + deprecated_descr)
+                            enum_name += ' ' + self.formatter.italic('Deprecated in v' + deprecated_display + ' and later. ' + deprecated_descr)
                         else:
-                            enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
+                            enum_name += ' ' + self.formatter.italic('(deprecated in v' + deprecated_display + ' and later.)')
 
                 if profile_mode:
                     profile_spec = ''
