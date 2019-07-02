@@ -857,6 +857,8 @@ class CSDLToJSON:
                     json_obj_def["required"] = []
                 if prop_name not in json_obj_def["required"]:
                     json_obj_def["required"].append( prop_name )
+                    if prop_name == "Members":
+                        json_obj_def["required"].append( "Members@odata.count" )
             if term == "Redfish.RequiredOnCreate":
                 if "requiredOnCreate" not in json_obj_def:
                     json_obj_def["requiredOnCreate"] = []
