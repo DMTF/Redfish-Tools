@@ -13,10 +13,12 @@ Brief : This file contains the definitions and functionalities for converting
 """
 
 import argparse
+import errno
 import json
 import os
 import re
 import sys
+import urllib.request
 import yaml
 
 # List of terms that have a simple one to one conversion
@@ -67,6 +69,7 @@ class JSONToYAML:
         self.info_block = info_block
         self.uri_cache = {}
         self.action_cache = {}
+        self.input_dir = input
 
         # Initialize the caches if extending an existing definition
         if base_file is not None:
@@ -420,15 +423,59 @@ class JSONToYAML:
 
         # Update $ref to use the form "/components/schemas/" instead of "/definitions/"
         if "$ref" in json_data:
-            json_data["$ref"] = json_data["$ref"].replace( ".json#/definitions/", ".yaml#/components/schemas/", 1 )
-            json_data["$ref"] = json_data["$ref"].replace( "#/definitions/", "#/components/schemas/", 1 )
+            if json_data["$ref"][0] == "#":
+                # Local reference
+                json_data["$ref"] = json_data["$ref"].replace( "#/definitions/", "#/components/schemas/", 1 )
+            else:
+                # External reference; find the definition and check if it's a link to a resource or some other definition
+                id_ref = False
 
-            # Replace the $ref with an idRef instance if this is just a link to another resource
-            ref_match = re.match( "^.+\\/(.+).yaml#\\/components\\/schemas\\/(.+)$", json_data["$ref"] )
-            if ref_match:
-                # If the type name is the same as the schema name, then this is a resource link
-                if ref_match.group( 1 ) == ref_match.group( 2 ):
+                # Check if the type name is the same as the schema name
+                ref_match = re.match( "^.+\\/(.+).json#\\/definitions\\/(.+)$", json_data["$ref"] )
+                if ref_match:
+                    if ref_match.group( 1 ) == ref_match.group( 2 ) and ref_match.group( 1 ) != "Redundancy":
+                        # They are the same; this MIGHT be a resource link
+                        ref_search = re.search( "\/([\w\d_\.\-]+\.json)", json_data["$ref"] )
+                        if ref_search:
+                            # Check if the file being referenced is also being converted
+                            json_file_path = self.input_dir + os.path.sep + ref_search.group( 1 )
+                            json_ref_data = {}
+                            if os.path.isfile( json_file_path ):
+                                with open( json_file_path ) as json_file:
+                                    json_ref_data = json.load( json_file )
+                            else:
+                                # Not local; need to download a copy
+                                json_file_path = json_data["$ref"].split( "#" )[0]
+                                retry_count = 0
+                                retry_count_max = 20
+                                while retry_count < retry_count_max:
+                                    try:
+                                        req = urllib.request.Request( json_file_path )
+                                        response = urllib.request.urlopen( req )
+                                        json_ref_data = json.loads( response.read().decode() )
+                                        break
+                                    except OSError as e:
+                                        if e.errno != errno.ECONNRESET:
+                                            break
+                                        retry_count += 1
+
+                            # Get the reference definition
+                            ref_definition = json_ref_data.get( "definitions", {} ).get( json_data["$ref"].rsplit( "/" )[-1], None )
+                            if ref_definition is None:
+                                print( "ERROR: Could not get {}".format( json_data["$ref"] ) )
+                            else:
+                                # Check if the definition contains an anyOf where the $ref of the first item points to idRef
+                                try:
+                                    if "/definitions/idRef" in ref_definition["anyOf"][0]["$ref"]:
+                                        id_ref = True
+                                except:
+                                    pass
+
+                # If idRef was found, this is a link; otherwise this is another data type (like an enum or an object)
+                if id_ref:
                     json_data["$ref"] = self.odata_schema + "#/components/schemas/idRef"
+                else:
+                    json_data["$ref"] = json_data["$ref"].replace( ".json#/definitions/", ".yaml#/components/schemas/", 1 )
 
         # Perform the same process on all other objects in the structure
         for key in json_data:
