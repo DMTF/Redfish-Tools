@@ -30,9 +30,9 @@ options.cache = new CSDL.cache(options.useLocal, options.useNetwork);
 //Units that don't exist in UCUM
 const unitsWhiteList = ['RPM'];
 //Enumeration Member names that are non-Pascal Cased
-const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N', 
+const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
-                                    'LPDDR3_SDRAM', 'DDR2_SDRAM', 'DDR2_SDRAM_FB_DIMM', 'DDR2_SDRAM_FB_DIMM_PROBE', 
+                                    'LPDDR3_SDRAM', 'DDR2_SDRAM', 'DDR2_SDRAM_FB_DIMM', 'DDR2_SDRAM_FB_DIMM_PROBE',
                                     'DDR_SGRAM', 'DDR_SDRAM', 'SO_DIMM', 'Mini_RDIMM', 'Mini_UDIMM', 'SO_RDIMM_72b',
                                     'SO_UDIMM_72b', 'SO_DIMM_16b', 'SO_DIMM_32b', 'TPM1_2', 'TPM2_0', 'TCM1_0', 'iWARP',
                                     'RSA_2048Bit', 'RSA_3072Bit', 'RSA_4096Bit', 'EC_P256', 'EC_P384', 'EC_P521', 'EC_X25519', 'EC_X448', 'EC_Ed25519', 'EC_Ed448'];
@@ -64,7 +64,7 @@ describe('CSDL Tests', () => {
       assert.equal(err, null);
     });
   });
-  
+
   files.forEach((file) => {
     describe(file, () => {
       let fileName = file.substring(file.lastIndexOf('/')+1);
@@ -120,7 +120,12 @@ describe('CSDL Tests', () => {
 
 function csdlTestSetup() {
   let arr = [];
-  arr.push(published.getPublishedSchemaVersionList('http://redfish.dmtf.org/schemas/v1/'));
+  if(config.has('Redfish.PublishedSchemaUri')) {
+    arr.push(published.getPublishedSchemaVersionList(config.get('Redfish.PublishedSchemaUri')));
+  }
+  else {
+    arr.push(published.getPublishedSchemaVersionList('http://redfish.dmtf.org/schemas/v1/'));
+  }
   OverRideFiles.forEach((file) => {
     arr.push(new Promise((resolve, reject) => {
       CSDL.parseMetadataUri(file, options, (err, csdl) => {
@@ -138,6 +143,7 @@ function csdlTestSetup() {
 
 describe('Mockup Syntax Tests', () => {
   let mockupFiles = glob.sync(config.get('Redfish.MockupFilePath'));
+  let extraCSDLs = [];
   let linkCache = {};
   let txtCache = {};
   let jsonCache = {};
@@ -156,7 +162,23 @@ describe('Mockup Syntax Tests', () => {
         txtCache[name] = data[i].txt;
         jsonCache[name] = data[i].json;
       }
-      done();
+      if(config.has('Redfish.AdditionalCSDL')) {
+        extraCSDLs = config.get('Redfish.AdditionalCSDL');
+        let tmpArr = [];
+        for(let i = 0; i < extraCSDLs.length; i++) {
+          tmpArr.push(options.cache.getMetadata(extraCSDLs[i]));
+        }
+        tmpArr.push(options.cache.waitForCoherent());
+        Promise.all(tmpArr).then(() => {
+          done();
+        }).catch((e) => {
+          console.log(e);
+          done();
+        });
+      }
+      else {
+        done();
+      }
     });
   });
 
@@ -192,7 +214,7 @@ describe('Mockup Syntax Tests', () => {
             if(!this.isLeaf) return;
 
             if(!isLink(this.key)) return;
-            let link = url.parse(this.node); 
+            let link = url.parse(this.node);
             let filepath = linkToFile[link.pathname];
             if(filepath === undefined && link.pathname.substr(link.pathname.length - 1) === '/') {
               //Try without the trailing slash...
@@ -258,7 +280,7 @@ function addFileToLinkCache(filename, cache) {
     if(cache[mockupName] === undefined) {
       cache[mockupName] = {};
     }
-    split = split.slice(2, -1); 
+    split = split.slice(2, -1);
     split.unshift('redfish', 'v1');
     let link = '/'+split.join('/');
     cache[mockupName][link] = filename;
@@ -905,7 +927,7 @@ function typeOrBaseTypesHaveAnnotations(type, annotations, typeName, typeType, c
   }
 }
 
-function validCSDLTypeInMockup(json, file) { 
+function validCSDLTypeInMockup(json, file) {
   if(json["$schema"] !== undefined) {
     //Ignore JSON schema files
     return;
@@ -1338,7 +1360,7 @@ function validateActions(actions) {
    if(action['Target'] !== undefined) {
      throw new Error('Action "'+propName+'" has invalid property "Target"');
    }
- } 
+ }
 }
 
 function schemaOwningEntityCheck(csdl) {
@@ -1362,13 +1384,13 @@ function schemaReleaseCheck(csdl) {
       // These namespaces do not follow the normal rules and require the Release term
       if(release.length === 0) {
         throw new Error('Namespace '+schemas[i]._Name+' lacks Release term!');
-      }    
+      }
     }
     else if(NamespacesWithoutReleaseTerm.indexOf(schemas[i]._Name) !== -1) {
       // These namespaces do not follow the normal rules and do not use the Release term
       if(release.length !== 0) {
         throw new Error('Namespace '+schemas[i]._Name+' contains an unexpected Release term!');
-      }    
+      }
     }
     else {
       // All other namespaces require the Release term if it's versioned and non-errata
