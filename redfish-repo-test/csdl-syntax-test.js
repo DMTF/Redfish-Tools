@@ -47,6 +47,7 @@ const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
+const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
 /************************************************************/
 
 describe('CSDL Tests', () => {
@@ -247,6 +248,11 @@ describe('Mockup Syntax Tests', () => {
           it('Is Valid Type', function() {
             validCSDLTypeInMockup(json, file);
           });
+          if(file.includes('non-resource-examples') === false && file.includes ('Contoso') === false) {
+            it('Is Valid URI', function() {
+              isValidURI(json, file);
+            });
+          }
         }
       }
     });
@@ -1087,6 +1093,107 @@ function validCSDLTypeInMockup(json, file) {
       }
     }
   }
+}
+
+function isValidURI(json, file) {
+  if(json["$schema"] !== undefined) {
+    //Ignore JSON schema files
+    return;
+  }
+  if(json['@odata.type'] === undefined) {
+    if(json['v1'] !== undefined) {
+      /*This is probably a root json, ignore it*/
+      return;
+    }
+    if(json['@odata.context'] === '/redfish/v1/$metadata') {
+      /*This is an Odata service doc, ignrore it*/
+      return;
+    }
+    return;
+  }
+  let type = json['@odata.type'].substring(1);
+  let CSDLType = CSDL.findByType({_options: options}, type);
+  if(CSDLType === null) {
+    throw new Error('Could not locate type '+type);
+  }
+  CSDLType = getCSDLWithUri(CSDLType);
+  if(CSDLType === null) {
+    throw new Error('Unable to locate Uri annotation for type '+type);
+  }
+  if(CSDLType.Annotations === undefined || CSDLType.Annotations['Redfish.Uris'] === undefined) {
+    return;
+  }
+  let id = json['@odata.id'];
+  if(id === undefined) {
+    return;
+  }
+  let uris = CSDLType.Annotations['Redfish.Uris'].Collection.Strings;
+  let pass = false;
+  let extra = [];
+  for(let i = 0; i < uris.length; i++) {
+    let ret = isIdInUri(id, uris[i]);
+    if(ret === true) {
+      pass = true;
+      break;
+    }
+    if(ret !== false) {
+      extra.push(ret);
+    }
+  }
+  if(pass === false) {
+    let msg = 'Unable to locate URI for id '+id+' that matches Uri pattern for type '+type;
+    if(extra.length > 0) {
+      msg+='\nFound URIs where id is longer:\n';
+      for(let i = 0; i < extra.length; i++) {
+        msg += 'Uri: '+extra[i].uri+' Extra: '+extra[i].extra+'\n';
+      }
+    }
+    throw new Error(msg);
+  }
+}
+
+function getCSDLWithUri(type) {
+  if(type.Annotations !== undefined && type.Annotations['Redfish.Uris'] !== undefined) {
+    return type;
+  }
+  if(NoUriWhitelist.indexOf(type.Name) !== -1) {
+    return type;
+  }
+  if(type.BaseType) {
+    return getCSDLWithUri(CSDL.findByType({_options: options}, type.BaseType));
+  }
+  return null;
+}
+
+function isIdInUri(id, uri) {
+  let split = uri.split(/{\w*}/);
+  let elem = split.shift();
+  let index = id.indexOf(elem);
+  if(index !== 0) {
+    return false;
+  }
+  let rest = id.substring(elem.length);
+  while(split.length) {
+    elem = split.shift();
+    if(elem === '') {
+      index = rest.indexOf('/');
+      if(index === -1 && split.length === 0) {
+        return true;
+      }
+      rest = rest.substring(index);
+    }
+    else {
+      index = rest.indexOf(elem);
+      if(index === -1) {
+        return false;
+      }
+      rest = rest.substring(elem.length+index);
+    }
+  }
+  if(rest.length === 0 || rest === '/' || rest === '/SD' || rest === '/Settings') {
+    return true;
+  }
+  return {uri: uri, extra: rest};
 }
 
 function getLatestTypeVersion(defaultType, namespace, type, majorVersion, minorVersion) {

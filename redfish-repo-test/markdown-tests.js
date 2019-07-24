@@ -51,7 +51,8 @@ describe('Markdown', () => {
           }
         });
       });
-      it('Internal Links are consistent', (done) => {
+      it('Internal Links are consistent', function(done) {
+        this.timeout(5000);
         marked(text, (err, html) => {
             let doc = new JSDOM(`<body>${html}</body>`);
             let $ = require('jquery')(doc.window);
