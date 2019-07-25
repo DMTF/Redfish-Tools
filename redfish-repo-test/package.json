@@ -1,6 +1,6 @@
 {
   "name": "redfishrepotest",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A set of tests for Redfish Mockups, CSDL, OpenAPI, and JSON Schemas.",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "mocha": "^6.0.2",
-    "CSDLParser": "^0.2.0",
+    "CSDLParser": "^0.2.2",
     "config": "^3.0.1",
     "fuzzy": "^0.1.1",
     "glob": "^7.0.0",

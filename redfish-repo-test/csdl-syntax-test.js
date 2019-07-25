@@ -48,6 +48,7 @@ const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
+const PluralSchemaWhiteList = ['ChassisCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 /************************************************************/
 
 describe('CSDL Tests', () => {
@@ -94,6 +95,7 @@ describe('CSDL Tests', () => {
       }
       it('Descriptions have trailing periods', () => {descriptionPeriodCheck(csdl);});
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
+      it('No plural Schemas', () => {noPluralSchemas(csdl);});
       it('BaseTypes are valid', () => {checkBaseTypes(csdl);});
       it('All Annotation Terms are valid', () => {checkAnnotationTerms(csdl);});
       it('Enum Members are valid names', () => {checkEnumMembers(csdl);});
@@ -473,6 +475,24 @@ function checkForEmptySchemas(csdl) {
     }
     if(properties.length === 1 && schemas[i].Annotations !== undefined) {
       trivialNamespaceCheck(schemas[i]);
+    }
+  }
+}
+
+function noPluralSchemas(csdl) {
+  let schemas = CSDL.search(csdl, 'Schema');
+  if(schemas.length === 0) {
+    return;
+  }
+  for(let i = 0; i < schemas.length; i++) {
+    if(schemas[i]._Name.startsWith('Org.OData')) {
+      continue;
+    }
+    if(PluralSchemaWhiteList.indexOf(schemas[i]._Name) !== -1) {
+      continue;
+    }
+    if(schemas[i]._Name.includes('sCollection') || schemas[i]._Name.includes('s_v1')) {
+      throw new Error('Schema '+schemas[i]._Name+' is plural!');
     }
   }
 }
