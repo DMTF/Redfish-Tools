@@ -29,6 +29,9 @@ describe('Markdown', () => {
           return;
         }
         examples.forEach((example) => {
+          if(example[2].indexOf('multipart') !== -1) {
+            return;
+	  }
           let json = example[1] === 'http' ? example[2].split("\n\n")[1] : example[2];
 
           if(!json) return;
@@ -51,7 +54,8 @@ describe('Markdown', () => {
           }
         });
       });
-      it('Internal Links are consistent', (done) => {
+      it('Internal Links are consistent', function(done) {
+        this.timeout(5000);
         marked(text, (err, html) => {
             let doc = new JSDOM(`<body>${html}</body>`);
             let $ = require('jquery')(doc.window);
