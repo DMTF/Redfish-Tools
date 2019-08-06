@@ -63,7 +63,7 @@ describe('CSDL Tests', () => {
       overrideCSDLs = res.slice(1);
       done();
     }).catch((err) => {
-      assert.equal(err, null);
+      done(err);
     });
   });
 
@@ -72,7 +72,7 @@ describe('CSDL Tests', () => {
       let fileName = file.substring(file.lastIndexOf('/')+1);
       let csdl = null;
       before(function(done) {
-        this.timeout(60000);
+        this.timeout(120000);
         CSDL.parseMetadataFile(file, options, (err, data) => {
           if(err) {
             throw err;
