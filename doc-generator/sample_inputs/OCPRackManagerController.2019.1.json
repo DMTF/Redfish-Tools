@@ -1,0 +1,190 @@
+{
+  "SchemaDefinition": "RedfishInteroperabilityProfile.v1_0_0",
+  "ProfileName": "OCPRackManagerController",
+  "ProfileVersion": "2019.1",
+  "Purpose": "Profile for OpenRMC Rack Manager Controller.",
+  "ContactInfo": "john.leung@opencompute.org",
+  "OwningEntity": "Open Compute Project",
+  "Protocol": {
+    "MinVersion": "1.0"
+  },
+  "Resources": {
+     "ServiceRoot": {
+      "Purpose": "Entry point for the whole API. It contains ",
+      "PropertyRequirements": {
+        "Chassis": {
+          "Purpose": "To enumerate Chassis."
+        },
+        "Managers": {
+          "Purpose": "To enumerate Managers."
+        },
+        "Systems": {
+          "Purpose": "To enumerate Computer Systems."
+        },
+        "Tasks": {
+          "Purpose": "To provide support long time operations as asynchronous calls."
+        },
+        "Sessions": {
+          "Purpose": "To provide support for Sessions."
+        },
+        "EventService": {
+          "Purpose": "To provide support for asynchronous event."
+        }
+      }
+    },
+    "ChassisCollection": {
+      "PropertyRequirements": {
+        "Members": {
+          "Purpose": "Intel RSD Compute service should have at least one Chassis, a casing for the whole hardware.",
+          "MinCount": 1
+        }
+      }
+    },
+    "Chassis": {
+      "Purpose": "Used to model physical location of the asset, casing topology and information.",
+      "PropertyRequirements": {
+        "Links": {
+          "PropertyRequirements": {
+            "ComputerSystems": {
+              "Purpose": "Used to create physical topology and relations."
+            },
+            "ManagersInChassis": {
+              "Purpose": "Used to create physical topology and relations."
+            }
+          }
+        }
+      }
+    },
+    "Manager": {
+      "Purpose": "Used to model management asset. Managers is used during service registration process and to control service.",
+      "PropertyRequirements": {
+        "Links": {
+          "PropertyRequirements": {
+            "ManagerForServers": {
+              "Purpose": "Used to know which Computer System is managed by this Manager."
+            }
+          }
+        }
+      }
+    },
+    "ManagerCollection": {
+      "PropertyRequirements": {
+        "Members": {
+          "Purpose": "Intel RSD Compute service should have at least one Manager, a software exposing Intel RSD Compute.",
+          "MinCount": 1
+        }
+      }
+    },
+    "ComputerSystemCollection": {
+      "PropertyRequirements": {
+        "Members": {
+          "Purpose": "Intel RSD Compute service should have at least one Computer System to manage.",
+          "MinCount": 1
+        }
+      }
+    },
+    "ComputerSystem": {
+      "Purpose": "Used to model and manage server's configuration.",
+      "PropertyRequirements": {
+        "PowerState": {
+          "Purpose": "Used to proper control state of the Computer System."
+        },
+        "Boot": {
+          "Purpose": "Used to control Computer System's BIOS boot options for composition and/or decomposition.",
+          "PropertyRequirements": {
+            "BootSourceOverrideEnabled": {},
+            "BootSourceOverrideTarget": {},
+            "BootSourceOverrideMode": {}
+          }
+        },
+        "Memory": {
+          "Purpose": "Computer System must have at least one Memory module to boot up.",
+          "MinCount": 1
+        },
+        "Processors": {
+          "Purpose": "Computer System must have at least one Processor to boot up.",
+          "MinCount": 1
+        },
+          "Status": {
+              "Purpose" : "We want to see the Status"
+          },
+        "UUID": {
+          "Purpose": "Used to recognize Computer System. UUID must be permanent and available from the service boot. Computer Systems with the same UUIDs will be treated as one."
+        },
+        "NetworkInterfaces": {
+          "Purpose": "Computer System must have at least one Network Interface with MAC address to support features like remote boot.",
+          "MinCount": 1
+        }
+      },
+      "ActionRequirements": {
+        "Reset": {
+          "Purpose": "Used to control power state of the Computer System.",
+          "Parameters": {
+            "ResetType": {
+              "MinSupportValues": [
+                "On",
+                "Off"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "EthernetInterface": {
+      "Purpose": "Ethernet Interface is used to model network connection and retrieve basic networking properties like MAC address.",
+      "MinVersion": "1.0.0",
+      "PropertyRequirements": {
+        "PermanentMACAddress": {
+          "Purpose": "Used to uniquely identify Network Interface."
+        }
+      }
+    },
+    "EthernetInterfaceCollection": {
+      "PropertyRequirements": {
+        "Members": {
+          "Purpose": "Intel RSD Compute service should have at least one Ethernet Interface to manage.",
+          "MinCount": 1
+        }
+      }
+    },
+    "Processor": {
+      "Purpose": "Used in search for Computer System during composition. You cannot compose a computer system without processor.",
+      "MinVersion": "1.0.0",
+      "PropertyRequirements": {
+        "TotalCores": {
+          "Purpose": "Used as one of indicators of Computer System performance. Used in search during Computer System."
+        },
+        "MaxSpeedMhz": {
+          "Purpose": "Used as one of indicators of Computer System performance. Used in search during Computer System."
+        },
+        "Socket": {
+          "Purpose": "Used to identify Processor in multi processors Computer Systems."
+        }
+      }
+    },
+    "ProcessorCollection": {
+      "PropertyRequirements": {
+        "Members": {
+          "Purpose": "Intel RSD Compute service should have at least one Processor in Computer System.",
+          "MinCount": 1
+        }
+      }
+    },
+    "Memory": {
+      "Purpose": "Used in search for Computer System during composition. You cannot compose a computer system without memory.",
+      "PropertyRequirements": {
+        "CapacityMiB": {
+          "Purpose": "Used as a indicator of Memory quality."
+        }
+      }
+    },
+    "MemoryCollection": {
+      "PropertyRequirements": {
+        "Members": {
+          "Purpose": "Intel RSD Compute service should have at least one Memory module in Computer System.",
+          "MinCount": 1
+        }
+      }
+    }
+  }
+}

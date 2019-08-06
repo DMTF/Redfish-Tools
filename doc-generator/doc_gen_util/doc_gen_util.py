@@ -133,13 +133,19 @@ class DocGenUtilities:
             else:
                 sep = '.'
             context_parts = context_version.split(sep)
-            # versions are expected to have three parts
+
+            # versions are expected to have three parts, but fill in 0 if not
+            while len(version_parts) < 3:
+                version_parts.append("0")
+            while len(context_parts) < 3:
+                context_parts.append("0")
             for i in range(3):
                 if version_parts[i] > context_parts[i]:
                     return 1
                 if version_parts[i] < context_parts[i]:
                     return -1
             return 0
+
 
     @staticmethod
     def make_unversioned_ref(this_ref):

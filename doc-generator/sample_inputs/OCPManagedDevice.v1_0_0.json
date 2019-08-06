@@ -65,11 +65,16 @@
 		},
 		"EthernetInterface": {
 			"MinVersion": "1.1.0",
-			"ReadRequirement": "Recommended",
-			"ConditionalRequirements": [{
+                        "ReadRequirement": "Recommended",
+                        "URIs": ["/redfish/v1/Systems/{ComputerSystemId}/EthernetInterfaces/{EthernetInterfaceId}"],
+                        "ConditionalRequirements": [{
 				"SubordinateToResource": ["Manager", "EthernetInterfaceCollection"],
 				"ReadRequirement": "Mandatory"
-			}],
+			},
+                        {
+                                "URIs": ["/redfish/v1/Managers/{ManagerId}/EthernetInterfaces/{EthernetInterfaceId}"],
+                                "ReadRequirement": "Mandatory"
+                        }],
 			"PropertyRequirements": {
 				"MACAddress": {},
 				"SpeedMbps": {},
@@ -95,7 +100,11 @@
 						"SubordinateToResource": ["Manager", "EthernetInterfaceCollection"],
 						"ReadRequirement": "Mandatory",
 						"WriteRequirement": "Mandatory"
-					}]
+					},
+                                        {
+                                            "URIs": ["/redfish/v1/Managers/{ManagerId}/EthernetInterfaces/{EthernetInterfaceId}"],
+                                            "ReadRequirement": "Mandatory"
+                                        }]
 				},
 				"FQDN": {
 					"ReadRequirement": "Recommended",
@@ -110,7 +119,7 @@
 					"ConditionalRequirements": [{
 						"SubordinateToResource": ["Manager", "EthernetInterfaceCollection"],
 						"ReadRequirement": "Mandatory",
-						"WriteRequirement": "Mandatory"						
+						"WriteRequirement": "Mandatory"
 					}]
 				},
 				"IPv4Addresses": {

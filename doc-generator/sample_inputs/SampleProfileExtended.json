@@ -96,7 +96,7 @@
         "EthernetInterface": {
             "MinVersion": "1.2.0",
             "ReadRequirement": "Recommended",
-            "ConditionalRequirements": [{
+	    "ConditionalRequirements": [{
                 "SubordinateToResource": ["Manager", "EthernetInterfaceCollection"],
                 "ReadRequirement": "Mandatory"
             }],

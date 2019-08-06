@@ -11,6 +11,7 @@ Brief : Provides utilities for resolving references in a set of Redfish json sch
 Initial author: Second Rise LLC.
 """
 
+import types
 import warnings
 from doc_gen_util import DocGenUtilities
 
@@ -25,31 +26,29 @@ warnings.formatwarning = simple_warning_format
 class SchemaTraverser:
     """Provides methods for traversing Redfish schemas (imported from JSON into objects). """
 
-    def __init__(self, schema_data, meta_data, uri_to_local):
+    def __init__(self, schema_data, uri_to_local):
         """Set up the SchemaTraverser.
 
         schema_data: dict of normalized_schema_uri: json_data
-        meta_data: metadata (versioning) by schema and property
         uri_to_local: dict of normalized URI: local path
         """
-        self.schemas = schema_data
-        self.meta = meta_data
-        self.uri_to_local = uri_to_local
-        self.remote_schemas = {} # dict of uri:json_data retrieved dynamically
+        self.schemas = types.MappingProxyType(schema_data)
+        self.uri_to_local = types.MappingProxyType(uri_to_local)
+        self.remote_schemas = types.MappingProxyType({}) # dict of uri:json_data retrieved dynamically
 
 
     def copy(self):
         """Create a traverser with equivalent state to this one's"""
-        schema_data = self.schemas.copy()
-        meta_data = self.meta.copy()
-        uri_to_local = self.uri_to_local.copy()
-        return SchemaTraverser(schema_data, meta_data, uri_to_local)
+        return SchemaTraverser(self.schemas, self.uri_to_local)
 
 
     def add_schema(self, uri, data):
         """Add the specified schema data to self.schemas. Fails if uri is already present"""
+
         if not self.schemas.get(uri):
-            self.schemas[uri] = data
+            mutable_schemas = dict(self.schemas)
+            mutable_schemas[uri] = data
+            self.schemas = types.MappingProxyType(mutable_schemas)
         else:
             warnings.warn("Not overwriting traverser's schema data for " + uri)
 
@@ -70,43 +69,21 @@ class SchemaTraverser:
             if not schema:
                 return None
 
-        meta = self.meta.get(schema_ref, {})
-
         elements = [x for x in path.split('/') if x]
         element = ''
         for element in elements:
             if element in schema:
                 schema = schema[element]
-                meta = meta.get(element, {})
             else:
                 return None
 
+        schema = dict(schema)
         schema['_from_schema_ref'] = schema_ref
         if '_schema_name' not in schema:
             schema['_schema_name'] = self.get_schema_name(schema_ref)
         schema['_prop_name'] = element
-        schema['_doc_generator_meta'] = meta
         schema['_ref_uri'] = ref
         return schema
-
-
-    def find_meta_data(self, ref):
-        """Find meta data identified by ref within self.meta."""
-
-        schema_ref, path = self.get_schema_ref_and_path(ref)
-
-        meta = self.meta.get(schema_ref)
-        if not meta:
-            return {}
-
-        elements = [x for x in path.split('/') if x]
-        for element in elements:
-            if element in schema:
-                meta = meta.get(element)
-            else:
-                return {}
-
-        return meta
 
 
     def get_schema_name(self, ref):
@@ -218,10 +195,18 @@ class SchemaTraverser:
         schema_data = DocGenUtilities.http_load_as_json(uri)
         if schema_data:
             schema_data['_schema_name'] = self.find_schema_name(uri, schema_data)
-            self.remote_schemas[uri] = schema_data
+            self.add_remote_schema(uri, schema_data)
             return schema_data
 
         return None
+
+
+    def add_remote_schema(self, uri, schema_data):
+        """ Add an entry to remote_schemas. """
+
+        mutable_remote_schemas = dict(self.remote_schemas)
+        mutable_remote_schemas[uri] = schema_data
+        self.remote_schemas = types.MappingProxyType(mutable_remote_schemas)
 
 
     @staticmethod

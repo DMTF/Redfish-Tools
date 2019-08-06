@@ -55,12 +55,14 @@ class DocGenerator:
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            profile_resources = {}
+            # profile_resources = {}
+            # profile_protocol = {}
+            profile_merged = {}
 
             if 'RequiredProfiles' in config['profile']:
                 for req_profile_name in config['profile']['RequiredProfiles'].keys():
-                    profile_resources = self.merge_required_profile(
-                        profile_resources, req_profile_name,
+                    profile_merged = self.merge_required_profile(
+                        profile_merged, req_profile_name,
                         config['profile']['RequiredProfiles'][req_profile_name])
 
             if 'Registries' in config['profile']:
@@ -70,7 +72,10 @@ class DocGenerator:
                                                              config['profile']['Registries'][registry_name])
                     config['profile']['registries_annotated'][registry_name] = registry_summary
 
-            profile_resources = self.merge_dicts(profile_resources, self.config.get('profile', {}).get('Resources', {}))
+            profile_resources = self.merge_dicts(profile_merged.get('Resources', {}),
+                                                     self.config.get('profile', {}).get('Resources', {}))
+            profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
+                                                     self.config.get('profile', {}).get('Protocol', {}))
 
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
@@ -86,6 +91,7 @@ class DocGenerator:
                 profile_resources_indexed[normalized_uri] = profile_data
 
             self.config['profile_resources'] = profile_resources_indexed
+            self.config['profile_protocol'] = profile_protocol
 
 
     def generate_doc(self):
@@ -193,8 +199,8 @@ class DocGenerator:
         return versioned_uri
 
 
-    def merge_required_profile(self, profile_resources, req_profile_name, req_profile_info):
-        """ Merge a required profile into profile_resources (a dict). May result in recursive calls. """
+    def merge_required_profile(self, merged_data, req_profile_name, req_profile_info):
+        """ Merge a required profile into merged_data (a dict). May result in recursive calls. """
 
         req_profile_repo = req_profile_info.get('Repository', 'http://redfish.dmtf.org/profiles')
         req_profile_minversion = req_profile_info.get('MinVersion', '1.0.0')
@@ -226,7 +232,7 @@ class DocGenerator:
         if not req_profile_uri:
             warnings.warn("Unable to find Profile for " + req_profile_repo + ", " +
                           req_profile_name + ", minimum version: " + req_profile_minversion)
-            return profile_resources
+            return merged_data
 
 
         if is_local_file:
@@ -237,12 +243,15 @@ class DocGenerator:
         if req_profile_data:
             if 'RequiredProfiles' in req_profile_data:
                 for req_profile_name in req_profile_data['RequiredProfiles'].keys():
-                    profile_resources = self.merge_required_profile(
-                        profile_resources, req_profile_name, req_profile_data['RequiredProfiles'][req_profile_name])
+                    merged_data = self.merge_required_profile(
+                        merged_data, req_profile_name, req_profile_data['RequiredProfiles'][req_profile_name])
 
-            profile_resources = self.merge_dicts(profile_resources, req_profile_data.get('Resources', {}))
+            merged_data = {
+                'Resources': self.merge_dicts(merged_data.get('Resources', {}), req_profile_data.get('Resources', {})),
+                'Protocol': self.merge_dicts(merged_data.get('Protocol', {}), req_profile_data.get('Protocol', {}))
+                }
 
-        return profile_resources
+        return merged_data
 
 
     def merge_dicts(self, dict1, dict2):
@@ -305,7 +314,6 @@ class DocGenerator:
 
         self.property_data = {}
         collection_data = {}
-        doc_generator_meta = {}
 
         # First expand the grouped files -- these are the schemas that get first-class documentation sections
         for normalized_uri in grouped_files.keys():
@@ -323,7 +331,6 @@ class DocGenerator:
 
             self.property_data[normalized_uri] = data
 
-            doc_generator_meta[normalized_uri] = self.property_data[normalized_uri]['doc_generator_meta']
             latest_info = grouped_files[normalized_uri][-1]
             latest_file = os.path.join(latest_info['root'], latest_info['filename'])
             latest_data = DocGenUtilities.load_as_json(latest_file)
@@ -337,9 +344,9 @@ class DocGenerator:
             schema_data[normalized_uri] = latest_data
 
         # Also process and version definitions in any "other" files. These are files without top-level $ref objects.
-        schema_data = self.process_unversioned_files(schema_data, doc_generator_meta, self.config['uri_to_local'])
+        schema_data = self.process_unversioned_files(schema_data, self.config['uri_to_local'])
 
-        traverser = SchemaTraverser(schema_data, doc_generator_meta, self.config['uri_to_local'])
+        traverser = SchemaTraverser(schema_data, self.config['uri_to_local'])
 
         # Generate output
         if self.config.get('output_content') == 'property_index':
@@ -517,9 +524,7 @@ class DocGenerator:
     def process_files(self, schema_ref, refs):
         """Loop through a set of refs and process the specified files into property data.
 
-        Returns a property_data object consisting of the properties from the last ref file,
-        and metadata ('doc_generator_meta') indicating version for properties introduced after
-        1.0 and version_deprecated for deprecated properties.
+        Returns a property_data object consisting of the properties from the last ref file.
         """
         property_data = {}
         unversioned_ref = None
@@ -536,7 +541,7 @@ class DocGenerator:
 
 
     def process_data_file(self, schema_ref, ref, property_data):
-        """Process a single file by ref name, identifying metadata and updating property_data."""
+        """Process a single file by ref name, adding some annotations to property_data."""
 
         filename = os.path.join(ref['root'], ref['filename'])
         normalized_uri = self.construct_uri_for_filename(filename)
@@ -590,8 +595,6 @@ class DocGenerator:
         if 'definitions' not in property_data:
             property_data['definitions'] = {}
 
-        meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
-
         if (version == '1.0.0') and (schema_ref in property_data):
             warnings.warn('Check', schema_ref, 'for version problems.',
                           'Are there two files with either version 1.0.0 or no version?')
@@ -616,12 +619,6 @@ class DocGenerator:
         except KeyError:
             warnings.warn('Unable to find properties in path ' + ref['ref'] + ' from ' + filename)
             return {}
-
-        meta = self.extend_metadata(meta, properties, version, normalized_uri + '#properties/')
-        meta['definitions'] = meta.get('definitions', {})
-        definitions = property_data['definitions']
-        meta['definitions'] = self.extend_metadata(meta['definitions'], definitions, version, normalized_uri + '#definitions/')
-        property_data['doc_generator_meta'] = meta
 
         return property_data
 
@@ -659,7 +656,6 @@ class DocGenerator:
                 # Skip schemas that aren't mentioned in the profile:
                 return property_data
 
-        meta = property_data.get('doc_generator_meta', {'schema_name': schema_name})
         definitions = data.get('definitions')
         if 'definitions' not in property_data:
             property_data['definitions'] = {}
@@ -668,19 +664,16 @@ class DocGenerator:
             if prop_name == element_to_skip or prop_name in property_data['definitions'].keys():
                 continue
             property_data['definitions'][prop_name] = prop_info
-        meta['definitions'] = meta.get('definitions', {})
-        meta['definitions'] = self.extend_metadata(meta['definitions'], definitions, 'unversioned',
-                                                   normalized_uri + '#definitions/')
 
         return property_data
 
 
-    def process_unversioned_files(self, schema_data, doc_generator_meta, uri_to_local):
-        """ Process version metadata in individually-versioned properties in files lacking a $ref.
+    def process_unversioned_files(self, schema_data, uri_to_local):
+        """ Process version in individually-versioned properties in files lacking a $ref.
         That complicated rule catches some of the "referenced objects."
         """
 
-        interim_traverser = SchemaTraverser(schema_data, doc_generator_meta, uri_to_local)
+        interim_traverser = SchemaTraverser(schema_data, uri_to_local)
         for filename, data in schema_data.items():
             if '$ref' in data:
                 continue
@@ -751,7 +744,6 @@ class DocGenerator:
         """
 
         prop_info =  {}
-        meta = {}
 
         # Check latest version in refs_by_version against prop_info _latest_version:
         latest_version = '0.0.0'
@@ -772,7 +764,6 @@ class DocGenerator:
                     continue
                 if 'properties' in ref_info:
                     ref_properties = ref_info['properties']
-                    meta = self.extend_metadata(meta, ref_properties, this_version, this_ref + '#properties')
 
                     # Follow refs in properties, if they are local to the same schema.
                     [this_schema, rest] = this_ref.split('#')
@@ -805,8 +796,6 @@ class DocGenerator:
                                 if ref_properties[prop_name].get('anyOf'):
                                     del(ref_properties[prop_name]['anyOf']) # We're replacing this.
                                 child_ref_properties = child_ref['properties']
-                                meta[prop_name] = self.extend_metadata(meta[prop_name], child_ref_properties, this_version,
-                                                                       this_ref + '/prop_name#properties')
                                 ref_properties[prop_name]['properties'] = child_ref_properties
                                 ref_properties[prop_name]['type'] = 'object'
 
@@ -819,10 +808,9 @@ class DocGenerator:
             if not ref_info:
                 return prop_info
 
-            # Update saved property to latest version, with extended metadata:
+            # Update saved property to latest version:
             prop_info = copy.deepcopy(ref_info)
             prop_info['properties'] = ref_properties
-            prop_info['_doc_generator_meta'] = meta
             prop_info['_latest_version'] = this_version
             prop_info['_ref_uri'] = common_ref
 
@@ -849,83 +837,6 @@ class DocGenerator:
             prop_data[key] = value
 
         return prop_data
-
-
-    def extend_metadata(self, meta, properties, version, normalized_uri=''):
-
-        # WORKAROUND for CSDL-to-JSON bug that inappropriately adds properties
-        # in errata versions prior to their actual addition:
-        workaround_errata_version = False
-        version_bits = version.split('.')
-        if ((len(version_bits) == 3) and (version_bits[2] != '0')):
-            workaround_errata_version = True
-
-        for prop_name in properties.keys():
-            props = properties[prop_name]
-
-            if prop_name not in meta:
-                meta[prop_name] = {}
-            if (version and ('version' not in meta[prop_name])
-                and (version != 'unversioned')
-                and (not workaround_errata_version)):
-                # Track version only when first seen
-                meta[prop_name]['version'] = version
-            if 'deprecated' in props:
-                if ('version_deprecated' not in meta[prop_name]) and (not workaround_errata_version):
-                    if not version or version == '1.0.0':
-                        warnings.warn('"deprecated" found in version 1.0.0: ' + prop_name )
-                    else:
-                        meta[prop_name]['version_deprecated'] = version
-                    meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
-
-            # If this data is from the unversioned schema, remove any previously-set deprecation version
-            # and either remove or update the version_deprecated_explanation:
-            if version == 'unversioned':
-                meta[prop_name]['unversioned'] = True
-                if 'version_deprecated' in meta[prop_name]:
-                    del meta[prop_name]['version_deprecated']
-                    del meta[prop_name]['version_deprecated_explanation']
-                if props.get('deprecated'):
-                    meta[prop_name]['version_deprecated_explanation'] = props['deprecated']
-
-            if props.get('enum'):
-                enum = props.get('enum')
-                meta[prop_name]['enum'] = meta[prop_name].get('enum', {})
-
-                # Until mid-2018, enum deprecations were not noted in the schema, so we support them from
-                # the supplemental config.
-                prop_ref = normalized_uri + prop_name
-                sup_enum_deprecations = self.config.get('enum_deprecations', {}).get(prop_ref, {})
-                enum_deprecations = props.get('enumDeprecated', {})
-                for enum_name in enum:
-                    if enum_name not in meta[prop_name]['enum']:
-                        meta[prop_name]['enum'][enum_name] = {}
-                    enum_meta = meta[prop_name]['enum'][enum_name]
-                    if (version and ('version' not in enum_meta)
-                        and (version != 'unversioned')
-                        and (not workaround_errata_version)):
-                        enum_meta['version'] = version
-
-                    if sup_enum_deprecations:
-                        if sup_enum_deprecations.get(enum_name):
-                            meta[prop_name]['enum'][enum_name]['version_deprecated'] = sup_enum_deprecations[enum_name]['version']
-                            meta[prop_name]['enum'][enum_name]['version_deprecated_explanation'] = sup_enum_deprecations[enum_name]['description']
-
-                    else:
-                        if enum_deprecations.get(enum_name):
-                            meta[prop_name]['enum'][enum_name]['version_deprecated_explanation'] = enum_deprecations.get(enum_name)
-                            if ('version_deprecated' not in meta[prop_name]['enum'][enum_name]) and (not workaround_errata_version):
-                                meta[prop_name]['enum'][enum_name]['version_deprecated'] = version
-
-            # build out metadata for sub-properties.
-            if props.get('properties'):
-                child_props = props['properties']
-                meta[prop_name] = self.extend_metadata(meta[prop_name], child_props, version,
-                                                       normalized_uri + prop_name + '/properties/')
-
-            properties[prop_name]['_doc_generator_meta'] = meta[prop_name]
-
-        return meta
 
 
     @staticmethod
@@ -1117,7 +1028,7 @@ def main():
 
     # If property_index mode was specified, get config from args.config_file:
     if config['output_content'] == 'property_index':
-        args.supfile = False
+
         if args.config_file:
             config_file= open(args.config_file, 'r', encoding="utf8")
             config_data = json.load(config_file)
@@ -1132,6 +1043,17 @@ def main():
         else:
             config['property_index_config'] = {'DescriptionOverrides': {},
                                                'ExcludedProperties': []}
+        if args.supfile:
+            try:
+                with open(args.supfile, 'r', encoding="utf8") as supfile:
+                    boilerplate = supfile.read()
+                    if '[insert property index]' in boilerplate:
+                        config['property_index_boilerplate'] = boilerplate
+                    else:
+                        warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
+            except (OSError) as ex:
+                warnings.warn('Unable to open ' + args.supfile + ' to read: ' +  str(ex))
+
 
     else:
         # In any mode other than property_index, we should have a supplemental file.
@@ -1148,6 +1070,7 @@ def main():
         try:
             supfile = open(supfile, 'r', encoding="utf8")
             config['supplemental'] = parse_supplement.parse_file(supfile)
+            supfile.close()
         except (OSError) as ex:
             if supfile_expected:
                 warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))

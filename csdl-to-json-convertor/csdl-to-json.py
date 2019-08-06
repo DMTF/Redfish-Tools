@@ -23,15 +23,16 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 # Default configurations
-CONFIG_DEF_COPYRIGHT = "Copyright 2014-2018 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
+CONFIG_DEF_COPYRIGHT = "Copyright 2014-2019 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
 CONFIG_DEF_REDFISH_SCHEMA = "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json"
-CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json"
+CONFIG_DEF_ODATA_SCHEMA = "http://redfish.dmtf.org/schemas/v1/odata-v4.json"
 CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 
 # Regex strings
 VERSION_REGEX = "v([0-9]+)_([0-9]+)_([0-9]+)$"
-PATTERN_PROP_REGEX = "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_.]+$"
+PATTERN_PROP_REGEX = "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$"
+PATTERN_PROP_ACTION_REGEX = "^#([a-zA-Z_][a-zA-Z0-9_]*\\.)+[a-zA-Z_][a-zA-Z0-9_]*$"
 DEFAULT_VER = "v1_0_0"
 DEFAULT_ATTRIB = "UNKNOWN_ATTRIB"
 
@@ -856,6 +857,8 @@ class CSDLToJSON:
                     json_obj_def["required"] = []
                 if prop_name not in json_obj_def["required"]:
                     json_obj_def["required"].append( prop_name )
+                    if prop_name == "Members":
+                        json_obj_def["required"].append( "Members@odata.count" )
             if term == "Redfish.RequiredOnCreate":
                 if "requiredOnCreate" not in json_obj_def:
                     json_obj_def["requiredOnCreate"] = []
@@ -926,28 +929,42 @@ class CSDLToJSON:
 
         name = self.get_attrib( object, "Name" )
         base_type = self.get_attrib( object, "BaseType", False )
-        # These objects are not actual resources since they just belong in messages sent asynchronously to a client
-        id_etag_skip = False
+
+        # These objects are not actual resources; not all OData properties apply
+        id_skip = False
+        context_skip = False
+        etag_skip = False
         if self.namespace_under_process.startswith( "Event." ):
-            id_etag_skip = True
+            # Events are just asynchronous notifications; there's no way for a client to perform a GET or PATCH on an event
+            id_skip = True
+            etag_skip = True
+        if ( self.namespace_under_process.startswith( "AttributeRegistry." ) or
+             self.namespace_under_process.startswith( "MessageRegistry." ) or
+             self.namespace_under_process.startswith( "PrivilegeRegistry." ) ):
+            # Registries do not contain any properties beyond the type since they are simply copied from the author as is
+            id_skip = True
+            context_skip = True
+            etag_skip = True
 
         # If the object is the Resource or ResourceCollection object, or is derived from them, then we add the OData properties
         if ( name == "Resource" or name == "ResourceCollection" or
              base_type == "Resource.v1_0_0.Resource" or base_type == "Resource.v1_0_0.ResourceCollection" ):
-            json_obj_def["properties"]["@odata.context"] = { "$ref": self.odata_schema + "#/definitions/context" }
             json_obj_def["properties"]["@odata.type"] = { "$ref": self.odata_schema + "#/definitions/type" }
-            if not id_etag_skip:
+            if not id_skip:
                 json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
+            if not context_skip:
+                json_obj_def["properties"]["@odata.context"] = {"$ref": self.odata_schema + "#/definitions/context"}
+            if not etag_skip:
                 json_obj_def["properties"]["@odata.etag"] = { "$ref": self.odata_schema + "#/definitions/etag" }
             if "required" not in json_obj_def:
                 json_obj_def["required"] = []
-            if "@odata.id" not in json_obj_def["required"] and not id_etag_skip:
+            if "@odata.id" not in json_obj_def["required"] and not id_skip:
                 json_obj_def["required"].append( "@odata.id" )
             if "@odata.type" not in json_obj_def["required"]:
                 json_obj_def["required"].append( "@odata.type" )
 
         # If the object is the ReferenceableMember, or is derived from it, then we add the OData properties
-        if ( name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember" ) and not id_etag_skip:
+        if ( name == "ReferenceableMember" or base_type == "Resource.v1_0_0.ReferenceableMember" ) and not id_skip:
             json_obj_def["properties"]["@odata.id"] = { "$ref": self.odata_schema + "#/definitions/id" }
             if "required" not in json_obj_def:
                 json_obj_def["required"] = []

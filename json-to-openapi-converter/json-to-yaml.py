@@ -13,10 +13,12 @@ Brief : This file contains the definitions and functionalities for converting
 """
 
 import argparse
+import errno
 import json
 import os
 import re
 import sys
+import urllib.request
 import yaml
 
 # List of terms that have a simple one to one conversion
@@ -37,9 +39,9 @@ ACTION_RESPONSES = [ 200, 202, 204 ]
 DELETE_RESPONSES = [ 200, 202, 204 ]
 
 # Default configurations
-CONFIG_DEF_MESSAGE_REF = "http://redfish.dmtf.org/schemas/v1/Message.v1_0_6.yaml#/components/schemas/Message"
-CONFIG_DEF_TASK_REF = "http://redfish.dmtf.org/schemas/v1/Task.v1_3_0.yaml#/components/schemas/Task"
-CONFIG_DEF_ODATA_SCHEMA_LOC = "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.yaml"
+CONFIG_DEF_MESSAGE_REF = "http://redfish.dmtf.org/schemas/v1/Message.v1_0_7.yaml#/components/schemas/Message"
+CONFIG_DEF_TASK_REF = "http://redfish.dmtf.org/schemas/v1/Task.v1_4_1.yaml#/components/schemas/Task"
+CONFIG_DEF_ODATA_SCHEMA_LOC = "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml"
 CONFIG_DEF_OUT_FILE = "openapi.yaml"
 CONFIG_DEF_EXTENSIONS = {}
 
@@ -50,6 +52,7 @@ class JSONToYAML:
     Args:
         input: The folder containing the input JSON files
         output: The folder to store the resulting YAML files
+        overwrite: Whether or not to overwrite versioned files
         base_file: The filename of the base OpenAPI Service Document
         service_file: The filename for the OpenAPI Service Document
         odata_schema: The location for the Redfish OData Schema file
@@ -59,13 +62,14 @@ class JSONToYAML:
         extensions: The URI extensions to apply to given resource types
     """
 
-    def __init__( self, input, output, base_file, service_file, odata_schema, message_ref, task_ref, info_block, extensions ):
+    def __init__( self, input, output, overwrite, base_file, service_file, odata_schema, message_ref, task_ref, info_block, extensions ):
         self.odata_schema = odata_schema
         self.message_ref = message_ref
         self.task_ref = task_ref
         self.info_block = info_block
         self.uri_cache = {}
         self.action_cache = {}
+        self.input_dir = input
 
         # Initialize the caches if extending an existing definition
         if base_file is not None:
@@ -109,9 +113,10 @@ class JSONToYAML:
                     self.update_object( json_data )
 
                     out_filename = output + os.path.sep + filename.rsplit( ".", 1 )[0] + ".yaml"
-                    out_string = yaml.dump( json_data, default_flow_style = False )
-                    with open( out_filename, "w" ) as file:
-                        file.write( out_string )
+                    if overwrite or is_unversioned( filename ) or ( not os.path.isfile( out_filename ) ):
+                        out_string = yaml.dump( json_data, default_flow_style = False )
+                        with open( out_filename, "w" ) as file:
+                            file.write( out_string )
 
         # Update the URI information with the action information collected
         self.update_uri_info_with_actions()
@@ -418,15 +423,59 @@ class JSONToYAML:
 
         # Update $ref to use the form "/components/schemas/" instead of "/definitions/"
         if "$ref" in json_data:
-            json_data["$ref"] = json_data["$ref"].replace( ".json#/definitions/", ".yaml#/components/schemas/", 1 )
-            json_data["$ref"] = json_data["$ref"].replace( "#/definitions/", "#/components/schemas/", 1 )
+            if json_data["$ref"][0] == "#":
+                # Local reference
+                json_data["$ref"] = json_data["$ref"].replace( "#/definitions/", "#/components/schemas/", 1 )
+            else:
+                # External reference; find the definition and check if it's a link to a resource or some other definition
+                id_ref = False
 
-            # Replace the $ref with an idRef instance if this is just a link to another resource
-            ref_match = re.match( "^.+\\/(.+).yaml#\\/components\\/schemas\\/(.+)$", json_data["$ref"] )
-            if ref_match:
-                # If the type name is the same as the schema name, then this is a resource link
-                if ref_match.group( 1 ) == ref_match.group( 2 ):
+                # Check if the type name is the same as the schema name
+                ref_match = re.match( "^.+\\/(.+).json#\\/definitions\\/(.+)$", json_data["$ref"] )
+                if ref_match:
+                    if ref_match.group( 1 ) == ref_match.group( 2 ) and ref_match.group( 1 ) != "Redundancy":
+                        # They are the same; this MIGHT be a resource link
+                        ref_search = re.search( "\/([\w\d_\.\-]+\.json)", json_data["$ref"] )
+                        if ref_search:
+                            # Check if the file being referenced is also being converted
+                            json_file_path = self.input_dir + os.path.sep + ref_search.group( 1 )
+                            json_ref_data = {}
+                            if os.path.isfile( json_file_path ):
+                                with open( json_file_path ) as json_file:
+                                    json_ref_data = json.load( json_file )
+                            else:
+                                # Not local; need to download a copy
+                                json_file_path = json_data["$ref"].split( "#" )[0]
+                                retry_count = 0
+                                retry_count_max = 20
+                                while retry_count < retry_count_max:
+                                    try:
+                                        req = urllib.request.Request( json_file_path )
+                                        response = urllib.request.urlopen( req )
+                                        json_ref_data = json.loads( response.read().decode() )
+                                        break
+                                    except OSError as e:
+                                        if e.errno != errno.ECONNRESET:
+                                            break
+                                        retry_count += 1
+
+                            # Get the reference definition
+                            ref_definition = json_ref_data.get( "definitions", {} ).get( json_data["$ref"].rsplit( "/" )[-1], None )
+                            if ref_definition is None:
+                                print( "ERROR: Could not get {}".format( json_data["$ref"] ) )
+                            else:
+                                # Check if the definition contains an anyOf where the $ref of the first item points to idRef
+                                try:
+                                    if "/definitions/idRef" in ref_definition["anyOf"][0]["$ref"]:
+                                        id_ref = True
+                                except:
+                                    pass
+
+                # If idRef was found, this is a link; otherwise this is another data type (like an enum or an object)
+                if id_ref:
                     json_data["$ref"] = self.odata_schema + "#/components/schemas/idRef"
+                else:
+                    json_data["$ref"] = json_data["$ref"].replace( ".json#/definitions/", ".yaml#/components/schemas/", 1 )
 
         # Perform the same process on all other objects in the structure
         for key in json_data:
@@ -645,6 +694,22 @@ class JSONToYAML:
 
         return False
 
+def is_unversioned( name ):
+    """
+    Checks if a JSON Schema file name is unversioned
+
+    Args:
+        name: The string name of the file
+
+    Returns:
+        True if the file is unversioned, False otherwise
+    """
+
+    # Versioned filename match the form NAME.vX_Y_Z.json
+    if re.search( "v([0-9]+)_([0-9]+)_([0-9]+).json$", name ) is None:
+        return True
+    return False
+
 if __name__ == '__main__':
 
     # Get the input arguments
@@ -653,7 +718,14 @@ if __name__ == '__main__':
     argget.add_argument( "--output", "-O",  type = str, required = True, help = "The folder to write the converted YAML files" )
     argget.add_argument( "--config", "-C", type = str, required = True, help = "The JSON file that describes configuration options for the output" )
     argget.add_argument( "--base", "-B", type = str, required = False, help = "The base OpenAPI Service Document if extending an existing one" )
+    argget.add_argument( "--overwrite", "-W", type = str, help = "Overwrite the versioned files in the output directory if they already exist (default is True)" )
     args = argget.parse_args()
+
+    # Get the overwrite flag
+    overwrite = True
+    if args.overwrite is not None:
+        if ( args.overwrite == "False" ) or ( args.overwrite == "false" ):
+            overwrite = False
 
     # Read the configuration file
     config_data = {}
@@ -683,6 +755,6 @@ if __name__ == '__main__':
         sys.exit( 1 )
 
     # Funnel everything to the translator
-    JSONToYAML( args.input, args.output, args.base, config_data["OutputFile"], config_data["ODataSchema"], config_data["MessageRef"], config_data["TaskRef"], config_data["info"], config_data["Extensions"] )
+    JSONToYAML( args.input, args.output, overwrite, args.base, config_data["OutputFile"], config_data["ODataSchema"], config_data["MessageRef"], config_data["TaskRef"], config_data["info"], config_data["Extensions"] )
 
     sys.exit( 0 )

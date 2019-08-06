@@ -54,6 +54,10 @@ class HtmlGenerator(DocFormatter):
  }
  ul, ol {margin-left: 2em;}
  li {margin: 0 0 0.5em;}
+ .hanging-indent {
+      padding-left: 1em;
+      text-indent: -1em;
+ }
  p {margin: 0 0 0.5em;}
  div.toc {margin: 0 0 2em 0;}
  .toc ul {list-style-type: none;}
@@ -76,9 +80,6 @@ class HtmlGenerator(DocFormatter):
 }
 table.properties{
     width: 100%;
-}
-table.uris tr td:nth-child(2) {
-    word-break: break-all;
 }
 .property-details-content {
     margin-left: 5em;
@@ -177,6 +178,7 @@ pre.code{
         traverser = self.traverser
         formatted = []     # The row itself
 
+        within_action = prop_path == ['Actions']
         current_depth = len(prop_path)
 
         if in_array:
@@ -204,53 +206,57 @@ pre.code{
         self.current_depth = current_depth
         parent_depth = current_depth - 1
 
+        version_added = None
+        version_deprecated = None
+        version_deprecated_explanation = ''
         if isinstance(prop_info, list):
-            meta = prop_info[0].get('_doc_generator_meta')
+            version_added = prop_info[0].get('versionAdded')
+            version_deprecated = prop_info[0].get('versionDeprecated')
+            version_deprecated_explanation = prop_info[0].get('deprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
         elif isinstance(prop_info, dict):
-            meta = prop_info.get('_doc_generator_meta')
+            version_added = prop_info.get('versionAdded')
+            version_deprecated = prop_info.get('versionDeprecated')
+            version_deprecated_explanation = prop_info.get('deprecated')
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
-
-        if not meta:
-            meta = {}
-
-        # We want to modify a local copy of meta, deleting redundant version info
-        meta = copy.deepcopy(meta)
 
         name_and_version = self.formatter.bold(html.escape(prop_name, False))
         deprecated_descr = None
 
-        version = meta.get('version')
+        version = version_depr = None
+        if version_added:
+            version = self.format_version(version_added)
+        if version_deprecated:
+            version_depr = self.format_version(version_deprecated)
         self.current_version[current_depth] = version
 
         # Don't display version if there is a parent version and this is not newer:
-        if self.current_version.get(parent_depth) and version:
+        if version and self.current_version.get(parent_depth):
             if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
-                del meta['version']
+                version = None
 
-        if meta.get('version', '1.0.0') != '1.0.0':
-            version_text = html.escape(meta['version'], False)
+        if version and version != '1.0.0':
+            version_text = html.escape(version, False)
             version_display = self.truncate_version(version_text, 2) + '+'
-            if 'version_deprecated' in meta:
-                version_depr = html.escape(meta['version_deprecated'], False)
-                deprecated_display = self.truncate_version(version_depr, 2)
+            if version_deprecated:
+                version_depr_text = html.escape(version_depr, False)
+                deprecated_display = self.truncate_version(version_depr_text, 2)
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display +
                                                       ', deprecated v' + deprecated_display +  ')')
-                deprecated_descr = html.escape("Deprecated v" + deprecated_display + '+. ' +
-                                               meta['version_deprecated_explanation'], False)
+                deprecated_descr = html.escape("Deprecated in v" + deprecated_display + ' and later. ' +
+                                                   version_deprecated_explanation, False)
             else:
                 name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
-        elif 'version_deprecated' in meta:
-            version_depr = html.escape(meta['version_deprecated'], False)
-            deprecated_display = self.truncate_version(version_depr, 2)
+        elif version_deprecated:
+            version_depr_text = html.escape(version_depr, False)
+            deprecated_display = self.truncate_version(version_depr_text, 2)
             name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
-            deprecated_descr = html.escape( "Deprecated v" + deprecated_display + '+. ' +
-                                            meta['version_deprecated_explanation'], False)
+            deprecated_descr = html.escape( "Deprecated in v" + deprecated_display + ' and later. ' +
+                                                version_deprecated_explanation, False)
 
-        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path,
-                                                     meta.get('within_action'))
+        formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
         if formatted_details.get('promote_me'):
             return({'row': '\n'.join(formatted_details['item_description']), 'details':formatted_details['prop_details'],
@@ -321,11 +327,9 @@ pre.code{
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 if has_enum:
                     anchor = schema_ref + '|details|' + prop_name
-                    text_descr = 'See <a href="#' + anchor + '">' + prop_name + '</a> in Property Details, below, for the possible values of this property.'
+                    text_descr = 'For the possible property values, see <a href="#' + anchor + '">' + prop_name + '</a> in Property Details.'
                 else:
-                    text_descr = 'See Property Details, below, for more information about this property.'
-
-
+                    text_descr = 'For more information about this property, see Property Details.'
                 if formatted_details['descr']:
                     formatted_details['descr'] += '<br>' + self.formatter.italic(text_descr)
                 else:
@@ -359,7 +363,7 @@ pre.code{
                 prop_type += '<br>(' + item_list + ')'
 
         prop_access = ''
-        if (not meta.get('is_pattern') and not formatted_details['prop_is_object']
+        if (not formatted_details['prop_is_object']
                 and not formatted_details.get('array_of_objects')):
             if formatted_details['read_only']:
                 prop_access = '<nobr>read-only</nobr>'
@@ -431,14 +435,15 @@ pre.code{
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None, profile=None):
+                                    supplemental_details, parent_prop_info, anchor=None, profile=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         contents = []
         contents.append(self.formatter.head_four(html.escape(prop_name, False) + ':', self.level, anchor))
 
-        parent_version = meta.get('version')
-        enum_meta = meta.get('enum', {})
+        parent_version = parent_prop_info.get('versionAdded')
+        if parent_version:
+            parent_version = self.format_version(parent_version)
 
         # Are we in profile mode? If so, consult the profile passed in for this property.
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
@@ -476,33 +481,41 @@ pre.code{
 
             for enum_item in enum:
                 enum_name = html.escape(enum_item, False)
-                enum_item_meta = enum_meta.get(enum_item, {})
+                version = version_depr = deprecated_descr = None
                 version_display = None
-                deprecated_descr = None
+                if parent_prop_info.get('enumVersionAdded'):
+                    version_added = parent_prop_info.get('enumVersionAdded').get(enum_name)
+                    if version_added:
+                        version = self.format_version(version_added)
+                if parent_prop_info.get('enumVersionDeprecated'):
+                    version_deprecated = parent_prop_info.get('enumVersionDeprecated').get(enum_name)
+                    if version_deprecated:
+                        version_depr = self.format_version(version_deprecated)
+                if parent_prop_info.get('enumDeprecated'):
+                    deprecated_descr = parent_prop_info.get('enumDeprecated').get(enum_name)
 
-                if 'version' in enum_item_meta:
-                    version = enum_item_meta['version']
+                if version:
                     if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
                 if version_display:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = html.escape(enum_item_meta['version_deprecated'], False)
-                        deprecated_display = self.truncate_version(version_depr, 2)
+                    if version_depr:
+                        version_depr_text = html.escape(version_depr, False)
+                        deprecated_display = self.truncate_version(version_depr_text, 2)
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            deprecated_descr = html.escape('Deprecated v' + deprecated_display + '+. ' +
-                                                           enum_item_meta['version_deprecated_explanation'], False)
+                        if deprecated_descr:
+                            deprecated_descr_text = html.escape('Deprecated in v' + deprecated_display
+                                                                    + ' and later. ' + deprecated_descr)
                     else:
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
-                elif 'version_deprecated' in enum_item_meta:
-                    version_depr = html.escape(enum_item_meta['version_deprecated'], False)
-                    deprecated_display = self.truncate_version(version_depr, 2)
+                elif version_depr:
+                    version_depr_text = html.escape(version_depr, False)
+                    deprecated_display = self.truncate_version(version_depr_text, 2)
                     enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
-                    if enum_item_meta.get('version_deprecated_explanation'):
-                        deprecated_descr = html.escape('Deprecated v' + deprecated_display + '+. ' +
-                                                       enum_item_meta['version_deprecated_explanation'], False)
+                    if deprecated_descr:
+                        deprecated_descr_text = html.escape('Deprecated in v' + deprecated_display + ' and later. ' +
+                                                        deprecated_descr)
 
                 descr = html.escape(enum_details.get(enum_item, ''), False)
                 if deprecated_descr:
@@ -536,33 +549,48 @@ pre.code{
             enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = html.escape(enum_item, False)
-                enum_item_meta = enum_meta.get(enum_item, {})
+                version = version_depr = deprecated_descr = None
                 version_display = None
 
-                if 'version' in enum_item_meta:
-                    version = enum_item_meta['version']
+                if parent_prop_info.get('enumVersionAdded'):
+                    version_added = parent_prop_info.get('enumVersionAdded').get(enum_name)
+                    if version_added:
+                        version = self.format_version(version_added)
+
+                if parent_prop_info('enumVersionDeprecated'):
+                    version_deprecated = parent_prop_info.get('enumVersionDeprecated').get(enum_name)
+                    if version_deprecated:
+                        version_depr = self.format_version(version_deprecated)
+
+                if parent_prop_info.get('enumDeprecated'):
+                    deprecated_descr = parent_prop_info.get('enumDeprecated').get(enum_name)
+
+                if version:
                     if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
                 if version_display:
-                    if 'version_deprecated' in enum_item_meta:
-                        version_depr = html.escape(enum_item_meta['version_deprecated'], False)
-                        deprecated_display = self.truncate_version(version_depr, 2)
+                    if version_depr:
+                        version_depr_text = html.escape(version_depr, False)
+                        deprecated_display = self.truncate_version(version_depr_text, 2)
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
-                        if enum_item_meta.get('version_deprecated_explanation'):
-                            enum_name += '<br>' + self.formatter.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
-                                                                          enum_item_meta['version_deprecated_explanation'], False))
+                        if deprecated_descr:
+                            enum_name += '<br>' + self.formatter.italic(html.escape(
+                                'Deprecated in v' + deprecated_display
+                                + ' and later. ' + deprecated_descr))
                     else:
                         enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
 
-                elif 'version_deprecated' in enum_item_meta:
-                    version_depr = html.escape(enum_item_meta['version_deprecated'], False)
-                    deprecated_display = self.truncate_version(version_depr, 2)
+                elif version_depr:
+                    version_depr_text = html.escape(version_depr, False)
+                    deprecated_display = self.truncate_version(version_depr_text, 2)
                     enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
-                    if enum_item_meta.get('version_deprecated_explanation'):
-                        enum_name += '<br>' + self.formatter.italic(html.escape('Deprecated v' + deprecated_display + '+. ' +
-                                                                      enum_item_meta['version_deprecated_explanation'], False))
+                    if deprecated_descr:
+                        enum_name += '<br>' + self.formatter.italic(html.escape(
+                            'Deprecated in v' + deprecated_display + ' and later. ' +
+                            deprecated_descr))
+
 
                 cells = [enum_name]
                 if profile_mode:
@@ -631,7 +659,7 @@ pre.code{
             tmp_row = self._add_closing_brace(tmp_row, '', '}')
             rows[-1] = tmp_row
 
-            formatted.append(self.formatter.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
+            formatted.append(self.formatter.para('The following table shows the parameters for the action that are included in the POST body to the URI shown in the "target" property of the Action.'))
 
             formatted.append(self.formatter.make_table(rows))
 
@@ -651,6 +679,9 @@ pre.code{
 
             if section.get('release_history'):
                 contents.append(section['release_history'])
+
+            if section.get('conditional_requirements'):
+                contents.append(section['conditional_requirements'])
 
             if section.get('description'):
                 contents.append(section['description'])
@@ -877,11 +908,16 @@ pre.code{
         """ Add the URIs (which should be a list) """
         uri_strings = []
         for uri in sorted(uris, key=str.lower):
-            uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
+            uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h4>URIs:</h4>' + uri_block
         self.this_section['uris'] = uri_content
+
+
+    def add_conditional_requirements(self, text):
+        """ Add a conditional requirements, which should already be formatted """
+        self.this_section['conditional_requirements'] = '<h4>Conditional Requirements:</h4>' + text
 
 
     def format_uri_block_for_action(self, action, uris):
@@ -889,7 +925,8 @@ pre.code{
         uri_strings = []
         for uri in sorted(uris, key=str.lower):
             uri = uri + "/Actions/" + action
-            uri_strings.append('<li>' + self.format_uri(uri) + '</li>')
+            uri = uri.replace('/', '/\u200b')
+            uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h5>URIs:</h5>' + uri_block
@@ -898,6 +935,7 @@ pre.code{
 
     def format_uri(self, uri):
         """ Format a URI for output. Includes creating links to Id'd schemas """
+
         uri_parts = uri.split('/')
         uri_parts_highlighted = []
         for part in uri_parts:
@@ -911,8 +949,14 @@ pre.code{
                 # and italicize it
                 part = self.formatter.italic(part)
             uri_parts_highlighted.append(part)
-        uri_highlighted = '/'.join(uri_parts_highlighted)
+        uri_highlighted = '/\u200b'.join(uri_parts_highlighted)
         return uri_highlighted
+
+
+    def format_uris_for_table(self, uris):
+        """ Format a bunch of uris to go into a table cell """
+        return ''.join(['<div class="hanging-indent">' + self.format_uri(x) + '</div>'
+                            for x in sorted(uris, key=str.lower)])
 
 
     def format_json_payload(self, json_payload):
@@ -995,7 +1039,7 @@ pre.code{
                 version = DocGenUtilities.get_ref_version(ref_info.get('_ref_uri', ''))
             if version:
                 ref_id += '_v' + version
-            return '<a href="#' + ref_id + '">' + ref_info.get('_prop_name') + ' object' + '</a>'
+            return '<a href="#' + ref_id + '">' + ref_info.get('_prop_name') + '</a>'
         return ref_key
 
 

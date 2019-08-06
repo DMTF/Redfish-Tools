@@ -9,54 +9,6 @@
                     "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/idRef"
                 },
                 {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_0_0.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_0_2.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_0_3.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_0_4.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_0_5.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_0_6.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_0_7.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_1_0.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_1_1.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_1_2.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_1_3.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_1_4.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_1_5.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_2_0.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_2_1.json#/definitions/Event"
-                },
-                {
-                    "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_2_2.json#/definitions/Event"
-                },
-                {
                     "$ref": "http://redfish.dmtf.org/schemas/v1/Event.v1_3_0.json#/definitions/Event"
                 }
             ],

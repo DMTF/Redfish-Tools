@@ -54,10 +54,14 @@ def test_gather(mockRequest):
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_identifier_versioning(mockRequest):
     """ Checks a formerly buggy case wherein the DurableName property showed version 1.1+, but
-    DurableNameFormat lacked a version notation. """
+    DurableNameFormat lacked a version notation.
+
+    This test originated when the doc generator compared versioned schemas to generate version
+    data based on when properties appeared in a schema. Now that we have version annotations in the
+    schemas and use those, this is much less likely to break.
+    """
 
     config = copy.deepcopy(base_config)
-    # config['output_format'] = 'markdown'
     config['output_format'] = 'html'
     config['supplemental'] = {'Introduction': "# Common Objects\n\n[insert_common_objects]\n"}
 
@@ -68,17 +72,6 @@ def test_identifier_versioning(mockRequest):
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
-
-    # common_properties['http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Identifier'] should
-    # contain properties DurableName and DurableNameFormat, both of which should have version: 1.1.0.
-    common_properties = docGen.generator.common_properties
-    identifier_properties = common_properties.get('http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Identifier', {}).get('properties', {})
-    assert 'DurableName' in identifier_properties
-    assert 'DurableNameFormat' in identifier_properties
-    DurableName_meta = identifier_properties.get('DurableName', {}).get('_doc_generator_meta', {})
-    DurableNameFormat_meta = identifier_properties.get('DurableNameFormat', {}).get('_doc_generator_meta', {})
-    assert DurableName_meta.get('version') == "1.1.0"
-    assert DurableNameFormat_meta.get('version') == "1.1.0"
 
     # The above should result in the following strings in the HTML output:
     assert "<b>DurableName</b> <i>(v1.1+)</i>" in output

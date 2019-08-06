@@ -149,11 +149,11 @@ def test_supplement_description_vs_full_html (mockRequest):
     assert len(subsystemId_failed_overrides) == 0, "Property description override failed for " + str(len(subsystemId_failed_overrides)) + " mentions of SubsystemId"
 
     # Verify that the description overrides retained the reference to the common property:
-    ipv4_failed_overrides = [x for x in ipv4_rows if "for details on this property" not in x]
+    ipv4_failed_overrides = [x for x in ipv4_rows if "For property details" not in x]
     assert len(ipv4_failed_overrides) == 0, "Property description override failed to include reference to common property for " + str(len(ipv4_failed_overrides)) + " mentions of Ipv4Address"
 
     # Verify that the full description overrides DID NOT retain the reference to the common property:
-    ipv6_failed_overrides = [x for x in ipv6_rows if "for details on this property" in x]
+    ipv6_failed_overrides = [x for x in ipv6_rows if "For property details" in x]
     assert len(ipv6_failed_overrides) == 0, "Property full description override incorrectly included reference to common property " + str(len(ipv6_failed_overrides)) + " mentions of Ipv6Address"
 
 

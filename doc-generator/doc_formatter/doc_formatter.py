@@ -44,6 +44,15 @@ class DocFormatter:
         self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
         self.current_uris = []
 
+        if self.config.get('profile_mode'):
+            # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
+            minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
+            compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
+            if compare < 0:
+                self.config['MinVersionLT1.6'] = True
+            else:
+                self.config['MinVersionLT1.6'] = False
+
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
         self.config['excluded_pattern_props_by_match'] = self.config.get('excluded_pattern_props_by_match', [])
@@ -72,7 +81,11 @@ class DocFormatter:
             }
 
         # Properties to carry through from parent when a ref is extended:
-        self.parent_props = ['description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern', 'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter']
+        self.parent_props = [
+            'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
+            'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter', 'versionAdded', 'versionDeprecated',
+            'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated'
+            ]
 
 
     def emit(self):
@@ -93,6 +106,12 @@ class DocFormatter:
     def add_uris(self, uris):
         """ Add the uris """
         raise NotImplementedError
+
+
+    def add_conditional_requirements(self, text):
+        """ Add a conditional requirements, which should already be formatted """
+        raise NotImplementedError
+
 
     def add_release_history(self, release_history):
         """ Add the release history. """
@@ -117,6 +136,11 @@ class DocFormatter:
             uri_parts_highlighted.append(part)
         uri_highlighted = '/'.join(uri_parts_highlighted)
         return uri_highlighted
+
+
+    def format_uris_for_table(self, uris):
+        """ Format a bunch of uris to go into a table cell """
+        return '<br>'.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
 
 
     def format_json_payload(self, json_payload):
@@ -174,7 +198,7 @@ class DocFormatter:
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, meta, anchor=None, profile={}):
+                                    supplemental_details, parent_prop_info, anchor=None, profile={}):
         """Generate a formatted table of enum information for inclusion in Property Details."""
         raise NotImplementedError
 
@@ -267,9 +291,10 @@ class DocFormatter:
     def format_conditional_details(self, schema_ref, prop_name, conditional_reqs):
         """Generate a formatted Conditional Details section from profile data"""
         formatted = []
-        anchor = schema_ref + '|conditional_reqs|' + prop_name
 
-        formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
+        if prop_name:
+            anchor = schema_ref + '|conditional_reqs|' + prop_name
+            formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
 
         rows = []
         for creq in conditional_reqs:
@@ -279,14 +304,19 @@ class DocFormatter:
             compare_property = creq.get('CompareProperty')
             comparison = creq.get('Comparison')
             values = creq.get('Values', [])
+            uris = creq.get('URIs')
+            uri_protocol_note = ''
             req = self.format_conditional_access(creq)
 
             if creq.get('BaseRequirement'):
                 # Don't output the base requirement
                 continue
-
             elif subordinate_to:
                 req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
+            elif uris:
+                req_desc = "Resource URI is: " + self.format_uris_for_table(uris)
+                if self.config['MinVersionLT1.6']:
+                    purpose = "Applies if Protocol version is 1.6+"
 
             if compare_property:
                 compare_to = creq.get('CompareType', '')
@@ -375,7 +405,15 @@ class DocFormatter:
             self.add_section(section_name, schema_name)
             self.current_version = {}
 
-            uris = details['uris']
+            if profile.get('URIs'):
+                uris = profile['URIs']
+            else:
+                uris = details['uris']
+
+            conditional_details = None
+            if profile.get('ConditionalRequirements'):
+                conditional_reqs = profile.get('ConditionalRequirements')
+                conditional_details = self.format_conditional_details(schema_ref, None, conditional_reqs)
 
             # Normative docs prefer longDescription to description
             if config.get('normative') and 'longDescription' in definitions[schema_name]:
@@ -414,6 +452,9 @@ class DocFormatter:
             if details.get('release_history'):
                 self.add_release_history(details['release_history'])
 
+            if conditional_details:
+                self.add_conditional_requirements(conditional_details)
+
             self.add_json_payload(json_payload)
 
             if 'properties' in details.keys():
@@ -432,8 +473,7 @@ class DocFormatter:
                     prop_info['parent_requires_on_create'] = required_on_create
                     prop_info['required_parameter'] = prop_info.get('requiredParameter') == True
 
-                    meta = prop_info.get('_doc_generator_meta', {})
-                    prop_infos = self.extend_property_info(schema_ref, prop_info, properties.get('_doc_generator_meta'))
+                    prop_infos = self.extend_property_info(schema_ref, prop_info)
 
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
@@ -511,9 +551,6 @@ class DocFormatter:
 
         schema_ref = prop_info['_from_schema_ref']
         prop_name = prop_info['_prop_name']
-        meta = prop_info.get('_doc_generator_meta')
-        if not meta:
-            meta = {}
 
         prop_infos = frag_gen.extend_property_info(schema_ref, prop_info)
 
@@ -560,13 +597,9 @@ class DocFormatter:
 
             if self.skip_schema(prop_name):
                 continue;
-            meta = prop_info.get('_doc_generator_meta')
             version = prop_info.get('_latest_version')
             if not version:
                 version = DocGenUtilities.get_ref_version(prop_info.get('_ref_uri', ''))
-
-            if not meta:
-                meta = {}
 
             prop_infos = cp_gen.extend_property_info(schema_ref, prop_info) # TODO: Do we really need to expand this?
 
@@ -638,7 +671,7 @@ class DocFormatter:
         header = self.formatter.make_header_row(['Collection Type', 'URIs'])
         rows = []
         for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
-            item_text = '<br>'.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
+            item_text = self.format_uris_for_table(uris)
             rows.append(self.formatter.make_row([collection_name, item_text]))
         doc = self.formatter.make_table(rows, [header], 'uris')
         return doc
@@ -654,11 +687,11 @@ class DocFormatter:
             [preamble, collection_file_name] = x.rsplit('/', 1)
             [collection_name, rest] = collection_file_name.split('.', 1)
             uris = sorted(self.property_data[x].get('uris', []), key=str.lower)
-            data[collection_name] = [self.format_uri(x) for x in uris]
+            data[collection_name] = uris
         return data
 
 
-    def extend_property_info(self, schema_ref, prop_info, context_meta=None):
+    def extend_property_info(self, schema_ref, prop_info):
         """If prop_info contains a $ref or anyOf attribute, extend it with that information.
 
         Returns an array of objects. Arrays of arrays of objects are possible but not expected.
@@ -666,8 +699,6 @@ class DocFormatter:
         traverser = self.traverser
         prop_ref = prop_info.get('$ref', None)
         prop_anyof = prop_info.get('anyOf', None)
-        if not context_meta:
-            context_meta = {}
 
         prop_infos = []
         outside_ref = None
@@ -712,8 +743,6 @@ class DocFormatter:
                 warnings.warn("Unable to find data for " + prop_ref)
 
             else:
-                prop_meta = prop_info.get('_doc_generator_meta', {})
-
                 # Update version info from the ref, provided that it is within the same schema.
                 # Make the comparison by unversioned ref, in respect of the way common_properties are keyed
                 from_schema_ref = ref_info.get('_from_schema_ref')
@@ -722,13 +751,7 @@ class DocFormatter:
                 is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref)
                                                                or (schema_ref == unversioned_schema_ref))
 
-                if not is_other_schema:
-                    ref_meta = ref_info.get('_doc_generator_meta', {})
-                    meta = self.merge_full_metadata(prop_meta, ref_meta)
-                else:
-                    meta = prop_meta
                 node_name = traverser.get_node_from_ref(prop_ref)
-                meta = self.merge_metadata(node_name, meta, context_meta)
 
                 is_documented_schema = self.is_documented_schema(from_schema_ref)
                 is_collection_of = traverser.is_collection_of(from_schema_ref)
@@ -816,12 +839,10 @@ class DocFormatter:
                                                 # of IPv6GatewayStaticAddress.
                                                 ref_info['type'] = 'object'
                                             if specific_version:
-                                                append_ref = ('See the ' + self.link_to_common_property(ref_key) + ' '
-                                                              + '(v' + str(specific_version) + ')' +
-                                                              ' for details on this property.')
+                                                append_ref = ('For property details, see ' + self.link_to_common_property(ref_key) + ' '
+                                                              + '(v' + str(specific_version) + ').')
                                             else:
-                                                append_ref = ('See the ' + self.link_to_common_property(ref_key) +
-                                                              ' for details on this property.')
+                                                append_ref = ('For property details, see ' + self.link_to_common_property(ref_key) + '.' )
 
                             new_ref_info = {
                                 'description': ref_description,
@@ -854,6 +875,14 @@ class DocFormatter:
                     if x in self.parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
 
+                # If we're getting prop-level version information from the $ref, use it only if the $ref
+                # is in the same schema:
+                if is_other_schema:
+                    for x in ['versionAdded', 'versionDeprecated', 'deprecated',
+                                  'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated']:
+                        if ref_info.get(x) and not prop_info.get(x):
+                            del ref_info[x]
+
                 # Pull in any "require" from parent:
                 parent_requires = prop_info.get('parent_requires', [])
                 parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
@@ -874,11 +903,8 @@ class DocFormatter:
                         props[x]['parent_requires_on_create'] = required_on_create
                         props[x]['required_parameter'] = props[x].get('requiredParameter') == True
 
-                # override metadata with merged metadata from above.
-                prop_info['_doc_generator_meta'] = meta
-
                 if '$ref' in prop_info or 'anyOf' in prop_info:
-                    return self.extend_property_info(schema_ref, prop_info, context_meta)
+                    return self.extend_property_info(schema_ref, prop_info)
 
             prop_infos.append(prop_info)
 
@@ -931,7 +957,7 @@ class DocFormatter:
                     for x in prop_info.keys():
                         if x in self.parent_props:
                             elt[x] = prop_info[x]
-                elt = self.extend_property_info(schema_ref, elt, context_meta)
+                elt = self.extend_property_info(schema_ref, elt)
                 prop_infos.extend(elt)
 
             # If this is a nullable property (based on {type: 'null'} object AnyOf), add 'null' to the type.
@@ -1031,7 +1057,7 @@ class DocFormatter:
         return False
 
 
-    def parse_property_info(self, schema_ref, prop_name, prop_infos, prop_path, within_action=False):
+    def parse_property_info(self, schema_ref, prop_name, prop_infos, prop_path):
         """Parse a list of one more more property info objects into strings for display.
 
         Returns a dict of 'prop_type', 'read_only', 'descr', 'prop_is_object',
@@ -1041,17 +1067,17 @@ class DocFormatter:
         'profile_conditional_req', 'profile_conditional_details', 'profile_values', 'profile_comparison',
         'pattern', 'prop_required', 'prop_required_on_create', 'required_parameter'
         """
+        within_action = prop_path == ['Actions']
+
         if isinstance(prop_infos, dict):
-            return self._parse_single_property_info(schema_ref, prop_name, prop_infos,
-                                                    prop_path, within_action)
+            return self._parse_single_property_info(schema_ref, prop_name, prop_infos, prop_path)
 
         if len(prop_infos) == 1:
             prop_info = prop_infos[0]
             if isinstance(prop_info, dict):
-                return self._parse_single_property_info(schema_ref, prop_name, prop_info,
-                                                        prop_path, within_action)
+                return self._parse_single_property_info(schema_ref, prop_name, prop_info, prop_path)
             else:
-                return self.parse_property_info(schema_ref, prop_name, prop_info, prop_path, within_action)
+                return self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
         parsed = {
                   'prop_type': [],
@@ -1094,7 +1120,7 @@ class DocFormatter:
             path_to_prop.append(prop_name)
             profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
-        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path, within_action)
+        anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path)
                          for x in prop_infos]
 
         # Remove details for anyOf props with prop_type = 'null'.
@@ -1161,7 +1187,7 @@ class DocFormatter:
         return parsed
 
 
-    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, prop_path, within_action=False):
+    def _parse_single_property_info(self, schema_ref, prop_name, prop_info, prop_path):
         """Parse definition of a specific property into strings for display.
 
         Returns a dict of 'prop_type', 'prop_units', 'read_only', 'descr', 'add_link_text',
@@ -1173,6 +1199,8 @@ class DocFormatter:
         'required_parameter', 'verbatim_description'
         """
         traverser = self.traverser
+
+        within_action = prop_path == ['Actions']
 
         # type may be a string or a list.
         prop_details = {}
@@ -1257,13 +1285,13 @@ class DocFormatter:
             # Extend and parse parameter info
             for action_param in action_parameters.keys():
                 params = action_parameters[action_param]
-                params = self.extend_property_info(schema_ref, params, {})
-                action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param], {})
+                params = self.extend_property_info(schema_ref, params)
+                action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param])
 
             action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
 
             if self.config.get('payloads'):
-                version = prop_info['_doc_generator_meta']['version']
+                version = self.get_latest_version(prop_info.get('_from_schema_ref'))
                 short_name = prop_name
                 if prop_name.startswith('#'): # expected
                     # Example: from #Bios.ResetBios, we want "ResetBios"
@@ -1292,7 +1320,7 @@ class DocFormatter:
                 formatted_action = self.format_property_row(schema_ref, param_name, action_parameters[param_name], new_path)
 
                 # Capture the enum details and merge them into the ones for the overall properties:
-                if formatted_action.get('details'):
+                if formatted_action and formatted_action.get('details'):
                     has_prop_details = True
                     prop_details.update(formatted_action['details'])
 
@@ -1320,7 +1348,7 @@ class DocFormatter:
                         excerpt_copy_name = excerpt_copy_name[:-7]
                     prop_item['excerptCopy'] = excerpt_copy_name
 
-                prop_items = self.extend_property_info(schema_ref, prop_item, prop_info.get('_doc_generator_meta'))
+                prop_items = self.extend_property_info(schema_ref, prop_item)
                 if excerpt_copy_name:
                     excerpt_ref_uri = prop_items[0].get('_ref_uri')
                     excerpt_schema_ref = prop_items[0].get('_from_schema_ref')
@@ -1354,8 +1382,8 @@ class DocFormatter:
             prop_details[prop_name] = self.format_property_details(prop_name, prop_type, descr,
                                                                    prop_enum, prop_enum_details,
                                                                    supplemental_details,
-                                                                   prop_info.get('_doc_generator_meta', {}),
-                                                                   anchor, profile)
+                                                                   prop_info,
+                                                                   anchor=anchor, profile=profile)
 
         # Action details may be supplied as markdown in the supplemental doc.
         # Possibly we should be phasing this out.
@@ -1405,6 +1433,12 @@ class DocFormatter:
                     combined_prop_item = prop_items[0]
                     combined_prop_item['_prop_name'] = prop_name
                     combined_prop_item['readonly'] = prop_info.get('readonly', False)
+                    combined_prop_item['versionAdded'] = prop_info.get('versionAdded')
+                    combined_prop_item['versionDeprecated'] = prop_info.get('versionDeprecated')
+                    combined_prop_item['deprecated'] = prop_info.get('deprecated')
+                    combined_prop_item['enumVersionAdded'] = prop_info.get('enumVersionAdded')
+                    combined_prop_item['enumVersionDeprecated'] = prop_info.get('enumVersionDeprecated')
+                    combined_prop_item['enumDeprecated'] = prop_info.get('enumDeprecated')
                     if self.config.get('normative') and combined_prop_item.get('longDescription'):
                         descr = descr + ' ' + combined_prop_item['longDescription']
                         combined_prop_item['longDescription'] = descr
@@ -1557,10 +1591,6 @@ class DocFormatter:
         action_details = {}
         conditional_details = {}
 
-        context_meta = prop_info.get('_doc_generator_meta')
-        if not context_meta:
-            context_meta = {}
-
         # If prop_info was extracted from a different schema, it will be present as
         # _from_schema_ref
         schema_ref = prop_info.get('_from_schema_ref', schema_ref)
@@ -1600,16 +1630,11 @@ class DocFormatter:
                 base_detail_info['prop_required_on_create'] = (base_detail_info.get('prop_required_on_create') or
                                                                    prop_name in parent_requires_on_create)
                 base_detail_info = self.apply_overrides(base_detail_info, schema_name, prop_name)
-                meta = self.merge_metadata(prop_name, base_detail_info.get('_doc_generator_meta', {}), context_meta)
-                detail_info = self.extend_property_info(schema_ref, base_detail_info, meta)
-                meta = self.merge_full_metadata(detail_info[0].get('_doc_generator_meta', {}), meta)
+                detail_info = self.extend_property_info(schema_ref, base_detail_info)
 
                 if is_action:
                     # Trim out the properties; these are always Target and Title:
                     detail_info[0]['properties'] = {}
-
-                meta['within_action'] = is_action
-                detail_info[0]['_doc_generator_meta'] = meta
 
                 new_path = prop_path.copy()
 
@@ -1643,9 +1668,7 @@ class DocFormatter:
                     base_pattern_info['description'] = base_pattern_info['longDescription'] = description
                     base_pattern_info['verbatim_description'] = True
 
-                    meta = self.merge_metadata(prop_name, base_pattern_info.get('_doc_generator_meta', {}), context_meta)
-                    pattern_info = self.extend_property_info(schema_ref, base_pattern_info, meta)
-                    meta = self.merge_full_metadata(pattern_info[0].get('_doc_generator_meta', {}), meta)
+                    pattern_info = self.extend_property_info(schema_ref, base_pattern_info)
 
                     formatted = self.format_property_row(schema_ref, prop_name, pattern_info, prop_path)
                     if formatted:
@@ -1698,7 +1721,7 @@ class DocFormatter:
         """ String for output. Override in HTML formatter to get actual links. """
         ref_info = self.common_properties.get(ref_key)
         if ref_info and ref_info.get('_prop_name'):
-            return ref_info.get('_prop_name') + ' object'
+            return ref_info.get('_prop_name')
         return ref_key
 
     def link_to_outside_schema(self, schema_full_uri):
@@ -1783,74 +1806,6 @@ class DocFormatter:
         return prop_info
 
 
-    def merge_metadata(self, node_name, meta, context_meta):
-        """ Merge version and version_deprecated information from meta with that from context_meta
-
-        context_meta contains version info for the parent, plus embedded version info for node_name
-        (and its siblings). We want:
-        * (MAYBE) If meta['node_name'] and context_meta['node_name'] both exist, use the older version. For example,
-          this can occur when an object was initially defined inline and later moved to the definitions section
-          of a schema and included by reference. Presumably definitions could move in the other direction as well!
-          We want the version of the first appearance of this property in the schema.
-        * If context_meta['node_name']['version'] is newer than meta['version'], use the newer version.
-          (implication is that this property was added to the parent after it was already defined elsewhere.)
-        For deprecations, it's even less likely differing versions will make sense, but we generally want the
-        older version.
-        """
-        node_meta = context_meta.get(node_name, {})
-        meta = self.merge_full_metadata(meta, node_meta)
-
-        return meta
-
-
-    def merge_full_metadata(self, meta_a, meta_b):
-        """ Recursively merge two metadata structures.
-        We want to capture the earlier of version and version_deprecated values for all nodes. """
-
-        meta1 = copy.deepcopy(meta_a)
-        meta2 = copy.deepcopy(meta_b)
-
-        if ('version' in meta1) and ('version' in meta2):
-            compare = DocGenUtilities.compare_versions(meta1['version'], meta2['version'])
-            # We want the "first seen" entry, so use the older one.
-            if compare > 0:
-                meta1['version'] = meta2['version']
-        elif 'version' in meta2:
-            meta1['version'] = meta2['version']
-
-        # If any of this data is from the unversioned schema, that wins (expected is that it will be from meta2):
-        if meta1.get('unversioned'):
-            if 'version_deprecated' in meta2:
-                del(meta2['version_deprecated'])
-            # It's still possible for an unversioned schema to include a deprecation notice!
-            meta2['version_deprecated_explanation'] = meta1.get('version_deprecated_explanation', '')
-        elif meta2.get('unversioned'):
-            if 'version_deprecated' in meta1:
-                del(meta1['version_deprecated'])
-            # It's still possible for an unversioned schema to include a deprecation notice!
-            meta1['version_deprecated_explanation'] = meta2.get('version_deprecated_explanation', '')
-
-        elif ('version_deprecated' in meta1) and ('version_deprecated' in meta2):
-            compare = DocGenUtilities.compare_versions(meta1['version_deprecated'], meta2['version_deprecated'])
-            if compare > 0:
-                # meta2 is older, use that:
-                meta1['version_deprecated'] = meta2['version_deprecated']
-        elif 'version_deprecated' in meta2:
-            meta1['version_deprecated'] = meta2['version_deprecated']
-            meta1['version_deprecated_explanation'] = meta2.get('version_deprecated_explanation', '')
-
-        for key, val in meta1.items():
-            if isinstance(val, dict):
-                if meta2.get(key):
-                    meta1[key] = self.merge_full_metadata(meta1[key], meta2[key])
-        for key, val in meta2.items():
-            if isinstance(val, dict):
-                # Just pick up the missed items.
-                if not meta1.get(key):
-                    meta1[key] = meta2[key]
-        return meta1
-
-
     def get_prop_profile(self, schema_ref, prop_path, section):
         """Get profile data for the specified property, by schema_ref, prop name path, and section.
 
@@ -1884,6 +1839,21 @@ class DocFormatter:
                 prop_reqs = prop_profile.get('PropertyRequirements', prop_profile.get('Parameters', {}))
 
         return prop_profile
+
+
+    def get_latest_version(self, schema_ref):
+        """ Look up the latest version of the referenced schema in our property data """
+        return  self.property_data.get(schema_ref, {}).get('latest_version')
+
+
+    @staticmethod
+    def format_version(version_string):
+        """ version_string may be in the form "v1_5_0" or "1.5.0". We want the latter; this gives it to us. """
+        if version_string.startswith('v'):
+            version_string = version_string[1:]
+        if '_' in version_string:
+            version_string = version_string.replace('_', '.')
+        return version_string
 
 
     @staticmethod
