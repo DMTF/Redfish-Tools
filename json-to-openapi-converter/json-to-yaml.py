@@ -39,8 +39,8 @@ ACTION_RESPONSES = [ 200, 202, 204 ]
 DELETE_RESPONSES = [ 200, 202, 204 ]
 
 # Default configurations
-CONFIG_DEF_MESSAGE_REF = "http://redfish.dmtf.org/schemas/v1/Message.v1_0_7.yaml#/components/schemas/Message"
-CONFIG_DEF_TASK_REF = "http://redfish.dmtf.org/schemas/v1/Task.v1_4_1.yaml#/components/schemas/Task"
+CONFIG_DEF_MESSAGE_REF = "http://redfish.dmtf.org/schemas/v1/Message.v1_0_8.yaml#/components/schemas/Message"
+CONFIG_DEF_TASK_REF = "http://redfish.dmtf.org/schemas/v1/Task.v1_4_2.yaml#/components/schemas/Task"
 CONFIG_DEF_ODATA_SCHEMA_LOC = "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml"
 CONFIG_DEF_OUT_FILE = "openapi.yaml"
 CONFIG_DEF_EXTENSIONS = {}
@@ -494,30 +494,30 @@ class JSONToYAML:
             An object containing the definition of the Redfish Error payload
         """
         redfish_error = {
-            "description": "Contains an error payload from a Redfish Service.",
-            "x-longDescription": "This type, as described by the Redfish Specification, shall contain an error payload from a Redfish Service.",
+            "description": "The error payload from a Redfish Service.",
+            "x-longDescription": "The Redfish Specification-described type shall contain an error payload from a Redfish Service.",
             "type": "object",
             "properties": {
                 "error": {
-                    "description": "Contains properties used to describe an error from a Redfish Service.",
-                    "x-longDescription": "This property, as described by the Redfish Specification, shall contain properties used to describe an error from a Redfish Service.",
+                    "description": "The properties that describe an error from a Redfish Service.",
+                    "x-longDescription": "The Redfish Specification-described type shall contain properties that describe an error from a Redfish Service.",
                     "type": "object",
                     "properties": {
                         "code": {
-                            "description": "A string indicating a specific MessageId from the message registry.",
-                            "x-longDescription": "This property shall be a string indicating a specific MessageId from the message registry.",
+                            "description": "A string indicating a specific MessageId from a Message Registry.",
+                            "x-longDescription": "This property shall contain a string indicating a specific MessageId from a Message Registry.",
                             "readOnly": True,
                             "type": "string"
                         },
                         "message": {
-                            "description": "A human-readable error message corresponding to the message in the message registry.",
-                            "x-longDescription": "This property shall be a human-readable error message corresponding to the message in the message registry.",
+                            "description": "A human-readable error message corresponding to the message in a Message Registry.",
+                            "x-longDescription": "This property shall contain a human-readable error message corresponding to the message in a Message Registry.",
                             "readOnly": True,
                             "type": "string"
                         },
                         "@Message.ExtendedInfo": {
-                            "description": "An array of message objects describing one or more error message(s).",
-                            "x-longDescription": "This property shall be an array of message objects describing one or more error message(s).",
+                            "description": "An array of messages describing one or more error messages.",
+                            "x-longDescription": "This property shall be an array of message objects describing one or more error messages.",
                             "type": "array",
                             "items": {
                                 "$ref": self.message_ref
