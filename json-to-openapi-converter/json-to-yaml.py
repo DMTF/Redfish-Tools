@@ -179,6 +179,7 @@ class JSONToYAML:
                 self.uri_cache[uri]["updatable"] = False
                 self.uri_cache[uri]["deletable"] = False
                 self.uri_cache[uri]["action"] = False
+                self.uri_cache[uri]["actionResponse"] = None
                 if "post" in yaml_data["paths"][uri]:
                     self.uri_cache[uri]["insertable"] = True
                     self.uri_cache[uri]["requestBody"] = yaml_data["paths"][uri]["post"]["requestBody"]["content"]["application/json"]["schema"]["$ref"]
@@ -197,13 +198,16 @@ class JSONToYAML:
                 reference = yaml_data["paths"][uri]["post"]["requestBody"]["content"]["application/json"]["schema"]["$ref"]
                 response = yaml_data["paths"][uri]["post"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
                 action = "#" + uri.rsplit( "/" )[-1]
-                yaml_file = re.search( "([A-Za-z0-9]+\.v\d_\d_\d\.yaml)", reference ).group( 1 )
+                yaml_file = re.search( "([A-Za-z0-9]+\.v[\d]+_[\d]+_[\d]+\.yaml)", reference ).group( 1 )
 
                 if yaml_file not in self.action_cache:
                     self.action_cache[yaml_file] = {}
                 self.action_cache[yaml_file][action] = {}
                 self.action_cache[yaml_file][action]["reference"] = "#" + reference.rsplit( "#" )[-1]
-                self.action_cache[yaml_file][action]["actionResponse"] = response
+                if response == "#/components/schemas/RedfishError":
+                    self.action_cache[yaml_file][action]["actionResponse"] = None
+                else:
+                    self.action_cache[yaml_file][action]["actionResponse"] = "#" + response.rsplit( "#" )[-1]
 
     def check_for_uri_info( self, json_data, filename ):
         """
