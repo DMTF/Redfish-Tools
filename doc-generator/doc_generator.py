@@ -55,8 +55,6 @@ class DocGenerator:
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
-            # profile_resources = {}
-            # profile_protocol = {}
             profile_merged = {}
 
             if 'RequiredProfiles' in config['profile']:
@@ -65,7 +63,7 @@ class DocGenerator:
                         profile_merged, req_profile_name,
                         config['profile']['RequiredProfiles'][req_profile_name])
 
-            if 'Registries' in config['profile']:
+            if 'Registries' in config['profile'] and (config['profile_mode'] != 'subset'):
                 config['profile']['registries_annotated'] = {}
                 for registry_name in config['profile']['Registries'].keys():
                     registry_summary = self.process_registry(registry_name,
@@ -74,8 +72,11 @@ class DocGenerator:
 
             profile_resources = self.merge_dicts(profile_merged.get('Resources', {}),
                                                      self.config.get('profile', {}).get('Resources', {}))
-            profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
+
+            if config['profile_mode'] != 'subset':
+                profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
                                                      self.config.get('profile', {}).get('Protocol', {}))
+                self.config['profile_protocol'] = profile_protocol
 
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
@@ -91,7 +92,6 @@ class DocGenerator:
                 profile_resources_indexed[normalized_uri] = profile_data
 
             self.config['profile_resources'] = profile_resources_indexed
-            self.config['profile_protocol'] = profile_protocol
 
 
     def generate_doc(self):
@@ -965,6 +965,9 @@ def main():
                               'profile requirements. "Terse" output is intended for use by '
                               'Service developers, including only the subset of properties with '
                               'profile requirements.'))
+    parser.add_argument('--subset', action='store_true', dest='subset',
+                        help=('Subset output (meaningful only with --profile). Generates "Schema subset '
+                              'output, with the subset defined in the JSON profile document.'))
 
     parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
                         help='Produce Property Index output.')
@@ -1082,6 +1085,8 @@ def main():
     if args.profile_doc:
         if args.profile_terse:
             config['profile_mode'] = 'terse'
+        elif args.subset:
+            config['profile_mode'] = 'subset'
         else:
             config['profile_mode'] = 'verbose'
 
@@ -1092,6 +1097,14 @@ def main():
         except (OSError) as ex:
             warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
             exit()
+
+    if args.subset and not args.profile_doc:
+        warnings.warn('"Subset output (--subset) requires a profile (--profile).')
+        exit()
+
+    if args.profile_terse and not args.profile_doc:
+        warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).')
+        exit()
 
     if 'keywords' in config['supplemental']:
         # Promote the keywords to top-level keys.

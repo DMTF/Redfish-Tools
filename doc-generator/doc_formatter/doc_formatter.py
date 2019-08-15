@@ -45,13 +45,13 @@ class DocFormatter:
         self.current_uris = []
 
         if self.config.get('profile_mode'):
-            # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
-            minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
-            compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
-            if compare < 0:
-                self.config['MinVersionLT1.6'] = True
-            else:
-                self.config['MinVersionLT1.6'] = False
+            self.config['MinVersionLT1.6'] = False
+            if self.config['profile_mode'] != 'subset':
+                # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
+                minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
+                compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
+                if compare < 0:
+                    self.config['MinVersionLT1.6'] = True
 
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
