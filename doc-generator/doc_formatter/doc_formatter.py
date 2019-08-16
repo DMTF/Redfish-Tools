@@ -448,7 +448,7 @@ class DocFormatter:
                 description = supplemental.get('schema-intro', description)
 
             # Profile purpose overrides all:
-            if profile:
+            if profile and profile_mode != 'subset':
                 description = profile.get('Purpose')
 
             if description:
@@ -1007,7 +1007,7 @@ class DocFormatter:
             # if a resource is specified with no PropertyRequirements, include them all.
             return prop_names
 
-        if self.config.get('profile_mode') == 'terse':
+        if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
             if is_action:
                 profile_props = [x for x in profile.keys()]
             else:
@@ -1631,7 +1631,7 @@ class DocFormatter:
 
             prop_names = [x for x in properties.keys()]
 
-            if self.config.get('profile_mode') == 'terse':
+            if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
                 if len(prop_path) and prop_path[0] == 'Actions':
                     profile_section = 'ActionRequirements'
                 else:

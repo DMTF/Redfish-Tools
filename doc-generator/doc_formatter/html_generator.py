@@ -370,6 +370,7 @@ pre.code{
             else:
                 prop_access = '<nobr>read-write</nobr>'
 
+        # TODO: if in subset mode, check for WriteRequirement === None (present and None).
         if formatted_details['prop_required'] or formatted_details.get('required_parameter'):
             prop_access += ' <nobr>required</nobr>'
         elif formatted_details['prop_required_on_create']:
@@ -405,10 +406,10 @@ pre.code{
 
         row = []
         row.append(indentation_string + name_and_version)
-        if self.config.get('profile_mode'):
+        if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
             row.append(profile_access)
         row.append(prop_type)
-        if not self.config.get('profile_mode'):
+        if not self.config.get('profile_mode') or self.config.get('profile_mode') == 'subset':
             row.append(prop_access)
         row.append(descr)
 
@@ -473,7 +474,7 @@ pre.code{
 
         if enum_details:
             headings = [prop_type, 'Description']
-            if profile_mode:
+            if profile_mode and profile_mode != 'subset':
                 headings.append('Profile Specifies')
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -525,7 +526,7 @@ pre.code{
                         descr = self.formatter.italic(deprecated_descr)
                 cells = [enum_name, descr]
 
-                if profile_mode:
+                if profile_mode and profile_mode != 'subset':
                     if enum_name in profile_values:
                         cells.append('Required')
                     elif enum_name in profile_min_support_values:
@@ -542,7 +543,7 @@ pre.code{
 
         elif enum:
             headings = [prop_type]
-            if profile_mode:
+            if profile_mode and profile_mode != 'subset':
                 headings.append('Profile Specifies')
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -593,7 +594,7 @@ pre.code{
 
 
                 cells = [enum_name]
-                if profile_mode:
+                if profile_mode and profile_mode != 'subset':
                     if enum_name in profile_values:
                         cells.append('Required')
                     elif enum_name in profile_min_support_values:
