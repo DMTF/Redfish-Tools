@@ -243,6 +243,17 @@ class DocFormatter:
                                                          read_req=formatted_details.get('profile_read_req'),
                                                          write_req=formatted_details.get('profile_write_req'),
                                                          min_count=formatted_details.get('profile_mincount'))
+        elif self.config.get('profile_mode') == 'terse':
+            if formatted_details.get('prop_required'):
+                read_req = 'Mandatory'
+            else:
+                read_req = ''
+
+            profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
+                                                         read_req=read_req,
+                                                         write_req=False,
+                                                         min_count=False)
+
         else:
             profile_access = ''
 
@@ -466,7 +477,7 @@ class DocFormatter:
                 if self.config.get('profile_mode'):
                     prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
 
-                prop_names = self.organize_prop_names(prop_names, profile)
+                prop_names = self.organize_prop_names(prop_names)
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
@@ -977,7 +988,7 @@ class DocFormatter:
         return prop_infos
 
 
-    def organize_prop_names(self, prop_names, profile=None):
+    def organize_prop_names(self, prop_names):
         """ Strip out excluded property names, sorting the remainder """
 
         prop_names = self.exclude_prop_names(prop_names, self.config['excluded_properties'],
@@ -989,7 +1000,12 @@ class DocFormatter:
     def filter_props_by_profile(self, prop_names, profile, schema_requires, is_action=False):
 
         if profile is None:
-            return []
+            warnings.warn("filter_props_by_profile was called with no profile data" )
+            return prop_names
+
+        if profile.get('PropertyRequirements') is None:
+            # if a resource is specified with no PropertyRequirements, include them all.
+            return prop_names
 
         if self.config.get('profile_mode') == 'terse':
             if is_action:
@@ -1623,6 +1639,8 @@ class DocFormatter:
                 profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
 
                 prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
+                prop_names = self.organize_prop_names(prop_names)
+
                 filtered_properties = {}
                 for k in prop_names:
                     filtered_properties[k] = properties[k]
