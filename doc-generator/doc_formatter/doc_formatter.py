@@ -463,6 +463,9 @@ class DocFormatter:
 
                 properties = details['properties']
                 prop_names = [x for x in properties.keys()]
+                if self.config.get('profile_mode'):
+                    prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
+
                 prop_names = self.organize_prop_names(prop_names, profile)
 
                 for prop_name in prop_names:
@@ -977,15 +980,14 @@ class DocFormatter:
     def organize_prop_names(self, prop_names, profile=None):
         """ Strip out excluded property names, sorting the remainder """
 
-        if self.config.get('profile_mode'):
-            prop_names = self.filter_props_by_profile(prop_names, profile)
         prop_names = self.exclude_prop_names(prop_names, self.config['excluded_properties'],
                                        self.config['excluded_by_match'])
         prop_names.sort(key=str.lower)
         return prop_names
 
 
-    def filter_props_by_profile(self, prop_names, profile, is_action=False):
+    def filter_props_by_profile(self, prop_names, profile, schema_requires, is_action=False):
+
         if profile is None:
             return []
 
@@ -994,6 +996,10 @@ class DocFormatter:
                 profile_props = [x for x in profile.keys()]
             else:
                 profile_props = [x for x in profile.get('PropertyRequirements', {}).keys()]
+            for x in schema_requires:
+                if x not in profile_props:
+                    profile_props.append(x)
+
             if profile.get('ActionRequirements'):
                 profile_props.append('Actions')
 
@@ -1001,7 +1007,7 @@ class DocFormatter:
                 # Action properties typically start with "#SchemaName.", which is not reflected in the profile:
                 filtered = []
                 for prop in profile_props:
-                    if prop in prop_names:
+                    if prop in prop_names or prop in schema_requires:
                         filtered.append(prop)
                     else:
                         matches = [x for x in prop_names if x.endswith('.' + prop)]
@@ -1010,6 +1016,7 @@ class DocFormatter:
                 prop_names = filtered
             else:
                 prop_names = list(set(prop_names) & set(profile_props))
+
         prop_names.sort(key=str.lower)
         return prop_names
 
@@ -1605,8 +1612,8 @@ class DocFormatter:
         prop_names = patterns = False
 
         if properties:
+
             prop_names = [x for x in properties.keys()]
-            prop_names = self.exclude_annotations(prop_names)
 
             if self.config.get('profile_mode') == 'terse':
                 if len(prop_path) and prop_path[0] == 'Actions':
@@ -1615,11 +1622,13 @@ class DocFormatter:
                     profile_section = 'PropertyRequirements'
                 profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
 
-                prop_names = self.filter_props_by_profile(prop_names, profile, is_action)
+                prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
                 filtered_properties = {}
                 for k in prop_names:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
+            else:
+                prop_names = self.exclude_annotations(prop_names)
 
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]

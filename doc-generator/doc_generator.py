@@ -26,9 +26,17 @@ import parse_supplement
 
 
 # Format user warnings simply
+class InfoWarning(UserWarning):
+    """ A warning class for informational messages that don't need a stack trace. """
+    pass
+
 def simple_warning_format(message, category, filename, lineno, file=None, line=None):
     """ a basic format for warnings from this program """
-    return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
+    if category == InfoWarning:
+        return '  Info: %s' % (message) + "\n"
+    else:
+        return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
+
 
 warnings.formatwarning = simple_warning_format
 
@@ -1099,11 +1107,11 @@ def main():
             exit()
 
     if args.subset and not args.profile_doc:
-        warnings.warn('"Subset output (--subset) requires a profile (--profile).')
+        warnings.warn('"Subset output (--subset) requires a profile (--profile).', InfoWarning)
         exit()
 
     if args.profile_terse and not args.profile_doc:
-        warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).')
+        warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).', InfoWarning)
         exit()
 
     if 'keywords' in config['supplemental']:
