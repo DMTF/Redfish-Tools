@@ -474,7 +474,7 @@ class DocFormatter:
 
                 properties = details['properties']
                 prop_names = [x for x in properties.keys()]
-                if self.config.get('profile_mode'):
+                if self.config.get('profile_mode') and profile:
                     prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
 
                 prop_names = self.organize_prop_names(prop_names)
@@ -1638,7 +1638,8 @@ class DocFormatter:
                     profile_section = 'PropertyRequirements'
                 profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
 
-                prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
+                if profile:
+                    prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
                 prop_names = self.organize_prop_names(prop_names)
 
                 filtered_properties = {}

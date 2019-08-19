@@ -67,6 +67,7 @@
 				"UUID": {},
 				"IndicatorLED": {
 					"ReadRequirement": "Recommended",
+                                        "WriteRequirement": "None",
 					"ConditionalRequirements": [{
 						"Purpose": "Physical Systems must have a writable Indicator LED",
 						"CompareProperty": "SystemType",

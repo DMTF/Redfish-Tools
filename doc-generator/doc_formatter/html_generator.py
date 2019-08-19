@@ -368,9 +368,15 @@ pre.code{
             if formatted_details['read_only']:
                 prop_access = '<nobr>read-only</nobr>'
             else:
-                prop_access = '<nobr>read-write</nobr>'
+                # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
+                # emit read-only.
+                if ((self.config.get('profile_mode') == 'subset')
+                        and formatted_details.get('profile_write_req')
+                        and (formatted_details['profile_write_req'] == 'None')):
+                        prop_access = '<nobr>read-only</nobr>'
+                else:
+                    prop_access = '<nobr>read-write</nobr>'
 
-        # TODO: if in subset mode, check for WriteRequirement === None (present and None).
         if formatted_details['prop_required'] or formatted_details.get('required_parameter'):
             prop_access += ' <nobr>required</nobr>'
         elif formatted_details['prop_required_on_create']:
