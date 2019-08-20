@@ -513,7 +513,7 @@ class DocFormatter:
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
 
-        if self.config.get('profile_mode'):
+        if self.config.get('profile_mode') and self.config['profile_mode'] != 'subset':
             # Add registry messages, if in profile.
             registry_reqs = config.get('profile').get('registries_annotated', {})
             if registry_reqs:
