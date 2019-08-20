@@ -585,13 +585,16 @@ class DocGenerator:
         if profile_mode:
             schema_profile = profile.get(generalized_uri)
             if schema_profile:
-                min_version = schema_profile.get('MinVersion')
-                if min_version:
-                    if version:
-                        property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
-                    else:
-                        # this is unlikely
-                        property_data['name_and_version'] += ' v' + min_version + '+'
+                if profile_mode != 'subset':
+                    min_version = schema_profile.get('MinVersion')
+                    if min_version:
+                        if version:
+                            property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
+                        else:
+                            # this is unlikely
+                            property_data['name_and_version'] += ' v' + min_version + '+'
+                    elif version:
+                        property_data['name_and_version'] += ' ' + version
             else:
                 # Skip schemas that aren't mentioned in the profile:
                 return {}
