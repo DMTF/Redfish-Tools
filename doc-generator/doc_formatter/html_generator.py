@@ -455,9 +455,6 @@ pre.code{
         # Are we in profile mode? If so, consult the profile passed in for this property.
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
         # Property enums, look for MinSupportValues/RecommendedValues.
-        if prop_name == 'ConnectTypesSupported':
-            import pdb; pdb.set_trace()
-
         profile_mode = self.config.get('profile_mode')
         if profile_mode:
             if profile is None:
@@ -470,6 +467,10 @@ pre.code{
             # profile_all_values is not used. What were we going for here?
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
+
+        if profile_mode == 'subset' and len(profile_values):
+            enum = [x for x in enum if x in profile_values]
+
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
