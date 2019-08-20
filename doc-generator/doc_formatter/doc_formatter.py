@@ -1184,7 +1184,6 @@ class DocFormatter:
         parsed['prop_required_on_create'] = details[0]['prop_required_on_create']
         parsed['required_parameter'] = details[0].get('requiredParameter') == True
 
-        # Data from profile:
         if profile is not None:
             parsed['is_in_profile'] = True
             parsed['profile_read_req'] = profile.get('ReadRequirement', 'Mandatory')
@@ -1257,7 +1256,8 @@ class DocFormatter:
                     prop_name_parts = prop_name.split('.')
                     prop_brief_name = prop_name_parts[-1]
             path_to_prop = prop_path.copy()
-            path_to_prop.append(prop_brief_name)
+            if not prop_info.get('_in_items'):
+                path_to_prop.append(prop_brief_name)
             profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
         # Some special treatment is required for Actions
@@ -1378,6 +1378,11 @@ class DocFormatter:
                     add_link_text = prop_items[0].get('add_link_text', add_link_text)
 
                 array_of_objects = True
+
+                # Annotate the items so we know not to add a level to the property path
+                # later. There's probably a more elegant way to address this than to annotate!
+                for x in prop_items:
+                    x['_in_items'] = True
 
                 if len(prop_items) == 1:
                     if 'type' in prop_items[0] and 'properties' not in prop_items[0]:
