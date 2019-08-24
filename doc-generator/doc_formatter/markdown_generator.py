@@ -480,7 +480,7 @@ class MarkdownGenerator(DocFormatter):
         return '\n'.join(contents) + '\n'
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
