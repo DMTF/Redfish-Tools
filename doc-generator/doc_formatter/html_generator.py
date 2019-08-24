@@ -389,7 +389,7 @@ pre.code{
         profile_access = self.format_base_profile_access(formatted_details)
 
         descr = formatted_details['descr']
-        if formatted_details['profile_purpose']:
+        if formatted_details['profile_purpose'] and (self.config.get('profile_mode') != 'subset'):
             descr += '<br>' + self.formatter.bold("Profile Purpose: " + formatted_details['profile_purpose'])
 
         # Conditional Requirements
@@ -460,7 +460,7 @@ pre.code{
             if profile is None:
                 profile = {}
             profile_values = profile.get('Values', [])
-            profile_min_support_values = profile.get('MinSupportValues', [])
+            profile_min_support_values = profile.get('MinSupportValues', []) # No longer a valid name?
             profile_parameter_values = profile.get('ParameterValues', [])
             profile_recommended_values = profile.get('RecommendedValues', [])
 
@@ -468,9 +468,14 @@ pre.code{
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
 
-        if profile_mode == 'subset' and len(profile_values):
-            enum = [x for x in enum if x in profile_values]
-
+        # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
+        # means all values are supported.
+        # Otherwise, Values/ParameterValues specifies the set that should be listed.
+        if profile_mode == 'subset':
+            if len(profile_values):
+                enum = [x for x in enum if x in profile_values]
+            elif len(profile_parameter_values):
+                enum = [x for x in enum if x in profile_parameter_values]
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
@@ -636,7 +641,7 @@ pre.code{
 
         return '\n'.join(contents) + '\n'
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -661,6 +666,23 @@ pre.code{
             rows.append(self.formatter.make_row(['{', '','','']))
 
             param_names = [x for x in action_parameters.keys()]
+
+            if self.config.get('profile_mode') == 'subset':
+                if profile.get('Parameters'):
+                    param_names = [x for x in profile['Parameters'].keys() if x in param_names]
+                else:
+                    # Pluck out just the parameters that are required by the schema
+                    required_param_names = []
+                    for x in param_names:
+                        param_deets = action_parameters[x]
+                        if isinstance(param_deets, list):
+                            if param_deets[0].get('required_parameter'):
+                                required_param_names.append(x)
+                        else:
+                            if param_deets.get('required_parameter'):
+                                required_param_names.append(x)
+                    param_names = required_param_names
+
             param_names.sort(key=str.lower)
             for param_name in param_names:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])

@@ -113,16 +113,20 @@
 				}
 			},
 			"ActionRequirements": {
-				"Reset": {
-					"ReadRequirement": "Mandatory",
-					"Parameters": {
-						"ResetType": {
-							"AllowableValues": ["ForceOff", "On", "ForceRestart"],
-							"Purpose": "Minimal set to allow power on, off and reboot.",
-							"ReadRequirement": "Mandatory"
-						}
-					}
+			    "Reset": {
+				"ReadRequirement": "Mandatory",
+                                "Purpose": "Ability to reset the system is a core requirement of most users.",
+				"Parameters": {
+				    "ResetType": {
+					"ParameterValues": ["ForceOff", "On", "ForceRestart"],
+					"Purpose": "Minimal set to allow power on, off and reboot.",
+					"ReadRequirement": "Mandatory"
+				    }
 				}
+			    },
+                            "RemoveResourceBlock": {
+                                "ReadRequirement": "Mandatory"
+                            }
 			}
 		},
 		"ComputerSystemCollection": {

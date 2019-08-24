@@ -83,8 +83,8 @@ class DocFormatter:
         # Properties to carry through from parent when a ref is extended:
         self.parent_props = [
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
-            'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter', 'versionAdded', 'versionDeprecated',
-            'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated'
+            'readonly', 'prop_required', 'prop_required_on_create', 'requiredParameter', 'required_parameter',
+            'versionAdded', 'versionDeprecated', 'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated'
             ]
 
 
@@ -230,7 +230,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
         """Generate a formatted Actions section from parameters data"""
         raise NotImplementedError
 
@@ -485,7 +485,7 @@ class DocFormatter:
                     prop_info['prop_required_on_create'] = prop_info.get('prop_required_on_create') or prop_name in required_on_create
                     prop_info['parent_requires'] = required
                     prop_info['parent_requires_on_create'] = required_on_create
-                    prop_info['required_parameter'] = prop_info.get('requiredParameter') == True
+                    prop_info['required_parameter'] = prop_info.get('requiredParameter')
 
                     prop_infos = self.extend_property_info(schema_ref, prop_info)
 
@@ -900,8 +900,9 @@ class DocFormatter:
                 # Pull in any "require" from parent:
                 parent_requires = prop_info.get('parent_requires', [])
                 parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
-                ref_info['prop_required'] = ref_info.get('prop_required') or prop_name in parent_requires
+                ref_info['prop_required'] = ref_info.get('prop_required') or prop_name in parent_requires or prop_info.get('requiredParameter')
                 ref_info['prop_required_on_create'] = ref_info.get('prop_required_on_create') or prop_name in parent_requires_on_create
+                ref_info['required_parameter'] = prop_info.get('requiredParameter')
 
                 prop_info = ref_info
 
@@ -915,7 +916,7 @@ class DocFormatter:
                         props[x]['prop_required_on_create'] = props[x].get('prop_required_on_create') or x in required_on_create
                         props[x]['parent_requires'] = required
                         props[x]['parent_requires_on_create'] = required_on_create
-                        props[x]['required_parameter'] = props[x].get('requiredParameter') == True
+                        props[x]['required_parameter'] = props[x].get('requiredParameter')
 
                 if '$ref' in prop_info or 'anyOf' in prop_info:
                     return self.extend_property_info(schema_ref, prop_info)
@@ -1003,9 +1004,13 @@ class DocFormatter:
             warnings.warn("filter_props_by_profile was called with no profile data" )
             return prop_names
 
-        if profile.get('PropertyRequirements') is None:
-            # if a resource is specified with no PropertyRequirements, include them all.
-            return prop_names
+        if profile.get('PropertyRequirements') is None and not is_action:
+            # if a resource is specified with no PropertyRequirements, include them all...
+            # but do omit "Actions" if there are no ActionRequirements.
+            if profile.get('ActionRequirements') and len(profile['ActionRequirements']):
+                return prop_names
+            else:
+                return [x for x in prop_names if x != 'Actions']
 
         if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
             if is_action:
@@ -1309,9 +1314,10 @@ class DocFormatter:
             for action_param in action_parameters.keys():
                 params = action_parameters[action_param]
                 params = self.extend_property_info(schema_ref, params)
-                action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param])
+                action_parameters[action_param] = params
 
-            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
+            # action_parameters should include "required" indicators, but does not ... always?
+            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters, profile)
 
             if self.config.get('payloads'):
                 version = self.get_latest_version(prop_info.get('_from_schema_ref'))
