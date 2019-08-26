@@ -976,8 +976,8 @@ def main():
                               'profile requirements. "Terse" output is intended for use by '
                               'Service developers, including only the subset of properties with '
                               'profile requirements.'))
-    parser.add_argument('--subset', action='store_true', dest='subset',
-                        help=('Subset output (meaningful only with --profile). Generates "Schema subset '
+    parser.add_argument('--subset', dest='subset_doc',
+                        help=('Path to a JSON profile document. Generates "Schema subset" '
                               'output, with the subset defined in the JSON profile document.'))
 
     parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
@@ -1096,8 +1096,6 @@ def main():
     if args.profile_doc:
         if args.profile_terse:
             config['profile_mode'] = 'terse'
-        elif args.subset:
-            config['profile_mode'] = 'subset'
         else:
             config['profile_mode'] = 'verbose'
 
@@ -1109,9 +1107,15 @@ def main():
             warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
             exit()
 
-    if args.subset and not args.profile_doc:
-        warnings.warn('"Subset output (--subset) requires a profile (--profile).', InfoWarning)
-        exit()
+    if args.subset_doc:
+        config['profile_mode'] = 'subset'
+        profile_doc = args.subset_doc
+        try:
+            profile = open(profile_doc, 'r', encoding="utf8")
+            config['profile_doc'] = profile_doc
+        except (OSError) as ex:
+            warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
+            exit()
 
     if args.profile_terse and not args.profile_doc:
         warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).', InfoWarning)
