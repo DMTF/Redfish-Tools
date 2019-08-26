@@ -945,6 +945,12 @@ def main():
     parser = argparse.ArgumentParser(description=help_description,
                                      epilog=help_epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    parser.add_argument('--config', dest="config_file",
+                        help=('Path to a config file, containing configuration '
+                              ' in JSON format. '
+                              ))
+
     parser.add_argument('import_from', metavar='import_from', nargs='*',
                         help=('Name of a file or directory to process (wild cards are acceptable). '
                               'Default: json-schema'))
@@ -964,10 +970,6 @@ def main():
                               'Within this directory, use the following naming scheme for example files: '
                               '<schema_name>-v<major_version>-example.json for JSON payloads, '
                               '<schema_name-v<major_version>-action-<action_name>.json for action examples.'))
-    parser.add_argument('--config', dest="config_file",
-                        help=('Path to a config file, containing configuration '
-                              ' in JSON format. '
-                              'Used in property_index mode only.'))
     parser.add_argument('--profile', dest='profile_doc',
                         help=('Path to a JSON profile document, for profile output.'))
     parser.add_argument('-t', '--terse', action='store_true', dest='profile_terse',
@@ -1039,25 +1041,30 @@ def main():
             warnings.warn('Unable to read payload_dir "' + payload_dir + '"; ' + str(ex))
             exit();
 
+    config_file_read = False
+    if args.config_file:
+        try:
+            with open(args.config_file, 'r', encoding="utf8") as config_file:
+                config_data = json.load(config_file)
+                if config['output_content'] == 'property_index':
+                    config['property_index_config'] = config_data # We will amend this on output, if requested
+                # Populate the URI mappings
+                config['uri_to_local'] = {}
+                config['local_to_uri'] = {}
+                for k, v in config_data.get('uri_mapping', {}).items():
+                    vpath = os.path.abspath(v)
+                    config['uri_to_local'][k] = vpath
+                    config['local_to_uri'][vpath] = k
+                config_file_read = True
+        except (OSError) as ex:
+            warnings.warn('Unable to open ' + args.config_file + ' to read: ' + str(ex))
 
-    # If property_index mode was specified, get config from args.config_file:
     if config['output_content'] == 'property_index':
-
-        if args.config_file:
-            config_file= open(args.config_file, 'r', encoding="utf8")
-            config_data = json.load(config_file)
-            config['property_index_config'] = config_data # We will amend this on output, if requested
-            # Populate the URI mappings
-            config['uri_to_local'] = {}
-            config['local_to_uri'] = {}
-            for k, v in config_data.get('uri_mapping', {}).items():
-                vpath = os.path.abspath(v)
-                config['uri_to_local'][k] = vpath
-                config['local_to_uri'][vpath] = k
-        else:
-            config['property_index_config'] = {'DescriptionOverrides': {},
-                                               'ExcludedProperties': []}
-        if args.supfile:
+         if not args.config_file:
+             # Minimal config is required; we'll be adding to this.
+             config['property_index_config'] = {'DescriptionOverrides': {},
+                                                'ExcludedProperties': []}
+         if args.supfile:
             try:
                 with open(args.supfile, 'r', encoding="utf8") as supfile:
                     boilerplate = supfile.read()
