@@ -935,7 +935,10 @@ def main():
         'profile_mode': False,
         'profile_doc': None,
         'profile_resources': {},
-        'profile': {}
+        'profile': {},
+
+        # These values indicate whether to override config with supplement data, and may be useful for debugging
+        'uri_mapping_from_config': False
         }
 
     help_description = 'Generate documentation for Redfish JSON schema files.\n\n'
@@ -1003,14 +1006,16 @@ def main():
                 config_data = json.load(config_file)
                 if config.get('output_content') == 'property_index':
                     config['property_index_config'] = config_data # We will amend this on output, if requested
-                # Populate the URI mappings
-                config['uri_to_local'] = {}
-                config['local_to_uri'] = {}
-                # TODO: check supplement logic.
-                for k, v in config_data.get('uri_mapping', {}).items():
-                    vpath = os.path.abspath(v)
-                    config['uri_to_local'][k] = vpath
-                    config['local_to_uri'][vpath] = k
+                if config_data.get('uri_mapping'):
+                    # Populate the URI mappings
+                    config['uri_to_local'] = {}
+                    config['local_to_uri'] = {}
+                    config['uri_mapping_from_config'] = True
+                    # TODO: check supplement logic.
+                    for k, v in config_data.get('uri_mapping').items():
+                        vpath = os.path.abspath(v)
+                        config['uri_to_local'][k] = vpath
+                        config['local_to_uri'][vpath] = k
                 config_file_read = True
         except (OSError) as ex:
             warnings.warn('Unable to open ' + args['config_file'] + ' to read: ' + str(ex))
@@ -1176,11 +1181,12 @@ def main():
     if 'local_to_uri' in config['supplemental'] and 'local_to_uri' not in config:
         config['local_to_uri'] = config['supplemental']['local_to_uri']
 
-    if 'uri_to_local' in config['supplemental'] and 'uri_to_local' not in config:
-        config['uri_to_local'] = config['supplemental']['uri_to_local']
+    if not config['uri_mapping_from_config']:
+        if 'uri_to_local' in config['supplemental']:
+            config['uri_to_local'] = config['supplemental']['uri_to_local']
 
-    if 'profile_local_to_uri' in config['supplemental']:
-        config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
+        if 'profile_local_to_uri' in config['supplemental']:
+            config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
 
     config['profile_uri_to_local'] = config['supplemental'].get('profile_uri_to_local', {})
 
