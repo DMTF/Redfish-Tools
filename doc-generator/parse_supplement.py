@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2019 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -15,8 +15,10 @@ import urllib.request
 import os.path
 import warnings
 
+# TODO: move some warnings out of here and into doc_generator, accounting for the possibility
+# that some values could come from either config or supplement.
 def parse_file(filehandle):
-    """Parse the supplemental material document. Returns a dict."""
+    """Parse the supplemental material document. Returns a dict. """
 
     # First, split into heading / text.
     parsed = {}

@@ -1,0 +1,31 @@
+{
+    "version": "The version string is optional. It may have (future?) meaning in property index mode.",
+    "description": "Redfish Documentation Generator Example: config file for output of standard-mode documentation in HTML format.",
+    "supfile": "Redfish-Tools/doc-generator/sample_inputs/supplement_for_standard_output.md",
+    "format": "html",
+    "import_from": [ "Redfish/json-schema" ],
+    "outfile": "standard.html",
+    "uri_mapping": { "redfish.dmtf.org/schemas/v1": "Redfish/json-schema" },
+    "ExcludedProperties": [
+        "@odata.context",
+        "@odata.type",
+        "@odata.id",
+        "@odata.etag",
+        "Name",
+        "Id",
+        "Description",
+        "Oem"
+    ],
+    "ExcludedAnnotations": [
+        "*@odata.count",
+        "*@odata.navigationLink"
+    ],
+    "ExcludedSchemas": [
+        "*Collection",
+        "HostedStorageServices",
+        "StorageService",
+        "StorageSystem",
+        "idRef",
+        "Oem"
+    ]
+}

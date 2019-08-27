@@ -992,23 +992,51 @@ def main():
                               "For example, --escape=@#. Use --escape=@ if strings with embedded @ "
                               "are being converted to mailto links."))
 
-    args = parser.parse_args()
+    command_line_args = parser.parse_args()
+    args = vars(command_line_args)
 
-    config['output_format'] = args.format
-    if args.property_index:
+    # Check for a config_file. If there is one, we'll update args based on it.
+    config_file_read = False
+    if args['config_file']:
+        try:
+            with open(args['config_file'], 'r', encoding="utf8") as config_file:
+                config_data = json.load(config_file)
+                if config.get('output_content') == 'property_index':
+                    config['property_index_config'] = config_data # We will amend this on output, if requested
+                # Populate the URI mappings
+                config['uri_to_local'] = {}
+                config['local_to_uri'] = {}
+                # TODO: check supplement logic.
+                for k, v in config_data.get('uri_mapping', {}).items():
+                    vpath = os.path.abspath(v)
+                    config['uri_to_local'][k] = vpath
+                    config['local_to_uri'][vpath] = k
+                config_file_read = True
+        except (OSError) as ex:
+            warnings.warn('Unable to open ' + args['config_file'] + ' to read: ' + str(ex))
+
+    if config_file_read:
+        # TODO: this is incomplete
+        config_args = ['supfile', 'format', 'import_from', 'outfile']
+        for x in config_args:
+            if config_data.get(x) and (not args[x] or args[x] == parser.get_default(x)):
+                args[x] = config_data[x]
+
+    config['output_format'] = args['format']
+    if args['property_index']:
         config['output_content'] = 'property_index'
-        config['write_config_to'] = args.property_index_config_out
+        config['write_config_to'] = args['property_index_config_out']
 
     else:
         config['output_content'] = 'full_doc'
 
-    if len(args.import_from):
-        import_from = args.import_from
+    if len(args['import_from']):
+        import_from = args['import_from']
     else:
         import_from = [ os.path.join(config.get('cwd'), 'json-schema') ]
 
     # Determine outfile and verify that it is writeable:
-    outfile_name = args.outfile
+    outfile_name = args['outfile']
     if outfile_name == 'output.md':
         if config['output_format'] == 'html':
             outfile_name = 'index.html'
@@ -1030,60 +1058,40 @@ def main():
         exit();
 
     # If payload_dir was provided, verify that it is a readable directory:
-    if args.payload_dir:
+    if args['payload_dir']:
         try:
-            if os.path.isdir(args.payload_dir):
-                config['payload_dir'] = args.payload_dir
+            if os.path.isdir(args['payload_dir']):
+                config['payload_dir'] = args['payload_dir']
             else:
-                warnings.warn('"' + args.payload_dir + '" is not a directory. Exiting.')
+                warnings.warn('"' + args['payload_dir'] + '" is not a directory. Exiting.')
                 exit();
         except (Exception) as ex:
             warnings.warn('Unable to read payload_dir "' + payload_dir + '"; ' + str(ex))
             exit();
 
-    config_file_read = False
-    if args.config_file:
-        try:
-            with open(args.config_file, 'r', encoding="utf8") as config_file:
-                config_data = json.load(config_file)
-                if config['output_content'] == 'property_index':
-                    config['property_index_config'] = config_data # We will amend this on output, if requested
-                # Populate the URI mappings
-                config['uri_to_local'] = {}
-                config['local_to_uri'] = {}
-                for k, v in config_data.get('uri_mapping', {}).items():
-                    vpath = os.path.abspath(v)
-                    config['uri_to_local'][k] = vpath
-                    config['local_to_uri'][vpath] = k
-                config_file_read = True
-        except (OSError) as ex:
-            warnings.warn('Unable to open ' + args.config_file + ' to read: ' + str(ex))
-
-    if config['output_content'] == 'property_index':
-         if not args.config_file:
+    if config.get('output_content')== 'property_index':
+         if not args['config_file']:
              # Minimal config is required; we'll be adding to this.
              config['property_index_config'] = {'DescriptionOverrides': {},
                                                 'ExcludedProperties': []}
-         if args.supfile:
+         if args['supfile']:
             try:
-                with open(args.supfile, 'r', encoding="utf8") as supfile:
+                with open(args['supfile'], 'r', encoding="utf8") as supfile:
                     boilerplate = supfile.read()
                     if '[insert property index]' in boilerplate:
                         config['property_index_boilerplate'] = boilerplate
                     else:
                         warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
             except (OSError) as ex:
-                warnings.warn('Unable to open ' + args.supfile + ' to read: ' +  str(ex))
-
-
+                warnings.warn('Unable to open ' + args['supfile'] + ' to read: ' +  str(ex))
     else:
         # In any mode other than property_index, we should have a supplemental file.
         # Ensure supfile is readable (if not, warn but proceed)
         supfile_expected = False
-        if args.supfile:
-            supfile = args.supfile
+        if args['supfile']:
+            supfile = args['supfile']
             supfile_expected = True
-        elif args.normative:
+        elif args['normative']:
             supfile = config.get('cwd') + '/devsupplement.md'
         else:
             supfile = config.get('cwd') + '/usersupplement.md'
@@ -1100,13 +1108,13 @@ def main():
                               ' not found. Proceeding.')
 
     # Check profile document, if specified
-    if args.profile_doc:
-        if args.profile_terse:
+    if args['profile_doc']:
+        if args['profile_terse']:
             config['profile_mode'] = 'terse'
         else:
             config['profile_mode'] = 'verbose'
 
-        profile_doc = args.profile_doc
+        profile_doc = args['profile_doc']
         try:
             profile = open(profile_doc, 'r', encoding="utf8")
             config['profile_doc'] = profile_doc
@@ -1114,9 +1122,9 @@ def main():
             warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
             exit()
 
-    if args.subset_doc:
+    if args['subset_doc']:
         config['profile_mode'] = 'subset'
-        profile_doc = args.subset_doc
+        profile_doc = args['subset_doc']
         try:
             profile = open(profile_doc, 'r', encoding="utf8")
             config['profile_doc'] = profile_doc
@@ -1124,7 +1132,7 @@ def main():
             warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
             exit()
 
-    if args.profile_terse and not args.profile_doc:
+    if args['profile_terse'] and not args['profile_doc']:
         warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).', InfoWarning)
         exit()
 
@@ -1165,10 +1173,10 @@ def main():
     if 'FullDescription Overrides' in config['supplemental']:
         config['property_fulldescription_overrides'] = config['supplemental']['FullDescription Overrides']
 
-    if 'local_to_uri' in config['supplemental']:
+    if 'local_to_uri' in config['supplemental'] and 'local_to_uri' not in config:
         config['local_to_uri'] = config['supplemental']['local_to_uri']
 
-    if 'uri_to_local' in config['supplemental']:
+    if 'uri_to_local' in config['supplemental'] and 'uri_to_local' not in config:
         config['uri_to_local'] = config['supplemental']['uri_to_local']
 
     if 'profile_local_to_uri' in config['supplemental']:
@@ -1191,10 +1199,10 @@ def main():
         config['omit_version_in_headers'] = config['supplemental']['keywords'].get('omit_version_in_headers', False)
         config['expand_defs_from_non_output_schemas'] = config['supplemental']['keywords'].get('expand_defs_from_non_output_schemas', False)
 
-    config['normative'] = args.normative
+    config['normative'] = args['normative']
 
-    if args.escape_chars:
-        config['escape_chars'] = [x for x in args.escape_chars]
+    if args['escape_chars']:
+        config['escape_chars'] = [x for x in args['escape_chars']]
 
     doc_generator = DocGenerator(import_from, outfile, config)
     doc_generator.generate_doc()
