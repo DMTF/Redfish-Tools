@@ -81,6 +81,7 @@ describe('CSDL Tests', () => {
     describe(file, () => {
       let fileName = file.substring(file.lastIndexOf('/')+1);
       let csdl = null;
+      let isYang = false
       before(function(done) {
         this.timeout(120000);
         CSDL.parseMetadataFile(file, options, (err, data) => {
@@ -88,6 +89,7 @@ describe('CSDL Tests', () => {
             throw err;
           }
           csdl = data;
+          isYang = ifYangSchema(data)
           done();
         });
       });
@@ -103,15 +105,17 @@ describe('CSDL Tests', () => {
         it('Has Permission Annotations', () => {permissionsCheck(csdl);});
         it('Complex Types Should Not Have Permissions', () => {complexTypesPermissions(csdl);});
       }
-      it('Descriptions have trailing periods', () => {descriptionPeriodCheck(csdl);});
+      it('Descriptions have trailing periods', () => {if (!isYang) descriptionPeriodCheck(csdl);});
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
       it('No plural Schemas', () => {noPluralSchemas(csdl);});
       it('BaseTypes are valid', () => {checkBaseTypes(csdl);});
       it('All Annotation Terms are valid', () => {checkAnnotationTerms(csdl);});
-      it('Enum Members are valid names', () => {checkEnumMembers(csdl);});
-      //Don't do Pascal Case checking in the RedfishErrors file; the properties are dictated by the OData spec
+      if (!file.includes('RedfishYangExtensions')) {
+        it('Enum Members are valid names', () => {if (!isYang) checkEnumMembers(csdl);});
+      }
+      //Don't do Pascal Case checking in the RedfishErrors file or Yang files; the properties are dictated by the OData spec
       if(file.includes('RedfishError_v1.xml') === false) {
-        it('Properties are Pascal-cased', () => {checkPropertiesPascalCased(csdl);});
+        it('Properties are Pascal-cased', () => {if (!isYang) checkPropertiesPascalCased(csdl);});
       }
       it('Reference URIs are valid', () => {checkReferenceUris(csdl);});
       //skip the metadata mockup
@@ -119,7 +123,7 @@ describe('CSDL Tests', () => {
         it('All References Used', () => {checkReferencesUsed(csdl);});
         it('All namespaces have OwningEntity', () => {schemaOwningEntityCheck(csdl);});
       }
-      it('All EntityType defintions have Actions', () => {entityTypesHaveActions(csdl);});
+      it('All EntityType defintions have Actions', () => {if (!isYang) entityTypesHaveActions(csdl);});
       it('NavigationProperties for Collections cannot be Nullable', () => {navigationPropNullCheck(csdl);});
       it('All new schemas are one version off published', () => {schemaVersionCheck(csdl, publishedSchemas);});
       //Skip OEM extentions and metadata files
@@ -130,6 +134,18 @@ describe('CSDL Tests', () => {
     });
   });
 });
+
+function ifYangSchema(csdl) {
+    // Detect if a certain file is Yang.
+    // Find all external schema references
+    let references = CSDL.search(csdl, 'Reference', undefined, true);
+
+    // Go through each reference
+    for(let i = 0; i < references.length; i++) {
+      if(references[i].Uri.includes('RedfishYang')) return true
+    }
+    return false
+}
 
 function csdlTestSetup() {
   let arr = [];
