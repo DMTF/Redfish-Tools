@@ -921,7 +921,6 @@ def main():
         'excluded_schemas': [],
         'excluded_schemas_by_match': [],
         'excluded_pattern_props': [],
-        'excluded_pattern_props_by_match': [],
         'expand_defs_from_non_output_schemas': False,
         'omit_version_in_headers': False,
         'actions_in_property_table': True,
@@ -959,9 +958,9 @@ def main():
                               'Default: json-schema'))
     parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False,
                         help='Produce normative (developer-focused) output')
-    parser.add_argument('--format', dest='format', default='markdown',
+    parser.add_argument('--format', dest='format',
                         choices=['markdown', 'html', 'csv'], help='Output format')
-    parser.add_argument('--out', dest='outfile', default='output.md',
+    parser.add_argument('--out', dest='outfile',
                         help=('Output file (default depends on output format: '
                               'output.md for Markdown, index.html for HTML, output.csv for CSV'))
     parser.add_argument('--sup', dest='supfile',
@@ -1021,10 +1020,20 @@ def main():
 
     if config_file_read:
         # TODO: this is incomplete
-        config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir']
+        config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
+                           'profile_doc', 'profile_terse']
         for x in config_args:
-            if config_data.get(x) and (not args[x] or args[x] == parser.get_default(x)):
+            if config_data.get(x) and not args[x]:
                 args[x] = config_data[x]
+
+    # set defaults:
+    arg_defaults = {
+        'format' : 'markdown',
+        'outfile' : 'output.md',
+        }
+    for param, default in arg_defaults.items():
+        if not args[param]:
+            args[param] = default
 
     config['output_format'] = args['format']
     if args['property_index']:
@@ -1147,29 +1156,56 @@ def main():
     if 'Schema Documentation' in config['supplemental']:
         config['uri_replacements'] = config['supplemental']['Schema Documentation']
 
-    if 'Excluded Annotations' in config['supplemental']:
-        config['excluded_properties'].extend(
-            config['supplemental']['Excluded Annotations'].get('exact_match'))
-        config['excluded_annotations'].extend(
-            config['supplemental']['Excluded Annotations'].get('exact_match'))
-        config['excluded_by_match'].extend(
-            config['supplemental']['Excluded Annotations'].get('wildcard_match'))
-        config['excluded_annotations_by_match'].extend(
-            config['supplemental']['Excluded Annotations'].get('wildcard_match'))
 
-    if 'Excluded Properties' in config['supplemental']:
-        config['excluded_properties'].extend(
-            config['supplemental']['Excluded Properties'].get('exact_match', []))
-        config['excluded_by_match'].extend(
-            config['supplemental']['Excluded Properties'].get('wildcard_match', []))
+    excluded_annotations = {}
+    if 'excluded_annotations' in config_data:
+        excluded_annotations['exact'] = [x for x in config_data['excluded_annotations'] if not x.startswith('*')]
+        excluded_annotations['wildcard'] = [x[1:] for x in config_data['excluded_annotations'] if x.startswith('*')]
+    elif 'Excluded Annotations' in config['supplemental']:
+        excluded_annotations['exact'] = config['supplemental']['Excluded Annotations'].get('exact_match')
+        excluded_annotations['wildcard'] = config['supplemental']['Excluded Annotations'].get('wildcard_match')
+    if excluded_annotations.get('exact'):
+        excl = excluded_annotations.get('exact')
+        config['excluded_properties'].extend(excl)
+        config['excluded_annotations'].extend(excl)
+    if excluded_annotations.get('wildcard'):
+        excl = excluded_annotations.get('wildcard')
+        config['excluded_by_match'].extend(excl)
+        config['excluded_annotations_by_match'].extend(excl)
 
-    if 'Excluded Schemas' in config['supplemental']:
-        config['excluded_schemas'] = config['supplemental']['Excluded Schemas'].get('exact_match')
-        config['excluded_schemas_by_match'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
+    excluded_properties = {}
+    if 'excluded_properties' in config_data:
+        excluded_properties['exact'] = [x for x in config_data['excluded_properties'] if not x.startswith('*')]
+        excluded_properties['wildcard'] = [x[1:] for x in config_data['excluded_properties'] if x.startswith('*')]
+    elif 'Excluded Properties' in config['supplemental']:
+        excluded_properties['exact'] = config['supplemental']['Excluded Properties'].get('exact_match', [])
+        excluded_properties['wildcard'] = config['supplemental']['Excluded Properties'].get('wildcard_match', [])
+    if excluded_properties.get('exact'):
+        config['excluded_properties'].extend(excluded_properties['exact'])
+    if excluded_properties.get('wildcard'):
+        config['excluded_by_match'].extend(excluded_properties['wildcard'])
 
-    if 'Excluded patternProperties' in config['supplemental']:
-        config['excluded_pattern_props'] = config['supplemental']['Excluded patternProperties'].get('exact_match')
-        config['excluded_pattern_props_by_match'] = config['supplemental']['Excluded patternProperties'].get('wildcard_match')
+    excluded_schemas = {}
+    if 'excluded_schemas' in config_data:
+        excluded_schemas['exact'] = [x for x in config_data['excluded_schemas'] if not x.startswith('*')]
+        excluded_schemas['wildcard'] = [x[1:] for x in config_data['excluded_schemas'] if x.startswith('*')]
+    elif 'Excluded Schemas' in config['supplemental']:
+        excluded_schemas['exact'] = config['supplemental']['Excluded Schemas'].get('exact_match')
+        excluded_schemas['wildcard'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
+    if excluded_schemas.get('exact'):
+        config['excluded_schemas'] = excluded_schemas['exact']
+    if excluded_schemas.get('wildcard'):
+        config['excluded_schemas_by_match'] = excluded_schemas['wildcard']
+
+    # We will get "exact_match" and "wildcard_match" from supplemental, but "wildcard_match" doesn't
+    # make sense for patterns. On the off chance that someone starts a pattern with * and it gets scooped
+    # into wildcard_match, we will pull the contents of that list back in.
+    excluded_patterns = {}
+    if 'excluded_pattern_properties' in config_data:
+        config['excluded_pattern_props'].extend([x for x in config_data['excluded_pattern_properties']])
+    elif 'Excluded patternProperties' in config['supplemental']:
+        config['excluded_pattern_props'].extend(config['supplemental']['Excluded patternProperties'].get('exact_match'))
+        config['excluded_pattern_props'].extend(config['supplemental']['Excluded patternProperties'].get('wildcard_match'))
 
     if 'Description Overrides' in config['supplemental']:
         config['property_description_overrides'] = config['supplemental']['Description Overrides']

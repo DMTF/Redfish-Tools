@@ -53,32 +53,3 @@ String-replacement for "units" values. Case-sensitive. Any units not matched wil
 # Sample Profile-focused Document
 
 [add_toc]
-
-# Excluded Properties
-
-The Excluded Properties section removes properties from the root level of any schema section.  Instances of the property within embedded objects are retained.  If the excluded properties require documentation, include it in the Introduction section of this document.
-
-## @odata.context
-## @odata.type
-## @odata.id
-
-# Excluded patternProperties
-
-You'll probably want to exclude this and only this:
-
-## ^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$
-
-
-# Excluded Annotations
-
-These annotations are removed from the schema details in all cases.  If the excluded annotations require documentation, include it in the Introduction section of this document.
-
-## *@odata.count
-## *@odata.navigationLink
-
-# Excluded Schemas
-
-Some schemas are excluded from the documentation for clarity.  Since all Redfish collections are based on the same structure, this is documented in the Introduction section to reduce repetition in the document.
-
---- For now, we'll include the Collection output.
---- ## *Collection

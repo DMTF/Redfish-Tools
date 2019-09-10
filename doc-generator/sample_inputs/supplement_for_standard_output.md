@@ -97,6 +97,7 @@ A number of corner-case issues have been found in the schema definitions which c
 
 3) Ignore deprecated property annotations if property exists in unversioned schema namespace.  Properties that are moved from versioned to unversioned namespace are marked as deprecated, but this is an internal schema construct and does not indicate the property has actually been deprecated (from the user perspective).  The docgen is picking up these annotations, however, so an exception algorithm to catch these is needed.
 
+
 ------------------------------------------ SCHEMA GUIDE BEGINS HERE --------------------------------------
 
 # Introduction

@@ -55,7 +55,6 @@ class DocFormatter:
 
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
-        self.config['excluded_pattern_props_by_match'] = self.config.get('excluded_pattern_props_by_match', [])
 
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
@@ -1691,8 +1690,7 @@ class DocFormatter:
             # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
             if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
                 patterns = prop_info['patternProperties'].keys()
-                patterns_to_include = self.exclude_prop_names(patterns, self.config['excluded_pattern_props'],
-                                                              self.config['excluded_pattern_props_by_match'])
+                patterns_to_include = self.exclude_prop_names(patterns, self.config['excluded_pattern_props'], [])
 
                 for pattern in patterns_to_include:
                     prop_name = '(pattern)'

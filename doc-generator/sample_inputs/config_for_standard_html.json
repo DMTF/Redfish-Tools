@@ -1,12 +1,14 @@
 {
     "version": "The version string is optional. It may have (future?) meaning in property index mode.",
     "description": "Redfish Documentation Generator Example: config file for output of standard-mode documentation in HTML format.",
-    "payload_dir": "./mockups/DSP2046-examples",
     "format": "html",
+    "payload_dir": "./mockups/DSP2046-examples",
     "import_from": [ "./json-schema" ],
     "outfile": "standard.html",
+    "normative": true,
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
-    "ExcludedProperties": [
+    "supfile": "../Redfish-Tools/doc-generator/sample_inputs/supplement_for_standard_output.md",
+    "excluded_properties": [
         "@odata.context",
         "@odata.type",
         "@odata.id",
@@ -16,11 +18,11 @@
         "Description",
         "Oem"
     ],
-    "ExcludedAnnotations": [
+    "excluded_annotations": [
         "*@odata.count",
         "*@odata.navigationLink"
     ],
-    "ExcludedSchemas": [
+    "excluded_schemas": [
         "*Collection",
         "HostedStorageServices",
         "StorageService",
@@ -28,5 +30,7 @@
         "idRef",
         "Oem"
     ],
-    "supfile": "../Redfish-Tools/doc-generator/sample_inputs/supplement_for_standard_output.md"
+    "excluded_pattern_properties": [
+        "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$"
+    ]
 }
