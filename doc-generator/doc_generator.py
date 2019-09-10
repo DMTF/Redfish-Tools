@@ -1011,7 +1011,6 @@ def main():
                     config['uri_to_local'] = {}
                     config['local_to_uri'] = {}
                     config['uri_mapping_from_config'] = True
-                    # TODO: check supplement logic.
                     for k, v in config_data.get('uri_mapping').items():
                         vpath = os.path.abspath(v)
                         config['uri_to_local'][k] = vpath
@@ -1022,7 +1021,7 @@ def main():
 
     if config_file_read:
         # TODO: this is incomplete
-        config_args = ['supfile', 'format', 'import_from', 'outfile']
+        config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir']
         for x in config_args:
             if config_data.get(x) and (not args[x] or args[x] == parser.get_default(x)):
                 args[x] = config_data[x]
@@ -1178,8 +1177,16 @@ def main():
     if 'FullDescription Overrides' in config['supplemental']:
         config['property_fulldescription_overrides'] = config['supplemental']['FullDescription Overrides']
 
+    # URI mappings may be provided either in the config file or the supplemental document.
+    # If they are in both, the version in the config file is what we use.
+    # If neither is populated, issue a warning.
     if 'local_to_uri' in config['supplemental'] and 'local_to_uri' not in config:
         config['local_to_uri'] = config['supplemental']['local_to_uri']
+
+    if not config['local_to_uri']:
+        warnings.warn("Schema URI Mapping was not found or empty. " +
+                          "URI mapping may be provided via config file or supplmentatl markdown. " +
+                          "Output is likely to be incomplete.\n\n")
 
     if not config['uri_mapping_from_config']:
         if 'uri_to_local' in config['supplemental']:

@@ -98,12 +98,6 @@ def parse_file(filehandle):
 
     if 'Schema URI Mapping' in parsed:
         parsed['local_to_uri'], parsed['uri_to_local'] = parse_uri_mapping(parsed['Schema URI Mapping'])
-        if not parsed.get('uri_to_local'):
-            warnings.warn("Schema URI Mapping found in supplemental document didn't provide any mappings. " +
-                          "Output is likely to be incomplete.\n\n")
-    else:
-        warnings.warn("Schema URI Mapping not found in supplemental document. " +
-                      "Output is likely to be incomplete.\n\n")
 
     if 'Profile URI Mapping' in parsed:
         parsed['profile_local_to_uri'], parsed['profile_uri_to_local'] = parse_uri_mapping(
@@ -210,9 +204,9 @@ def parse_uri_mapping(markdown_blob):
                     local_to_uri[abs_local_path] = uri
                     uri_to_local[uri] = abs_local_path
                 else:
-                    warnings.warn('URI mapping has a bad local path "' + local_path + '"')
+                    warnings.warn('URI mapping in Supplemental file has a bad local path "' + local_path + '"')
             else:
-                warnings.warn('Could not parse URI mapping: "' + line + '"')
+                warnings.warn('Could not parse URI mapping from Supplemental file: "' + line + '"')
 
     return local_to_uri, uri_to_local
 
