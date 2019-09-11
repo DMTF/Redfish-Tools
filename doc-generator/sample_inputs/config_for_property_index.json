@@ -6,7 +6,7 @@
     "import_from": [ "./json-schema" ],
     "outfile": "property_index.html",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
-    "ExcludedProperties": [
+    "excluded_properties": [
         "description",
         "Id",
         "@odata.context",

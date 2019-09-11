@@ -2,11 +2,11 @@
     "version": "The version string is optional. It may have (future?) meaning in property index mode.",
     "description": "Redfish Documentation Generator Example: config file for output of standard-mode documentation in HTML format.",
     "format": "html",
-    "payload_dir": "./mockups/DSP2046-examples",
     "import_from": [ "./json-schema" ],
     "outfile": "standard.html",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
     "supfile": "../Redfish-Tools/doc-generator/sample_inputs/supplement_for_standard_output.md",
+    "payload_dir": "./mockups/DSP2046-examples",
     "add_toc": true,
     "excluded_properties": [
         "@odata.context",
