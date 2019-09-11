@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2019 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -15,8 +15,10 @@ import urllib.request
 import os.path
 import warnings
 
+# TODO: move some warnings out of here and into doc_generator, accounting for the possibility
+# that some values could come from either config or supplement.
 def parse_file(filehandle):
-    """Parse the supplemental material document. Returns a dict."""
+    """Parse the supplemental material document. Returns a dict. """
 
     # First, split into heading / text.
     parsed = {}
@@ -96,12 +98,6 @@ def parse_file(filehandle):
 
     if 'Schema URI Mapping' in parsed:
         parsed['local_to_uri'], parsed['uri_to_local'] = parse_uri_mapping(parsed['Schema URI Mapping'])
-        if not parsed.get('uri_to_local'):
-            warnings.warn("Schema URI Mapping found in supplemental document didn't provide any mappings. " +
-                          "Output is likely to be incomplete.\n\n")
-    else:
-        warnings.warn("Schema URI Mapping not found in supplemental document. " +
-                      "Output is likely to be incomplete.\n\n")
 
     if 'Profile URI Mapping' in parsed:
         parsed['profile_local_to_uri'], parsed['profile_uri_to_local'] = parse_uri_mapping(
@@ -124,8 +120,7 @@ def parse_configuration(markdown_blob):
 
     Values may be coerced as needed. So far, expected booleans are coerced.
     """
-    boolean_settings = ['omit_version_in_headers', 'expand_defs_from_non_output_schemas', 'add_toc',
-                        'actions_in_property_table']
+    boolean_settings = ['omit_version_in_headers', 'add_toc', 'actions_in_property_table']
     config = {}
     pattern = re.compile(r'\s*-\s+(\S+)\s*:\s*(\S+)')
 
@@ -208,9 +203,9 @@ def parse_uri_mapping(markdown_blob):
                     local_to_uri[abs_local_path] = uri
                     uri_to_local[uri] = abs_local_path
                 else:
-                    warnings.warn('URI mapping has a bad local path "' + local_path + '"')
+                    warnings.warn('URI mapping in Supplemental file has a bad local path "' + local_path + '"')
             else:
-                warnings.warn('Could not parse URI mapping: "' + line + '"')
+                warnings.warn('Could not parse URI mapping from Supplemental file: "' + line + '"')
 
     return local_to_uri, uri_to_local
 

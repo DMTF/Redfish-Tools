@@ -17,7 +17,6 @@ from doc_generator import DocGenerator
 testcase_path = os.path.join('tests', 'samples', 'csv_mode')
 
 base_config = {
-    'expand_defs_from_non_output_schemas': False,
     'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
     'profile_resources': {},
     'units_translation': {},

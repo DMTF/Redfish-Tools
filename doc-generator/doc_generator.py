@@ -1,6 +1,6 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
-# Copyright 2016, 2017, 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017, 2018, 2019 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -585,7 +585,9 @@ class DocGenerator:
         if profile_mode:
             schema_profile = profile.get(generalized_uri)
             if schema_profile:
-                if profile_mode != 'subset':
+                if profile_mode == 'subset':
+                    property_data['name_and_version'] += ' ' + version
+                else:
                     min_version = schema_profile.get('MinVersion')
                     if min_version:
                         if version:
@@ -921,8 +923,6 @@ def main():
         'excluded_schemas': [],
         'excluded_schemas_by_match': [],
         'excluded_pattern_props': [],
-        'excluded_pattern_props_by_match': [],
-        'expand_defs_from_non_output_schemas': False,
         'omit_version_in_headers': False,
         'actions_in_property_table': True,
         'schema_supplement': None,
@@ -935,7 +935,10 @@ def main():
         'profile_mode': False,
         'profile_doc': None,
         'profile_resources': {},
-        'profile': {}
+        'profile': {},
+
+        # These values indicate whether to override config with supplement data, and may be useful for debugging
+        'uri_mapping_from_config': False
         }
 
     help_description = 'Generate documentation for Redfish JSON schema files.\n\n'
@@ -945,14 +948,20 @@ def main():
     parser = argparse.ArgumentParser(description=help_description,
                                      epilog=help_epilog,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    parser.add_argument('--config', dest="config_file",
+                        help=('Path to a config file, containing configuration '
+                              ' in JSON format. '
+                              ))
+
     parser.add_argument('import_from', metavar='import_from', nargs='*',
                         help=('Name of a file or directory to process (wild cards are acceptable). '
                               'Default: json-schema'))
     parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False,
                         help='Produce normative (developer-focused) output')
-    parser.add_argument('--format', dest='format', default='markdown',
+    parser.add_argument('--format', dest='format',
                         choices=['markdown', 'html', 'csv'], help='Output format')
-    parser.add_argument('--out', dest='outfile', default='output.md',
+    parser.add_argument('--out', dest='outfile',
                         help=('Output file (default depends on output format: '
                               'output.md for Markdown, index.html for HTML, output.csv for CSV'))
     parser.add_argument('--sup', dest='supfile',
@@ -964,10 +973,6 @@ def main():
                               'Within this directory, use the following naming scheme for example files: '
                               '<schema_name>-v<major_version>-example.json for JSON payloads, '
                               '<schema_name-v<major_version>-action-<action_name>.json for action examples.'))
-    parser.add_argument('--config', dest="config_file",
-                        help=('Path to a config file, containing configuration '
-                              ' in JSON format. '
-                              'Used in property_index mode only.'))
     parser.add_argument('--profile', dest='profile_doc',
                         help=('Path to a JSON profile document, for profile output.'))
     parser.add_argument('-t', '--terse', action='store_true', dest='profile_terse',
@@ -976,8 +981,8 @@ def main():
                               'profile requirements. "Terse" output is intended for use by '
                               'Service developers, including only the subset of properties with '
                               'profile requirements.'))
-    parser.add_argument('--subset', action='store_true', dest='subset',
-                        help=('Subset output (meaningful only with --profile). Generates "Schema subset '
+    parser.add_argument('--subset', dest='subset_doc',
+                        help=('Path to a JSON profile document. Generates "Schema subset" '
                               'output, with the subset defined in the JSON profile document.'))
 
     parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
@@ -990,23 +995,72 @@ def main():
                               "For example, --escape=@#. Use --escape=@ if strings with embedded @ "
                               "are being converted to mailto links."))
 
-    args = parser.parse_args()
+    command_line_args = parser.parse_args()
+    args = vars(command_line_args)
 
-    config['output_format'] = args.format
-    if args.property_index:
+    # Check for a config_file. If there is one, we'll update args based on it.
+    config_file_read = False
+    if args['config_file']:
+        try:
+            with open(args['config_file'], 'r', encoding="utf8") as config_file:
+                config_data = json.load(config_file)
+                if config_data.get('property_index') or args['property_index']:
+                    config['property_index_config'] = config_data # We will amend this on output, if requested
+                if config_data.get('uri_mapping'):
+                    # Populate the URI mappings
+                    config['uri_to_local'] = {}
+                    config['local_to_uri'] = {}
+                    config['uri_mapping_from_config'] = True
+                    for k, v in config_data.get('uri_mapping').items():
+                        vpath = os.path.abspath(v)
+                        config['uri_to_local'][k] = vpath
+                        config['local_to_uri'][vpath] = k
+                config_file_read = True
+        except (OSError) as ex:
+            warnings.warn('Unable to open ' + args['config_file'] + ' to read: ' + str(ex))
+
+    if config_file_read:
+        config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
+                           'profile_doc', 'profile_terse', 'subset_doc',
+                           'property_index', 'property_index_config_out',
+                           'escape_chars'
+                           ]
+        for x in config_args:
+            if config_data.get(x) and not args[x]:
+                args[x] = config_data[x]
+
+        # config_flags don't have command-line overrides; they should be added to config directly.
+        # We want to capture the fact that a flag was set, even if false, as this should override
+        # the corresponding keyword in the supplemental markdown document.
+        config_flags = ['add_toc']
+        for x in config_flags:
+            if x in config_data:
+                config[x] = config_data[x]
+
+    # set defaults:
+    arg_defaults = {
+        'format' : 'markdown',
+        'outfile' : 'output.md',
+        }
+    for param, default in arg_defaults.items():
+        if not args[param]:
+            args[param] = default
+
+    config['output_format'] = args['format']
+    if args['property_index']:
         config['output_content'] = 'property_index'
-        config['write_config_to'] = args.property_index_config_out
+        config['write_config_to'] = args['property_index_config_out']
 
     else:
         config['output_content'] = 'full_doc'
 
-    if len(args.import_from):
-        import_from = args.import_from
+    if len(args['import_from']):
+        import_from = args['import_from']
     else:
         import_from = [ os.path.join(config.get('cwd'), 'json-schema') ]
 
     # Determine outfile and verify that it is writeable:
-    outfile_name = args.outfile
+    outfile_name = args['outfile']
     if outfile_name == 'output.md':
         if config['output_format'] == 'html':
             outfile_name = 'index.html'
@@ -1028,55 +1082,45 @@ def main():
         exit();
 
     # If payload_dir was provided, verify that it is a readable directory:
-    if args.payload_dir:
+    if args['payload_dir']:
         try:
-            if os.path.isdir(args.payload_dir):
-                config['payload_dir'] = args.payload_dir
+            if os.path.isdir(args['payload_dir']):
+                config['payload_dir'] = args['payload_dir']
             else:
-                warnings.warn('"' + args.payload_dir + '" is not a directory. Exiting.')
+                warnings.warn('"' + args['payload_dir'] + '" is not a directory. Exiting.')
                 exit();
         except (Exception) as ex:
             warnings.warn('Unable to read payload_dir "' + payload_dir + '"; ' + str(ex))
             exit();
 
+    if config.get('output_content') == 'property_index':
+         if not config_file_read:
+             # Minimal config is required; we'll be adding to this.
+             config['property_index_config'] = {'DescriptionOverrides': {},
+                                                'ExcludedProperties': []}
+         else:
+             if 'ExcludedProperties' not in config['property_index_config']:
+                 import pdb; pdb.set_trace()
+                 config['property_index_config'] == config.get('excluded_properties', [])
 
-    # If property_index mode was specified, get config from args.config_file:
-    if config['output_content'] == 'property_index':
-
-        if args.config_file:
-            config_file= open(args.config_file, 'r', encoding="utf8")
-            config_data = json.load(config_file)
-            config['property_index_config'] = config_data # We will amend this on output, if requested
-            # Populate the URI mappings
-            config['uri_to_local'] = {}
-            config['local_to_uri'] = {}
-            for k, v in config_data.get('uri_mapping', {}).items():
-                vpath = os.path.abspath(v)
-                config['uri_to_local'][k] = vpath
-                config['local_to_uri'][vpath] = k
-        else:
-            config['property_index_config'] = {'DescriptionOverrides': {},
-                                               'ExcludedProperties': []}
-        if args.supfile:
+         if args['supfile']:
             try:
-                with open(args.supfile, 'r', encoding="utf8") as supfile:
+                with open(args['supfile'], 'r', encoding="utf8") as supfile:
                     boilerplate = supfile.read()
                     if '[insert property index]' in boilerplate:
                         config['property_index_boilerplate'] = boilerplate
                     else:
                         warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
             except (OSError) as ex:
-                warnings.warn('Unable to open ' + args.supfile + ' to read: ' +  str(ex))
-
-
+                warnings.warn('Unable to open ' + args['supfile'] + ' to read: ' +  str(ex))
     else:
         # In any mode other than property_index, we should have a supplemental file.
         # Ensure supfile is readable (if not, warn but proceed)
         supfile_expected = False
-        if args.supfile:
-            supfile = args.supfile
+        if args['supfile']:
+            supfile = args['supfile']
             supfile_expected = True
-        elif args.normative:
+        elif args['normative']:
             supfile = config.get('cwd') + '/devsupplement.md'
         else:
             supfile = config.get('cwd') + '/usersupplement.md'
@@ -1093,15 +1137,13 @@ def main():
                               ' not found. Proceeding.')
 
     # Check profile document, if specified
-    if args.profile_doc:
-        if args.profile_terse:
+    if args['profile_doc']:
+        if args['profile_terse']:
             config['profile_mode'] = 'terse'
-        elif args.subset:
-            config['profile_mode'] = 'subset'
         else:
             config['profile_mode'] = 'verbose'
 
-        profile_doc = args.profile_doc
+        profile_doc = args['profile_doc']
         try:
             profile = open(profile_doc, 'r', encoding="utf8")
             config['profile_doc'] = profile_doc
@@ -1109,44 +1151,79 @@ def main():
             warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
             exit()
 
-    if args.subset and not args.profile_doc:
-        warnings.warn('"Subset output (--subset) requires a profile (--profile).', InfoWarning)
-        exit()
+    if args['subset_doc']:
+        config['profile_mode'] = 'subset'
+        profile_doc = args['subset_doc']
+        try:
+            profile = open(profile_doc, 'r', encoding="utf8")
+            config['profile_doc'] = profile_doc
+        except (OSError) as ex:
+            warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
+            exit()
 
-    if args.profile_terse and not args.profile_doc:
+    if args['profile_terse'] and not args['profile_doc']:
         warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).', InfoWarning)
         exit()
 
     if 'keywords' in config['supplemental']:
         # Promote the keywords to top-level keys.
-        config.update(config['supplemental']['keywords'])
+        for key, val in config['supplemental']['keywords'].items():
+            if key not in config:
+                config[key] = val
 
     if 'Schema Documentation' in config['supplemental']:
         config['uri_replacements'] = config['supplemental']['Schema Documentation']
 
-    if 'Excluded Annotations' in config['supplemental']:
-        config['excluded_properties'].extend(
-            config['supplemental']['Excluded Annotations'].get('exact_match'))
-        config['excluded_annotations'].extend(
-            config['supplemental']['Excluded Annotations'].get('exact_match'))
-        config['excluded_by_match'].extend(
-            config['supplemental']['Excluded Annotations'].get('wildcard_match'))
-        config['excluded_annotations_by_match'].extend(
-            config['supplemental']['Excluded Annotations'].get('wildcard_match'))
 
-    if 'Excluded Properties' in config['supplemental']:
-        config['excluded_properties'].extend(
-            config['supplemental']['Excluded Properties'].get('exact_match', []))
-        config['excluded_by_match'].extend(
-            config['supplemental']['Excluded Properties'].get('wildcard_match', []))
+    excluded_annotations = {}
+    if 'excluded_annotations' in config_data:
+        excluded_annotations['exact'] = [x for x in config_data['excluded_annotations'] if not x.startswith('*')]
+        excluded_annotations['wildcard'] = [x[1:] for x in config_data['excluded_annotations'] if x.startswith('*')]
+    elif 'Excluded Annotations' in config['supplemental']:
+        excluded_annotations['exact'] = config['supplemental']['Excluded Annotations'].get('exact_match')
+        excluded_annotations['wildcard'] = config['supplemental']['Excluded Annotations'].get('wildcard_match')
+    if excluded_annotations.get('exact'):
+        excl = excluded_annotations.get('exact')
+        config['excluded_properties'].extend(excl)
+        config['excluded_annotations'].extend(excl)
+    if excluded_annotations.get('wildcard'):
+        excl = excluded_annotations.get('wildcard')
+        config['excluded_by_match'].extend(excl)
+        config['excluded_annotations_by_match'].extend(excl)
 
-    if 'Excluded Schemas' in config['supplemental']:
-        config['excluded_schemas'] = config['supplemental']['Excluded Schemas'].get('exact_match')
-        config['excluded_schemas_by_match'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
+    excluded_properties = {}
+    if 'excluded_properties' in config_data:
+        excluded_properties['exact'] = [x for x in config_data['excluded_properties'] if not x.startswith('*')]
+        excluded_properties['wildcard'] = [x[1:] for x in config_data['excluded_properties'] if x.startswith('*')]
+    elif 'Excluded Properties' in config['supplemental']:
+        excluded_properties['exact'] = config['supplemental']['Excluded Properties'].get('exact_match', [])
+        excluded_properties['wildcard'] = config['supplemental']['Excluded Properties'].get('wildcard_match', [])
+    if excluded_properties.get('exact'):
+        config['excluded_properties'].extend(excluded_properties['exact'])
+    if excluded_properties.get('wildcard'):
+        config['excluded_by_match'].extend(excluded_properties['wildcard'])
 
-    if 'Excluded patternProperties' in config['supplemental']:
-        config['excluded_pattern_props'] = config['supplemental']['Excluded patternProperties'].get('exact_match')
-        config['excluded_pattern_props_by_match'] = config['supplemental']['Excluded patternProperties'].get('wildcard_match')
+    excluded_schemas = {}
+    if 'excluded_schemas' in config_data:
+        excluded_schemas['exact'] = [x for x in config_data['excluded_schemas'] if not x.startswith('*')]
+        excluded_schemas['wildcard'] = [x[1:] for x in config_data['excluded_schemas'] if x.startswith('*')]
+    elif 'Excluded Schemas' in config['supplemental']:
+        excluded_schemas['exact'] = config['supplemental']['Excluded Schemas'].get('exact_match')
+        excluded_schemas['wildcard'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
+    if excluded_schemas.get('exact'):
+        config['excluded_schemas'] = excluded_schemas['exact']
+    if excluded_schemas.get('wildcard'):
+        config['excluded_schemas_by_match'] = excluded_schemas['wildcard']
+
+    # We will get "exact_match" and "wildcard_match" from supplemental, but "wildcard_match" doesn't
+    # make sense for patterns. On the off chance that someone starts a pattern with * and it gets scooped
+    # into wildcard_match, we will pull the contents of that list back in.
+    excluded_patterns = {}
+    if 'excluded_pattern_properties' in config_data:
+        config['excluded_pattern_props'].extend([x for x in config_data['excluded_pattern_properties']])
+    elif 'Excluded patternProperties' in config['supplemental']:
+        config['excluded_pattern_props'].extend(config['supplemental']['Excluded patternProperties'].get('exact_match'))
+        config['excluded_pattern_props'].extend(config['supplemental']['Excluded patternProperties'].get('wildcard_match'))
 
     if 'Description Overrides' in config['supplemental']:
         config['property_description_overrides'] = config['supplemental']['Description Overrides']
@@ -1154,14 +1231,23 @@ def main():
     if 'FullDescription Overrides' in config['supplemental']:
         config['property_fulldescription_overrides'] = config['supplemental']['FullDescription Overrides']
 
-    if 'local_to_uri' in config['supplemental']:
+    # URI mappings may be provided either in the config file or the supplemental document.
+    # If they are in both, the version in the config file is what we use.
+    # If neither is populated, issue a warning.
+    if 'local_to_uri' in config['supplemental'] and 'local_to_uri' not in config:
         config['local_to_uri'] = config['supplemental']['local_to_uri']
 
-    if 'uri_to_local' in config['supplemental']:
-        config['uri_to_local'] = config['supplemental']['uri_to_local']
+    if not config['local_to_uri']:
+        warnings.warn("Schema URI Mapping was not found or empty. " +
+                          "URI mapping may be provided via config file or supplmentatl markdown. " +
+                          "Output is likely to be incomplete.\n\n")
 
-    if 'profile_local_to_uri' in config['supplemental']:
-        config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
+    if not config['uri_mapping_from_config']:
+        if 'uri_to_local' in config['supplemental']:
+            config['uri_to_local'] = config['supplemental']['uri_to_local']
+
+        if 'profile_local_to_uri' in config['supplemental']:
+            config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
 
     config['profile_uri_to_local'] = config['supplemental'].get('profile_uri_to_local', {})
 
@@ -1174,16 +1260,10 @@ def main():
 
     config['wants_common_objects'] = config['supplemental'].get('wants_common_objects', False)
 
-    if 'keywords' in config['schema_supplement']:
-        config['add_toc'] = config['supplemental']['keywords'].get('add_toc', False)
-        config['actions_in_property_table'] = config['supplemental']['keywords'].get('actions_in_property_table', True)
-        config['omit_version_in_headers'] = config['supplemental']['keywords'].get('omit_version_in_headers', False)
-        config['expand_defs_from_non_output_schemas'] = config['supplemental']['keywords'].get('expand_defs_from_non_output_schemas', False)
+    config['normative'] = args['normative']
 
-    config['normative'] = args.normative
-
-    if args.escape_chars:
-        config['escape_chars'] = [x for x in args.escape_chars]
+    if args['escape_chars']:
+        config['escape_chars'] = [x for x in args['escape_chars']]
 
     doc_generator = DocGenerator(import_from, outfile, config)
     doc_generator.generate_doc()

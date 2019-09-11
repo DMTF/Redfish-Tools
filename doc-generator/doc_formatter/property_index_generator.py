@@ -41,8 +41,7 @@ class PropertyIndexGenerator(DocFormatter):
         """
         # parse the property index config data
         config_data = config['property_index_config']
-        # doc generator will be looking for config['supplemental']['DescriptionOverrides']
-        config['supplemental']['DescriptionOverrides'] = config_data.get('DescriptionOverrides', {})
+
         excluded_props =  config_data.get('ExcludedProperties', [])
         config['excluded_properties'].extend([x for x in excluded_props if not x.startswith('*')])
         config['excluded_by_match'].extend([x[1:] for x in excluded_props if x.startswith('*')])
@@ -62,7 +61,7 @@ class PropertyIndexGenerator(DocFormatter):
         self.properties_by_name = {}
         self.coalesced_properties = {}
         # Shorthand for the overrides.
-        self.overrides = config['supplemental']['DescriptionOverrides']
+        self.overrides = config_data.get('DescriptionOverrides', {})
 
         # Force some config here:
         self.config['omit_version_in_headers'] = True # This puts just the schema name in the section head.
@@ -208,7 +207,7 @@ class PropertyIndexGenerator(DocFormatter):
         pass
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
         """Generate a formatted Actions section from parameters data"""
         pass
 
