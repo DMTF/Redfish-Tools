@@ -40,14 +40,12 @@ follow the full URI, including data from remote files if possible.
 
 ## Local-repo: redfish.dmtf.org/schemas/v1 ./json-schema
 
+Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output. You must also specify "true" for add_toc, either in a Keyword Configuration section in this file, or in the (JSON) config file.
+
 # Keyword Configuration
 
 Keywords and their values as bullet points with name:value pairs in the "Keyword Configuration" section, as shown here. Keywords are not case-sensitive.
 
-- omit_version_in_headers: false
-- add_toc: true
-
-Note: you can specify the location of the TOC, presumably in the Introduction section, by placing the text [add_toc] where you want the Table of Contents substituted in. By default, the TOC will be placed at the top of the HTML output.
 
 # Description Overrides
 

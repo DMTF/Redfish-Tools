@@ -37,3 +37,9 @@ Config file references supplemental file *SampleProfileInput.md*
   python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_property_index.json
 
 Note that the config file for property index output includes some elements that are specific to that mode: DescriptionOverrides. Property Index mode does not use a supplemental markdown document.
+
+## Produce full documentation, in HTML format:
+
+ python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_csv.json
+
+Config file references supplemental file *supplement_for_standard_output.md*. (Note that there's a lot of detail in this supplemental file that's irrelevant to CSV output, and is simply ignored.)

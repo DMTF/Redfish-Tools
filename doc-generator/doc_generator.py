@@ -1030,6 +1030,14 @@ def main():
             if config_data.get(x) and not args[x]:
                 args[x] = config_data[x]
 
+        # config_flags don't have command-line overrides; they should be added to config directly.
+        # We want to capture the fact that a flag was set, even if false, as this should override
+        # the corresponding keyword in the supplemental markdown document.
+        config_flags = ['add_toc']
+        for x in config_flags:
+            if x in config_data:
+                config[x] = config_data[x]
+
     # set defaults:
     arg_defaults = {
         'format' : 'markdown',
@@ -1155,7 +1163,9 @@ def main():
 
     if 'keywords' in config['supplemental']:
         # Promote the keywords to top-level keys.
-        config.update(config['supplemental']['keywords'])
+        for key, val in config['supplemental']['keywords'].items():
+            if key not in config:
+                config[key] = val
 
     if 'Schema Documentation' in config['supplemental']:
         config['uri_replacements'] = config['supplemental']['Schema Documentation']
@@ -1245,12 +1255,6 @@ def main():
     config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
 
     config['wants_common_objects'] = config['supplemental'].get('wants_common_objects', False)
-
-    if 'keywords' in config['schema_supplement']:
-        config['add_toc'] = config['supplemental']['keywords'].get('add_toc', False)
-        config['actions_in_property_table'] = config['supplemental']['keywords'].get('actions_in_property_table', True)
-        config['omit_version_in_headers'] = config['supplemental']['keywords'].get('omit_version_in_headers', False)
-        config['expand_defs_from_non_output_schemas'] = config['supplemental']['keywords'].get('expand_defs_from_non_output_schemas', False)
 
     config['normative'] = args['normative']
 
