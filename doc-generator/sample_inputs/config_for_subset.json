@@ -1,6 +1,6 @@
 {
     "version": "The version string is optional. It may have (future?) meaning in property index mode.",
-    "description": "Redfish Documentation Generator Example: config file for output of standard-mode documentation in HTML format.",
+    "description": "Redfish Documentation Generator Example: config file for output of subset documentation in HTML format.",
     "format": "html",
     "import_from": [ "./json-schema" ],
     "outfile": "subset.html",

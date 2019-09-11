@@ -7,14 +7,33 @@ These assume that you have a clone of the DMTF/Redfish repo and the DMTF/Redfish
 Note that the config files themselves contain references to other files in this directory.
 
 
-## Produce full documentation, with normative descriptions and in HTML format:
+## Produce full documentation, in HTML format:
 
  python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_standard_html.json
 
-## Produce Profile output (terse mode, HTML format):
+Config file references supplemental file *supplement_for_standard_output.md*
+
+## Produce full documentation, with normative descriptions and in HTML format:
+
+ python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_normative_html.json
+
+Config file references supplemental file *supplement_for_standard_output.md*
+
+## Produce Profile output (terse mode, markdown format):
 
   python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_profile_terse.json
+
+Config file references supplemental file *SampleProfileInput.md*
 
 ## Produce Subset documentation (HTML format):
 
   python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_subset.json
+
+Config file references supplemental file *SampleProfileInput.md*
+
+
+## Produce Property Index output (HTML format):
+
+  python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_property_index.json
+
+Note that the config file for property index output includes some elements that are specific to that mode: DescriptionOverrides. Property Index mode does not use a supplemental markdown document.

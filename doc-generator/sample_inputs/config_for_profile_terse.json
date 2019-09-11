@@ -1,9 +1,9 @@
 {
     "version": "The version string is optional. It may have (future?) meaning in property index mode.",
-    "description": "Redfish Documentation Generator Example: config file for output of standard-mode documentation in HTML format.",
-    "format": "html",
+    "description": "Redfish Documentation Generator Example: config file for output of profile documentation in HTML format.",
+    "format": "markdown",
     "import_from": [ "./json-schema" ],
-    "outfile": "profile-terse.html",
+    "outfile": "profile-terse.md",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
     "profile_doc": "../Redfish-Tools/doc-generator/sample_inputs/OCPBasicServer.v1_0_0.json",
     "profile_terse": true,

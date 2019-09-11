@@ -1,0 +1,71 @@
+{
+    "version": "The version string is optional. It may have (future?) meaning in property index mode.",
+    "description": "Redfish Documentation Generator Example: config file for output of property index documentation in HTML format.",
+    "property_index": true,
+    "format": "html",
+    "import_from": [ "./json-schema" ],
+    "outfile": "property_index.html",
+    "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
+    "ExcludedProperties": [
+        "description",
+        "Id",
+        "@odata.context",
+        "@odata.type",
+        "@odata.id",
+        "@odata.etag",
+        "*@odata.count"
+    ],
+    "DescriptionOverrides": {
+        "EventType": [
+            {
+                "overrideDescription": "This indicates the type of an event recorded in this log.",
+                "globalOverride": true,
+                "type": "string"
+            }
+        ],
+        "MinReadingRange": [
+            {
+                "overrideDescription": "Minimum value for this reading.",
+                "globalOverride": true,
+                "type": "number"
+            }
+        ],
+        "ResourceBlocks": [
+            {
+                "overrideDescription": "An array of references to the Resource Blocks located in this Object.",
+                "globalOverride": true,
+                "type": "array"
+            }
+        ],
+        "FirmwareVersion": [
+            {
+                "description": "Firmware version.",
+                "type": "string",
+                "knownException": true,
+                "overrideDescription": "Override text for FirmwareVersion",
+                "schemas": [
+                    "AttributeRegistry/SupportedSystems"
+                ]
+            },
+            {
+                "overrideDescription": "The firmware version of this thingamajig.",
+                "type": "string",
+                "knownException": true,
+                "schemas": [
+                    "Power/PowerSupplies",
+                    "Manager",
+                    "ComputerSystem/TrustedModules",
+                    "Storage/StorageControllers"
+                ]
+            },
+            {
+                "description": "The version of firmware for this PCIe device.",
+                "type": "string",
+                "knownException": true,
+                "schemas": [
+                    "PCIeDevice"
+                ]
+            }
+        ]
+    }
+}

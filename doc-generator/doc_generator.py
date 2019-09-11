@@ -1005,7 +1005,7 @@ def main():
         try:
             with open(args['config_file'], 'r', encoding="utf8") as config_file:
                 config_data = json.load(config_file)
-                if config.get('output_content') == 'property_index':
+                if config_data.get('property_index') or args['property_index']:
                     config['property_index_config'] = config_data # We will amend this on output, if requested
                 if config_data.get('uri_mapping'):
                     # Populate the URI mappings
@@ -1023,7 +1023,9 @@ def main():
     if config_file_read:
         # TODO: this is incomplete
         config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
-                           'profile_doc', 'profile_terse', 'subset_doc']
+                           'profile_doc', 'profile_terse', 'subset_doc',
+                           'property_index', 'property_index_config_out'
+                           ]
         for x in config_args:
             if config_data.get(x) and not args[x]:
                 args[x] = config_data[x]
