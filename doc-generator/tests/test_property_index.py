@@ -34,7 +34,6 @@ property_index_config = {
 base_config = {
     'output_content': 'property_index',
     'output_format': 'markdown',
-    'expand_defs_from_non_output_schemas': False,
     'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
     'profile_resources': {},
     'units_translation': {},
