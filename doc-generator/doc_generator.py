@@ -585,7 +585,9 @@ class DocGenerator:
         if profile_mode:
             schema_profile = profile.get(generalized_uri)
             if schema_profile:
-                if profile_mode != 'subset':
+                if profile_mode == 'subset':
+                    property_data['name_and_version'] += ' ' + version
+                else:
                     min_version = schema_profile.get('MinVersion')
                     if min_version:
                         if version:
