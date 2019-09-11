@@ -1026,13 +1026,13 @@ def main():
                            'escape_chars'
                            ]
         for x in config_args:
-            if config_data.get(x) and not args[x]:
+            if config_data.get(x) and ('x' not in args or args[x] is None):
                 args[x] = config_data[x]
 
         # config_flags don't have command-line overrides; they should be added to config directly.
         # We want to capture the fact that a flag was set, even if false, as this should override
         # the corresponding keyword in the supplemental markdown document.
-        config_flags = ['add_toc']
+        config_flags = ['add_toc', 'units_translation']
         for x in config_flags:
             if x in config_data:
                 config[x] = config_data[x]
@@ -1100,7 +1100,6 @@ def main():
                                                 'ExcludedProperties': []}
          else:
              if 'ExcludedProperties' not in config['property_index_config']:
-                 import pdb; pdb.set_trace()
                  config['property_index_config'] == config.get('excluded_properties', [])
 
          if args['supfile']:
@@ -1254,7 +1253,8 @@ def main():
     if 'enum_deprecations' in config['supplemental']:
         config['enum_deprecations'] = config['supplemental']['enum_deprecations']
 
-    config['units_translation'] = config['supplemental'].get('units_translation', {})
+    if 'units_translation' not in config:
+        config['units_translation'] = config['supplemental'].get('units_translation', {})
 
     config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
 
