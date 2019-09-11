@@ -1026,7 +1026,7 @@ def main():
                            'escape_chars'
                            ]
         for x in config_args:
-            if config_data.get(x) and ('x' not in args or args[x] is None):
+            if config_data.get(x) and (x not in args or args[x] is None):
                 args[x] = config_data[x]
 
         # config_flags don't have command-line overrides; they should be added to config directly.
