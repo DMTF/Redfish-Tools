@@ -31,7 +31,7 @@ The following properties would otherwise be parsed from the supplemental markdow
 - actions_in_property_table: Boolean. If true, omit "Actions" from the property tables.
 - excluded_properties: A list of property names (strings) to omit. Wildcard match is supported for strings that begin with "*" ("*odata.count" matches "Members@odata.count" and others).
 - excluded_annotations: A list of annotation names (strings) to omit. Wildcard match is supported for strings that begin with "*".
-- excluded_pattern_properties: pattern properties to omit from output. Note that backslashes must be escaped in JSON ("\" becomes "\\".
+- excluded_pattern_properties: pattern properties to omit from output. Note that backslashes must be escaped in JSON ("\" becomes "\\").
 - excluded_schemas: Schemas (by name) to omit from output.
 - ExcludedProperties: synonym for excluded_properties; supported for only for property index output (for backward compatibility).
 - DescriptionOverrides: for property index output (only). See the config_for_property_index.json file for examples.
@@ -62,13 +62,13 @@ Config file references supplemental file *supplement_for_standard_output.md*
 
   python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_profile_terse.json
 
-Config file references supplemental file *SampleProfileInput.md*
+Config file references supplemental file *SampleProfileInput.md* and the profile OCPBasicServer.v1_0_0.json (which in turn references OCPManagedDevice.v1_0_0.json).
 
 ### Produce Subset documentation (HTML format):
 
   python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_subset.json
 
-Config file references supplemental file *SampleProfileInput.md*
+Config file references supplemental file *SampleProfileInput.md* and the profile OCPBasicServer.v1_0_0.json (which in turn references OCPManagedDevice.v1_0_0.json).
 
 
 ### Produce Property Index output (HTML format):
