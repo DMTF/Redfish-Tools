@@ -1021,7 +1021,7 @@ def main():
     if config_file_read:
         # TODO: this is incomplete
         config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
-                           'profile_doc', 'profile_terse']
+                           'profile_doc', 'profile_terse', 'subset_doc']
         for x in config_args:
             if config_data.get(x) and not args[x]:
                 args[x] = config_data[x]

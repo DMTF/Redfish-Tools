@@ -1,11 +1,3 @@
-# Schema URI Mapping
-
-Map schema URIs to local files. You may omit the protocol (e.g., https://) from the URI.
-The doc generator will use the local files when specified and otherwise
-follow the full URI, including data from remote files if possible.
-
-## Local-repo: redfish.dmtf.org/schemas/v1 ./json-schema
-
 # Profile URI Mapping
 
 Map profile URIs to local files. You may omit the protocol (e.g., https://) from the URI.
