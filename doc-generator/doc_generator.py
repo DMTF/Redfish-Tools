@@ -1021,10 +1021,10 @@ def main():
             warnings.warn('Unable to open ' + args['config_file'] + ' to read: ' + str(ex))
 
     if config_file_read:
-        # TODO: this is incomplete
         config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
                            'profile_doc', 'profile_terse', 'subset_doc',
-                           'property_index', 'property_index_config_out'
+                           'property_index', 'property_index_config_out',
+                           'escape_chars'
                            ]
         for x in config_args:
             if config_data.get(x) and not args[x]:
