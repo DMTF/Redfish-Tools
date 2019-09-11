@@ -923,7 +923,6 @@ def main():
         'excluded_schemas': [],
         'excluded_schemas_by_match': [],
         'excluded_pattern_props': [],
-        'expand_defs_from_non_output_schemas': False,
         'omit_version_in_headers': False,
         'actions_in_property_table': True,
         'schema_supplement': None,
@@ -1094,11 +1093,16 @@ def main():
             warnings.warn('Unable to read payload_dir "' + payload_dir + '"; ' + str(ex))
             exit();
 
-    if config.get('output_content')== 'property_index':
-         if not args['config_file']:
+    if config.get('output_content') == 'property_index':
+         if not config_file_read:
              # Minimal config is required; we'll be adding to this.
              config['property_index_config'] = {'DescriptionOverrides': {},
                                                 'ExcludedProperties': []}
+         else:
+             if 'ExcludedProperties' not in config['property_index_config']:
+                 import pdb; pdb.set_trace()
+                 config['property_index_config'] == config.get('excluded_properties', [])
+
          if args['supfile']:
             try:
                 with open(args['supfile'], 'r', encoding="utf8") as supfile:
