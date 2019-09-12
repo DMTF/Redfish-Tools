@@ -140,9 +140,9 @@ class DocGenUtilities:
             while len(context_parts) < 3:
                 context_parts.append("0")
             for i in range(3):
-                if version_parts[i] > context_parts[i]:
+                if int(version_parts[i]) > int(context_parts[i]):
                     return 1
-                if version_parts[i] < context_parts[i]:
+                if int(version_parts[i]) < int(context_parts[i]):
                     return -1
             return 0
 
