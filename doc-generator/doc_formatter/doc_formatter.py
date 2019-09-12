@@ -1650,7 +1650,7 @@ class DocFormatter:
 
                 if profile:
                     prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
-                prop_names = self.organize_prop_names(prop_names)
+                prop_names.sort(key=str.lower)
 
                 filtered_properties = {}
                 for k in prop_names:
