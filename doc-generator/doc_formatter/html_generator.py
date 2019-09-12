@@ -660,6 +660,8 @@ pre.code{
         # Add the URIs for this action.
         formatted.append(self.format_uri_block_for_action(action_name, self.current_uris));
 
+        param_names = []
+
         if action_parameters:
             rows = []
             # Add a "start object" row for this parameter:
@@ -684,6 +686,8 @@ pre.code{
                     param_names = required_param_names
 
             param_names.sort(key=str.lower)
+
+        if len(param_names):
             for param_name in param_names:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
                 rows.append(formatted_parameters.get('row'))
