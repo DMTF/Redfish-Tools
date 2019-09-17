@@ -803,6 +803,7 @@ class DocFormatter:
                         ref_pattern = ref_info.get('pattern')
                         link_detail = ''
                         append_ref = ''
+                        reference_disposition = self.config.get('reference_disposition') and self.config['reference_disposition'].get(prop_ref)
 
                         # Links to other Redfish resources are a special case.
                         if is_other_schema or is_ref_to_same_schema:
@@ -817,17 +818,25 @@ class DocFormatter:
                                                + '. See the ' + ref_schema_name + ' schema for details.')
 
                             else:
-                                if is_documented_schema:
-                                    link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
-                                                   + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                                   ' schema for details.')
+                                # If config specified treating this as a common object but we're not outputting common objects, ignore that.
+                                wants_common_objects = self.config.get('wants_common_objects')
+                                if reference_disposition == 'common_object' and not wants_common_objects:
+                                    reference_disposition = False
 
                                 if is_ref_to_same_schema:
                                     # e.g., a Chassis is contained by another Chassis
                                     link_detail = ('Link to another ' + prop_name + ' resource.')
 
-                                else:
-                                    wants_common_objects = self.config.get('wants_common_objects')
+                                # elif is_documented_schema and reference_disposition != 'include':
+                                elif is_documented_schema:
+                                    link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
+                                                   + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
+                                                   ' schema for details.')
+                                # elif reference_disposition == 'include':
+                                #     # Expand this ref in place
+                                #     pass
+
+                                if not is_ref_to_same_schema:
                                     if is_documented_schema or not wants_common_objects:
                                         append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                       ' schema for details on this property.')
