@@ -833,12 +833,12 @@ pre.code{
         if not doc_title:
             doc_title = ''
 
-        headlines = ['<head>', '<meta charset="utf-8">', '<title>' + doc_title + '</title>']
+        headlines = ['<head>', '<meta charset="utf-8"/>', '<title>' + doc_title + '</title>']
         styles = self.css_content
         headlines.append(styles)
         headlines.append('</head>')
         head = '\n'.join(headlines)
-        return '\n'.join(['<!doctype html>', '<html>', head, '<body>', body, '</body></html>'])
+        return '\n'.join(['<!DOCTYPE html>', '<html>', head, '<body>', body, '</body></html>'])
 
 
     def generate_toc(self, html_blob):
