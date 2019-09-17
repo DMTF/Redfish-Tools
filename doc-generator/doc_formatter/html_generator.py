@@ -53,7 +53,8 @@ class HtmlGenerator(DocFormatter):
     text-decoration: underline #000000
  }
  ul, ol {margin-left: 2em;}
- li {margin: 0 0 0.5em;}
+ li {margin: 0 0 0.5em;
+     word-break: break-all;}
  .hanging-indent {
       padding-left: 1em;
       text-indent: -1em;
@@ -80,6 +81,9 @@ class HtmlGenerator(DocFormatter):
 }
 table.properties{
     width: 100%;
+}
+table.uris tr td:nth-child(2) {
+    word-break: break-all;
 }
 .property-details-content {
     margin-left: 5em;
@@ -829,12 +833,12 @@ pre.code{
         if not doc_title:
             doc_title = ''
 
-        headlines = ['<head>', '<meta charset="utf-8">', '<title>' + doc_title + '</title>']
+        headlines = ['<head>', '<meta charset="utf-8"/>', '<title>' + doc_title + '</title>']
         styles = self.css_content
         headlines.append(styles)
         headlines.append('</head>')
         head = '\n'.join(headlines)
-        return '\n'.join(['<!doctype html>', '<html>', head, '<body>', body, '</body></html>'])
+        return '\n'.join(['<!DOCTYPE html>', '<html>', head, '<body>', body, '</body></html>'])
 
 
     def generate_toc(self, html_blob):

@@ -1018,6 +1018,9 @@ def main():
                 config_file_read = True
         except (OSError) as ex:
             warnings.warn('Unable to open ' + args['config_file'] + ' to read: ' + str(ex))
+        except (json.decoder.JSONDecodeError) as ex:
+            warnings.warn(args['config_file'] + " appears to be invalid JSON. JSON decoder reports: " + str(ex))
+            exit()
 
     if config_file_read:
         config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
@@ -1036,6 +1039,20 @@ def main():
         for x in config_flags:
             if x in config_data:
                 config[x] = config_data[x]
+
+        # if config_data includes an object_reference_disposition object, vet it a bit and store it.
+        if config_data.get('object_reference_disposition'):
+            obj_ref_disp = config_data.get('object_reference_disposition')
+            ref_disp_map = {}
+            valid_keys = ['common_object', 'include']
+            for x, refs in obj_ref_disp.items():
+                if x not in valid_keys:
+                    warnings.warn('Config file entry "object_reference_disposition" contains an unrecognized key: "'
+                                      + x + '", ignoring it.')
+                else:
+                    for ref in refs:
+                        ref_disp_map[ref] = x
+            config['reference_disposition'] = ref_disp_map
 
     # set defaults:
     arg_defaults = {

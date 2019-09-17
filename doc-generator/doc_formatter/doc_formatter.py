@@ -770,6 +770,7 @@ class DocFormatter:
                 is_collection_of = traverser.is_collection_of(from_schema_ref)
                 prop_name = ref_info.get('_prop_name', False)
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
+                reference_disposition = self.config.get('reference_disposition') and self.config['reference_disposition'].get(prop_ref)
 
                 if is_collection_of and ref_info.get('anyOf'):
                     anyof_ref = None
@@ -784,14 +785,16 @@ class DocFormatter:
                 ref_info = self.apply_overrides(ref_info)
 
                 if ref_info.get('type') == 'object':
-                    # If this is an excerpt, it will also be an object, and we want to expand-in-place:
-                    if excerpt_copy_name:
-                        ref_info['_is_excerpt'] = True
+                    # If this is an excerpt, it will also be an object, and we want to expand-in-place.
+                    # The same applies (or should) if config explicitly says to include:
+                    if excerpt_copy_name or (reference_disposition == 'include'):
                         if is_documented_schema:
                             excerpt_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
                         else: # This is not expected.
                             excerpt_link = self.link_to_outside_schema(from_schema_uri)
-                        ref_info['add_link_text'] = ("This object is an excerpt of the "
+                        if excerpt_copy_name:
+                            ref_info['_is_excerpt'] = True
+                            ref_info['add_link_text'] = ("This object is an excerpt of the "
                                                          + excerpt_link +
                                                          " resource located at the URI shown in DataSourceUri.")
 
@@ -817,17 +820,20 @@ class DocFormatter:
                                                + '. See the ' + ref_schema_name + ' schema for details.')
 
                             else:
-                                if is_documented_schema:
-                                    link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
-                                                   + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                                   ' schema for details.')
+                                # If config specified treating this as a common object but we're not outputting common objects, ignore that.
+                                wants_common_objects = self.config.get('wants_common_objects')
+                                if reference_disposition == 'common_object' and not wants_common_objects:
+                                    reference_disposition = False
 
                                 if is_ref_to_same_schema:
                                     # e.g., a Chassis is contained by another Chassis
                                     link_detail = ('Link to another ' + prop_name + ' resource.')
 
-                                else:
-                                    wants_common_objects = self.config.get('wants_common_objects')
+                                elif is_documented_schema:
+                                    link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
+                                                   + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
+                                                   ' schema for details.')
+                                if not is_ref_to_same_schema and reference_disposition != 'include':
                                     if is_documented_schema or not wants_common_objects:
                                         append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                       ' schema for details on this property.')
