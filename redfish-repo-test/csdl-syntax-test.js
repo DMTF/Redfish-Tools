@@ -1333,7 +1333,7 @@ function simpleTypeCheck(propType, propValue, CSDLProperty, propName) {
       if(typeof propValue !== 'string' && propValue !== null) {
         throw new Error('Property "'+propName+'" is an Edm.Guid, but the value in the mockup is not a valid JSON string.');
       }
-      if(propValue.match('([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})') === null) {
+      if(propValue.match('([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})') === null) {
         throw new Error('Property "'+propName+'" is an Edm.Guid, but the value in the mockup does not conform to the correct syntax.');
       }
       break;
