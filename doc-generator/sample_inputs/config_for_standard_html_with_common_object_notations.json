@@ -46,7 +46,7 @@
     },
     "object_reference_disposition": {
         "common_object": [
-            "http://redfish.dmtf.org/schemas/v1/Redundancy.json#/definitions/Redundancy"
+            "Redundancy"
         ],
         "include": [
             "http://redfish.dmtf.org/schemas/v1/PCIeDevice.json#/definitions/PCIeInterface"
