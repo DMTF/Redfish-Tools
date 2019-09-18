@@ -64,6 +64,8 @@ class DocFormatter:
             details = self.property_data[schema_ref]
             if self.skip_schema(details['schema_name']):
                 continue
+            if 'common_object_schemas' in self.config and schema_ref in self.config['common_object_schemas']:
+                continue
             if len(details['properties']):
                 self.documented_schemas.append(schema_ref)
 
@@ -800,6 +802,7 @@ class DocFormatter:
 
                     # If an object, include just the definition and description, and append a reference if possible:
                     else:
+                        wants_common_objects = self.config.get('wants_common_objects')
                         ref_description = ref_info.get('description')
                         ref_longDescription = ref_info.get('longDescription')
                         ref_fulldescription_override = ref_info.get('fulldescription_override')
@@ -820,11 +823,6 @@ class DocFormatter:
                                                + '. See the ' + ref_schema_name + ' schema for details.')
 
                             else:
-                                # If config specified treating this as a common object but we're not outputting common objects, ignore that.
-                                wants_common_objects = self.config.get('wants_common_objects')
-                                if reference_disposition == 'common_object' and not wants_common_objects:
-                                    reference_disposition = False
-
                                 if is_ref_to_same_schema:
                                     # e.g., a Chassis is contained by another Chassis
                                     link_detail = ('Link to another ' + prop_name + ' resource.')

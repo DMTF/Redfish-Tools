@@ -402,6 +402,16 @@ class DocGenerator:
             normalized_uri = self.construct_uri_for_filename(filename)
             self.schema_ref_to_filename[normalized_uri] = filename
 
+            # 'common_object_schemas' in config will be a list of schemas that should not get first-class sections.
+            schema_name_parts = schema_name.split('.')
+            unversioned_schema_name = schema_name_parts[0]
+            has_common_object_override = False
+            if self.config.get('reference_disposition', {}).get(unversioned_schema_name) == 'common_object':
+                has_common_object_override = True
+                if 'common_object_schemas' not in self.config:
+                    self.config['common_object_schemas'] = []
+                self.config['common_object_schemas'].append(normalized_uri)
+
             data['_schema_name'] = schema_name
             all_schemas[normalized_uri] = data
 
@@ -410,7 +420,13 @@ class DocGenerator:
             ref = ''
             if '$ref' in data:
                 ref = data['$ref'][1:] # drop initial '#'
-            else:
+
+            # This is a special case for resources like Redundancy, in which there is no $ref but we still need
+            # to capture its versioned/unversioned data ... and then we want it to appear in the Common Properties
+            # section if it's referred to.
+            if not ref and has_common_object_override:
+                ref = '/definitions/' + unversioned_schema_name
+            if not ref:
                 continue
 
             if fname.count('.') > 1:
