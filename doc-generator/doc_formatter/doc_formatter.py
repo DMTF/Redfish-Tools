@@ -64,6 +64,8 @@ class DocFormatter:
             details = self.property_data[schema_ref]
             if self.skip_schema(details['schema_name']):
                 continue
+            if 'common_object_schemas' in self.config and schema_ref in self.config['common_object_schemas']:
+                continue
             if len(details['properties']):
                 self.documented_schemas.append(schema_ref)
 
