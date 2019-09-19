@@ -58,6 +58,8 @@ Config file references supplemental file *supplement_for_standard_output.md*
 
 Config file references supplemental file *supplement_for_standard_output.md*
 
+Note that the "object_reference_disposition" part of this config identifies specific behavior for the Redundancy resource and for PCIeInterface (defined in PCIeDevice).
+
 ### Produce Profile output (terse mode, markdown format):
 
   python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_profile_terse.json
@@ -77,7 +79,7 @@ Config file references supplemental file *SampleProfileInput.md* and the profile
 
 Note that the config file for property index output includes some elements that are specific to that mode: DescriptionOverrides. Property Index mode does not use a supplemental markdown document.
 
-### Produce full documentation, in HTML format:
+### Produce CSV output:
 
  python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/config_for_csv.json
 
