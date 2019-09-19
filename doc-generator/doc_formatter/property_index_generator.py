@@ -305,12 +305,12 @@ class PropertyIndexGenerator(DocFormatter):
         overrides = updated['DescriptionOverrides'] # NB: this should already be in place.
 
         # Sorting isn't necessary in this method, but it's nice to have for troubleshooting.
-        property_names = sorted(self.coalesced_properties.keys())
+        property_names = sorted(self.coalesced_properties.keys(), key=str.lower)
 
         for prop_name in property_names:
             prop_config = overrides.get(prop_name)
             info = self.coalesced_properties[prop_name]
-            prop_types = sorted(info.keys())
+            prop_types = sorted(info.keys(), key=str.lower)
 
             # If we don't already have prop_config and we have multiple types, capture them all:
             num_prop_types = len(prop_types)
@@ -319,7 +319,7 @@ class PropertyIndexGenerator(DocFormatter):
             if not prop_config and num_prop_types > 1:
                 prop_config = overrides[prop_name] = []
                 for prop_type in prop_types:
-                    descriptions = sorted(info[prop_type].keys())
+                    descriptions = sorted(info[prop_type].keys(), key=str.lower)
                     for description in descriptions:
                         schemas = info[prop_type][description]
                         found_entry = {
@@ -333,7 +333,7 @@ class PropertyIndexGenerator(DocFormatter):
 
             else:
                 for prop_type in prop_types:
-                    descriptions = sorted(info[prop_type].keys())
+                    descriptions = sorted(info[prop_type].keys(), key=str.lower)
                     num_descriptions = len(descriptions)
                     done_with_prop_type = False
 
@@ -367,7 +367,7 @@ class PropertyIndexGenerator(DocFormatter):
                 return
 
         # check each entry against prop_config
-        descriptions = sorted(info[prop_type].keys())
+        descriptions = sorted(info[prop_type].keys(), key=str.lower)
         for description in descriptions:
             self.update_config_for_prop_name_and_type_and_description(prop_name, prop_type, description, info, prop_config)
 
@@ -423,15 +423,15 @@ class PropertyIndexGenerator(DocFormatter):
         """ Format output in the 'usual' way, as a tabular document """
 
         rows = []
-        property_names = sorted(self.coalesced_properties.keys())
+        property_names = sorted(self.coalesced_properties.keys(), key=str.lower)
 
         for prop_name in property_names:
             info = self.coalesced_properties[prop_name]
-            prop_types = sorted(info.keys())
+            prop_types = sorted(info.keys(), key=str.lower)
             first_row = True
 
             for prop_type in prop_types:
-                descriptions = sorted(info[prop_type].keys())
+                descriptions = sorted(info[prop_type].keys(), key=str.lower)
                 for description in descriptions:
                     schema_list = [self.format_schema_path(x) for x in info[prop_type][description] ]
                     if first_row:
