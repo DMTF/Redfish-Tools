@@ -973,7 +973,7 @@ def main():
     parser.add_argument('import_from', metavar='import_from', nargs='*',
                         help=('Name of a file or directory to process (wild cards are acceptable). '
                               'Default: json-schema'))
-    parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=False,
+    parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=None,
                         help='Produce normative (developer-focused) output')
     parser.add_argument('--format', dest='format',
                         choices=['markdown', 'html', 'csv'], help='Output format')
@@ -1001,7 +1001,7 @@ def main():
                         help=('Path to a JSON profile document. Generates "Schema subset" '
                               'output, with the subset defined in the JSON profile document.'))
 
-    parser.add_argument('--property_index', action='store_true', dest='property_index', default=False,
+    parser.add_argument('--property_index', action='store_true', dest='property_index', default=None,
                         help='Produce Property Index output.')
     parser.add_argument('--property_index_config_out', dest='property_index_config_out',
                         metavar='CONFIG_FILE_OUT',
@@ -1080,6 +1080,7 @@ def main():
             args[param] = default
 
     config['output_format'] = args['format']
+
     if args['property_index']:
         config['output_content'] = 'property_index'
         config['write_config_to'] = args['property_index_config_out']

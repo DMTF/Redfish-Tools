@@ -43,5 +43,13 @@
         "V": "Volts",
         "mW": "milliWatts",
         "m": "meters"
+    },
+    "object_reference_disposition": {
+        "common_object": [
+            "Redundancy"
+        ],
+        "include": [
+            "http://redfish.dmtf.org/schemas/v1/PCIeDevice.json#/definitions/PCIeInterface"
+        ]
     }
 }

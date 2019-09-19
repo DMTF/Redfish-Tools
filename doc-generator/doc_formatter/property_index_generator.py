@@ -67,6 +67,15 @@ class PropertyIndexGenerator(DocFormatter):
         self.config['omit_version_in_headers'] = True # This puts just the schema name in the section head.
         self.config['wants_common_objects'] = True
 
+        # get the formatter, so we can use the appropriate markup.
+        output_format = self.config.get('output_format', 'markdown')
+        if output_format == 'html':
+            from format_utils import HtmlUtils
+            self.formatter = HtmlUtils()
+        else:  # CSV also uses the markdown formatter.
+            from format_utils import FormatUtils
+            self.formatter = FormatUtils()
+
 
     def emit(self):
         """ Return the data! """
@@ -78,14 +87,12 @@ class PropertyIndexGenerator(DocFormatter):
             boilerplate = self.config['property_index_boilerplate']
             frontmatter, backmatter = boilerplate.split('[insert property index]')
         if output_format == 'html':
-            from format_utils import HtmlUtils
-            formatter = HtmlUtils()
             if frontmatter:
-                output = formatter.markdown_to_html(frontmatter)
+                output = self.formatter.markdown_to_html(frontmatter)
             else:
-                output = formatter.head_one("Property Index", 0)
-            output += self.format_tabular_output(formatter)
-            output += formatter.markdown_to_html(backmatter)
+                output = self.formatter.head_one("Property Index", 0)
+            output += self.format_tabular_output()
+            output += self.formatter.markdown_to_html(backmatter)
             toc = self.generate_toc(output)
             if '[add_toc]' in output:
                 output = output.replace('[add_toc]', toc, 1)
@@ -93,13 +100,11 @@ class PropertyIndexGenerator(DocFormatter):
             output = self.add_html_boilerplate(output)
 
         if output_format == 'markdown':
-            from format_utils import FormatUtils
-            formatter = FormatUtils()
             if frontmatter:
                 output = frontmatter
             else:
-                output = formatter.head_one("Property Index", 0)
-            output += self.format_tabular_output(formatter)
+                output = self.formatter.head_one("Property Index", 0)
+            output += self.format_tabular_output()
             output += backmatter
 
         if output_format == 'csv':
@@ -155,6 +160,10 @@ class PropertyIndexGenerator(DocFormatter):
 
         if has_enum:
             prop_type += " (enum)"
+
+        prop_units = details.get('prop_units')
+        if prop_units:
+            prop_type += self.formatter.br() + '(' + prop_units + ')'
 
         description_entry = {
             'schemas': [ schema_path ], 'prop_type': prop_type,
@@ -410,7 +419,7 @@ class PropertyIndexGenerator(DocFormatter):
                 config_by_schema[schema_name] = found_entry
 
 
-    def format_tabular_output(self, formatter):
+    def format_tabular_output(self):
         """ Format output in the 'usual' way, as a tabular document """
 
         rows = []
@@ -426,12 +435,12 @@ class PropertyIndexGenerator(DocFormatter):
                 for description in descriptions:
                     schema_list = [self.format_schema_path(x) for x in info[prop_type][description] ]
                     if first_row:
-                        first_col = formatter.bold(prop_name)
+                        first_col = self.formatter.bold(prop_name)
                         first_row = False
                     else:
                         first_col = ''
-                    rows.append(formatter.make_row([first_col,
-                                                    self.format_schema_list(schema_list, formatter),
+                    rows.append(self.formatter.make_row([first_col,
+                                                    self.format_schema_list(schema_list, self.formatter),
                                                     prop_type, description]))
 
         if self.write_config_fh:
@@ -440,8 +449,8 @@ class PropertyIndexGenerator(DocFormatter):
             json.dump(updated_config, config_out, indent=4, sort_keys=True)
             config_out.close()
 
-        headers = formatter.make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
-        table = formatter.make_table(rows, [headers])
+        headers = self.formatter.make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
+        table = self.formatter.make_table(rows, [headers])
         return table
 
 
