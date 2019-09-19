@@ -46,6 +46,7 @@ Note: you can specify the location of the TOC, presumably in the Introduction se
 
 Keywords and their values as bullet points with name:value pairs in the "Keyword Configuration" section, as shown here. Keywords are not case-sensitive.
 
+- html_title: Title from the supplemental doc
 
 # Description Overrides
 

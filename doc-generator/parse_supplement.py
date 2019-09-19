@@ -122,13 +122,14 @@ def parse_configuration(markdown_blob):
     """
     boolean_settings = ['omit_version_in_headers', 'add_toc', 'actions_in_property_table', 'suppress_version_history']
     config = {}
-    pattern = re.compile(r'\s*-\s+(\S+)\s*:\s*(\S+)')
+    pattern = re.compile(r'\s*[-\*]\s+(\S+)\s*:(.+)')
 
     for line in markdown_blob.splitlines():
         match = pattern.fullmatch(line)
         if match:
             name = match.group(1).lower()
             value = match.group(2)
+            value = value.strip()
             if name in boolean_settings:
                 if value.lower() in ['false', 'no', '0']:
                     value = False

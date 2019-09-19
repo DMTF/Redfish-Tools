@@ -8,6 +8,7 @@
     "supfile": "../Redfish-Tools/doc-generator/sample_inputs/supplement_for_standard_output.md",
     "payload_dir": "./mockups/DSP2046-examples",
     "add_toc": true,
+    "html_title": "Sample Standard Output",
     "excluded_properties": [
         "@odata.context",
         "@odata.type",

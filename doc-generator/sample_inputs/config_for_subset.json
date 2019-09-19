@@ -6,6 +6,7 @@
     "outfile": "subset.html",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
     "suppress_version_history": true,
+    "html_title": "Sample Profile-focused Document",
     "subset_doc": "../Redfish-Tools/doc-generator/sample_inputs/OCPBasicServer.v1_0_0.json",
     "supfile": "../Redfish-Tools/doc-generator/sample_inputs/SampleProfileInput.md",
     "excluded_annotations": [
