@@ -303,8 +303,9 @@ class CSDLToJSON:
         for prop_name, prop in base_def["properties"].items():
             if "excerpt" in prop:
                 count = count + 1
-                if prop["excerpt"] not in excerpt_list:
-                    excerpt_list.append( prop["excerpt"] )
+                for e in prop["excerpt"].split(","):
+                    if e not in excerpt_list:
+                         excerpt_list.append(e)
             if "excerptCopyOnly" in prop:
                 count = count + 1
         if count == 1:
@@ -327,7 +328,7 @@ class CSDLToJSON:
             remove_list = []
             for prop_name, prop in excerpt_def["properties"].items():
                 if "excerpt" in prop:
-                    if ( prop["excerpt"] != excerpt ) and ( prop["excerpt"] != base_name ):
+                    if ( excerpt not in prop["excerpt"].split(",") ) and ( prop["excerpt"] != base_name ):
                         remove_list.append( prop_name )
                 elif "excerptCopyOnly" not in prop:
                     remove_list.append( prop_name )
@@ -1059,7 +1060,8 @@ class CSDLToJSON:
 
             # Excerpt
             if term == "Redfish.Excerpt":
-                json_type_def["excerpt"] = self.namespace_under_process.split( "." )[0] + self.get_attrib( annotation, "String", False, "" )
+                excerpt_namespace = self.namespace_under_process.split( "." )[0]
+                json_type_def["excerpt"] = excerpt_namespace + self.get_attrib( annotation, "String", False, "" ).replace(",", "," + excerpt_namespace)
 
             # Excerpt Copy
             if term == "Redfish.ExcerptCopy":
