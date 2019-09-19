@@ -1051,7 +1051,7 @@ def main():
         # config_flags don't have command-line overrides; they should be added to config directly.
         # We want to capture the fact that a flag was set, even if false, as this should override
         # the corresponding keyword in the supplemental markdown document.
-        config_flags = ['add_toc', 'units_translation']
+        config_flags = ['add_toc', 'units_translation', 'suppress_version_history']
         for x in config_flags:
             if x in config_data:
                 config[x] = config_data[x]

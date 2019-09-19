@@ -461,7 +461,7 @@ class DocFormatter:
             else:
                 self.current_uris = []
 
-            if details.get('release_history'):
+            if details.get('release_history') and not self.config.get('suppress_version_history'):
                 self.add_release_history(details['release_history'])
 
             if conditional_details:
