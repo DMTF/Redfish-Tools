@@ -166,7 +166,7 @@ pre.code{
 </style>
 """
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
@@ -368,7 +368,8 @@ pre.code{
 
         prop_access = ''
         if (not formatted_details['prop_is_object']
-                and not formatted_details.get('array_of_objects')):
+                and not formatted_details.get('array_of_objects')
+                and not as_action_parameters):
             if formatted_details['read_only']:
                 prop_access = '<nobr>read-only</nobr>'
             else:
@@ -385,6 +386,8 @@ pre.code{
             prop_access += ' <nobr>required</nobr>'
         elif formatted_details['prop_required_on_create']:
             prop_access += ' <nobr>required on create</nobr>'
+        elif as_action_parameters:
+            prop_access += ' optional'
 
         if formatted_details['nullable']:
             prop_access += ' (null)'
@@ -693,7 +696,7 @@ pre.code{
 
         if len(param_names):
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } to the last row:

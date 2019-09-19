@@ -42,7 +42,7 @@ class MarkdownGenerator(DocFormatter):
         self.layout_payloads = 'top'
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
@@ -244,7 +244,8 @@ class MarkdownGenerator(DocFormatter):
 
         prop_access = ''
         if (not formatted_details['prop_is_object']
-                and not formatted_details.get('array_of_objects')):
+                and not formatted_details.get('array_of_objects')
+                and not as_action_parameters):
             if formatted_details['read_only']:
                 prop_access = 'read-only'
             else:
@@ -257,10 +258,17 @@ class MarkdownGenerator(DocFormatter):
                 else:
                     prop_access = 'read-write'
 
-        if formatted_details['prop_required'] or formatted_details['required_parameter']:
-            prop_access += ' required'
-        elif formatted_details['prop_required_on_create']:
-            prop_access += ' required on create'
+        # Action parameters don't have read/write properties, but they can be required/optional.
+        if as_action_parameters:
+            if formatted_details['prop_required'] or formatted_details['required_parameter']:
+                prop_access = 'required'
+            else:
+                prop_access = 'optional'
+        else:
+            if formatted_details['prop_required'] or formatted_details['required_parameter']:
+                prop_access += ' required'
+            elif formatted_details['prop_required_on_create']:
+                prop_access += ' required on create'
 
         if formatted_details['nullable']:
             prop_access += '<br>(null)'
@@ -540,7 +548,7 @@ class MarkdownGenerator(DocFormatter):
 
         if len(param_names):
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } row:
