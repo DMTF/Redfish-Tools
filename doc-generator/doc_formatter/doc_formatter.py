@@ -1956,8 +1956,8 @@ class DocFormatter:
             if len(summarized) <= max_entries:
                 version = DocFormatter.truncate_version(elt['version'], 2, True)
                 summarized.append({"version": "v" + version, "release": latest_release})
-
-        if num_releases > max_entries:
-            summarized.append({"version": "...", "release": "..."})
+            else:
+                summarized.append({"version": "...", "release": "..."})
+                break
 
         return summarized
