@@ -927,34 +927,7 @@ class DocGenerator:
         return idx
 
 
-def main():
-    """Parse and validate arguments, then process data and produce markdown output."""
-
-    config = {
-        'supplemental': {},
-        'excluded_annotations': [],
-        'excluded_annotations_by_match': [],
-        'excluded_properties': [],
-        'excluded_by_match': [],
-        'excluded_schemas': [],
-        'excluded_schemas_by_match': [],
-        'excluded_pattern_props': [],
-        'omit_version_in_headers': False,
-        'schema_supplement': None,
-        'normative': False,
-        'escape_chars': [],
-        'cwd': os.getcwd(),
-        'uri_replacements': {},
-        'local_to_uri': {},
-        'uri_to_local': {},
-        'profile_mode': False,
-        'profile_doc': None,
-        'profile_resources': {},
-        'profile': {},
-
-        # These values indicate whether to override config with supplement data, and may be useful for debugging
-        'uri_mapping_from_config': False
-        }
+def parse_command_line():
 
     help_description = 'Generate documentation for Redfish JSON schema files.\n\n'
     help_epilog = ('Example:\n   doc_generator.py --format=html\n   doc_generator.py'
@@ -1011,6 +984,38 @@ def main():
                               "are being converted to mailto links."))
 
     command_line_args = parser.parse_args()
+    return command_line_args
+
+
+def combine_configs():
+
+    config = {
+        'supplemental': {},
+        'excluded_annotations': [],
+        'excluded_annotations_by_match': [],
+        'excluded_properties': [],
+        'excluded_by_match': [],
+        'excluded_schemas': [],
+        'excluded_schemas_by_match': [],
+        'excluded_pattern_props': [],
+        'omit_version_in_headers': False,
+        'schema_supplement': None,
+        'normative': False,
+        'escape_chars': [],
+        'cwd': os.getcwd(),
+        'uri_replacements': {},
+        'local_to_uri': {},
+        'uri_to_local': {},
+        'profile_mode': False,
+        'profile_doc': None,
+        'profile_resources': {},
+        'profile': {},
+
+        # These values indicate whether to override config with supplement data, and may be useful for debugging
+        'uri_mapping_from_config': False
+        }
+
+    command_line_args = parse_command_line()
     args = vars(command_line_args)
 
     # Check for a config_file. If there is one, we'll update args based on it.
@@ -1094,6 +1099,8 @@ def main():
     else:
         import_from = [ os.path.join(config.get('cwd'), 'json-schema') ]
 
+    config['import_from'] = import_from
+
     # Determine outfile and verify that it is writeable:
     outfile_name = args['outfile']
     if outfile_name == 'output.md':
@@ -1109,12 +1116,7 @@ def main():
                 outfile_name += '.csv'
             if config['output_format'] == 'markdown':
                 outfile_name += '.md'
-
-    try:
-        outfile = open(outfile_name, 'w', encoding="utf8")
-    except (OSError) as ex:
-        warnings.warn('Unable to open ' + outfile_name + ' to write: ' + str(ex))
-        exit();
+    config['outfile_name'] = outfile_name
 
     # If payload_dir was provided, verify that it is a readable directory:
     if args['payload_dir']:
@@ -1304,7 +1306,21 @@ def main():
     if args['escape_chars']:
         config['escape_chars'] = [x for x in args['escape_chars']]
 
-    doc_generator = DocGenerator(import_from, outfile, config)
+    return config
+
+
+def main():
+    """Parse and validate arguments, then process data and produce markdown output."""
+
+    config = combine_configs()
+
+    try:
+        outfile = open(config['outfile_name'], 'w', encoding="utf8")
+    except (OSError) as ex:
+        warnings.warn('Unable to open ' + config['outfile_name'] + ' to write: ' + str(ex))
+        exit();
+
+    doc_generator = DocGenerator(config['import_from'], outfile, config)
     doc_generator.generate_doc()
 
 if __name__ == "__main__":
