@@ -940,7 +940,6 @@ def main():
         'excluded_schemas_by_match': [],
         'excluded_pattern_props': [],
         'omit_version_in_headers': False,
-        'actions_in_property_table': True,
         'schema_supplement': None,
         'normative': False,
         'escape_chars': [],
@@ -1052,7 +1051,8 @@ def main():
         # config_flags don't have command-line overrides; they should be added to config directly.
         # We want to capture the fact that a flag was set, even if false, as this should override
         # the corresponding keyword in the supplemental markdown document.
-        config_flags = ['add_toc', 'units_translation', 'suppress_version_history', 'html_title']
+        config_flags = ['add_toc', 'units_translation', 'suppress_version_history',
+                            'actions_in_property_table', 'html_title']
         for x in config_flags:
             if x in config_data:
                 config[x] = config_data[x]
@@ -1296,6 +1296,10 @@ def main():
     config['wants_common_objects'] = config['supplemental'].get('wants_common_objects', False)
 
     config['normative'] = args['normative']
+
+    # Apply defaults for parameters that were not explicitly set:
+    if 'actions_in_property_table' not in config:
+        config['actions_in_property_table'] = True
 
     if args['escape_chars']:
         config['escape_chars'] = [x for x in args['escape_chars']]
