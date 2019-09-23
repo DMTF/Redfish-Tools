@@ -1016,6 +1016,7 @@ def main():
 
     # Check for a config_file. If there is one, we'll update args based on it.
     config_file_read = False
+    config_data = {}
     if args['config_file']:
         try:
             with open(args['config_file'], 'r', encoding="utf8") as config_file:
@@ -1267,7 +1268,7 @@ def main():
     # URI mappings may be provided either in the config file or the supplemental document.
     # If they are in both, the version in the config file is what we use.
     # If neither is populated, issue a warning.
-    if 'local_to_uri' in config['supplemental'] and 'local_to_uri' not in config:
+    if 'local_to_uri' in config['supplemental'] and not config['local_to_uri']:
         config['local_to_uri'] = config['supplemental']['local_to_uri']
 
     if not config['local_to_uri']:
