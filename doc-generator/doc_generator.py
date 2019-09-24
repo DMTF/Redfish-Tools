@@ -983,11 +983,75 @@ def parse_command_line():
                               "For example, --escape=@#. Use --escape=@ if strings with embedded @ "
                               "are being converted to mailto links."))
 
-    command_line_args = parser.parse_args()
-    return command_line_args
+    command_line_args = vars(parser.parse_args())
+    return command_line_args.copy()
 
 
-def combine_configs():
+def parse_config_file(config_fn):
+    """ Attempt to open and parse a config file, which should be a JSON file. Returns a dictionary. """
+
+    # Check for a config_file. If there is one, we'll update args based on it.
+    config_file_read = False
+    config_data = {}
+    try:
+        with open(config_fn, 'r', encoding="utf8") as config_file:
+            config_data = json.load(config_file)
+            if config_data.get('uri_mapping'):
+                # Populate the URI mappings
+                config_data['uri_to_local'] = {}
+                config_data['local_to_uri'] = {}
+                config_data['uri_mapping_from_config'] = True
+                for k, v in config_data.get('uri_mapping').items():
+                    vpath = os.path.abspath(v)
+                    config_data['uri_to_local'][k] = vpath
+                    config_data['local_to_uri'][vpath] = k
+            config_file_read = True
+    except (OSError) as ex:
+        warnings.warn('Unable to open ' + args['config_file'] + ' to read: ' + str(ex))
+    except (json.decoder.JSONDecodeError) as ex:
+        warnings.warn(args['config_file'] + " appears to be invalid JSON. JSON decoder reports: " + str(ex))
+        exit()
+
+    return config_data
+
+
+def parse_supplemental_data(supfn, supfile_specified=False):
+    """ Open and parse supfn. Returns a dictionary.
+    If supfile_specified is False, don't warn if file is not found.
+    """
+
+    supfile_data = {}
+    try:
+        supfile = open(supfn, 'r', encoding="utf8")
+        supfile_data = parse_supplement.parse_file(supfile)
+        supfile.close()
+    except (OSError) as ex:
+        if supfile_specified:
+            warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
+        else:
+            warnings.warn('No supplemental file specified and ' + supfile +
+                              ' not found. Proceeding.')
+    return supfile_data
+
+
+def parse_supfile_for_property_index(supfn):
+    """ Not really a parser: Open supfn and check that it contains the expected marker.
+    If it does, return the contents of the file. If it doesn't, warn and return None.
+    """
+    try:
+        with open(supfn, 'r', encoding="utf8") as supfile:
+            boilerplate = supfile.read()
+            if '[insert property index]' in boilerplate:
+                return boilerplate
+            else:
+                warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
+    except (OSError) as ex:
+        warnings.warn('Unable to open ' + args['supfile'] + ' to read: ' +  str(ex))
+
+    return None
+
+
+def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
 
     config = {
         'supplemental': {},
@@ -1015,40 +1079,22 @@ def combine_configs():
         'uri_mapping_from_config': False
         }
 
-    command_line_args = parse_command_line()
-    args = vars(command_line_args)
+    args = command_line_args.copy()
 
-    # Check for a config_file. If there is one, we'll update args based on it.
-    config_file_read = False
-    config_data = {}
-    if args['config_file']:
-        try:
-            with open(args['config_file'], 'r', encoding="utf8") as config_file:
-                config_data = json.load(config_file)
-                if config_data.get('property_index') or args['property_index']:
-                    config['property_index_config'] = config_data # We will amend this on output, if requested
-                if config_data.get('uri_mapping'):
-                    # Populate the URI mappings
-                    config['uri_to_local'] = {}
-                    config['local_to_uri'] = {}
-                    config['uri_mapping_from_config'] = True
-                    for k, v in config_data.get('uri_mapping').items():
-                        vpath = os.path.abspath(v)
-                        config['uri_to_local'][k] = vpath
-                        config['local_to_uri'][vpath] = k
-                config_file_read = True
-        except (OSError) as ex:
-            warnings.warn('Unable to open ' + args['config_file'] + ' to read: ' + str(ex))
-        except (json.decoder.JSONDecodeError) as ex:
-            warnings.warn(args['config_file'] + " appears to be invalid JSON. JSON decoder reports: " + str(ex))
-            exit()
+    if supplemental_data:
+        config['supplemental'] = supplemental_data
 
-    if config_file_read:
-        config_args = ['supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
-                           'profile_doc', 'profile_terse', 'subset_doc',
-                           'property_index', 'property_index_config_out',
-                           'escape_chars'
-                           ]
+    if config_data:
+        # The --config argument does double duty; originally it was strictly for property_index_config.
+        if config_data.get('property_index') or command_line_args['property_index']:
+            config['property_index_config'] = config_data
+
+        # command-line arguments override the config file.
+        config_args = [
+            'supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
+            'profile_doc', 'profile_terse', 'subset_doc',
+            'property_index', 'property_index_config_out', 'escape_chars',
+            ]
         for x in config_args:
             if config_data.get(x) and (x not in args or args[x] is None):
                 args[x] = config_data[x]
@@ -1056,8 +1102,11 @@ def combine_configs():
         # config_flags don't have command-line overrides; they should be added to config directly.
         # We want to capture the fact that a flag was set, even if false, as this should override
         # the corresponding keyword in the supplemental markdown document.
-        config_flags = ['add_toc', 'units_translation', 'suppress_version_history',
-                            'actions_in_property_table', 'html_title']
+        config_flags = [
+            'add_toc', 'units_translation', 'suppress_version_history',
+            'actions_in_property_table', 'html_title',
+            'uri_to_local', 'local_to_uri', 'uri_mapping_from_config',
+            ]
         for x in config_flags:
             if x in config_data:
                 config[x] = config_data[x]
@@ -1131,24 +1180,14 @@ def combine_configs():
             exit();
 
     if config.get('output_content') == 'property_index':
-         if not config_file_read:
+         if 'property_index_config' not in config:
              # Minimal config is required; we'll be adding to this.
              config['property_index_config'] = {'DescriptionOverrides': {},
                                                 'ExcludedProperties': []}
          else:
              if 'ExcludedProperties' not in config['property_index_config']:
-                 config['property_index_config'] == config.get('excluded_properties', [])
+                 config['property_index_config']['ExcludedProperties'] = config.get('excluded_properties', [])
 
-         if args['supfile']:
-            try:
-                with open(args['supfile'], 'r', encoding="utf8") as supfile:
-                    boilerplate = supfile.read()
-                    if '[insert property index]' in boilerplate:
-                        config['property_index_boilerplate'] = boilerplate
-                    else:
-                        warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
-            except (OSError) as ex:
-                warnings.warn('Unable to open ' + args['supfile'] + ' to read: ' +  str(ex))
     else:
         # In any mode other than property_index, we should have a supplemental file.
         # Ensure supfile is readable (if not, warn but proceed)
@@ -1161,16 +1200,6 @@ def combine_configs():
         else:
             supfile = config.get('cwd') + '/usersupplement.md'
 
-        try:
-            supfile = open(supfile, 'r', encoding="utf8")
-            config['supplemental'] = parse_supplement.parse_file(supfile)
-            supfile.close()
-        except (OSError) as ex:
-            if supfile_expected:
-                warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
-            else:
-                warnings.warn('No supplemental file specified and ' + supfile +
-                              ' not found. Proceeding.')
 
     # Check profile document, if specified
     if args['profile_doc']:
@@ -1312,7 +1341,44 @@ def combine_configs():
 def main():
     """Parse and validate arguments, then process data and produce markdown output."""
 
-    config = combine_configs()
+    cwd = os.getcwd()
+
+    command_line_args = parse_command_line()
+    if command_line_args.get('config_file'):
+        config_data = parse_config_file(command_line_args['config_file'])
+    else:
+        config_data = {}
+
+    # Is there a supplemental file?
+    supfn = None
+    supfile_specified = False
+    if command_line_args.get('supfile'):
+        supfn = command_line_args['supfile']
+        supfile_specified = True
+    elif config_data.get('supfile'):
+        supfn = config_data['supfile']
+        supfile_specified = True
+    elif command_line_args.get('normative') or config_data.get('normative'):
+        supfn = os.path.join(cwd, 'devsupplement.md')
+    else:
+        supfn = os.path.join(cwd, 'usersupplement.md')
+
+    # In property_index mode, the supfile is very simple. Otherwise, it needs to be parsed.
+    sup_data = {}
+    property_index_boilerplate=None
+    if command_line_args.get('property_index') or config_data.get('property_index'):
+        if supfn and supfile_specified:
+            property_index_boilerplate = parse_supfile_for_property_index(supfn)
+    else:
+        if supfn:
+            sup_data = parse_supplemental_data(supfn, supfile_specified=supfile_specified)
+
+    config = combine_configs(command_line_args=command_line_args, config_data=config_data,
+                                 supplemental_data=sup_data)
+
+    if property_index_boilerplate:
+        config['property_index_boilerplate'] = property_index_boilerplate
+
 
     try:
         outfile = open(config['outfile_name'], 'w', encoding="utf8")
