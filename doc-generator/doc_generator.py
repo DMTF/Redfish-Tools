@@ -1051,10 +1051,29 @@ def parse_supfile_for_property_index(supfn):
     return None
 
 
-def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
+def combine_configs(command_line_args=None, config_data=None, supplemental_data=None):
+    """ Generate configuration based on various inputs (which should be dictionaries):
+    command_line_args: command-line arguments
+    config_data: read in from a config file
+    supplemental_data: read and parsed from a supplemental markdown document
 
+    If a parameter is specified in more than one place, config_data supersedes supplemental_data,
+    and command_line_args supersedes all.
+    """
+
+    if not command_line_args:
+        command_line_args = {}
+    if not config_data:
+        config_data = {}
+    if not supplemental_data:
+        supplemental_data = {}
+
+    uri_mapping_from_config = config_data.get('uri_mapping_from_config', False)
+    cwd = os.getcwd()
+
+    # config will become the combined config dictionary.
     config = {
-        'supplemental': {},
+        'supplemental': supplemental_data,
         'excluded_annotations': [],
         'excluded_annotations_by_match': [],
         'excluded_properties': [],
@@ -1066,7 +1085,7 @@ def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
         'schema_supplement': None,
         'normative': False,
         'escape_chars': [],
-        'cwd': os.getcwd(),
+        'cwd': cwd,
         'uri_replacements': {},
         'local_to_uri': {},
         'uri_to_local': {},
@@ -1074,19 +1093,17 @@ def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
         'profile_doc': None,
         'profile_resources': {},
         'profile': {},
-
-        # These values indicate whether to override config with supplement data, and may be useful for debugging
-        'uri_mapping_from_config': False
         }
 
+    # args is an intermediate dictionary, combining command-line and config parameters.
+    # Many of these parameters will need further vetting to produce config data, for
+    # example, opening a file or verifying well-formedness
     args = command_line_args.copy()
 
-    if supplemental_data:
-        config['supplemental'] = supplemental_data
-
     if config_data:
+
         # The --config argument does double duty; originally it was strictly for property_index_config.
-        if config_data.get('property_index') or command_line_args['property_index']:
+        if config_data.get('property_index') or command_line_args.get('property_index'):
             config['property_index_config'] = config_data
 
         # command-line arguments override the config file.
@@ -1105,7 +1122,7 @@ def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
         config_flags = [
             'add_toc', 'units_translation', 'suppress_version_history',
             'actions_in_property_table', 'html_title',
-            'uri_to_local', 'local_to_uri', 'uri_mapping_from_config',
+            'uri_to_local', 'local_to_uri'
             ]
         for x in config_flags:
             if x in config_data:
@@ -1188,18 +1205,6 @@ def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
              if 'ExcludedProperties' not in config['property_index_config']:
                  config['property_index_config']['ExcludedProperties'] = config.get('excluded_properties', [])
 
-    else:
-        # In any mode other than property_index, we should have a supplemental file.
-        # Ensure supfile is readable (if not, warn but proceed)
-        supfile_expected = False
-        if args['supfile']:
-            supfile = args['supfile']
-            supfile_expected = True
-        elif args['normative']:
-            supfile = config.get('cwd') + '/devsupplement.md'
-        else:
-            supfile = config.get('cwd') + '/usersupplement.md'
-
 
     # Check profile document, if specified
     if args['profile_doc']:
@@ -1230,23 +1235,23 @@ def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
         warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).', InfoWarning)
         exit()
 
-    if 'keywords' in config['supplemental']:
+    if 'keywords' in supplemental_data:
         # Promote the keywords to top-level keys.
-        for key, val in config['supplemental']['keywords'].items():
+        for key, val in supplemental_data['keywords'].items():
             if key not in config:
                 config[key] = val
 
-    if 'Schema Documentation' in config['supplemental']:
-        config['uri_replacements'] = config['supplemental']['Schema Documentation']
+    if 'Schema Documentation' in supplemental_data:
+        config['uri_replacements'] = supplemental_data['Schema Documentation']
 
 
     excluded_annotations = {}
     if 'excluded_annotations' in config_data:
         excluded_annotations['exact'] = [x for x in config_data['excluded_annotations'] if not x.startswith('*')]
         excluded_annotations['wildcard'] = [x[1:] for x in config_data['excluded_annotations'] if x.startswith('*')]
-    elif 'Excluded Annotations' in config['supplemental']:
-        excluded_annotations['exact'] = config['supplemental']['Excluded Annotations'].get('exact_match')
-        excluded_annotations['wildcard'] = config['supplemental']['Excluded Annotations'].get('wildcard_match')
+    elif 'Excluded Annotations' in supplemental_data:
+        excluded_annotations['exact'] = supplemental_data['Excluded Annotations'].get('exact_match')
+        excluded_annotations['wildcard'] = supplemental_data['Excluded Annotations'].get('wildcard_match')
     if excluded_annotations.get('exact'):
         excl = excluded_annotations.get('exact')
         config['excluded_properties'].extend(excl)
@@ -1260,9 +1265,9 @@ def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
     if 'excluded_properties' in config_data:
         excluded_properties['exact'] = [x for x in config_data['excluded_properties'] if not x.startswith('*')]
         excluded_properties['wildcard'] = [x[1:] for x in config_data['excluded_properties'] if x.startswith('*')]
-    elif 'Excluded Properties' in config['supplemental']:
-        excluded_properties['exact'] = config['supplemental']['Excluded Properties'].get('exact_match', [])
-        excluded_properties['wildcard'] = config['supplemental']['Excluded Properties'].get('wildcard_match', [])
+    elif 'Excluded Properties' in supplemental_data:
+        excluded_properties['exact'] = supplemental_data['Excluded Properties'].get('exact_match', [])
+        excluded_properties['wildcard'] = supplemental_data['Excluded Properties'].get('wildcard_match', [])
     if excluded_properties.get('exact'):
         config['excluded_properties'].extend(excluded_properties['exact'])
     if excluded_properties.get('wildcard'):
@@ -1272,9 +1277,9 @@ def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
     if 'excluded_schemas' in config_data:
         excluded_schemas['exact'] = [x for x in config_data['excluded_schemas'] if not x.startswith('*')]
         excluded_schemas['wildcard'] = [x[1:] for x in config_data['excluded_schemas'] if x.startswith('*')]
-    elif 'Excluded Schemas' in config['supplemental']:
-        excluded_schemas['exact'] = config['supplemental']['Excluded Schemas'].get('exact_match')
-        excluded_schemas['wildcard'] = config['supplemental']['Excluded Schemas'].get('wildcard_match')
+    elif 'Excluded Schemas' in supplemental_data:
+        excluded_schemas['exact'] = supplemental_data['Excluded Schemas'].get('exact_match')
+        excluded_schemas['wildcard'] = supplemental_data['Excluded Schemas'].get('wildcard_match')
     if excluded_schemas.get('exact'):
         config['excluded_schemas'] = excluded_schemas['exact']
     if excluded_schemas.get('wildcard'):
@@ -1286,45 +1291,45 @@ def combine_configs(command_line_args={}, config_data={}, supplemental_data={}):
     excluded_patterns = {}
     if 'excluded_pattern_properties' in config_data:
         config['excluded_pattern_props'].extend([x for x in config_data['excluded_pattern_properties']])
-    elif 'Excluded patternProperties' in config['supplemental']:
-        config['excluded_pattern_props'].extend(config['supplemental']['Excluded patternProperties'].get('exact_match'))
-        config['excluded_pattern_props'].extend(config['supplemental']['Excluded patternProperties'].get('wildcard_match'))
+    elif 'Excluded patternProperties' in supplemental_data:
+        config['excluded_pattern_props'].extend(supplemental_data['Excluded patternProperties'].get('exact_match'))
+        config['excluded_pattern_props'].extend(supplemental_data['Excluded patternProperties'].get('wildcard_match'))
 
-    if 'Description Overrides' in config['supplemental']:
-        config['property_description_overrides'] = config['supplemental']['Description Overrides']
+    if 'Description Overrides' in supplemental_data:
+        config['property_description_overrides'] = supplemental_data['Description Overrides']
 
-    if 'FullDescription Overrides' in config['supplemental']:
-        config['property_fulldescription_overrides'] = config['supplemental']['FullDescription Overrides']
+    if 'FullDescription Overrides' in supplemental_data:
+        config['property_fulldescription_overrides'] = supplemental_data['FullDescription Overrides']
 
     # URI mappings may be provided either in the config file or the supplemental document.
     # If they are in both, the version in the config file is what we use.
     # If neither is populated, issue a warning.
-    if 'local_to_uri' in config['supplemental'] and not config['local_to_uri']:
-        config['local_to_uri'] = config['supplemental']['local_to_uri']
+    if 'local_to_uri' in supplemental_data and not config['local_to_uri']:
+        config['local_to_uri'] = supplemental_data['local_to_uri']
 
     if not config['local_to_uri']:
         warnings.warn("Schema URI Mapping was not found or empty. " +
                           "URI mapping may be provided via config file or supplmentatl markdown. " +
                           "Output is likely to be incomplete.\n\n")
 
-    if not config['uri_mapping_from_config']:
-        if 'uri_to_local' in config['supplemental']:
-            config['uri_to_local'] = config['supplemental']['uri_to_local']
+    if not uri_mapping_from_config:
+        if 'uri_to_local' in supplemental_data:
+            config['uri_to_local'] = supplemental_data['uri_to_local']
 
-        if 'profile_local_to_uri' in config['supplemental']:
-            config['profile_local_to_uri'] = config['supplemental']['profile_local_to_uri']
+        if 'profile_local_to_uri' in supplemental_data:
+            config['profile_local_to_uri'] = supplemental_data['profile_local_to_uri']
 
-    config['profile_uri_to_local'] = config['supplemental'].get('profile_uri_to_local', {})
+    config['profile_uri_to_local'] = supplemental_data.get('profile_uri_to_local', {})
 
-    if 'enum_deprecations' in config['supplemental']:
-        config['enum_deprecations'] = config['supplemental']['enum_deprecations']
+    if 'enum_deprecations' in supplemental_data:
+        config['enum_deprecations'] = supplemental_data['enum_deprecations']
 
     if 'units_translation' not in config:
-        config['units_translation'] = config['supplemental'].get('units_translation', {})
+        config['units_translation'] = supplemental_data.get('units_translation', {})
 
-    config['schema_supplement'] = config['supplemental'].get('Schema Supplement', {})
+    config['schema_supplement'] = supplemental_data.get('Schema Supplement', {})
 
-    config['wants_common_objects'] = config['supplemental'].get('wants_common_objects', False)
+    config['wants_common_objects'] = supplemental_data.get('wants_common_objects', False)
 
     config['normative'] = args['normative']
 
@@ -1388,6 +1393,7 @@ def main():
 
     doc_generator = DocGenerator(config['import_from'], outfile, config)
     doc_generator.generate_doc()
+
 
 if __name__ == "__main__":
     main()
