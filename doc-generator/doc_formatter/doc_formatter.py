@@ -1009,8 +1009,10 @@ class DocFormatter:
 
         if profile.get('PropertyRequirements') is None and not is_action:
             # if a resource is specified with no PropertyRequirements, include them all...
-            # but do omit "Actions" if there are no ActionRequirements.
-            if profile.get('ActionRequirements') and len(profile['ActionRequirements']):
+            # but do omit "Actions" if there are no ActionRequirements (profile mode).
+            # For subset mode, "Actions" should be included either way.
+            if (self.config.get('profile_mode') == 'subset') or (
+                    profile.get('ActionRequirements') and len(profile['ActionRequirements'])):
                 return prop_names
             else:
                 return [x for x in prop_names if x != 'Actions']

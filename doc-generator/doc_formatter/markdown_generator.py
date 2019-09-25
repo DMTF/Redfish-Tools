@@ -531,18 +531,7 @@ class MarkdownGenerator(DocFormatter):
             if self.config.get('profile_mode') == 'subset':
                 if profile.get('Parameters'):
                     param_names = [x for x in profile['Parameters'].keys() if x in param_names]
-                else:
-                    # Pluck out just the parameters that are required by the schema
-                    required_param_names = []
-                    for x in param_names:
-                        param_deets = action_parameters[x]
-                        if isinstance(param_deets, list):
-                            if param_deets[0].get('required_parameter'):
-                                required_param_names.append(x)
-                        else:
-                            if param_deets.get('required_parameter'):
-                                required_param_names.append(x)
-                    param_names = required_param_names
+                # If there is no profile for this action, all parameters should be output.
 
             param_names.sort(key=str.lower)
 
