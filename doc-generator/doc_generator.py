@@ -1002,7 +1002,6 @@ class DocGenerator:
                     # Populate the URI mappings
                     config_data['uri_to_local'] = {}
                     config_data['local_to_uri'] = {}
-                    config_data['uri_mapping_from_config'] = True
                     for k, v in config_data.get('uri_mapping').items():
                         vpath = os.path.abspath(v)
                         config_data['uri_to_local'][k] = vpath
@@ -1072,7 +1071,7 @@ class DocGenerator:
         if not supplemental_data:
             supplemental_data = {}
 
-        uri_mapping_from_config = config_data.get('uri_mapping_from_config', False)
+        uri_mapping_from_config = config_data.get('uri_to_local')
         cwd = os.getcwd()
 
         # config will become the combined config dictionary.

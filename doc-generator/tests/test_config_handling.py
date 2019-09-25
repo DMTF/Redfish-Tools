@@ -14,17 +14,32 @@ the command line takes precedence, followed by the config file and finally the s
 """
 
 import os
-# import os.path
-# import copy
 from unittest.mock import patch
 import pytest
 from doc_generator import DocGenerator
 
+
+base_cli_args = {
+    "config_file": "../Redfish-Tools/doc-generator/sample_inputs/config_for_standard_html.json",
+    "import_from": ['/cli/path/to/schemas'],
+    "normative": True,
+    "format": 'markdown',
+    "outfile": "cli_outfile_name.md",
+    "supfile": "/cli/path/to/base_supp_file",
+    "payload_dir": "/cli/path/to/payloads",
+    "profile_doc": None,
+    "profile_terse": False,
+    "subset_doc": None,
+    "property_index": False,
+    "property_index_config_out": None,
+    "escape_chars": '@#'
+}
+
 base_cfg_in = {
     "html_title": "Title from config",
-    "output_format": "html",
-    "import_from": "/config/path/to/schemas",
-    "outfile_name": "config_outfile_name.html",
+    "format": "html",
+    "import_from": [ "/config/path/to/schemas" ],
+    "outfile": "config_outfile_name.html",
     "payload_dir": "/config/path/to/payloads",
     "actions_in_property_table": True,
     "local_to_uri": {
@@ -155,22 +170,6 @@ def test_supplement_only():
 
 @patch('sys.exit') # Doc generator warns and exits when some specified paths are not valid on the filesystem.
 @pytest.mark.filterwarnings("ignore:\"/config/path/to/payloads\" is not a directory. Exiting.")
-def test_config_cannot_set_common_objects(mock_exit):
-    """ Test that config file cannot set wants_common_objects to True.
-
-    Since common object (a.k.a. common property) collection only makes sense if there is
-    a place to output the results, it wants_common_objects can be set only by the
-    data parsed from the supplemental markdown file.
-    """
-    cfg = base_cfg_in.copy()
-    cfg['wants_common_objects'] = True
-    config = DocGenerator.combine_configs(config_data=cfg)
-
-    assert config.get('wants_common_objects') == False
-
-
-@patch('sys.exit') # Doc generator warns and exits when some specified paths are not valid on the filesystem.
-@pytest.mark.filterwarnings("ignore:\"/config/path/to/payloads\" is not a directory. Exiting.")
 def test_config_only(mock_exit):
     """ Test that config is something reasonable when only the config file data is supplied.
 
@@ -193,10 +192,70 @@ def test_config_only(mock_exit):
     assert config.get('html_title') == "Title from config"
     assert config.get('wants_common_objects') == False
     assert config.get('actions_in_property_table') == True
+    assert config.get('import_from') == ['/config/path/to/schemas']
+    assert config.get('outfile_name') == 'config_outfile_name.html'
+    assert config.get('output_format') == 'html'
 
 
-def test_config_overrides_supplement():
+@patch('sys.exit') # Doc generator warns and exits when some specified paths are not valid on the filesystem.
+@pytest.mark.filterwarnings("ignore:\"/config/path/to/payloads\" is not a directory. Exiting.")
+def test_config_cannot_set_common_objects(mock_exit):
+    """ Test that config file cannot set wants_common_objects to True.
+
+    Since common object (a.k.a. common property) collection only makes sense if there is
+    a place to output the results, it wants_common_objects can be set only by the
+    data parsed from the supplemental markdown file.
     """
+    cfg = base_cfg_in.copy()
+    cfg['wants_common_objects'] = True
+    config = DocGenerator.combine_configs(config_data=cfg)
+
+    assert config.get('wants_common_objects') == False
+
+
+@patch('sys.exit') # Doc generator warns and exits when some specified paths are not valid on the filesystem.
+@pytest.mark.filterwarnings("ignore:\"/config/path/to/payloads\" is not a directory. Exiting.")
+def test_config_overrides_supplement(mock_exit):
+    """ Verify that if some parameters are specified in both the supplement and the config file,
+    the values from the config file are used.
     """
 
-    pass
+    cfg = base_cfg_in.copy()
+    supp = base_supp.copy()
+
+    config = DocGenerator.combine_configs(config_data=cfg, supplemental_data=supp)
+
+    assert config.get('local_to_uri') == {
+        "/config/path/to/json-schema": "redfish.dmtf.org/schemas/v1"
+    }
+    assert config.get('uri_to_local') == {
+        "redfish.dmtf.org/schemas/v1": "/config/path/to/json-schema"
+    }
+    assert config.get('units_translation') == {
+        "s": "s_from_cfg",
+        "Mb/s": "Mb/s_from_cfg",
+    }
+    assert config.get('html_title') == "Title from config"
+    assert config.get('actions_in_property_table') == True
+    assert config.get('import_from') == ['/config/path/to/schemas']
+    assert config.get('outfile_name') == 'config_outfile_name.html'
+    assert config.get('output_format') == 'html'
+
+
+@patch('sys.exit') # Doc generator warns and exits when some specified paths are not valid on the filesystem.
+@pytest.mark.filterwarnings("ignore:\"/cli/path/to/payloads\" is not a directory. Exiting.")
+def test_cli_overrides_config(mock_exit):
+    """ Verify that if some parameters are specified in both the supplement and the config file,
+    the values from the config file are used.
+    """
+
+    cli_args = base_cli_args.copy()
+    cfg = base_cfg_in.copy()
+    supp = base_supp.copy()
+
+    config = DocGenerator.combine_configs(command_line_args=cli_args, config_data=cfg, supplemental_data=supp)
+
+    assert config.get('import_from') == ['/cli/path/to/schemas']
+    assert config.get('outfile_name') == 'cli_outfile_name.md'
+    assert config.get('output_format') == 'markdown'
+    assert config.get('escape_chars') == ['@', '#']
