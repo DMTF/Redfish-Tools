@@ -53,7 +53,8 @@ class HtmlGenerator(DocFormatter):
     text-decoration: underline #000000
  }
  ul, ol {margin-left: 2em;}
- li {margin: 0 0 0.5em;}
+ li {margin: 0 0 0.5em;
+     word-break: break-all;}
  .hanging-indent {
       padding-left: 1em;
       text-indent: -1em;
@@ -80,6 +81,9 @@ class HtmlGenerator(DocFormatter):
 }
 table.properties{
     width: 100%;
+}
+table.uris tr td:nth-child(2) {
+    word-break: break-all;
 }
 .property-details-content {
     margin-left: 5em;
@@ -162,7 +166,7 @@ pre.code{
 </style>
 """
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
@@ -364,16 +368,26 @@ pre.code{
 
         prop_access = ''
         if (not formatted_details['prop_is_object']
-                and not formatted_details.get('array_of_objects')):
+                and not formatted_details.get('array_of_objects')
+                and not as_action_parameters):
             if formatted_details['read_only']:
                 prop_access = '<nobr>read-only</nobr>'
             else:
-                prop_access = '<nobr>read-write</nobr>'
+                # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
+                # emit read-only.
+                if ((self.config.get('profile_mode') == 'subset')
+                        and formatted_details.get('profile_write_req')
+                        and (formatted_details['profile_write_req'] == 'None')):
+                        prop_access = '<nobr>read-only</nobr>'
+                else:
+                    prop_access = '<nobr>read-write</nobr>'
 
         if formatted_details['prop_required'] or formatted_details.get('required_parameter'):
             prop_access += ' <nobr>required</nobr>'
         elif formatted_details['prop_required_on_create']:
             prop_access += ' <nobr>required on create</nobr>'
+        elif as_action_parameters:
+            prop_access += ' optional'
 
         if formatted_details['nullable']:
             prop_access += ' (null)'
@@ -382,7 +396,7 @@ pre.code{
         profile_access = self.format_base_profile_access(formatted_details)
 
         descr = formatted_details['descr']
-        if formatted_details['profile_purpose']:
+        if formatted_details['profile_purpose'] and (self.config.get('profile_mode') != 'subset'):
             descr += '<br>' + self.formatter.bold("Profile Purpose: " + formatted_details['profile_purpose'])
 
         # Conditional Requirements
@@ -405,10 +419,10 @@ pre.code{
 
         row = []
         row.append(indentation_string + name_and_version)
-        if self.config.get('profile_mode'):
+        if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
             row.append(profile_access)
         row.append(prop_type)
-        if not self.config.get('profile_mode'):
+        if not self.config.get('profile_mode') or self.config.get('profile_mode') == 'subset':
             row.append(prop_access)
         row.append(descr)
 
@@ -453,12 +467,22 @@ pre.code{
             if profile is None:
                 profile = {}
             profile_values = profile.get('Values', [])
-            profile_min_support_values = profile.get('MinSupportValues', [])
+            profile_min_support_values = profile.get('MinSupportValues', []) # No longer a valid name?
             profile_parameter_values = profile.get('ParameterValues', [])
             profile_recommended_values = profile.get('RecommendedValues', [])
 
+            # profile_all_values is not used. What were we going for here?
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
+
+        # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
+        # means all values are supported.
+        # Otherwise, Values/ParameterValues specifies the set that should be listed.
+        if profile_mode == 'subset':
+            if len(profile_values):
+                enum = [x for x in enum if x in profile_values]
+            elif len(profile_parameter_values):
+                enum = [x for x in enum if x in profile_parameter_values]
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
@@ -473,7 +497,7 @@ pre.code{
 
         if enum_details:
             headings = [prop_type, 'Description']
-            if profile_mode:
+            if profile_mode and profile_mode != 'subset':
                 headings.append('Profile Specifies')
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -525,7 +549,7 @@ pre.code{
                         descr = self.formatter.italic(deprecated_descr)
                 cells = [enum_name, descr]
 
-                if profile_mode:
+                if profile_mode and profile_mode != 'subset':
                     if enum_name in profile_values:
                         cells.append('Required')
                     elif enum_name in profile_min_support_values:
@@ -542,7 +566,7 @@ pre.code{
 
         elif enum:
             headings = [prop_type]
-            if profile_mode:
+            if profile_mode and profile_mode != 'subset':
                 headings.append('Profile Specifies')
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -593,7 +617,7 @@ pre.code{
 
 
                 cells = [enum_name]
-                if profile_mode:
+                if profile_mode and profile_mode != 'subset':
                     if enum_name in profile_values:
                         cells.append('Required')
                     elif enum_name in profile_min_support_values:
@@ -624,7 +648,7 @@ pre.code{
 
         return '\n'.join(contents) + '\n'
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -643,15 +667,25 @@ pre.code{
         # Add the URIs for this action.
         formatted.append(self.format_uri_block_for_action(action_name, self.current_uris));
 
+        param_names = []
+
         if action_parameters:
             rows = []
             # Add a "start object" row for this parameter:
             rows.append(self.formatter.make_row(['{', '','','']))
 
             param_names = [x for x in action_parameters.keys()]
+
+            if self.config.get('profile_mode') == 'subset':
+                if profile and profile.get('Parameters'):
+                    param_names = [x for x in profile['Parameters'].keys() if x in param_names]
+                # If there is no profile for this action, all parameters should be output.
+
             param_names.sort(key=str.lower)
+
+        if len(param_names):
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } to the last row:
@@ -787,16 +821,16 @@ pre.code{
         # Replace pagebreak markers with pagebreak markup
         body = body.replace('~pagebreak~', '<p style="page-break-before: always"></p>')
 
-        doc_title = supplemental.get('Title')
+        doc_title = self.config.get('html_title', supplemental.get('Title'))
         if not doc_title:
             doc_title = ''
 
-        headlines = ['<head>', '<meta charset="utf-8">', '<title>' + doc_title + '</title>']
+        headlines = ['<head>', '<meta charset="utf-8"/>', '<title>' + doc_title + '</title>']
         styles = self.css_content
         headlines.append(styles)
         headlines.append('</head>')
         head = '\n'.join(headlines)
-        return '\n'.join(['<!doctype html>', '<html>', head, '<body>', body, '</body></html>'])
+        return '\n'.join(['<!DOCTYPE html>', '<html>', head, '<body>', body, '</body></html>'])
 
 
     def generate_toc(self, html_blob):

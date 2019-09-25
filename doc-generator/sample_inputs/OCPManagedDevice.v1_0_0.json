@@ -191,13 +191,13 @@
 				}
 			},
 			"ActionRequirements": {
-				"Reset": {
-					"Parameters": {
-						"ResetType": {
-							"MinSupportValues": ["ForceRestart"]
-						}
-					}
+			    "Reset": {
+				"Parameters": {
+				    "ResetType": {
+                                        "ParameterValues": ["ForceRestart"]
+                                    }
 				}
+			    }
 			}
 		},
 		"ManagerNetworkProtocol": {

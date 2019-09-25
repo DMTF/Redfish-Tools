@@ -34,7 +34,6 @@ property_index_config = {
 base_config = {
     'output_content': 'property_index',
     'output_format': 'markdown',
-    'expand_defs_from_non_output_schemas': False,
     'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
     'profile_resources': {},
     'units_translation': {},
@@ -75,26 +74,26 @@ def test_property_index_config_out(mockRequest):
                 "type": "string"
             }
 
-        ],
-        "LowerThresholdFatal": [
-            {
-                "schemas": [
-                    "Thermal/Fans"
+            ],
+            "LowerThresholdFatal": [
+                {
+                    "type": "integer",
+                    "description": "Below normal range and is fatal.",
+                    "knownException": False,
+                    "schemas": [
+                        "Thermal/Fans"
+                        ]
+                },
+                {
+                    "type": "number<br>(Cel)",
+                    "description": "Below normal range and is fatal.",
+                    "knownException": False,
+                    "schemas": [
+                        "Thermal/Temperatures"
+                        ]
+                }
                 ],
-                "description": "Below normal range and is fatal.",
-                "knownException": False,
-                "type": "integer"
-            },
-            {
-                "schemas": [
-                    "Thermal/Temperatures"
-                ],
-                "description": "Below normal range and is fatal.",
-                "knownException": False,
-                "type": "number"
-            }
-        ],
-        "RelatedItem": [
+            "RelatedItem": [
             {
                 "type": "array",
                 "schemas": [

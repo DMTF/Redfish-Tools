@@ -44,7 +44,6 @@ property_description_full_overrides = {
     }
 
 base_config = {
-    'expand_defs_from_non_output_schemas': False,
     'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
     'profile_resources': {},
     'units_translation': {},

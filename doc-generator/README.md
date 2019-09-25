@@ -40,7 +40,8 @@ referenced data from local files or over the Internet. See [The Supplemental Mat
 usage: doc_generator.py [-h] [-n] [--format {markdown,html,csv}]
                         [--out OUTFILE] [--sup SUPFILE]
                         [--payload_dir payload_dir] [--config CONFIG_FILE]
-                        [--profile PROFILE_DOC] [-t] [--property_index]
+                        [--profile PROFILE_DOC] [-t] [--subset SUBSET_DOC]
+                        [--property_index]
                         [--property_index_config_out CONFIG_FILE_OUT]
                         [--escape ESCAPE_CHARS]
                         [import_from [import_from ...]]
@@ -79,6 +80,9 @@ optional arguments:
                         output is intended for use by Service developers,
                         including only the subset of properties with profile
                         requirements.
+  --subset SUBSET_DOC   Path to a JSON profile document. Generates "Schema
+                        subset" output, with the subset defined in the JSON
+                        profile document.
   --property_index      Produce Property Index output.
   --property_index_config_out CONFIG_FILE_OUT
                         Generate updated config file, with specified filename

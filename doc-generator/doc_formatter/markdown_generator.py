@@ -42,7 +42,7 @@ class MarkdownGenerator(DocFormatter):
         self.layout_payloads = 'top'
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
@@ -195,15 +195,7 @@ class MarkdownGenerator(DocFormatter):
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
 
-        if formatted_details['profile_purpose']:
-            if formatted_details['descr']:
-                formatted_details['descr'] += ' '
-            formatted_details['descr'] += self.formatter.bold(formatted_details['profile_purpose'])
-
-        if formatted_details['descr'] is None:
-            formatted_details['descr'] = ''
-
-        if formatted_details['profile_purpose']:
+        if formatted_details['profile_purpose'] and (self.config.get('profile_mode') != 'subset'):
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
             formatted_details['descr'] += self.formatter.bold(formatted_details['profile_purpose'])
@@ -252,16 +244,31 @@ class MarkdownGenerator(DocFormatter):
 
         prop_access = ''
         if (not formatted_details['prop_is_object']
-                and not formatted_details.get('array_of_objects')):
+                and not formatted_details.get('array_of_objects')
+                and not as_action_parameters):
             if formatted_details['read_only']:
                 prop_access = 'read-only'
             else:
-                prop_access = 'read-write'
+                # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
+                # emit read-only.
+                if ((self.config.get('profile_mode') == 'subset')
+                        and formatted_details.get('profile_write_req')
+                        and (formatted_details['profile_write_req'] == 'None')):
+                        prop_access = 'read-only'
+                else:
+                    prop_access = 'read-write'
 
-        if formatted_details['prop_required'] or formatted_details['required_parameter']:
-            prop_access += ' required'
-        elif formatted_details['prop_required_on_create']:
-            prop_access += ' required on create'
+        # Action parameters don't have read/write properties, but they can be required/optional.
+        if as_action_parameters:
+            if formatted_details['prop_required'] or formatted_details['required_parameter']:
+                prop_access = 'required'
+            else:
+                prop_access = 'optional'
+        else:
+            if formatted_details['prop_required'] or formatted_details['required_parameter']:
+                prop_access += ' required'
+            elif formatted_details['prop_required_on_create']:
+                prop_access += ' required on create'
 
         if formatted_details['nullable']:
             prop_access += '<br>(null)'
@@ -269,7 +276,7 @@ class MarkdownGenerator(DocFormatter):
         # If profile reqs are present, massage them:
         profile_access = self.format_base_profile_access(formatted_details)
 
-        if self.config.get('profile_mode'):
+        if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
             if profile_access:
                 prop_type += '<br><br>' + self.formatter.italic(profile_access)
         elif prop_access:
@@ -319,12 +326,22 @@ class MarkdownGenerator(DocFormatter):
                 profile = {}
 
             profile_values = profile.get('Values', [])
-            profile_min_support_values = profile.get('MinSupportValues', [])
+            profile_min_support_values = profile.get('MinSupportValues', []) # No longer a valid name?
             profile_parameter_values = profile.get('ParameterValues', [])
             profile_recommended_values = profile.get('RecommendedValues', [])
 
+            # profile_all_values is not used. What were we going for here?
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
+
+            # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
+            # means all values are supported.
+            # Otherwise, Values/ParameterValues specifies the set that should be listed.
+            if profile_mode == 'subset':
+                if len(profile_values):
+                    enum = [x for x in enum if x in profile_values]
+                elif len(profile_parameter_values):
+                    enum = [x for x in enum if x in profile_parameter_values]
 
         if prop_description:
             contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
@@ -336,7 +353,7 @@ class MarkdownGenerator(DocFormatter):
             contents.append('\n' + supplemental_details + '\n')
 
         if enum_details:
-            if profile_mode:
+            if profile_mode and profile_mode != 'subset':
                 contents.append('| ' + prop_type + ' | Description | Profile Specifies |')
                 contents.append('| --- | --- | --- |')
             else:
@@ -383,7 +400,7 @@ class MarkdownGenerator(DocFormatter):
                     else:
                         descr = self.formatter.italic(deprecated_descr)
 
-                if profile_mode:
+                if profile_mode and profile_mode != 'subset':
                     profile_spec = ''
                     if enum_name in profile_values:
                         profile_spec = 'Required'
@@ -398,7 +415,7 @@ class MarkdownGenerator(DocFormatter):
                     contents.append('| ' + enum_name + ' | ' + descr + ' |')
 
         elif enum:
-            if profile_mode:
+            if profile_mode and profile_mode != 'subset':
                 contents.append('| ' + prop_type + ' | Profile Specifies |')
                 contents.append('| --- | --- |')
             else:
@@ -447,7 +464,7 @@ class MarkdownGenerator(DocFormatter):
                         else:
                             enum_name += ' ' + self.formatter.italic('(deprecated in v' + deprecated_display + ' and later.)')
 
-                if profile_mode:
+                if profile_mode and profile_mode != 'subset':
                     profile_spec = ''
                     if enum_name in profile_values:
                         profile_spec = 'Required'
@@ -480,7 +497,7 @@ class MarkdownGenerator(DocFormatter):
         return '\n'.join(contents) + '\n'
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -498,6 +515,8 @@ class MarkdownGenerator(DocFormatter):
         # Add the URIs for this action.
         formatted.append(self.format_uri_block_for_action(action_name, self.current_uris));
 
+        param_names = []
+
         if action_parameters:
             rows = []
             # Table start:
@@ -508,9 +527,17 @@ class MarkdownGenerator(DocFormatter):
             rows.append('| ' + ' | '.join(['{', ' ',' ',' ']) + ' |')
 
             param_names = [x for x in action_parameters.keys()]
+
+            if self.config.get('profile_mode') == 'subset':
+                if profile.get('Parameters'):
+                    param_names = [x for x in profile['Parameters'].keys() if x in param_names]
+                # If there is no profile for this action, all parameters should be output.
+
             param_names.sort(key=str.lower)
+
+        if len(param_names):
             for param_name in param_names:
-                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name])
+                formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
                 rows.append(formatted_parameters.get('row'))
 
             # Add a closing } row:

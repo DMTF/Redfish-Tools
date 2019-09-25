@@ -45,17 +45,16 @@ class DocFormatter:
         self.current_uris = []
 
         if self.config.get('profile_mode'):
-            # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
-            minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
-            compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
-            if compare < 0:
-                self.config['MinVersionLT1.6'] = True
-            else:
-                self.config['MinVersionLT1.6'] = False
+            self.config['MinVersionLT1.6'] = False
+            if self.config['profile_mode'] != 'subset':
+                # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
+                minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
+                compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
+                if compare < 0:
+                    self.config['MinVersionLT1.6'] = True
 
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
-        self.config['excluded_pattern_props_by_match'] = self.config.get('excluded_pattern_props_by_match', [])
 
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
@@ -64,6 +63,8 @@ class DocFormatter:
         for schema_ref in schemas:
             details = self.property_data[schema_ref]
             if self.skip_schema(details['schema_name']):
+                continue
+            if 'common_object_schemas' in self.config and schema_ref in self.config['common_object_schemas']:
                 continue
             if len(details['properties']):
                 self.documented_schemas.append(schema_ref)
@@ -83,8 +84,8 @@ class DocFormatter:
         # Properties to carry through from parent when a ref is extended:
         self.parent_props = [
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
-            'readonly', 'prop_required', 'prop_required_on_create', 'required_parameter', 'versionAdded', 'versionDeprecated',
-            'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated'
+            'readonly', 'prop_required', 'prop_required_on_create', 'requiredParameter', 'required_parameter',
+            'versionAdded', 'versionDeprecated', 'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated'
             ]
 
 
@@ -186,7 +187,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
         'row': content for the main table being generated.
@@ -230,7 +231,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
         """Generate a formatted Actions section from parameters data"""
         raise NotImplementedError
 
@@ -243,6 +244,17 @@ class DocFormatter:
                                                          read_req=formatted_details.get('profile_read_req'),
                                                          write_req=formatted_details.get('profile_write_req'),
                                                          min_count=formatted_details.get('profile_mincount'))
+        elif self.config.get('profile_mode') == 'terse':
+            if formatted_details.get('prop_required'):
+                read_req = 'Mandatory'
+            else:
+                read_req = ''
+
+            profile_access = self._format_profile_access(read_only=formatted_details.get('read_only', False),
+                                                         read_req=read_req,
+                                                         write_req=False,
+                                                         min_count=False)
+
         else:
             profile_access = ''
 
@@ -437,7 +449,7 @@ class DocFormatter:
                 description = supplemental.get('schema-intro', description)
 
             # Profile purpose overrides all:
-            if profile:
+            if profile and profile_mode != 'subset':
                 description = profile.get('Purpose')
 
             if description:
@@ -449,7 +461,7 @@ class DocFormatter:
             else:
                 self.current_uris = []
 
-            if details.get('release_history'):
+            if details.get('release_history') and not self.config.get('suppress_version_history'):
                 self.add_release_history(details['release_history'])
 
             if conditional_details:
@@ -463,7 +475,10 @@ class DocFormatter:
 
                 properties = details['properties']
                 prop_names = [x for x in properties.keys()]
-                prop_names = self.organize_prop_names(prop_names, profile)
+                if self.config.get('profile_mode') and profile:
+                    prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
+
+                prop_names = self.organize_prop_names(prop_names)
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
@@ -471,7 +486,7 @@ class DocFormatter:
                     prop_info['prop_required_on_create'] = prop_info.get('prop_required_on_create') or prop_name in required_on_create
                     prop_info['parent_requires'] = required
                     prop_info['parent_requires_on_create'] = required_on_create
-                    prop_info['required_parameter'] = prop_info.get('requiredParameter') == True
+                    prop_info['required_parameter'] = prop_info.get('requiredParameter')
 
                     prop_infos = self.extend_property_info(schema_ref, prop_info)
 
@@ -499,7 +514,7 @@ class DocFormatter:
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
 
-        if self.config.get('profile_mode'):
+        if self.config.get('profile_mode') and self.config['profile_mode'] != 'subset':
             # Add registry messages, if in profile.
             registry_reqs = config.get('profile').get('registries_annotated', {})
             if registry_reqs:
@@ -757,6 +772,7 @@ class DocFormatter:
                 is_collection_of = traverser.is_collection_of(from_schema_ref)
                 prop_name = ref_info.get('_prop_name', False)
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
+                reference_disposition = self.config.get('reference_disposition') and self.config['reference_disposition'].get(prop_ref)
 
                 if is_collection_of and ref_info.get('anyOf'):
                     anyof_ref = None
@@ -771,19 +787,22 @@ class DocFormatter:
                 ref_info = self.apply_overrides(ref_info)
 
                 if ref_info.get('type') == 'object':
-                    # If this is an excerpt, it will also be an object, and we want to expand-in-place:
-                    if excerpt_copy_name:
-                        ref_info['_is_excerpt'] = True
+                    # If this is an excerpt, it will also be an object, and we want to expand-in-place.
+                    # The same applies (or should) if config explicitly says to include:
+                    if excerpt_copy_name or (reference_disposition == 'include'):
                         if is_documented_schema:
                             excerpt_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
                         else: # This is not expected.
                             excerpt_link = self.link_to_outside_schema(from_schema_uri)
-                        ref_info['add_link_text'] = ("This object is an excerpt of the "
+                        if excerpt_copy_name:
+                            ref_info['_is_excerpt'] = True
+                            ref_info['add_link_text'] = ("This object is an excerpt of the "
                                                          + excerpt_link +
                                                          " resource located at the URI shown in DataSourceUri.")
 
                     # If an object, include just the definition and description, and append a reference if possible:
                     else:
+                        wants_common_objects = self.config.get('wants_common_objects')
                         ref_description = ref_info.get('description')
                         ref_longDescription = ref_info.get('longDescription')
                         ref_fulldescription_override = ref_info.get('fulldescription_override')
@@ -804,17 +823,15 @@ class DocFormatter:
                                                + '. See the ' + ref_schema_name + ' schema for details.')
 
                             else:
-                                if is_documented_schema:
-                                    link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
-                                                   + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                                   ' schema for details.')
-
                                 if is_ref_to_same_schema:
                                     # e.g., a Chassis is contained by another Chassis
                                     link_detail = ('Link to another ' + prop_name + ' resource.')
 
-                                else:
-                                    wants_common_objects = self.config.get('wants_common_objects')
+                                elif is_documented_schema:
+                                    link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
+                                                   + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
+                                                   ' schema for details.')
+                                if not is_ref_to_same_schema and reference_disposition != 'include':
                                     if is_documented_schema or not wants_common_objects:
                                         append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
                                                       ' schema for details on this property.')
@@ -886,8 +903,9 @@ class DocFormatter:
                 # Pull in any "require" from parent:
                 parent_requires = prop_info.get('parent_requires', [])
                 parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
-                ref_info['prop_required'] = ref_info.get('prop_required') or prop_name in parent_requires
+                ref_info['prop_required'] = ref_info.get('prop_required') or prop_name in parent_requires or prop_info.get('requiredParameter')
                 ref_info['prop_required_on_create'] = ref_info.get('prop_required_on_create') or prop_name in parent_requires_on_create
+                ref_info['required_parameter'] = prop_info.get('requiredParameter')
 
                 prop_info = ref_info
 
@@ -901,7 +919,7 @@ class DocFormatter:
                         props[x]['prop_required_on_create'] = props[x].get('prop_required_on_create') or x in required_on_create
                         props[x]['parent_requires'] = required
                         props[x]['parent_requires_on_create'] = required_on_create
-                        props[x]['required_parameter'] = props[x].get('requiredParameter') == True
+                        props[x]['required_parameter'] = props[x].get('requiredParameter')
 
                 if '$ref' in prop_info or 'anyOf' in prop_info:
                     return self.extend_property_info(schema_ref, prop_info)
@@ -974,26 +992,40 @@ class DocFormatter:
         return prop_infos
 
 
-    def organize_prop_names(self, prop_names, profile=None):
+    def organize_prop_names(self, prop_names):
         """ Strip out excluded property names, sorting the remainder """
 
-        if self.config.get('profile_mode'):
-            prop_names = self.filter_props_by_profile(prop_names, profile)
         prop_names = self.exclude_prop_names(prop_names, self.config['excluded_properties'],
                                        self.config['excluded_by_match'])
         prop_names.sort(key=str.lower)
         return prop_names
 
 
-    def filter_props_by_profile(self, prop_names, profile, is_action=False):
-        if profile is None:
-            return []
+    def filter_props_by_profile(self, prop_names, profile, schema_requires, is_action=False):
 
-        if self.config.get('profile_mode') == 'terse':
+        if profile is None:
+            warnings.warn("filter_props_by_profile was called with no profile data" )
+            return prop_names
+
+        if profile.get('PropertyRequirements') is None and not is_action:
+            # if a resource is specified with no PropertyRequirements, include them all...
+            # but do omit "Actions" if there are no ActionRequirements (profile mode).
+            # For subset mode, "Actions" should be included either way.
+            if (self.config.get('profile_mode') == 'subset') or (
+                    profile.get('ActionRequirements') and len(profile['ActionRequirements'])):
+                return prop_names
+            else:
+                return [x for x in prop_names if x != 'Actions']
+
+        if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
             if is_action:
                 profile_props = [x for x in profile.keys()]
             else:
                 profile_props = [x for x in profile.get('PropertyRequirements', {}).keys()]
+            for x in schema_requires:
+                if x not in profile_props:
+                    profile_props.append(x)
+
             if profile.get('ActionRequirements'):
                 profile_props.append('Actions')
 
@@ -1001,7 +1033,7 @@ class DocFormatter:
                 # Action properties typically start with "#SchemaName.", which is not reflected in the profile:
                 filtered = []
                 for prop in profile_props:
-                    if prop in prop_names:
+                    if prop in prop_names or prop in schema_requires:
                         filtered.append(prop)
                     else:
                         matches = [x for x in prop_names if x.endswith('.' + prop)]
@@ -1010,6 +1042,7 @@ class DocFormatter:
                 prop_names = filtered
             else:
                 prop_names = list(set(prop_names) & set(profile_props))
+
         prop_names.sort(key=str.lower)
         return prop_names
 
@@ -1161,7 +1194,6 @@ class DocFormatter:
         parsed['prop_required_on_create'] = details[0]['prop_required_on_create']
         parsed['required_parameter'] = details[0].get('requiredParameter') == True
 
-        # Data from profile:
         if profile is not None:
             parsed['is_in_profile'] = True
             parsed['profile_read_req'] = profile.get('ReadRequirement', 'Mandatory')
@@ -1234,7 +1266,8 @@ class DocFormatter:
                     prop_name_parts = prop_name.split('.')
                     prop_brief_name = prop_name_parts[-1]
             path_to_prop = prop_path.copy()
-            path_to_prop.append(prop_brief_name)
+            if not prop_info.get('_in_items'):
+                path_to_prop.append(prop_brief_name)
             profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
         # Some special treatment is required for Actions
@@ -1286,9 +1319,10 @@ class DocFormatter:
             for action_param in action_parameters.keys():
                 params = action_parameters[action_param]
                 params = self.extend_property_info(schema_ref, params)
-                action_parameters[action_param] = self.extend_property_info(schema_ref, action_parameters[action_param])
+                action_parameters[action_param] = params
 
-            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters)
+            # action_parameters should include "required" indicators, but does not ... always?
+            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters, profile)
 
             if self.config.get('payloads'):
                 version = self.get_latest_version(prop_info.get('_from_schema_ref'))
@@ -1355,6 +1389,11 @@ class DocFormatter:
                     add_link_text = prop_items[0].get('add_link_text', add_link_text)
 
                 array_of_objects = True
+
+                # Annotate the items so we know not to add a level to the property path
+                # later. There's probably a more elegant way to address this than to annotate!
+                for x in prop_items:
+                    x['_in_items'] = True
 
                 if len(prop_items) == 1:
                     if 'type' in prop_items[0] and 'properties' not in prop_items[0]:
@@ -1605,21 +1644,26 @@ class DocFormatter:
         prop_names = patterns = False
 
         if properties:
-            prop_names = [x for x in properties.keys()]
-            prop_names = self.exclude_annotations(prop_names)
 
-            if self.config.get('profile_mode') == 'terse':
+            prop_names = [x for x in properties.keys()]
+
+            if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
                 if len(prop_path) and prop_path[0] == 'Actions':
                     profile_section = 'ActionRequirements'
                 else:
                     profile_section = 'PropertyRequirements'
                 profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
 
-                prop_names = self.filter_props_by_profile(prop_names, profile, is_action)
+                if profile:
+                    prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
+                prop_names.sort(key=str.lower)
+
                 filtered_properties = {}
                 for k in prop_names:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
+            else:
+                prop_names = self.exclude_annotations(prop_names)
 
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
@@ -1652,8 +1696,7 @@ class DocFormatter:
             # If this is an action parameter, don't list the pattern here (we'll catch it in action details):
             if not ('Actions' in prop_path and len(prop_path) > prop_path.index('Actions') + 1):
                 patterns = prop_info['patternProperties'].keys()
-                patterns_to_include = self.exclude_prop_names(patterns, self.config['excluded_pattern_props'],
-                                                              self.config['excluded_pattern_props_by_match'])
+                patterns_to_include = self.exclude_prop_names(patterns, self.config['excluded_pattern_props'], [])
 
                 for pattern in patterns_to_include:
                     prop_name = '(pattern)'
@@ -1915,8 +1958,8 @@ class DocFormatter:
             if len(summarized) <= max_entries:
                 version = DocFormatter.truncate_version(elt['version'], 2, True)
                 summarized.append({"version": "v" + version, "release": latest_release})
-
-        if num_releases > max_entries:
-            summarized.append({"version": "...", "release": "..."})
+            else:
+                summarized.append({"version": "...", "release": "..."})
+                break
 
         return summarized
