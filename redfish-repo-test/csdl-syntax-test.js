@@ -41,8 +41,8 @@ const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310'
                                     'NEMA_L6_20P', 'NEMA_L6_30P', 'NEMA_L14_20P', 'NEMA_L14_30P', 'NEMA_L15_20P',
                                     'NEMA_L15_30P', 'NEMA_L21_20P', 'NEMA_L21_30P', 'NEMA_L22_20P', 'NEMA_L22_30P',
                                     'California_CS8265', 'California_CS8365', 'IEC_60320_C14', 'IEC_60320_C20',
-                                    'IEC_60309_1P3W_16A', 'IEC_60309_1P3W_32A', 'IEC_60309_1P3W_63A', 'IEC_60309_3P5W_16A',
-                                    'IEC_60309_3P5W_32A', 'IEC_60309_3P5W_63A', 'IEC_60309_3P4W_60A', 'IEC_60309_3P5W_60A',
+                                    'IEC_60309_316P6', 'IEC_60309_332P6', 'IEC_60309_363P6', 'IEC_60309_516P6',
+                                    'IEC_60309_532P6', 'IEC_60309_563P6', 'IEC_60309_460P9', 'IEC_60309_560P9',
                                     'Field_208V_3P4W_60A', 'Field_400V_3P5W_32A', 'NEMA_5_15R', 'NEMA_5_20R', 
                                     'NEMA_L5_20R', 'NEMA_L5_30R', 'NEMA_L6_20R', 'NEMA_L6_30R', 'CEE_7_Type_E',
                                     'CEE_7_Type_F', 'SEV_1011_TYPE_12', 'SEV_1011_TYPE_23', 'BS_1363_Type_G'];
