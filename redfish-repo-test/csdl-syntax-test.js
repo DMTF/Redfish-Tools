@@ -37,15 +37,16 @@ const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310'
                                     'SO_UDIMM_72b', 'SO_DIMM_16b', 'SO_DIMM_32b', 'TPM1_2', 'TPM2_0', 'TCM1_0', 'iWARP',
                                     'RSA_2048Bit', 'RSA_3072Bit', 'RSA_4096Bit', 'EC_P256', 'EC_P384', 'EC_P521',
                                     'EC_X25519', 'EC_X448', 'EC_Ed25519', 'EC_Ed448', 'NEMA_5_15P', 'NEMA_L5_15P', 
-                                    'NEMA_5_20P', 'NEMA_L5_20P', 'NEMA_L5_30P', 'NEMA_6_15P', 'NEMA_L6_15P', 'NEMA_6_20P',
-                                    'NEMA_L6_20P', 'NEMA_L6_30P', 'NEMA_L14_20P', 'NEMA_L14_30P', 'NEMA_L15_20P',
-                                    'NEMA_L15_30P', 'NEMA_L21_20P', 'NEMA_L21_30P', 'NEMA_L22_20P', 'NEMA_L22_30P',
-                                    'California_CS8265', 'California_CS8365', 'IEC_60320_C14', 'IEC_60320_C20',
-                                    'IEC_60309_316P6', 'IEC_60309_332P6', 'IEC_60309_363P6', 'IEC_60309_516P6',
-                                    'IEC_60309_532P6', 'IEC_60309_563P6', 'IEC_60309_460P9', 'IEC_60309_560P9',
-                                    'Field_208V_3P4W_60A', 'Field_400V_3P5W_32A', 'NEMA_5_15R', 'NEMA_5_20R', 
-                                    'NEMA_L5_20R', 'NEMA_L5_30R', 'NEMA_L6_20R', 'NEMA_L6_30R', 'CEE_7_Type_E',
-                                    'CEE_7_Type_F', 'SEV_1011_TYPE_12', 'SEV_1011_TYPE_23', 'BS_1363_Type_G'];
+                                    'NEMA_5_20P', 'NEMA_L5_20P', 'NEMA_L5_30P', 'NEMA_6_15P', 'NEMA_L6_15P',
+                                    'NEMA_6_20P', 'NEMA_L6_20P', 'NEMA_L6_30P', 'NEMA_L14_20P', 'NEMA_L14_30P',
+                                    'NEMA_L15_20P', 'NEMA_L15_30P', 'NEMA_L21_20P', 'NEMA_L21_30P', 'NEMA_L22_20P',
+                                    'NEMA_L22_30P', 'California_CS8265', 'California_CS8365', 'IEC_60320_C14',
+                                    'IEC_60320_C13','IEC_60320_C20', 'IEC_60309_316P6', 'IEC_60309_332P6',
+                                    'IEC_60309_363P6', 'IEC_60309_516P6', 'IEC_60309_532P6', 'IEC_60309_563P6',
+                                    'IEC_60309_460P9', 'IEC_60309_560P9', 'Field_208V_3P4W_60A', 'Field_400V_3P5W_32A',
+                                    'NEMA_5_15R', 'NEMA_5_20R', 'NEMA_L5_20R', 'NEMA_L5_30R', 'NEMA_L6_20R',
+                                    'NEMA_L6_30R', 'CEE_7_Type_E', 'CEE_7_Type_F', 'SEV_1011_TYPE_12',
+                                    'SEV_1011_TYPE_23', 'BS_1363_Type_G'];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 
