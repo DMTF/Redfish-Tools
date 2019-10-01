@@ -3,14 +3,14 @@
         "title": "Redfish",
         "x-copyright": "Copyright 2019 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
         "description": "This contains the definition of a Redfish service.",
-        "version": "2019.1",
+        "version": "2019.2",
         "contact": {
             "name": "DMTF",
             "url": "https://www.dmtf.org/standards/redfish"
         }
     },
     "OutputFile": "openapi.yaml",
-    "TaskRef": "http://redfish.dmtf.org/schemas/v1/Task.v1_4_1.yaml#/components/schemas/Task",
-    "MessageRef": "http://redfish.dmtf.org/schemas/v1/Message.v1_0_7.yaml#/components/schemas/Message",
+    "TaskRef": "http://redfish.dmtf.org/schemas/v1/Task.v1_4_2.yaml#/components/schemas/Task",
+    "MessageRef": "http://redfish.dmtf.org/schemas/v1/Message.v1_0_8.yaml#/components/schemas/Message",
     "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml"
 }
