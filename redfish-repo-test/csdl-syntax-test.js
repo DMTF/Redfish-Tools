@@ -28,7 +28,7 @@ options.cache = new CSDL.cache(options.useLocal, options.useNetwork);
 
 /***************** White lists ******************************/
 //Units that don't exist in UCUM
-const unitsWhiteList = ['RPM'];
+const unitsWhiteList = ['RPM', 'V.A'];
 //Enumeration Member names that are non-Pascal Cased
 const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
