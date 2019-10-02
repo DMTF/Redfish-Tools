@@ -46,7 +46,8 @@ const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310'
                                     'IEC_60309_460P9', 'IEC_60309_560P9', 'Field_208V_3P4W_60A', 'Field_400V_3P5W_32A',
                                     'NEMA_5_15R', 'NEMA_5_20R', 'NEMA_L5_20R', 'NEMA_L5_30R', 'NEMA_L6_20R',
                                     'NEMA_L6_30R', 'CEE_7_Type_E', 'CEE_7_Type_F', 'SEV_1011_TYPE_12',
-                                    'SEV_1011_TYPE_23', 'BS_1363_Type_G'];
+                                    'SEV_1011_TYPE_23', 'BS_1363_Type_G', 'TLS_SSL', 'CRAM_MD5', 'HMAC_MD5', 'HMAC_SHA96',
+                                    'CBC_DES', 'CFB128_AES128' ];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 
