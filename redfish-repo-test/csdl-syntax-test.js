@@ -46,12 +46,15 @@ const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310'
                                     'IEC_60309_460P9', 'IEC_60309_560P9', 'Field_208V_3P4W_60A', 'Field_400V_3P5W_32A',
                                     'NEMA_5_15R', 'NEMA_5_20R', 'NEMA_L5_20R', 'NEMA_L5_30R', 'NEMA_L6_20R',
                                     'NEMA_L6_30R', 'CEE_7_Type_E', 'CEE_7_Type_F', 'SEV_1011_TYPE_12',
-                                    'SEV_1011_TYPE_23', 'BS_1363_Type_G'];
+                                    'SEV_1011_TYPE_23', 'BS_1363_Type_G', 'TLS_SSL', 'CRAM_MD5', 'HMAC_MD5', 'HMAC_SHA96',
+                                    'CBC_DES', 'CFB128_AES128' ];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
-const SwordfishSchemaFileList = [ 'HostedStorageServices_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml', 'VolumeCollection_v1.xml' ];
+const SwordfishSchemaFileList = [ 'ConsistencyGroupCollection_v1.xml', 'EndpointGroupCollection_v1.xml', 'FileSystemCollection_v1.xml', 'HostedStorageServices_v1.xml',
+                                  'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml', 'StorageServiceCollection_v1.xml',
+                                  'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml', 'VolumeCollection_v1.xml' ];
 const ContosoSchemaFileList = [ 'ContosoExtensions_v1.xml', 'TurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'TurboencabulatorService' ];
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
