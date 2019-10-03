@@ -52,9 +52,12 @@ const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310'
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
-const SwordfishSchemaFileList = [ 'ConsistencyGroupCollection_v1.xml', 'EndpointGroupCollection_v1.xml', 'FileSystemCollection_v1.xml', 'HostedStorageServices_v1.xml',
-                                  'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml', 'StorageServiceCollection_v1.xml',
-                                  'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml', 'VolumeCollection_v1.xml' ];
+const SwordfishSchemaFileList = [ 'Capacity_v1.xml', 'ClassOfService_v1.xml', 'ConsistencyGroup_v1.xml', 'ConsistencyGroupCollection_v1.xml',
+                                  'DataStorageLoSCapabilities_v1.xml', 'EndpointGroupCollection_v1.xml', 'FileSystemCollection_v1.xml',
+                                  'HostedStorageServices_v1.xml', 'IOStatistics_v1.xml', 'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml',
+                                  'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml', 'StorageReplicaInfo_v1.xml',
+                                  'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
+                                  'VolumeCollection_v1.xml' ];
 const ContosoSchemaFileList = [ 'ContosoExtensions_v1.xml', 'TurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'TurboencabulatorService' ];
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
