@@ -50,6 +50,7 @@ The config file is a JSON file that contains five properties at the root of the 
 * TaskRef: A pointer to the JSON Schema definition of Task
 * MessageRef: A pointer to the JSON Schema definition of Message
 * ODataSchema: A pointer to the OData extensions to JSON Schema
+* DoNotWrite: A list of the output files to filter out when writing the YAML files
 * Extensions: A structure containing additional URIs to apply to a given resource type if provided in the base OpenAPI Service Document
 
 Sample File:
@@ -69,6 +70,11 @@ Sample File:
     "TaskRef": "http://redfish.dmtf.org/schemas/v1/Task.v1_3_0.yaml#/components/schemas/Task",
     "MessageRef": "http://redfish.dmtf.org/schemas/v1/Message.v1_0_6.yaml#/components/schemas/Message",
     "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.yaml",
+    "DoNotWrite": [
+        "redfish-error.",
+        "redfish-payload-annotations.",
+        "redfish-schema.",
+        "redfish-schema-" ],
     "Extensions": {
         "Drive": [
             "/redfish/v1/SpecialDriveArray/{DriveId}"
