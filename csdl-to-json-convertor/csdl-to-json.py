@@ -1372,6 +1372,8 @@ def main():
         config_data["Location"] = CONFIG_DEF_LOCATION
     if "ResourceLocation" not in config_data:
         config_data["ResourceLocation"] = CONFIG_DEF_RESOURCE_LOCATION
+    if "DoNotWrite" not in config_data:
+        config_data["DoNotWrite"] = []
 
     # Get the definition for Resource
     resource_file = args.input + os.path.sep + "Resource_v1.xml"
@@ -1428,13 +1430,15 @@ def main():
                 translator.process()
                 for namespace in translator.json_out:
                     out_filename = args.output + os.path.sep + namespace + ".json"
+                    out_filename_short = namespace + ".json"
                     if translator.errors[namespace]:
                         print( "-- Errors detected while generating {}; not creating file".format( out_filename ) )
                     else:
-                        if overwrite or is_namespace_unversioned( namespace ) or ( not os.path.isfile( out_filename ) ):
-                            out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
-                            with open( out_filename, "w" ) as file:
-                                file.write( out_string )
+                        if len( [ i for i in config_data["DoNotWrite"] if out_filename_short.startswith( i ) ] ) == 0:
+                            if overwrite or is_namespace_unversioned( namespace ) or ( not os.path.isfile( out_filename ) ):
+                                out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
+                                with open( out_filename, "w" ) as file:
+                                    file.write( out_string )
 
 def is_namespace_unversioned( namespace ):
     """

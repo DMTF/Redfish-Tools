@@ -40,11 +40,12 @@ optional arguments:
 ### Config File
 
 The config file can contain up to five parameters; parameters not defined will have a default value in the tool:
-  * Copyright: The copyright string to include in the JSON Schema files
-  * RedfishSchema: A pointer to the Redfish extensions to JSON Schema
-  * ODataSchema: A pointer to the OData extensions to JSON Schema
-  * Location: A pointer to the web folder where the resulting JSON Schema files will be published
-  * ResourceLocation: A pointer to the web folder where the core Resource_v1.xml file can be found
+* Copyright: The copyright string to include in the JSON Schema files
+* RedfishSchema: A pointer to the Redfish extensions to JSON Schema
+* ODataSchema: A pointer to the OData extensions to JSON Schema
+* Location: A pointer to the web folder where the resulting JSON Schema files will be published
+* ResourceLocation: A pointer to the web folder where the core Resource_v1.xml file can be found
+* DoNotWrite: A list of the output files to filter out when writing the JSON files
 
 Sample File and Default Values:
 ```
@@ -53,29 +54,30 @@ Sample File and Default Values:
     "RedfishSchema": "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_2_0.json",
     "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata.4.0.0.json",
     "Location": "http://redfish.dmtf.org/schemas/v1/",
-    "ResourceLocation": "http://redfish.dmtf.org/schemas/v1/"
+    "ResourceLocation": "http://redfish.dmtf.org/schemas/v1/",
+    "DoNotWrite": []
 }
 ```
 
 ## Operation
 
 The tool makes several assumptions about the format of the Redfish CSDL files:
-  * Each file that defines a resource follows the Redfish model for inheritance by copy; other than the base *Resource* definition, each resource definition is contained in one file
-  * Any referenced external namespaces have proper *Include* statements found at the top of the CSL file
-  * All annotations have their expected facets filled; for example, the OData.Description annotation must use the *String=* facet
-  * All namespaces follow the Redfish defined format where a namespace is either unversioned, or is in the form *name.vX_Y_Z*
-  * If a reference is made to another CSDL file, its JSON Schema file will be in the same folder
+* Each file that defines a resource follows the Redfish model for inheritance by copy; other than the base *Resource* definition, each resource definition is contained in one file
+* Any referenced external namespaces have proper *Include* statements found at the top of the CSL file
+* All annotations have their expected facets filled; for example, the OData.Description annotation must use the *String=* facet
+* All namespaces follow the Redfish defined format where a namespace is either unversioned, or is in the form *name.vX_Y_Z*
+* If a reference is made to another CSDL file, its JSON Schema file will be in the same folder
 
 Before any translation is done, the tool will attempt to locate the Resource_v1.xml schema.  This is to cache properties for base definitions that all resources use.  The tool will first check to see if the file exists in the input directory; if it doesn't exist there, it will access the remote location for the file.
 
 Once the Resource_v1.xml definitions are cached, the tool loops on all files ending in ".xml" in the input directory.  For every namespace found in the file, it will generate a corresponding ".json" file in the following manner:
-  * For EntityType and ComplexType definitions...
+* For EntityType and ComplexType definitions...
     * ... that are in an unversioned namespace and are marked as abstract have a definition that contains an "anyOf" statement in the unversioned JSON Schema that points to all versioned definitions
     * ... that are in an unversioned namespace and are not marked as abstract have their definition translated only to the unversioned JSON Schema file
     * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files
-  * Action definitions...
+* Action definitions...
     * ... that are in an unversioned namespace are translated to all versioned JSON Schema files
     * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files
-  * EnumType and TypeDefinition definitions...
+* EnumType and TypeDefinition definitions...
     * ... that are in an unversioned namespace are translated to the unversioned JSON Schema file
     * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files

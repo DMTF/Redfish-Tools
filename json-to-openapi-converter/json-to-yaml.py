@@ -60,9 +60,10 @@ class JSONToYAML:
         task_ref: The location for the Task schema file
         info_block: The info block to put in the OpenAPI Service Document
         extensions: The URI extensions to apply to given resource types
+        do_not_write: A list of files to not write
     """
 
-    def __init__( self, input, output, overwrite, base_file, service_file, odata_schema, message_ref, task_ref, info_block, extensions ):
+    def __init__( self, input, output, overwrite, base_file, service_file, odata_schema, message_ref, task_ref, info_block, extensions, do_not_write ):
         self.odata_schema = odata_schema
         self.message_ref = message_ref
         self.task_ref = task_ref
@@ -113,10 +114,12 @@ class JSONToYAML:
                     self.update_object( json_data )
 
                     out_filename = output + os.path.sep + filename.rsplit( ".", 1 )[0] + ".yaml"
-                    if overwrite or is_unversioned( filename ) or ( not os.path.isfile( out_filename ) ):
-                        out_string = yaml.dump( json_data, default_flow_style = False )
-                        with open( out_filename, "w" ) as file:
-                            file.write( out_string )
+                    out_filename_short = filename.rsplit( ".", 1 )[0] + ".yaml"
+                    if len( [ i for i in do_not_write if out_filename_short.startswith( i ) ] ) == 0:
+                        if overwrite or is_unversioned( filename ) or ( not os.path.isfile( out_filename ) ):
+                            out_string = yaml.dump( json_data, default_flow_style = False )
+                            with open( out_filename, "w" ) as file:
+                                file.write( out_string )
 
         # Update the URI information with the action information collected
         self.update_uri_info_with_actions()
@@ -754,11 +757,13 @@ if __name__ == '__main__':
         config_data["TaskRef"] = CONFIG_DEF_TASK_REF
     if "Extensions" not in config_data:
         config_data["Extensions"] = CONFIG_DEF_EXTENSIONS
+    if "DoNotWrite" not in config_data:
+        config_data["DoNotWrite"] = []
     if "info" not in config_data:
         print( "ERROR: Configuration file does not contain 'info' data" )
         sys.exit( 1 )
 
     # Funnel everything to the translator
-    JSONToYAML( args.input, args.output, overwrite, args.base, config_data["OutputFile"], config_data["ODataSchema"], config_data["MessageRef"], config_data["TaskRef"], config_data["info"], config_data["Extensions"] )
+    JSONToYAML( args.input, args.output, overwrite, args.base, config_data["OutputFile"], config_data["ODataSchema"], config_data["MessageRef"], config_data["TaskRef"], config_data["info"], config_data["Extensions"], config_data["DoNotWrite"] )
 
     sys.exit( 0 )
