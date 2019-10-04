@@ -29,7 +29,7 @@ describe('OpenAPI/YAML', () => {
       if(file.includes('openapi.yaml')) {
         it('Is Valid OpenAPI', function() { 
           this.retries(2); //Retry in case of HTTP errors
-          this.timeout(30000);
+          this.timeout(60000);
           let doc = yaml.safeLoad(txt);
           return SwaggerParser.validate(doc, {resolve: {custom: customOpenAPIResolver}});
         });
