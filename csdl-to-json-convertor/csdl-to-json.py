@@ -1434,7 +1434,7 @@ def main():
                     if translator.errors[namespace]:
                         print( "-- Errors detected while generating {}; not creating file".format( out_filename ) )
                     else:
-                        if len( [ i for i in config_data["DoNotWrite"] if i in out_filename_short ] ) == 0:
+                        if len( [ i for i in config_data["DoNotWrite"] if out_filename_short.startswith( i ) ] ) == 0:
                             if overwrite or is_namespace_unversioned( namespace ) or ( not os.path.isfile( out_filename ) ):
                                 out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
                                 with open( out_filename, "w" ) as file:

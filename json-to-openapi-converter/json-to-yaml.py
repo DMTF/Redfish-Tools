@@ -115,7 +115,7 @@ class JSONToYAML:
 
                     out_filename = output + os.path.sep + filename.rsplit( ".", 1 )[0] + ".yaml"
                     out_filename_short = filename.rsplit( ".", 1 )[0] + ".yaml"
-                    if len( [ i for i in do_not_write if i in out_filename_short ] ) == 0:
+                    if len( [ i for i in do_not_write if out_filename_short.startswith( i ) ] ) == 0:
                         if overwrite or is_unversioned( filename ) or ( not os.path.isfile( out_filename ) ):
                             out_string = yaml.dump( json_data, default_flow_style = False )
                             with open( out_filename, "w" ) as file:
