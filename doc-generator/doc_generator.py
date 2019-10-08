@@ -229,7 +229,6 @@ class DocGenerator:
                 local_path = self.config['profile_uri_to_local'][partial_uri]
                 if partial_uri.endswith(req_profile_name):
                     req_profile_repo = local_path[0:-len(req_profile_name)]
-                    pass
                 else:
                     req_profile_repo = local_path
                 is_local_file = True
@@ -992,7 +991,6 @@ class DocGenerator:
     def parse_config_file(config_fn):
         """ Attempt to open and parse a config file, which should be a JSON file. Returns a dictionary. """
 
-        # Check for a config_file. If there is one, we'll update args based on it.
         config_file_read = False
         config_data = {}
         try:
@@ -1009,6 +1007,7 @@ class DocGenerator:
                 config_file_read = True
         except (OSError) as ex:
             warnings.warn('Unable to open ' + config_fn + ' to read: ' + str(ex))
+            sys.exit()
         except (json.decoder.JSONDecodeError) as ex:
             warnings.warn(config_fn + " appears to be invalid JSON. JSON decoder reports: " + str(ex))
             sys.exit()
@@ -1029,9 +1028,9 @@ class DocGenerator:
             supfile.close()
         except (OSError) as ex:
             if supfile_specified:
-                warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
+                warnings.warn('Unable to open ' + supfn + ' to read: ' +  str(ex))
             else:
-                warnings.warn('No supplemental file specified and ' + supfile +
+                warnings.warn('No supplemental file specified and ' + supfn +
                                   ' not found. Proceeding.')
         return supfile_data
 
@@ -1049,7 +1048,7 @@ class DocGenerator:
                 else:
                     warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
         except (OSError) as ex:
-            warnings.warn('Unable to open ' + args['supfile'] + ' to read: ' +  str(ex))
+            warnings.warn('Unable to open ' + supfn + ' to read: ' +  str(ex))
 
         return None
 
@@ -1098,10 +1097,10 @@ class DocGenerator:
             'profile': {},
             }
 
-        # args is an intermediate dictionary, combining command-line and config parameters.
+        # combined_args is an intermediate dictionary, combining command-line and config parameters.
         # Many of these parameters will need further vetting to produce config data, for
         # example, opening a file or verifying well-formedness
-        args = command_line_args.copy()
+        combined_args = command_line_args.copy()
 
         if config_data:
 
@@ -1111,13 +1110,17 @@ class DocGenerator:
 
             # command-line arguments override the config file.
             config_args = [
-                'supfile', 'format', 'import_from', 'outfile', 'payload_dir', 'normative',
+                'supfile', 'format', 'outfile', 'payload_dir', 'normative',
                 'profile_doc', 'profile_terse', 'subset_doc',
                 'property_index', 'property_index_config_out', 'escape_chars',
                 ]
             for x in config_args:
-                if config_data.get(x) and (x not in args or args[x] is None):
-                    args[x] = config_data[x]
+                if config_data.get(x) and (x not in combined_args or combined_args[x] is None):
+                    combined_args[x] = config_data[x]
+
+            # import_from is special: command-line parsing will always produce a list, sometimes empty.
+            if config_data.get('import_from') and not combined_args.get('import_from'):
+                combined_args['import_from'] = config_data['import_from']
 
             # config_flags don't have command-line overrides; they should be added to config directly.
             # We want to capture the fact that a flag was set, even if false, as this should override
@@ -1151,27 +1154,27 @@ class DocGenerator:
             'outfile' : 'output.md',
             }
         for param, default in arg_defaults.items():
-            if not args.get(param):
-                args[param] = default
+            if not combined_args.get(param):
+                combined_args[param] = default
 
-        config['output_format'] = args['format']
+        config['output_format'] = combined_args['format']
 
-        if args.get('property_index'):
+        if combined_args.get('property_index'):
             config['output_content'] = 'property_index'
-            config['write_config_to'] = args['property_index_config_out']
+            config['write_config_to'] = combined_args['property_index_config_out']
 
         else:
             config['output_content'] = 'full_doc'
 
-        if 'import_from' in args and len(args['import_from']):
-            import_from = args['import_from']
+        if 'import_from' in combined_args and len(combined_args['import_from']):
+            import_from = combined_args['import_from']
         else:
             import_from = [ os.path.join(config.get('cwd'), 'json-schema') ]
 
         config['import_from'] = import_from
 
         # Determine outfile and verify that it is writeable:
-        outfile_name = args['outfile']
+        outfile_name = combined_args['outfile']
         if outfile_name == 'output.md':
             if config['output_format'] == 'html':
                 outfile_name = 'index.html'
@@ -1188,13 +1191,13 @@ class DocGenerator:
         config['outfile_name'] = outfile_name
 
         # If payload_dir was provided, verify that it is a readable directory:
-        if args.get('payload_dir'):
-            payload_dir = args.get('payload_dir')
+        if combined_args.get('payload_dir'):
+            payload_dir = combined_args.get('payload_dir')
             try:
-                if os.path.isdir(args['payload_dir']):
-                    config['payload_dir'] = args['payload_dir']
+                if os.path.isdir(combined_args['payload_dir']):
+                    config['payload_dir'] = combined_args['payload_dir']
                 else:
-                    warnings.warn('"' + args['payload_dir'] + '" is not a directory. Exiting.')
+                    warnings.warn('"' + combined_args['payload_dir'] + '" is not a directory. Exiting.')
                     sys.exit();
             except (Exception) as ex:
                 warnings.warn('Unable to read payload_dir "' + payload_dir + '"; ' + str(ex))
@@ -1211,13 +1214,13 @@ class DocGenerator:
 
 
         # Check profile document, if specified
-        if args.get('profile_doc'):
-            if args['profile_terse']:
+        if combined_args.get('profile_doc'):
+            if combined_args['profile_terse']:
                 config['profile_mode'] = 'terse'
             else:
                 config['profile_mode'] = 'verbose'
 
-            profile_doc = args['profile_doc']
+            profile_doc = combined_args['profile_doc']
             try:
                 profile = open(profile_doc, 'r', encoding="utf8")
                 config['profile_doc'] = profile_doc
@@ -1225,9 +1228,9 @@ class DocGenerator:
                 warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
                 sys.exit()
 
-        if args.get('subset_doc'):
+        if combined_args.get('subset_doc'):
             config['profile_mode'] = 'subset'
-            profile_doc = args['subset_doc']
+            profile_doc = combined_args['subset_doc']
             try:
                 profile = open(profile_doc, 'r', encoding="utf8")
                 config['profile_doc'] = profile_doc
@@ -1235,7 +1238,7 @@ class DocGenerator:
                 warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
                 sys.exit()
 
-        if args.get('profile_terse') and not args.get('profile_doc'):
+        if combined_args.get('profile_terse') and not combined_args.get('profile_doc'):
             warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).', InfoWarning)
             sys.exit()
 
@@ -1335,14 +1338,14 @@ class DocGenerator:
 
         config['wants_common_objects'] = supplemental_data.get('wants_common_objects', False)
 
-        config['normative'] = args.get('normative', False)
+        config['normative'] = combined_args.get('normative', False)
 
         # Apply defaults for parameters that were not explicitly set:
         if 'actions_in_property_table' not in config:
             config['actions_in_property_table'] = True
 
-        if args.get('escape_chars'):
-            config['escape_chars'] = [x for x in args['escape_chars']]
+        if combined_args.get('escape_chars'):
+            config['escape_chars'] = [x for x in combined_args['escape_chars']]
 
         return config
 
@@ -1353,6 +1356,7 @@ def main():
     cwd = os.getcwd()
 
     command_line_args = DocGenerator.parse_command_line()
+
     if command_line_args.get('config_file'):
         config_data = DocGenerator.parse_config_file(command_line_args['config_file'])
     else:
