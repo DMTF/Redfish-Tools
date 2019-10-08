@@ -1008,9 +1008,9 @@ class DocGenerator:
                         config_data['local_to_uri'][vpath] = k
                 config_file_read = True
         except (OSError) as ex:
-            warnings.warn('Unable to open ' + args['config_file'] + ' to read: ' + str(ex))
+            warnings.warn('Unable to open ' + config_fn + ' to read: ' + str(ex))
         except (json.decoder.JSONDecodeError) as ex:
-            warnings.warn(args['config_file'] + " appears to be invalid JSON. JSON decoder reports: " + str(ex))
+            warnings.warn(config_fn + " appears to be invalid JSON. JSON decoder reports: " + str(ex))
             sys.exit()
 
         return config_data
