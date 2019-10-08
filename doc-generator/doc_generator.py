@@ -229,7 +229,6 @@ class DocGenerator:
                 local_path = self.config['profile_uri_to_local'][partial_uri]
                 if partial_uri.endswith(req_profile_name):
                     req_profile_repo = local_path[0:-len(req_profile_name)]
-                    pass
                 else:
                     req_profile_repo = local_path
                 is_local_file = True
@@ -1009,6 +1008,7 @@ class DocGenerator:
                 config_file_read = True
         except (OSError) as ex:
             warnings.warn('Unable to open ' + config_fn + ' to read: ' + str(ex))
+            sys.exit()
         except (json.decoder.JSONDecodeError) as ex:
             warnings.warn(config_fn + " appears to be invalid JSON. JSON decoder reports: " + str(ex))
             sys.exit()
@@ -1029,9 +1029,9 @@ class DocGenerator:
             supfile.close()
         except (OSError) as ex:
             if supfile_specified:
-                warnings.warn('Unable to open ' + supfile + ' to read: ' +  str(ex))
+                warnings.warn('Unable to open ' + supfn + ' to read: ' +  str(ex))
             else:
-                warnings.warn('No supplemental file specified and ' + supfile +
+                warnings.warn('No supplemental file specified and ' + supfn +
                                   ' not found. Proceeding.')
         return supfile_data
 
