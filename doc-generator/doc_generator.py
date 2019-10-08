@@ -991,7 +991,6 @@ class DocGenerator:
     def parse_config_file(config_fn):
         """ Attempt to open and parse a config file, which should be a JSON file. Returns a dictionary. """
 
-        # Check for a config_file. If there is one, we'll update args based on it.
         config_file_read = False
         config_data = {}
         try:
@@ -1049,7 +1048,7 @@ class DocGenerator:
                 else:
                     warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
         except (OSError) as ex:
-            warnings.warn('Unable to open ' + args['supfile'] + ' to read: ' +  str(ex))
+            warnings.warn('Unable to open ' + supfn + ' to read: ' +  str(ex))
 
         return None
 
