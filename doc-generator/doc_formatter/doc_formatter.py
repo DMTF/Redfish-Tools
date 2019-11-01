@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016, 2017, 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017, 2018, 2019 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -1278,7 +1278,7 @@ class DocFormatter:
         # Only objects within Actions have parameters
         action_parameters = prop_info.get('parameters', {})
 
-        prop_info = self.apply_overrides(prop_info)
+        prop_info = self.apply_overrides(prop_info, schema_name, prop_name)
 
         if isinstance(prop_type, list):
             prop_is_object = 'object' in prop_type
@@ -1836,8 +1836,10 @@ class DocFormatter:
                 prop_info['description'] = prop_info['longDescription'] = local_full_overrides[prop_name]
                 prop_info['fulldescription_override'] = True
             return prop_info
+
         if prop_name in self.config.get('property_description_overrides', {}):
             prop_info['description'] = prop_info['longDescription'] = self.config['property_description_overrides'][prop_name]
+
         if prop_name in self.config.get('property_fulldescription_overrides', {}):
             prop_info['description'] = prop_info['longDescription'] = self.config['property_fulldescription_overrides'][prop_name]
             prop_info['fulldescription_override'] = True
