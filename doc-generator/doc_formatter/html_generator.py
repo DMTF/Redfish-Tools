@@ -956,14 +956,7 @@ pre.code{
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_strings = []
-        for uri in sorted(uris, key=str.lower):
-            uri = uri + "/Actions/" + action
-            uri = uri.replace('/', '/\u200b')
-            uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
-
-        uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
-        uri_content = '<h5>URIs:</h5>' + uri_block
+        uri_content = '<b>URI: {URI of resource}/Actions/' + action + '</b><br><br>'
         return uri_content
 
 
