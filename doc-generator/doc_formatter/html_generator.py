@@ -956,7 +956,7 @@ pre.code{
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_content = '<b>ACTION URI: {Base URI of target resource}/Actions/' + action + '</b><br><br>'
+        uri_content = '<b>Action URI: {Base URI of target resource}/Actions/' + action + '</b><br><br>'
         return uri_content
 
 
