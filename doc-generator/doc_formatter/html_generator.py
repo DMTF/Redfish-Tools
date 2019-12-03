@@ -693,12 +693,12 @@ pre.code{
             tmp_row = self._add_closing_brace(tmp_row, '', '}')
             rows[-1] = tmp_row
 
-            formatted.append(self.formatter.para('The following table shows the parameters for the action that are included in the POST body to the URI shown in the "target" property of the Action.'))
+            formatted.append(self.formatter.para("Perform the action using a POST to the specific Action URI for this resource.  Parameters for the action are passed in a JSON body and are defined as follows:"))
 
             formatted.append(self.formatter.make_table(rows))
 
         else:
-            formatted.append(self.formatter.para("(This action takes no parameters.)"))
+            formatted.append(self.formatter.para("Perform the action using a POST to the specific Action URI for this resource.  This action takes no parameters."))
 
         return "\n".join(formatted)
 
@@ -956,7 +956,7 @@ pre.code{
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_content = '<b>URI: {URI of resource}/Actions/' + action + '</b><br><br>'
+        uri_content = '<b>ACTION URI: {Base URI of target resource}/Actions/' + action + '</b><br><br>'
         return uri_content
 
 
