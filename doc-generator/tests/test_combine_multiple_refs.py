@@ -8,7 +8,7 @@ File: test_combine_multiple_refs.py
 Brief: Tests for the "combine multiple refs" setting. This setting specifies that multiple objects within
        a schema, that are defined by reference to the same definition, should have their definitions
        moved into the Property Details section, with a single-line (row) listing for each object in the
-       main table. combine_multiple_refs is an integer threshhold at which this behavior kicks in. If it is
+       main table. combine_multiple_refs is an integer threshold at which this behavior kicks in. If it is
        absent or 0, no combining occurs. If it is 2 or greater, combining occurs at that number of references
        to the same object. A setting of 1 does not make sense and should be prevented.
 """
@@ -57,7 +57,7 @@ def test_combine_not_set(mockRequest):
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_combine_at_3(mockRequest):
-    """ Threshhold is set at 3. This is a likely choice; our example is a sextuple of references. """
+    """ Threshold is set at 3. This is a likely choice; our example is a sextuple of references. """
 
     config = copy.deepcopy(base_config)
     config['combine_multiple_refs'] = 3
@@ -76,7 +76,7 @@ def test_combine_at_3(mockRequest):
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_combine_at_6(mockRequest):
-    """ Threshhold is set at 6. Our example with six references should trigger here too (fencepost check). """
+    """ Threshold is set at 6. Our example with six references should trigger here too (fencepost check). """
 
     config = copy.deepcopy(base_config)
     config['combine_multiple_refs'] = 3
@@ -95,7 +95,7 @@ def test_combine_at_6(mockRequest):
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_combine_at_7(mockRequest):
-    """ Threshhold is set at 7. Our example with six references should NOT trigger here. """
+    """ Threshold is set at 7. Our example with six references should NOT trigger here. """
 
     config = copy.deepcopy(base_config)
     config['combine_multiple_refs'] = 3
