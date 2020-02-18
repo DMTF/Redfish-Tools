@@ -1095,6 +1095,7 @@ class DocGenerator:
             'profile_doc': None,
             'profile_resources': {},
             'profile': {},
+            'combine_multiple_refs': 0,
             }
 
         # combined_args is an intermediate dictionary, combining command-line and config parameters.
@@ -1128,7 +1129,7 @@ class DocGenerator:
             config_flags = [
                 'add_toc', 'units_translation', 'suppress_version_history',
                 'actions_in_property_table', 'html_title',
-                'uri_to_local', 'local_to_uri'
+                'uri_to_local', 'local_to_uri', 'combine_multiple_refs'
                 ]
             for x in config_flags:
                 if x in config_data:
@@ -1339,6 +1340,11 @@ class DocGenerator:
         config['wants_common_objects'] = supplemental_data.get('wants_common_objects', False)
 
         config['normative'] = combined_args.get('normative', False)
+
+        if config['combine_multiple_refs'] == 1:
+            warnings.warn("The combine_multiple_refs setting of 1 does not make sense. " +
+                              "It should be 2 or more, or 0 to prevent combining. Assuming 0 was intended.\n\n")
+            config['combine_multiple_refs'] == 0
 
         # Apply defaults for parameters that were not explicitly set:
         if 'actions_in_property_table' not in config:
