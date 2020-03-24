@@ -43,6 +43,7 @@ class DocFormatter:
         self.formatter = FormatUtils() # Non-markdown formatters will override this.
         self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
         self.current_uris = []
+        self.ref_deduplicator = {} # Tracks use of refs within a schema to assist in combining them for output.
 
         if self.config.get('profile_mode'):
             self.config['MinVersionLT1.6'] = False
@@ -391,6 +392,7 @@ class DocFormatter:
             details = property_data[schema_ref]
             schema_name = details['schema_name']
             profile = config.get('profile_resources', {}).get(schema_ref, {})
+            self.ref_deduplicator[schema_ref] = {}
 
             # Look up supplemental details for this schema/version
             version = details.get('latest_version', '1')
@@ -479,6 +481,7 @@ class DocFormatter:
                     prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
 
                 prop_names = self.organize_prop_names(prop_names)
+                prop_info_stash = {}
 
                 for prop_name in prop_names:
                     prop_info = properties[prop_name]
@@ -489,7 +492,14 @@ class DocFormatter:
                     prop_info['required_parameter'] = prop_info.get('requiredParameter')
 
                     prop_infos = self.extend_property_info(schema_ref, prop_info)
+                    # If we've extended an in-schema reference, capture it:
+                    prop_info_ref_uri = self.count_ref_in_schema(schema_ref, prop_infos[0])
 
+                    # TODO: need to extend further here, before continuing on.
+                    prop_info_stash[prop_name] = prop_infos
+
+                for prop_name in prop_names:
+                    prop_infos = prop_info_stash[prop_name]
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
                         # Skip "Actions" if requested. Everything else is output.
@@ -1383,6 +1393,7 @@ class DocFormatter:
                     prop_item['excerptCopy'] = excerpt_copy_name
 
                 prop_items = self.extend_property_info(schema_ref, prop_item)
+                # TODO: maybe capture dups here
                 if excerpt_copy_name:
                     excerpt_ref_uri = prop_items[0].get('_ref_uri')
                     excerpt_schema_ref = prop_items[0].get('_from_schema_ref')
@@ -1675,6 +1686,7 @@ class DocFormatter:
                                                                    prop_name in parent_requires_on_create)
                 base_detail_info = self.apply_overrides(base_detail_info, schema_name, prop_name)
                 detail_info = self.extend_property_info(schema_ref, base_detail_info)
+                prop_info_ref_uri = self.count_ref_in_schema(schema_ref, detail_info[0])
 
                 if is_action:
                     # Trim out the properties; these are always Target and Title:
@@ -1790,6 +1802,30 @@ class DocFormatter:
                             replacement = match_spec.get('replace_with')
 
         return replacement
+
+    def count_ref_in_schema(self, schema_ref, prop_info):
+        """ Examine prop_info for a reference and update the count in ref_deduplicator, if appropriate.
+        Returns the _ref_uri from prop_info if so
+        """
+
+        ref_uri = prop_info.get('_ref_uri', None)
+        if not ref_uri:
+            return None
+
+        # Normalize ref_uri:
+        ref_uri = '#'.join(self.traverser.get_schema_ref_and_path(ref_uri))
+
+
+        if schema_ref not in self.ref_deduplicator:
+            self.ref_deduplicator[schema_ref] = {}
+        dedup = self.ref_deduplicator[schema_ref]
+
+        if ref_uri in dedup:
+            dedup[ref_uri] = dedup[ref_uri] + 1
+        else:
+            dedup[ref_uri] = 1
+
+        return ref_uri
 
 
     # Override in HTML formatter to get actual links.
