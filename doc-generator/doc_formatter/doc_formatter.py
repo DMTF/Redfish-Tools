@@ -495,8 +495,9 @@ class DocFormatter:
                     # If we've extended an in-schema reference, capture it:
                     prop_info_ref_uri = self.count_ref_in_schema(schema_ref, prop_infos[0])
 
-                    # TODO: need to extend further here, before continuing on.
                     prop_info_stash[prop_name] = prop_infos
+                    # Extend further so all ref counts are updated before we start formatting output:
+                    self.extend_and_count_refs(schema_ref, prop_infos)
 
                 for prop_name in prop_names:
                     prop_infos = prop_info_stash[prop_name]
@@ -529,7 +530,7 @@ class DocFormatter:
             registry_reqs = config.get('profile').get('registries_annotated', {})
             if registry_reqs:
                 self.add_registry_reqs(registry_reqs)
-
+        import pdb; pdb.set_trace()
         return self.output_document()
 
 
@@ -1826,6 +1827,28 @@ class DocFormatter:
             dedup[ref_uri] = 1
 
         return ref_uri
+
+
+    # TODO: the following should be called recursively from count_ref_in_schema.
+    def extend_and_count_refs(self, schema_ref, prop_infos):
+        """ Extend, but don't format, elements of prop_infos to update ref_deduplicator counts. """
+
+        for prop_info in prop_infos:
+            if isinstance(prop_info, dict):
+                properties = prop_info.get('properties')
+                if properties:
+                    for prop_name in properties.keys():
+                        if isinstance(properties.get(prop_name), dict):
+                            base_detail_info = properties[prop_name]
+                            detail_info = self.extend_property_info(schema_ref, base_detail_info)
+                            self.count_ref_in_schema(schema_ref, detail_info[0])
+                elif prop_info.get('items'):
+                    # TODO
+                    pass
+
+
+    def extend_property_for_count(self, schema_ref, prop_info):
+        pass
 
 
     # Override in HTML formatter to get actual links.
