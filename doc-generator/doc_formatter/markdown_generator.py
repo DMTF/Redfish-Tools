@@ -55,7 +55,6 @@ class MarkdownGenerator(DocFormatter):
         This may include embedded objects with their own properties.
         """
 
-        traverser = self.traverser
         formatted = []     # The row itself
 
         within_action = prop_path == ['Actions']
@@ -94,13 +93,16 @@ class MarkdownGenerator(DocFormatter):
             version_deprecated_explanation = prop_info[0].get('deprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
+            prop_ref = prop_info[0].get('_ref_uri')
+            ref_name = prop_info[0].get('_prop_name')
         elif isinstance(prop_info, dict):
             version_added = prop_info.get('versionAdded')
             version_deprecated = prop_info.get('versionDeprecated')
             version_deprecated_explanation = prop_info.get('deprecated')
             has_enum = 'enum' in prop_info
-            is_excerpt = prop_info[0].get('_is_excerpt')
-
+            is_excerpt = prop_info.get('_is_excerpt')
+            prop_ref = prop_info.get('_ref_uri')
+            ref_name = prop_info.get('_prop_name')
         if prop_name:
             name_and_version = self.formatter.bold(self.escape_for_markdown(prop_name,
                                                                   self.config.get('escape_chars', [])))
@@ -140,7 +142,19 @@ class MarkdownGenerator(DocFormatter):
                                  self.escape_for_markdown(version_deprecated_explanation,
                                                           self.config.get('escape_chars', [])))
 
+
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
+
+        if prop_ref and ((self.config.get('combine_multiple_refs', 0) > 1) and
+                (self.ref_deduplicator.get(schema_ref, {}).get(prop_ref, 0) >= self.config.get('combine_multiple_refs'))):
+                print(prop_ref)
+                # import pdb; pdb.set_trace()
+                # This is wrong:
+                # object_details = { ref_name: formatted_details.get('object_description', [])[0] }
+                # formatted_details['prop_details'].update(object_details)
+                # formatted_details['object_description'] = []
+                pass
+
 
         if formatted_details.get('promote_me'):
             return({'row': '\n'.join(formatted_details['item_description']), 'details':formatted_details['prop_details'],

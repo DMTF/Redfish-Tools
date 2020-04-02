@@ -41,7 +41,7 @@ base_config = {
 def test_combine_not_set(mockRequest):
     """ The non-combine case; multiple refs to the same object appear multiple times. """
     config = copy.deepcopy(base_config)
-    # config['combine_multiple_refs'] = 0
+    config['combine_multiple_refs'] = 0
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'sensor'))
 
@@ -54,7 +54,7 @@ def test_combine_not_set(mockRequest):
     # The "Threshold" object is referred to six times, and is the only thing with a DwellTime attribute.
     assert output.count('DwellTime') == 6
 
-@pytest.mark.skip(reason="not ready to run this")
+
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_combine_at_3(mockRequest):
     """ Threshold is set at 3. This is a likely choice; our example is a sextuple of references. """

@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016, 2017, 2018, 2019 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016, 2017, 2018, 2019, 2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -31,6 +31,7 @@ class DocFormatter:
         """
         self.property_data = property_data
         self.common_properties = {}
+        self.common_property_details = {}
         self.traverser = traverser
         self.config = config
         self.level = level
@@ -514,6 +515,8 @@ class DocFormatter:
                         if formatted.get('profile_conditional_details'):
                             conditional_details.update(formatted['profile_conditional_details'])
 
+                # import pdb; pdb.set_trace()
+                prop_details.update(self.common_property_details)
                 if len(prop_details):
                     detail_names = [x for x in prop_details.keys()]
                     detail_names.sort(key=str.lower)
@@ -526,6 +529,7 @@ class DocFormatter:
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
 
+        import pdb;pdb.set_trace()
         if self.config.get('profile_mode') and self.config['profile_mode'] != 'subset':
             # Add registry messages, if in profile.
             registry_reqs = config.get('profile').get('registries_annotated', {})
@@ -775,6 +779,7 @@ class DocFormatter:
                 from_schema_ref = ref_info.get('_from_schema_ref')
                 from_schema_uri, _, _ = ref_info.get('_ref_uri', '').partition('#')
                 unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
+                requested_ref_uri = ref_info['_ref_uri']
                 is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref)
                                                                or (schema_ref == unversioned_schema_ref))
 
@@ -811,6 +816,16 @@ class DocFormatter:
                             ref_info['add_link_text'] = ("This object is an excerpt of the "
                                                          + excerpt_link +
                                                          " resource located at the URI shown in DataSourceUri.")
+
+                    elif ((self.config.get('combine_multiple_refs', 0) > 1) and
+                              (self.ref_deduplicator.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config.get('combine_multiple_refs'))):
+                        # TODO: move this into markdown, html, etc.? Make the prop_name a link, anyway.
+                        ref_info['add_link_text'] = ("For more information about this property, see " + prop_name + " in Property Details.")
+                        # # import pdb; pdb.set_trace()
+                        # formatted = self.format_property_row(schema_ref, prop_name, [ref_info], [])
+                        # if self.common_property_details.get('prop_name') is None:
+                        #     import pdb; pdb.set_trace()
+                        #     self.common_property_details[prop_name] = formatted['details']
 
                     # If an object, include just the definition and description, and append a reference if possible:
                     else:
@@ -849,7 +864,6 @@ class DocFormatter:
                                                       ' schema for details on this property.')
                                     else:
                                         # This looks like a Common Object! We should have an unversioned ref for this.
-                                        requested_ref_uri = ref_info['_ref_uri']
                                         ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
                                         if ref_key:
                                             parent_info = traverser.find_ref_data(ref_key)
@@ -1804,14 +1818,20 @@ class DocFormatter:
 
         return replacement
 
-    def count_ref_in_schema(self, schema_ref, prop_info):
+    def count_ref_in_schema(self, schema_ref, prop_info, ancestors=None):
         """ Examine prop_info for a reference and update the count in ref_deduplicator, if appropriate.
-        Returns the _ref_uri from prop_info if so
+        Returns the _ref_uri from prop_info if so.
         """
+
+        if ancestors is None:
+            ancestors = []
 
         ref_uri = prop_info.get('_ref_uri', None)
         if not ref_uri:
             return None
+
+        # if ref_uri.endswith('Activation'):
+        #     import pdb; pdb.set_trace()
 
         # Normalize ref_uri:
         ref_uri = '#'.join(self.traverser.get_schema_ref_and_path(ref_uri))
@@ -1820,17 +1840,27 @@ class DocFormatter:
             self.ref_deduplicator[schema_ref] = {}
         dedup = self.ref_deduplicator[schema_ref]
 
+        for anc in ancestors:
+            if anc not in dedup:
+                import pdb; pdb.set_trace()
+                dedup[anc] = {}
+            dedup = dedup[anc]
+
         if ref_uri in dedup:
-            dedup[ref_uri] = dedup[ref_uri] + 1
+            dedup[ref_uri]['count'] = dedup[ref_uri].get('count') + 1
         else:
-            dedup[ref_uri] = 1
+            dedup[ref_uri] = {'count': 1}
 
         return ref_uri
 
 
-    def extend_and_count_refs(self, schema_ref, prop_infos):
+    def extend_and_count_refs(self, schema_ref, prop_infos, ancestors=None):
         """ Extend, but don't format, elements of prop_infos to update ref_deduplicator counts. """
 
+        if ancestors is None:
+            ancestors = []
+        else:
+            ancestors = ancestors.copy()
         for prop_info in prop_infos:
             if isinstance(prop_info, dict):
                 properties = prop_info.get('properties')
@@ -1839,12 +1869,16 @@ class DocFormatter:
                         if isinstance(properties.get(prop_name), dict):
                             base_detail_info = properties[prop_name]
                             detail_info = self.extend_property_info(prop_info.get('_from_schema_ref', schema_ref), base_detail_info)
-                            self.count_ref_in_schema(schema_ref, detail_info[0])
-                            self.extend_and_count_refs(schema_ref, detail_info)
+                            ref_info = self.count_ref_in_schema(schema_ref, detail_info[0], ancestors)
+                            if ref_info:
+                                # if 'Threshold' in ref_info:
+                                #     import pdb; pdb.set_trace()
+                                ancestors.append(ref_info)
+                            self.extend_and_count_refs(schema_ref, detail_info, ancestors)
 
                 elif prop_info.get('items') and (prop_info['items'].get('type') not in ['string', 'integer']):
                     if prop_info['items'].get('$ref') or prop_info['items'].get('anyOf'):
-                        self.extend_and_count_refs(schema_ref, prop_info['items'])
+                        self.extend_and_count_refs(schema_ref, prop_info['items'], ancestors)
 
 
     # Override in HTML formatter to get actual links.
