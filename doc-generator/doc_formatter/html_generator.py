@@ -16,7 +16,6 @@ import markdown
 import warnings
 from doc_gen_util import DocGenUtilities
 from format_utils import HtmlUtils
-from flask import Flask
 from . import DocFormatter
 from . import ToCParser
 
@@ -41,8 +40,9 @@ class HtmlGenerator(DocFormatter):
             }
         self.formatter = HtmlUtils()
         self.table_of_contents = ''
+        """For now, manually copied main.css to Redfish/release directory"""
         self.css_content = """
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" type="text/css" href="./static/css/main.css">
 """
 
     def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):

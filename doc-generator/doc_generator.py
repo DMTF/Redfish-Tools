@@ -1,6 +1,6 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
-# Copyright 2016, 2017, 2018, 2019 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -887,7 +887,6 @@ class DocGenerator:
         print(markdown, file=outfile)
         outfile.close()
         print(outfile.name, "written.")
-
 
     def construct_uri_for_filename(self, fname):
         """Use the schema URI mapping to construct a URI for this file"""
