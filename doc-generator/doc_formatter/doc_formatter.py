@@ -45,6 +45,7 @@ class DocFormatter:
         self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
         self.current_uris = []
         self.ref_deduplicator = {} # Tracks use of refs within a schema to assist in combining them for output.
+        self.ref_counts = {}       # Summarized data from self.ref_deduplicator
 
         if self.config.get('profile_mode'):
             self.config['MinVersionLT1.6'] = False
@@ -501,6 +502,8 @@ class DocFormatter:
 
                     prop_info_stash[prop_name] = prop_infos
 
+                self.ref_counts[schema_ref] = self.summarize_duplicates(self.ref_deduplicator.get(schema_ref, {}))
+
                 for prop_name in prop_names:
                     prop_infos = prop_info_stash[prop_name]
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
@@ -527,10 +530,6 @@ class DocFormatter:
                     cond_names.sort(key=str.lower)
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
-
-        # TODO: combine duplicate counts:
-        import pdb;pdb.set_trace()
-        pass
 
         if self.config.get('profile_mode') and self.config['profile_mode'] != 'subset':
             # Add registry messages, if in profile.
@@ -819,14 +818,11 @@ class DocFormatter:
                                                          + excerpt_link +
                                                          " resource located at the URI shown in DataSourceUri.")
 
-                    elif ((self.config.get('combine_multiple_refs', 0) > 1) and
-                              (self.ref_deduplicator.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config.get('combine_multiple_refs'))):
+                    elif self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']:
                         # TODO: move this into markdown, html, etc.? Make the prop_name a link, anyway.
                         ref_info['add_link_text'] = ("For more information about this property, see " + prop_name + " in Property Details.")
-                        # # import pdb; pdb.set_trace()
                         # formatted = self.format_property_row(schema_ref, prop_name, [ref_info], [])
                         # if self.common_property_details.get('prop_name') is None:
-                        #     import pdb; pdb.set_trace()
                         #     self.common_property_details[prop_name] = formatted['details']
 
                     # If an object, include just the definition and description, and append a reference if possible:
@@ -1874,6 +1870,24 @@ class DocFormatter:
                 elif prop_info.get('items') and (prop_info['items'].get('type') not in ['string', 'integer']):
                     if prop_info['items'].get('$ref') or prop_info['items'].get('anyOf'):
                         self.extend_and_count_refs(schema_ref, prop_info['items'], ancestors)
+
+
+    def summarize_duplicates(self, count_data):
+        """ Combine duplicate counts from self.ref_deduplicator. """
+
+        summary = {}
+        combine_threshold = self.config.get('combine_multiple_refs', 0)
+        if combine_threshold < 2:
+            return summary
+
+        for (ref_uri, data) in count_data.items():
+            if ref_uri == 'count':
+                continue
+            if data.get('count', 0) >= combine_threshold:
+                summary[ref_uri] = data['count']
+            else:
+                summary.update(self.summarize_duplicates(data))
+        return summary
 
 
     # Override in HTML formatter to get actual links.

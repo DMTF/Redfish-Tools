@@ -145,8 +145,7 @@ class MarkdownGenerator(DocFormatter):
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
-        if prop_ref and ((self.config.get('combine_multiple_refs', 0) > 1) and
-                (self.ref_deduplicator.get(schema_ref, {}).get(prop_ref, 0) >= self.config.get('combine_multiple_refs'))):
+        if prop_ref and self.config.get('combine_multiple_refs') and (self.ref_counts.get(schema_ref, {}).get(prop_ref, 0) >= self.config['combine_multiple_refs']):
                 print(prop_ref)
                 # import pdb; pdb.set_trace()
                 # This is wrong:
