@@ -48,7 +48,7 @@ class MarkdownGenerator(DocFormatter):
         Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
 
         'row': content for the main table being generated.
-        'details': content for the Property Details section.
+        'details': content for the Property details section.
         'action_details': content for the Actions section.
         'profile_conditional_details': populated only in profile_mode, formatted conditional details
 
@@ -210,9 +210,9 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 # If there are prop_details (enum details), add a note to the description:
                 if has_enum:
-                    text_descr = 'For the possible property values, see ' + prop_name + ' in Property Details.'
+                    text_descr = 'For the possible property values, see ' + prop_name + ' in Property details.'
                 else:
-                    text_descr = 'For more information about this property, see Property Details.'
+                    text_descr = 'For more information about this property, see Property details.'
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
             if formatted_details['has_action_details']:
@@ -308,7 +308,7 @@ class MarkdownGenerator(DocFormatter):
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
                                 supplemental_details, parent_prop_info, anchor=None, profile=None):
-        """Generate a formatted table of enum information for inclusion in Property Details."""
+        """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
         contents.append(self.formatter.head_three(prop_name + ':', self.level))
@@ -626,7 +626,7 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('\n' + self.formatter.head_two('Actions', self.level))
                 contents.append('\n\n'.join(section.get('action_details')))
             if section.get('property_details'):
-                contents.append('\n' + self.formatter.head_two('Property Details', self.level))
+                contents.append('\n' + self.formatter.head_two('Property details', self.level))
                 contents.append('\n'.join(section['property_details']))
 
         self.sections = []
