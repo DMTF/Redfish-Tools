@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016, 2017, 2018, 2019, 2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -515,7 +515,6 @@ class DocFormatter:
                         if formatted.get('profile_conditional_details'):
                             conditional_details.update(formatted['profile_conditional_details'])
 
-                # import pdb; pdb.set_trace()
                 prop_details.update(self.common_property_details)
                 if len(prop_details):
                     detail_names = [x for x in prop_details.keys()]
@@ -529,7 +528,10 @@ class DocFormatter:
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
 
+        # TODO: combine duplicate counts:
         import pdb;pdb.set_trace()
+        pass
+
         if self.config.get('profile_mode') and self.config['profile_mode'] != 'subset':
             # Add registry messages, if in profile.
             registry_reqs = config.get('profile').get('registries_annotated', {})
@@ -1830,9 +1832,6 @@ class DocFormatter:
         if not ref_uri:
             return None
 
-        # if ref_uri.endswith('Activation'):
-        #     import pdb; pdb.set_trace()
-
         # Normalize ref_uri:
         ref_uri = '#'.join(self.traverser.get_schema_ref_and_path(ref_uri))
 
@@ -1842,7 +1841,6 @@ class DocFormatter:
 
         for anc in ancestors:
             if anc not in dedup:
-                import pdb; pdb.set_trace()
                 dedup[anc] = {}
             dedup = dedup[anc]
 
@@ -1859,8 +1857,6 @@ class DocFormatter:
 
         if ancestors is None:
             ancestors = []
-        else:
-            ancestors = ancestors.copy()
         for prop_info in prop_infos:
             if isinstance(prop_info, dict):
                 properties = prop_info.get('properties')
@@ -1869,12 +1865,11 @@ class DocFormatter:
                         if isinstance(properties.get(prop_name), dict):
                             base_detail_info = properties[prop_name]
                             detail_info = self.extend_property_info(prop_info.get('_from_schema_ref', schema_ref), base_detail_info)
-                            ref_info = self.count_ref_in_schema(schema_ref, detail_info[0], ancestors)
-                            if ref_info:
-                                # if 'Threshold' in ref_info:
-                                #     import pdb; pdb.set_trace()
-                                ancestors.append(ref_info)
-                            self.extend_and_count_refs(schema_ref, detail_info, ancestors)
+                            ref_uri = self.count_ref_in_schema(schema_ref, detail_info[0], ancestors)
+                            prop_ancestors = ancestors.copy()
+                            if ref_uri:
+                                prop_ancestors.append(ref_uri)
+                            self.extend_and_count_refs(schema_ref, detail_info, prop_ancestors)
 
                 elif prop_info.get('items') and (prop_info['items'].get('type') not in ['string', 'integer']):
                     if prop_info['items'].get('$ref') or prop_info['items'].get('anyOf'):
