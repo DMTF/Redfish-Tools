@@ -821,9 +821,8 @@ class DocFormatter:
                     elif self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']:
                         # TODO: move this into markdown, html, etc.? Make the prop_name a link, anyway.
                         ref_info['add_link_text'] = ("For more information about this property, see " + prop_name + " in Property Details.")
-                        # formatted = self.format_property_row(schema_ref, prop_name, [ref_info], [])
-                        # if self.common_property_details.get('prop_name') is None:
-                        #     self.common_property_details[prop_name] = formatted['details']
+                        ref_info['_ref_description'] = ref_info['description']
+                        ref_info['_ref_longDescription'] = ref_info['longDescription']
 
                     # If an object, include just the definition and description, and append a reference if possible:
                     else:
@@ -890,9 +889,11 @@ class DocFormatter:
                                 'longDescription': ref_longDescription,
                                 'fulldescription_override': ref_fulldescription_override,
                                 'pattern': ref_pattern,
+                                '_ref_description': ref_description,
+                                '_ref_longDescription': ref_longDescription
                                 }
 
-                            props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly']
+                            props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly', '_ref_description', '_ref_longDescription']
                             for x in props_to_add:
                                 if ref_info.get(x):
                                     new_ref_info[x] = ref_info[x]
@@ -1475,8 +1476,18 @@ class DocFormatter:
             prop_info['parent_requires'] = required
             prop_info['parent_requires_on_create'] = required_on_create
 
-            object_formatted = self.format_object_descr(schema_ref, prop_info, new_path, is_action)
-            object_description = object_formatted['rows']
+            if self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(prop_info.get('_ref_uri'), 0) >= self.config['combine_multiple_refs']:
+                # Details of this object are to be moved into property details.
+                # Format it as if it were a top-level object, and remove the rows here.
+                object_formatted = self.format_object_descr(schema_ref, prop_info, [], is_action)
+                obj_prop_name = prop_info.get('_prop_name')
+                object_as_details = self.format_as_prop_details(obj_prop_name, prop_info.get('_ref_description'),
+                                                                    object_formatted['rows'])
+                prop_details.update({obj_prop_name : object_as_details})
+                object_formatted['rows'] = []
+            else:
+                object_formatted = self.format_object_descr(schema_ref, prop_info, new_path, is_action)
+                object_description = object_formatted['rows']
             if object_formatted['details']:
                 prop_details.update(object_formatted['details'])
 
@@ -1605,7 +1616,7 @@ class DocFormatter:
 
         We special-case this a couple of places where we treat other refs a little differently. """
         prop_info = None
-        if ref.endswith('#/definitions/idRef'):
+        if ref.endswith("#/definitions/idRef"):
             # idRef is a special case; we just want to pull in its definition and stop.
             prop_info = self.traverser.find_ref_data(ref)
             if not prop_info:
@@ -1655,8 +1666,7 @@ class DocFormatter:
         action_details = {}
         conditional_details = {}
 
-        # If prop_info was extracted from a different schema, it will be present as
-        # _from_schema_ref
+        # If prop_info was extracted from a different schema, it will be present as _from_schema_ref
         schema_ref = prop_info.get('_from_schema_ref', schema_ref)
         schema_name = self.traverser.get_schema_name(schema_ref)
 
@@ -1776,6 +1786,11 @@ class DocFormatter:
             action_details = formatted.get('action_details', {})
 
         return {'rows': output, 'details': details, 'action_details': action_details, 'promote_me': True}
+
+
+    def format_as_prop_details(self, prop_name, prop_description, rows, anchor=None):
+        """ Take the formatted rows and other strings from prop_info, and create a formatted block suitable for the prop_details section """
+        raise NotImplementedError
 
 
     def link_to_own_schema(self, schema_ref, schema_full_uri):

@@ -1041,6 +1041,20 @@ pre.code{
             self.registry_sections.append(this_section)
 
 
+    def format_as_prop_details(self, prop_name, prop_description, rows, anchor=None):
+        """ Take the formatted rows and other strings from prop_info, and create a formatted block suitable for the prop_details section """
+        contents = []
+        contents.append(self.formatter.head_four(html.escape(prop_name, False) + ':', 0, anchor))
+
+        if prop_description:
+            contents.append(self.formatter.para(prop_description))
+
+        obj_table = self.formatter.make_table(rows)
+        contents.append(obj_table)
+
+        return "\n".join(contents)
+
+
     def link_to_own_schema(self, schema_ref, schema_uri):
         """ Provide a link to schema_ref, preferring an in-document link to the schema_uri. """
         schema_name = self.traverser.get_schema_name(schema_ref)

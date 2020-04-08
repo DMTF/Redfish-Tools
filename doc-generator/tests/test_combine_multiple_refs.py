@@ -73,13 +73,17 @@ def test_combine_at_3(mockRequest):
     # The "Threshold" object is referred to six times, and is the only thing with a DwellTime attribute.
     assert output.count('DwellTime') == 1
 
-@pytest.mark.skip(reason="not ready to run this")
+
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_combine_at_6(mockRequest):
-    """ Threshold is set at 6. Our example with six references should trigger here too (fencepost check). """
+def test_combine_at_3_html(mockRequest):
+    """ Threshold is set at 3. This is a likely choice; our example is a sextuple of references.
+        This test exercises HTML output.
+    """
 
     config = copy.deepcopy(base_config)
     config['combine_multiple_refs'] = 3
+    config['output_format'] = 'html'
+    config['supplemental'] = {'Introduction': "# Common Objects\n\n[insert_common_objects]\n"}
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'sensor'))
 
@@ -93,13 +97,31 @@ def test_combine_at_6(mockRequest):
     assert output.count('DwellTime') == 1
 
 
-@pytest.mark.skip(reason="not ready to run this")
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_combine_at_6(mockRequest):
+    """ Threshold is set at 6. Our example with six references should trigger here too (fencepost check). """
+
+    config = copy.deepcopy(base_config)
+    config['combine_multiple_refs'] = 6
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'sensor'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # The "Threshold" object is referred to six times, and is the only thing with a DwellTime attribute.
+    assert output.count('DwellTime') == 1
+
+
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_combine_at_7(mockRequest):
     """ Threshold is set at 7. Our example with six references should NOT trigger here. """
 
     config = copy.deepcopy(base_config)
-    config['combine_multiple_refs'] = 3
+    config['combine_multiple_refs'] = 7
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'sensor'))
 

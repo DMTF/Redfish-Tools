@@ -142,18 +142,7 @@ class MarkdownGenerator(DocFormatter):
                                  self.escape_for_markdown(version_deprecated_explanation,
                                                           self.config.get('escape_chars', [])))
 
-
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
-
-        if prop_ref and self.config.get('combine_multiple_refs') and (self.ref_counts.get(schema_ref, {}).get(prop_ref, 0) >= self.config['combine_multiple_refs']):
-                print(prop_ref)
-                # import pdb; pdb.set_trace()
-                # This is wrong:
-                # object_details = { ref_name: formatted_details.get('object_description', [])[0] }
-                # formatted_details['prop_details'].update(object_details)
-                # formatted_details['object_description'] = []
-                pass
-
 
         if formatted_details.get('promote_me'):
             return({'row': '\n'.join(formatted_details['item_description']), 'details':formatted_details['prop_details'],
@@ -593,6 +582,20 @@ class MarkdownGenerator(DocFormatter):
             profile_access += self.formatter.nobr("Minimum " + str(min_count))
 
         return profile_access
+
+
+    def format_as_prop_details(self, prop_name, prop_description, rows, anchor=None):
+        """ Take the formatted rows and other strings from prop_info, and create a formatted block suitable for the prop_details section """
+        contents = []
+        contents.append(self.formatter.head_three(prop_name + ':', 0))
+
+        if prop_description:
+            contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
+
+        obj_table = self.formatter.make_table(rows)
+        contents.append(obj_table)
+
+        return "\n".join(contents)
 
 
     def link_to_own_schema(self, schema_ref, schema_full_uri):
