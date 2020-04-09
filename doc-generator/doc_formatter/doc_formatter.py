@@ -483,29 +483,34 @@ class DocFormatter:
                     prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
 
                 prop_names = self.organize_prop_names(prop_names)
-                prop_info_stash = {}
+
+                # If combining of multiple refs is requested, do a first pass, counting refs:
+                if self.config.get('combine_multiple_refs', 0) > 1:
+                    for prop_name in prop_names:
+                        prop_info = properties[prop_name]
+
+                        # Note: we are calling extend_property_info here solely for the purpose of counting refs.
+                        # In the next loop we call it again to generate the data to format -- we need to get the complete count
+                        # of in-schema refs before generating data to format.
+                        prop_infos = self.extend_property_info(schema_ref, prop_info)
+
+                        # If we've extended an in-schema reference, capture it:
+                        prop_info_ref_uri = self.count_ref_in_schema(schema_ref, prop_infos[0])
+
+                        # Extend further so all ref counts are updated before we start formatting output:
+                        self.extend_and_count_refs(schema_ref, prop_infos)
+
+                    self.ref_counts[schema_ref] = self.summarize_duplicates(self.ref_deduplicator.get(schema_ref, {}))
 
                 for prop_name in prop_names:
+                    # prop_infos = prop_info_stash[prop_name]
                     prop_info = properties[prop_name]
                     prop_info['prop_required'] = prop_info.get('prop_required') or prop_name in required
                     prop_info['prop_required_on_create'] = prop_info.get('prop_required_on_create') or prop_name in required_on_create
                     prop_info['parent_requires'] = required
                     prop_info['parent_requires_on_create'] = required_on_create
                     prop_info['required_parameter'] = prop_info.get('requiredParameter')
-
                     prop_infos = self.extend_property_info(schema_ref, prop_info)
-                    # If we've extended an in-schema reference, capture it:
-                    prop_info_ref_uri = self.count_ref_in_schema(schema_ref, prop_infos[0])
-
-                    # Extend further so all ref counts are updated before we start formatting output:
-                    self.extend_and_count_refs(schema_ref, prop_infos)
-
-                    prop_info_stash[prop_name] = prop_infos
-
-                self.ref_counts[schema_ref] = self.summarize_duplicates(self.ref_deduplicator.get(schema_ref, {}))
-
-                for prop_name in prop_names:
-                    prop_infos = prop_info_stash[prop_name]
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
                         # Skip "Actions" if requested. Everything else is output.
