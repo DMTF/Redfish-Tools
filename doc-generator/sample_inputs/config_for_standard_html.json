@@ -9,6 +9,7 @@
     "payload_dir": "./mockups/DSP2046-examples",
     "add_toc": true,
     "html_title": "Sample Standard Output",
+    "combine_multiple_refs": 3,
     "excluded_properties": [
         "@odata.context",
         "@odata.type",
