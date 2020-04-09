@@ -819,8 +819,8 @@ class DocFormatter:
                                                          " resource located at the URI shown in DataSourceUri.")
 
                     elif self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']:
-                        # TODO: move this into markdown, html, etc.? Make the prop_name a link, anyway.
-                        ref_info['add_link_text'] = ("For more information about this property, see " + prop_name + " in Property Details.")
+                        anchor = schema_ref + '|details_combined_ref|' + prop_name
+                        ref_info['add_link_text'] = ("For more information about this property, see " + self.link_to_anchor(prop_name, anchor) + " in Property Details.")
                         ref_info['_ref_description'] = ref_info['description']
                         ref_info['_ref_longDescription'] = ref_info['longDescription']
 
@@ -1481,8 +1481,9 @@ class DocFormatter:
                 # Format it as if it were a top-level object, and remove the rows here.
                 object_formatted = self.format_object_descr(schema_ref, prop_info, [], is_action)
                 obj_prop_name = prop_info.get('_prop_name')
+                anchor = schema_ref + '|details_combined_ref|' + obj_prop_name
                 object_as_details = self.format_as_prop_details(obj_prop_name, prop_info.get('_ref_description'),
-                                                                    object_formatted['rows'])
+                                                                    object_formatted['rows'], anchor)
                 prop_details.update({obj_prop_name : object_as_details})
                 object_formatted['rows'] = []
             else:
@@ -1810,6 +1811,10 @@ class DocFormatter:
     def link_to_outside_schema(self, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links."""
         return schema_full_uri
+
+    def link_to_anchor(self, text, anchor):
+        """ Link to arbitrary same-page anchor. Default implementation does not link; override where links to fragments are supported. """
+        return text
 
     def get_documentation_uri(self, ref_uri):
         """ If ref_uri is matched in self.config['uri_replacements'], provide a reference to that """
