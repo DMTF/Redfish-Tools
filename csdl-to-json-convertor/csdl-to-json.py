@@ -341,10 +341,11 @@ class CSDLToJSON:
                     if prop_name in excerpt_def["requiredOnCreate"]:
                         excerpt_def["requiredOnCreate"].remove( prop_name )
 
-            # Add the definition to the unversioned namespace
-            if excerpt_name not in self.json_out[base_name]["definitions"]:
-                self.json_out[base_name]["definitions"][excerpt_name] = { "anyOf": [] }
-            self.json_out[base_name]["definitions"][excerpt_name]["anyOf"].append( { "$ref": self.location + self.namespace_under_process + ".json#/definitions/" + excerpt_name } )
+            # Add the definition to the unversioned namespace if it's the latest errata
+            if self.is_latest_errata( self.namespace_under_process ):
+                if excerpt_name not in self.json_out[base_name]["definitions"]:
+                    self.json_out[base_name]["definitions"][excerpt_name] = { "anyOf": [] }
+                self.json_out[base_name]["definitions"][excerpt_name]["anyOf"].append( { "$ref": self.location + self.namespace_under_process + ".json#/definitions/" + excerpt_name } )
 
         # Remove any excerpt copy only properties from the base definition
         remove_list = []
@@ -446,7 +447,7 @@ class CSDLToJSON:
                 for schema in self.root.iter( ODATA_TAG_SCHEMA ):
                     namespace = self.get_attrib( schema, "Namespace" )
                     if namespace != self.namespace_under_process:
-                        if does_version_apply( oldest_version, namespace ):
+                        if does_version_apply( oldest_version, namespace ) and self.is_latest_errata( namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
@@ -1324,6 +1325,29 @@ class CSDLToJSON:
                 json_def["enumVersionAdded"][enum_member] = added
             else:
                 json_def["versionAdded"] = added
+
+    def is_latest_errata( self, namespace ):
+        """
+        Determines if the referenced namespace is the latest errata
+
+        Args:
+            namespace: The namespace to check
+
+        Returns:
+            True if the latest; False otherwise
+        """
+
+        # Go through each namespace in the schema to compare the versions
+        is_latest = True
+        for schema in self.root.iter( ODATA_TAG_SCHEMA ):
+            schema_namespace = self.get_attrib( schema, "Namespace" )
+            if not is_namespace_unversioned( schema_namespace ):
+                version1 = get_version_details( namespace )
+                version2 = get_version_details( schema_namespace )
+                # If the major and minor versions are the same, and the schema version is higher, then this is not the latest
+                if ( version1[0] == version2[0] ) and ( version1[1] == version2[1] ) and ( version1[2] < version2[2] ):
+                    is_latest = False
+        return is_latest
 
 def main():
     """

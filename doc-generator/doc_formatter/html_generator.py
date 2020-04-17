@@ -331,9 +331,9 @@ pre.code{
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 if has_enum:
                     anchor = schema_ref + '|details|' + prop_name
-                    text_descr = 'For the possible property values, see <a href="#' + anchor + '">' + prop_name + '</a> in Property Details.'
+                    text_descr = 'For the possible property values, see <a href="#' + anchor + '">' + prop_name + '</a> in Property details.'
                 else:
-                    text_descr = 'For more information about this property, see Property Details.'
+                    text_descr = 'For more information about this property, see Property details.'
                 if formatted_details['descr']:
                     formatted_details['descr'] += '<br>' + self.formatter.italic(text_descr)
                 else:
@@ -450,7 +450,7 @@ pre.code{
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
                                     supplemental_details, parent_prop_info, anchor=None, profile=None):
-        """Generate a formatted table of enum information for inclusion in Property Details."""
+        """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
         contents.append(self.formatter.head_four(html.escape(prop_name, False) + ':', self.level, anchor))
@@ -743,13 +743,13 @@ pre.code{
                 contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
             if section.get('property_details'):
                 deets = []
-                deets.append(self.formatter.head_three('Property Details', self.level))
+                deets.append(self.formatter.head_three('Property details', self.level))
                 deets.append(self.formatter.make_div('\n'.join(section['property_details']),
                                            'property-details-content'))
                 contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
 
             if section.get('json_payload'):
-                contents.append(self.formatter.head_three('Example Response', self.level))
+                contents.append(self.formatter.head_three('Example response', self.level))
                 contents.append(section['json_payload'])
 
         self.sections = []

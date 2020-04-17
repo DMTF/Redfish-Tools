@@ -1386,6 +1386,9 @@ function simpleTypeCheck(propType, propValue, CSDLProperty, propName) {
       if(typeof propValue !== 'string' && propValue !== null) {
         throw new Error('Property "'+propName+'" is an Edm.Duration, but the value in the mockup is not a valid JSON string.');
       }
+      if(propValue.match('-?P(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+(.\\d+)?S)?)?') === null) {
+        throw new Error('Property "'+propName+'" is an Edm.Duration, but the value in the mockup does not conform to the correct syntax.');
+      }
       break;
     default:
       throw new Error('Property "'+propName+'" is type "'+propType+'" which is not allowed by the Redfish spec.');
