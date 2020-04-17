@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016, 2017, 2018, 2019 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -31,6 +31,7 @@ class DocFormatter:
         """
         self.property_data = property_data
         self.common_properties = {}
+        self.common_property_details = {}
         self.traverser = traverser
         self.config = config
         self.level = level
@@ -43,6 +44,8 @@ class DocFormatter:
         self.formatter = FormatUtils() # Non-markdown formatters will override this.
         self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
         self.current_uris = []
+        self.ref_deduplicator = {} # Tracks use of refs within a schema to assist in combining them for output.
+        self.ref_counts = {}       # Summarized data from self.ref_deduplicator
 
         if self.config.get('profile_mode'):
             self.config['MinVersionLT1.6'] = False
@@ -391,6 +394,7 @@ class DocFormatter:
             details = property_data[schema_ref]
             schema_name = details['schema_name']
             profile = config.get('profile_resources', {}).get(schema_ref, {})
+            self.ref_deduplicator[schema_ref] = {}
 
             # Look up supplemental details for this schema/version
             version = details.get('latest_version', '1')
@@ -480,16 +484,33 @@ class DocFormatter:
 
                 prop_names = self.organize_prop_names(prop_names)
 
+                # If combining of multiple refs is requested, do a first pass, counting refs:
+                if self.config.get('combine_multiple_refs', 0) > 1:
+                    for prop_name in prop_names:
+                        prop_info = properties[prop_name]
+
+                        # Note: we are calling extend_property_info here solely for the purpose of counting refs.
+                        # In the next loop we call it again to generate the data to format -- we need to get the complete count
+                        # of in-schema refs before generating data to format.
+                        prop_infos = self.extend_property_info(schema_ref, prop_info)
+
+                        # If we've extended an in-schema reference, capture it:
+                        prop_info_ref_uri = self.count_ref_in_schema(schema_ref, prop_infos[0])
+
+                        # Extend further so all ref counts are updated before we start formatting output:
+                        self.extend_and_count_refs(schema_ref, prop_infos)
+
+                    self.ref_counts[schema_ref] = self.summarize_duplicates(self.ref_deduplicator.get(schema_ref, {}))
+
                 for prop_name in prop_names:
+                    # prop_infos = prop_info_stash[prop_name]
                     prop_info = properties[prop_name]
                     prop_info['prop_required'] = prop_info.get('prop_required') or prop_name in required
                     prop_info['prop_required_on_create'] = prop_info.get('prop_required_on_create') or prop_name in required_on_create
                     prop_info['parent_requires'] = required
                     prop_info['parent_requires_on_create'] = required_on_create
                     prop_info['required_parameter'] = prop_info.get('requiredParameter')
-
                     prop_infos = self.extend_property_info(schema_ref, prop_info)
-
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
                         # Skip "Actions" if requested. Everything else is output.
@@ -502,6 +523,7 @@ class DocFormatter:
                         if formatted.get('profile_conditional_details'):
                             conditional_details.update(formatted['profile_conditional_details'])
 
+                prop_details.update(self.common_property_details)
                 if len(prop_details):
                     detail_names = [x for x in prop_details.keys()]
                     detail_names.sort(key=str.lower)
@@ -763,6 +785,7 @@ class DocFormatter:
                 from_schema_ref = ref_info.get('_from_schema_ref')
                 from_schema_uri, _, _ = ref_info.get('_ref_uri', '').partition('#')
                 unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
+                requested_ref_uri = ref_info['_ref_uri']
                 is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref)
                                                                or (schema_ref == unversioned_schema_ref))
 
@@ -799,6 +822,12 @@ class DocFormatter:
                             ref_info['add_link_text'] = ("This object is an excerpt of the "
                                                          + excerpt_link +
                                                          " resource located at the URI shown in DataSourceUri.")
+
+                    elif self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']:
+                        anchor = schema_ref + '|details_combined_ref|' + prop_name
+                        ref_info['add_link_text'] = ("For more information about this property, see " + self.link_to_anchor(prop_name, anchor) + " in Property Details.")
+                        ref_info['_ref_description'] = ref_info['description']
+                        ref_info['_ref_longDescription'] = ref_info['longDescription']
 
                     # If an object, include just the definition and description, and append a reference if possible:
                     else:
@@ -837,7 +866,6 @@ class DocFormatter:
                                                       ' schema for details on this property.')
                                     else:
                                         # This looks like a Common Object! We should have an unversioned ref for this.
-                                        requested_ref_uri = ref_info['_ref_uri']
                                         ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
                                         if ref_key:
                                             parent_info = traverser.find_ref_data(ref_key)
@@ -866,9 +894,11 @@ class DocFormatter:
                                 'longDescription': ref_longDescription,
                                 'fulldescription_override': ref_fulldescription_override,
                                 'pattern': ref_pattern,
+                                '_ref_description': ref_description,
+                                '_ref_longDescription': ref_longDescription
                                 }
 
-                            props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly']
+                            props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly', '_ref_description', '_ref_longDescription']
                             for x in props_to_add:
                                 if ref_info.get(x):
                                     new_ref_info[x] = ref_info[x]
@@ -1383,6 +1413,7 @@ class DocFormatter:
                     prop_item['excerptCopy'] = excerpt_copy_name
 
                 prop_items = self.extend_property_info(schema_ref, prop_item)
+                # TODO: maybe capture dups here
                 if excerpt_copy_name:
                     excerpt_ref_uri = prop_items[0].get('_ref_uri')
                     excerpt_schema_ref = prop_items[0].get('_from_schema_ref')
@@ -1450,8 +1481,19 @@ class DocFormatter:
             prop_info['parent_requires'] = required
             prop_info['parent_requires_on_create'] = required_on_create
 
-            object_formatted = self.format_object_descr(schema_ref, prop_info, new_path, is_action)
-            object_description = object_formatted['rows']
+            if self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(prop_info.get('_ref_uri'), 0) >= self.config['combine_multiple_refs']:
+                # Details of this object are to be moved into property details.
+                # Format it as if it were a top-level object, and remove the rows here.
+                object_formatted = self.format_object_descr(schema_ref, prop_info, [], is_action)
+                obj_prop_name = prop_info.get('_prop_name')
+                anchor = schema_ref + '|details_combined_ref|' + obj_prop_name
+                object_as_details = self.format_as_prop_details(obj_prop_name, prop_info.get('_ref_description'),
+                                                                    object_formatted['rows'], anchor)
+                prop_details.update({obj_prop_name : object_as_details})
+                object_formatted['rows'] = []
+            else:
+                object_formatted = self.format_object_descr(schema_ref, prop_info, new_path, is_action)
+                object_description = object_formatted['rows']
             if object_formatted['details']:
                 prop_details.update(object_formatted['details'])
 
@@ -1580,7 +1622,7 @@ class DocFormatter:
 
         We special-case this a couple of places where we treat other refs a little differently. """
         prop_info = None
-        if ref.endswith('#/definitions/idRef'):
+        if ref.endswith("#/definitions/idRef"):
             # idRef is a special case; we just want to pull in its definition and stop.
             prop_info = self.traverser.find_ref_data(ref)
             if not prop_info:
@@ -1630,8 +1672,7 @@ class DocFormatter:
         action_details = {}
         conditional_details = {}
 
-        # If prop_info was extracted from a different schema, it will be present as
-        # _from_schema_ref
+        # If prop_info was extracted from a different schema, it will be present as _from_schema_ref
         schema_ref = prop_info.get('_from_schema_ref', schema_ref)
         schema_name = self.traverser.get_schema_name(schema_ref)
 
@@ -1753,6 +1794,11 @@ class DocFormatter:
         return {'rows': output, 'details': details, 'action_details': action_details, 'promote_me': True}
 
 
+    def format_as_prop_details(self, prop_name, prop_description, rows, anchor=None):
+        """ Take the formatted rows and other strings from prop_info, and create a formatted block suitable for the prop_details section """
+        raise NotImplementedError
+
+
     def link_to_own_schema(self, schema_ref, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links. """
         schema_name = self.traverser.get_schema_name(schema_ref)
@@ -1770,6 +1816,10 @@ class DocFormatter:
     def link_to_outside_schema(self, schema_full_uri):
         """ String for output. Override in HTML formatter to get actual links."""
         return schema_full_uri
+
+    def link_to_anchor(self, text, anchor):
+        """ Link to arbitrary same-page anchor. Default implementation does not link; override where links to fragments are supported. """
+        return text
 
     def get_documentation_uri(self, ref_uri):
         """ If ref_uri is matched in self.config['uri_replacements'], provide a reference to that """
@@ -1790,6 +1840,79 @@ class DocFormatter:
                             replacement = match_spec.get('replace_with')
 
         return replacement
+
+    def count_ref_in_schema(self, schema_ref, prop_info, ancestors=None):
+        """ Examine prop_info for a reference and update the count in ref_deduplicator, if appropriate.
+        Returns the _ref_uri from prop_info if so.
+        """
+
+        if ancestors is None:
+            ancestors = []
+
+        ref_uri = prop_info.get('_ref_uri', None)
+        if not ref_uri:
+            return None
+
+        # Normalize ref_uri:
+        ref_uri = '#'.join(self.traverser.get_schema_ref_and_path(ref_uri))
+
+        if schema_ref not in self.ref_deduplicator:
+            self.ref_deduplicator[schema_ref] = {}
+        dedup = self.ref_deduplicator[schema_ref]
+
+        for anc in ancestors:
+            if anc not in dedup:
+                dedup[anc] = {}
+            dedup = dedup[anc]
+
+        if ref_uri in dedup:
+            dedup[ref_uri]['count'] = dedup[ref_uri].get('count') + 1
+        else:
+            dedup[ref_uri] = {'count': 1}
+
+        return ref_uri
+
+
+    def extend_and_count_refs(self, schema_ref, prop_infos, ancestors=None):
+        """ Extend, but don't format, elements of prop_infos to update ref_deduplicator counts. """
+
+        if ancestors is None:
+            ancestors = []
+        for prop_info in prop_infos:
+            if isinstance(prop_info, dict):
+                properties = prop_info.get('properties')
+                if properties:
+                    for prop_name in properties.keys():
+                        if isinstance(properties.get(prop_name), dict):
+                            base_detail_info = properties[prop_name]
+                            detail_info = self.extend_property_info(prop_info.get('_from_schema_ref', schema_ref), base_detail_info)
+                            ref_uri = self.count_ref_in_schema(schema_ref, detail_info[0], ancestors)
+                            prop_ancestors = ancestors.copy()
+                            if ref_uri:
+                                prop_ancestors.append(ref_uri)
+                            self.extend_and_count_refs(schema_ref, detail_info, prop_ancestors)
+
+                elif prop_info.get('items') and (prop_info['items'].get('type') not in ['string', 'integer']):
+                    if prop_info['items'].get('$ref') or prop_info['items'].get('anyOf'):
+                        self.extend_and_count_refs(schema_ref, prop_info['items'], ancestors)
+
+
+    def summarize_duplicates(self, count_data):
+        """ Combine duplicate counts from self.ref_deduplicator. """
+
+        summary = {}
+        combine_threshold = self.config.get('combine_multiple_refs', 0)
+        if combine_threshold < 2:
+            return summary
+
+        for (ref_uri, data) in count_data.items():
+            if ref_uri == 'count':
+                continue
+            if data.get('count', 0) >= combine_threshold:
+                summary[ref_uri] = data['count']
+            else:
+                summary.update(self.summarize_duplicates(data))
+        return summary
 
 
     # Override in HTML formatter to get actual links.

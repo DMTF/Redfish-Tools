@@ -23,6 +23,14 @@ Note that the names of some config keys differ from their command-line counterpa
 - property_index_config_out
 - escape_chars (command line: /escape/)
 
+The combine_multiple_refs parameter is available only in a config file. This parameter specifies a threshold at which
+multiple references to the same object within a schema will be moved into Property Details, instead of expanded in place.
+For example, include the following to specify that if an object is referred to three or more times, it should be moved
+into property details:
+```
+      "combine_multiple_refs": 3,
+```
+
 The following properties would otherwise be parsed from the supplemental markdown file. For examples, see the config files in the sample_inputs directory:
 
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.

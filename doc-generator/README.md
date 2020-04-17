@@ -36,10 +36,15 @@ You must also specify a mapping from schema URIs to local directories.
 The `doc_generator.py` tool uses this information to determine whether to get
 referenced data from local files or over the Internet. See [The Supplemental Material Document](#the-supplemental-material-document).
 
+The --config option specifies a file in which you can specify many of the command-line
+options described here, as well as some parameters, such as URI mappings, that
+would otherwise be included in the Supplemental Material Document. See
+[Config Files](README_config_files.md).
+
 ```
-usage: doc_generator.py [-h] [-n] [--format {markdown,html,csv}]
-                        [--out OUTFILE] [--sup SUPFILE]
-                        [--payload_dir payload_dir] [--config CONFIG_FILE]
+usage: doc_generator.py [-h] [--config CONFIG_FILE] [-n]
+                        [--format {markdown,html,csv}] [--out OUTFILE]
+                        [--sup SUPFILE] [--payload_dir payload_dir]
                         [--profile PROFILE_DOC] [-t] [--subset SUBSET_DOC]
                         [--property_index]
                         [--property_index_config_out CONFIG_FILE_OUT]
@@ -54,6 +59,8 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
+  --config CONFIG_FILE  Path to a config file, containing configuration in
+                        JSON format.
   -n, --normative       Produce normative (developer-focused) output
   --format {markdown,html,csv}
                         Output format
@@ -70,8 +77,6 @@ optional arguments:
                         <schema_name>-v<major_version>-example.json for JSON
                         payloads, <schema_name-v<major_version>-action-<action
                         _name>.json for action examples.
-  --config CONFIG_FILE  Path to a config file, containing configuration in
-                        JSON format. Used in property_index mode only.
   --profile PROFILE_DOC
                         Path to a JSON profile document, for profile output.
   -t, --terse           Terse output (meaningful only with --profile). By

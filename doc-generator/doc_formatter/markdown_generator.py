@@ -55,7 +55,6 @@ class MarkdownGenerator(DocFormatter):
         This may include embedded objects with their own properties.
         """
 
-        traverser = self.traverser
         formatted = []     # The row itself
 
         within_action = prop_path == ['Actions']
@@ -94,13 +93,16 @@ class MarkdownGenerator(DocFormatter):
             version_deprecated_explanation = prop_info[0].get('deprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
+            prop_ref = prop_info[0].get('_ref_uri')
+            ref_name = prop_info[0].get('_prop_name')
         elif isinstance(prop_info, dict):
             version_added = prop_info.get('versionAdded')
             version_deprecated = prop_info.get('versionDeprecated')
             version_deprecated_explanation = prop_info.get('deprecated')
             has_enum = 'enum' in prop_info
-            is_excerpt = prop_info[0].get('_is_excerpt')
-
+            is_excerpt = prop_info.get('_is_excerpt')
+            prop_ref = prop_info.get('_ref_uri')
+            ref_name = prop_info.get('_prop_name')
         if prop_name:
             name_and_version = self.formatter.bold(self.escape_for_markdown(prop_name,
                                                                   self.config.get('escape_chars', [])))
@@ -580,6 +582,20 @@ class MarkdownGenerator(DocFormatter):
             profile_access += self.formatter.nobr("Minimum " + str(min_count))
 
         return profile_access
+
+
+    def format_as_prop_details(self, prop_name, prop_description, rows, anchor=None):
+        """ Take the formatted rows and other strings from prop_info, and create a formatted block suitable for the prop_details section """
+        contents = []
+        contents.append(self.formatter.head_three(prop_name + ':', 0))
+
+        if prop_description:
+            contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
+
+        obj_table = self.formatter.make_table(rows)
+        contents.append(obj_table)
+
+        return "\n".join(contents)
 
 
     def link_to_own_schema(self, schema_ref, schema_full_uri):
