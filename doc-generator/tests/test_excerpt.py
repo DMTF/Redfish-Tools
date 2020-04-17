@@ -53,8 +53,8 @@ def test_excerpt_circuit(mockRequest):
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**DataSourceUri** | string<br><br>*read-only<br>(null)* | A link to the resource that provides the data for this object. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PeakReading** | number<br><br>*read-only<br>(null)* | The peak reading value for this sensor. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the area or device to which this sensor measurement applies. *See PhysicalContext in Property Details, below, for the possible values of this property.* |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalSubContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the usage or location within a device to which this sensor measurement applies. *See PhysicalSubContext in Property Details, below, for the possible values of this property.* |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the area or device to which this sensor measurement applies. *See PhysicalContext in Property details, below, for the possible values of this property.* |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalSubContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the usage or location within a device to which this sensor measurement applies. *See PhysicalSubContext in Property details, below, for the possible values of this property.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Reading** | number<br><br>*read-only<br>(null)* | The present value for this Sensor. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**ReadingUnits** | string<br><br>*read-only<br>(null)* | Units in which the reading and thresholds are measured. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |
@@ -64,8 +64,8 @@ def test_excerpt_circuit(mockRequest):
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**DataSourceUri** | string<br><br>*read-only<br>(null)* | A link to the resource that provides the data for this object. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PeakReading** | number<br><br>*read-only<br>(null)* | The peak reading value for this sensor. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the area or device to which this sensor measurement applies. *For the possible property values, see PhysicalContext in Property Details.* |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalSubContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the usage or location within a device to which this sensor measurement applies. *For the possible property values, see PhysicalSubContext in Property Details.* |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the area or device to which this sensor measurement applies. *For the possible property values, see PhysicalContext in Property details.* |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalSubContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the usage or location within a device to which this sensor measurement applies. *For the possible property values, see PhysicalSubContext in Property details.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Reading** | number<br><br>*read-only<br>(null)* | The present value for this Sensor. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**ReadingUnits** | string<br><br>*read-only<br>(null)* | Units in which the reading and thresholds are measured. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |
