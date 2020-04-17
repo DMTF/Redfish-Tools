@@ -12,7 +12,7 @@ This schema contains required and requiredOnCreate properties.
 |     |     |     |
 | --- | --- | --- |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
-| **EntryType** | string<br>(enum)<br><br>*read-only required on create* | This is the type of log entry. *For the possible property values, see EntryType in Property Details.* |
+| **EntryType** | string<br>(enum)<br><br>*read-only required on create* | This is the type of log entry. *For the possible property values, see EntryType in Property details.* |
 | **HostWatchdogTimer** { | object | This object describes the Host Watchdog Timer functionality for this system. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FunctionEnabled** | boolean<br><br>*read-write required<br>(null)* | This indicates if the Host Watchdog Timer functionality has been enabled. Additional host-based software is necessary to activate the timer function. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Oem** {} | object | Oem extension object. See the *Resource* schema for details on this property. |
@@ -21,7 +21,7 @@ This schema contains required and requiredOnCreate properties.
 | **Id** | string<br><br>*read-only required* | Uniquely identifies the resource within the collection of like resources. |
 | **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 
-## Property Details
+## Property details
 
 ### EntryType:
 
