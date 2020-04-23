@@ -42,6 +42,11 @@ class HtmlUtils(FormatUtils):
         level = str(level + 4)
         return self._head_base(text, level, anchor_id)
 
+    def head_five(self, text, level, anchor_id=None):
+        """ Make a fifth-level heading, relative to the current formatter level """
+        level = str(level + 5)
+        return self._head_base(text, level, anchor_id)
+
 
     @staticmethod
     def para(text):

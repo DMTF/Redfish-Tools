@@ -113,12 +113,12 @@ class PropertyIndexGenerator(DocFormatter):
         return output
 
 
-    def add_section(self, text, link_id=False):
+    def add_section(self, text, link_id=False, schema_ref=False):
         """ Start gathering info for this schema. """
 
         self.this_section = {
             'properties': [],
-            'property_details': [],
+            'property_details': {},
             'head': '',
             'heading': '',
             'schema_name': text
@@ -211,7 +211,7 @@ class PropertyIndexGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, parent_prop_info, anchor=None, profile=None):
+                                supplemental_details, parent_prop_info, profile=None):
         """ Handle enum information """
         pass
 

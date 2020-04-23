@@ -449,11 +449,10 @@ pre.code{
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                    supplemental_details, parent_prop_info, anchor=None, profile=None):
+                                    supplemental_details, parent_prop_info, profile=None):
         """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
-        contents.append(self.formatter.head_four(html.escape(prop_name, False) + ':', self.level, anchor))
 
         parent_version = parent_prop_info.get('versionAdded')
         if parent_version:
@@ -744,7 +743,32 @@ pre.code{
             if section.get('property_details'):
                 deets = []
                 deets.append(self.formatter.head_three('Property details', self.level))
-                deets.append(self.formatter.make_div('\n'.join(section['property_details']),
+                # Sort and output property details
+                detail_names = [x for x in section['property_details'].keys()]
+                detail_names.sort(key=str.lower)
+                deets_content = []
+                for detail_name in detail_names:
+                    det_info = section['property_details'][detail_name]
+                    anchor = section['schema_ref'] + '|details|' + detail_name
+                    deets_content.append(self.formatter.head_four(html.escape(detail_name, False) + ':', 0, anchor))
+
+                    if len(det_info) == 1:
+                        for x in det_info.values():
+                            deets_content.append(x['formatted_descr'])
+                    else:
+                        path_to_ref = {}
+                        for ref, info in det_info.items():
+                            paths_as_text = [": ".join(x) for x in info['paths']]
+                            paths_as_text = ', '.join(paths_as_text)
+                            path_to_ref[paths_as_text] = ref
+                        paths_sorted = [x for x in path_to_ref.keys()]
+                        paths_sorted.sort(key=str.lower)
+                        for path in paths_sorted:
+                            info = det_info[path_to_ref[path]]
+                            deets_content.append(self.formatter.head_five("In " + path + ":", 0))
+                            deets_content.append(info['formatted_descr'])
+
+                deets.append(self.formatter.make_div('\n'.join(deets_content),
                                            'property-details-content'))
                 contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
 
@@ -913,12 +937,12 @@ pre.code{
         return '\n'.join(intro)
 
 
-    def add_section(self, text, link_id=False):
-        """ Add a top-level heading """
+    def add_section(self, text, link_id=False, schema_ref=False):
+        """ Add a container for all the information in a section """
 
         self.this_section = {
             'properties': [],
-            'property_details': [],
+            'property_details': {},
             'head': '',
             'heading': ''
             }
@@ -929,6 +953,7 @@ pre.code{
             self.this_section['head'] = text
             self.this_section['heading'] = self.formatter.head_two(section_text, self.level, link_id)
             self.this_section['link_id'] = link_id
+            self.this_section['schema_ref'] = schema_ref or text
 
         self.sections.append(self.this_section)
 
@@ -999,11 +1024,6 @@ pre.code{
         self.this_section['properties'].append(formatted_text)
 
 
-    def add_property_details(self, formatted_details):
-        """Add a chunk of property details information for the current section/schema."""
-        self.this_section['property_details'].append(formatted_details)
-
-
     def add_registry_reqs(self, registry_reqs):
         """Add registry messages. registry_reqs includes profile annotations."""
 
@@ -1041,10 +1061,9 @@ pre.code{
             self.registry_sections.append(this_section)
 
 
-    def format_as_prop_details(self, prop_name, prop_description, rows, anchor=None):
+    def format_as_prop_details(self, prop_name, prop_description, rows):
         """ Take the formatted rows and other strings from prop_info, and create a formatted block suitable for the prop_details section """
         contents = []
-        contents.append(self.formatter.head_four(html.escape(prop_name, False) + ':', 0, anchor))
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
