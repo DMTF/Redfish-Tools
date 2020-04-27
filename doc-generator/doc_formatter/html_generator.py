@@ -550,11 +550,11 @@ pre.code{
 
                 if profile_mode and profile_mode != 'subset':
                     if enum_name in profile_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_min_support_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_parameter_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_recommended_values:
                         cells.append('Recommended')
                     else:
@@ -618,11 +618,11 @@ pre.code{
                 cells = [enum_name]
                 if profile_mode and profile_mode != 'subset':
                     if enum_name in profile_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_min_support_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_parameter_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_recommended_values:
                         cells.append('Recommended')
                     else:

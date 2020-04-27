@@ -404,11 +404,11 @@ class MarkdownGenerator(DocFormatter):
                 if profile_mode and profile_mode != 'subset':
                     profile_spec = ''
                     if enum_name in profile_values:
-                        profile_spec = 'Required'
+                        profile_spec = 'Mandatory'
                     elif enum_name in profile_min_support_values:
-                        profile_spec = 'Required'
+                        profile_spec = 'Mandatory'
                     elif enum_name in profile_parameter_values:
-                        profile_spec = 'Required'
+                        profile_spec = 'Mandatory'
                     elif enum_name in profile_recommended_values:
                         profile_spec = 'Recommended'
                     contents.append('| ' + enum_name + ' | ' + descr + ' | ' + profile_spec + ' |')
@@ -468,11 +468,11 @@ class MarkdownGenerator(DocFormatter):
                 if profile_mode and profile_mode != 'subset':
                     profile_spec = ''
                     if enum_name in profile_values:
-                        profile_spec = 'Required'
+                        profile_spec = 'Mandatory'
                     elif enum_name in profile_min_support_values:
-                        profile_spec = 'Required'
+                        profile_spec = 'Mandatory'
                     elif enum_name in profile_parameter_values:
-                        profile_spec = 'Required'
+                        profile_spec = 'Mandatory'
                     elif enum_name in profile_recommended_values:
                         profile_spec = 'Recommended'
 
