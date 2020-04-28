@@ -44,8 +44,20 @@ def test_action_for_rekey_markdown(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
+    expected_output = '''
+**Response Payload**
 
-    assert False
+|     |     |     |     |
+| --- | --- | --- | --- |
+| { |  |  |  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Certificate** *(v1.1+)* { | object<br><br>* required* | The link to the certificate being rekeyed. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to another Certificate resource. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} |   |   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CSRString** *(v1.1+)* | string<br><br>*read-only required* | The string for the certificate signing request. |
+| } |  |  |  |
+'''
+
+    assert expected_output in output
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
@@ -61,5 +73,15 @@ def test_action_for_rekey_html(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
+    expected_output = '''
+</tbody></table><p><b>Response Payload</b></p>
+<table>
+<tbody>
+<tr><td>{</td><td></td><td></td><td></td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>Certificate</b> <i>(v1.1+)</i> {</nobr></td><td>object</td><td> <nobr>required</nobr></td><td>The link to the certificate being rekeyed.</td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>@odata.id</b></nobr><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</td><td>string</td><td><nobr>read-only</nobr></td><td><i>Link to another Certificate resource.</i></td></tr>
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<nobr><b>CSRString</b> <i>(v1.1+)</i></nobr><br>}</td><td>string</td><td><nobr>read-only</nobr> <nobr>required</nobr></td><td>The string for the certificate signing request.</td></tr>
+</tbody></table>
+'''
 
-    assert False
+    assert expected_output in output
