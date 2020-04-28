@@ -234,6 +234,29 @@ class DocFormatter:
         raise NotImplementedError
 
 
+    def format_action_response(self, schema_ref, action_param_name, action_response):
+        """Format the data from an actionResponse"""
+
+        formatted = []
+
+        formatted.append(self.formatter.para(self.formatter.bold("Response Payload")))
+
+        rows = []
+        # add a "start object" row:
+        rows.append(self.formatter.make_row(['{', '','','']))
+
+        formatted_rows = self.format_object_descr(schema_ref, action_response, [action_param_name], False)
+        rows = rows + formatted_rows['rows']
+
+        # Add a closing } to the last row:
+        rows = self.add_object_close(rows, '', '}', 4)
+
+        formatted.append(self.formatter.make_table(rows))
+
+        return "\n".join(formatted)
+
+
+
     def format_base_profile_access(self, formatted_details):
         """Massage profile read/write requirements for display"""
 
@@ -1336,6 +1359,12 @@ class DocFormatter:
             # action_parameters should include "required" indicators, but does not ... always?
             action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters, profile)
 
+            if prop_info.get('actionResponse'):
+                action_response = prop_info['actionResponse']
+                action_response_extended = self.extend_property_info(schema_ref, action_response)
+                action_response_formatted = self.format_action_response(schema_ref, prop_name, action_response_extended[0])
+                action_details += action_response_formatted
+
             if self.config.get('payloads'):
                 version = self.get_latest_version(prop_info.get('_from_schema_ref'))
                 short_name = prop_name
@@ -2027,6 +2056,14 @@ class DocFormatter:
         """ Look up the latest version of the referenced schema in our property data """
         return  self.property_data.get(schema_ref, {}).get('latest_version')
 
+
+    def add_object_close(self, rows, indentation_string, brace_string, num_cols):
+        """ Modify rows with whatever we use to close an object in this format """
+        row_content = [''] * num_cols
+        row_content[0] = indentation_string + brace_string
+
+        rows.append(self.formatter.make_row(row_content))
+        return rows
 
     @staticmethod
     def format_version(version_string):

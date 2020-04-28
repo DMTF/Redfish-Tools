@@ -1121,6 +1121,15 @@ pre.code{
             return 'See <a href="' + target + '" target="_blank">' + target + '</a>'
         return False
 
+
+    def add_object_close(self, rows, indentation_string, brace_string, num_cols):
+        """ Modify rows with whatever we use to close an object in this format """
+        tmp_row = rows[-1]
+        tmp_row = self._add_closing_brace(tmp_row, '', '}')
+        rows[-1] = tmp_row
+        return rows
+
+
     def _add_closing_brace(self, html_blob, indentation_string, brace_string):
         """ Add a closing } to the last row of this blob of rows. """
         close_str = '<br>' + indentation_string + brace_string
