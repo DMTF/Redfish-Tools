@@ -113,6 +113,7 @@ describe('CSDL Tests', () => {
         it('Complex Types Should Not Have Permissions', () => {complexTypesPermissions(csdl);});
       }
       it('Descriptions have trailing periods', () => {if (!isYang) descriptionPeriodCheck(csdl);});
+      it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
       it('No plural Schemas', () => {noPluralSchemas(csdl);});
       it('BaseTypes are valid', () => {checkBaseTypes(csdl);});
@@ -474,6 +475,18 @@ function descriptionPeriodCheck(csdl) {
   if(long_descriptions.length !== 0) {
     for(let i = 0; i < long_descriptions.length; i++) {
       descriptionEndsInPeriod(long_descriptions[i]);
+    }
+  }
+}
+
+function descriptionMayCheck(csdl) {
+  let long_descriptions = CSDL.search(csdl, 'Annotation', 'OData.LongDescription');
+  if(long_descriptions.length !== 0) {
+    for(let i = 0; i < long_descriptions.length; i++) {
+      let str = long_descriptions[i].String;
+      if(str.includes(" may ") || str.includes("May ")) {
+        throw new Error('"' + str + '" includes the ISO unallowed word "may"!');
+      }
     }
   }
 }
