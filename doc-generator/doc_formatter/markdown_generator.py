@@ -462,10 +462,15 @@ class MarkdownGenerator(DocFormatter):
         return '\n'.join(contents) + '\n'
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
+                                     version_strings=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
+        version_string = deprecated_descr = None
+        if version_strings:
+            version_string = version_strings.get('version_string')
+            deprecated_descr = version_strings.get('deprecated_descr')
 
         action_name = prop_name
         if prop_name.startswith('#'): # expected
@@ -474,7 +479,13 @@ class MarkdownGenerator(DocFormatter):
             prop_name = prop_name_parts[-1]
             action_name = action_name[1:]
 
-        formatted.append(self.formatter.head_four(prop_name, self.level))
+        name_and_version = prop_name
+        if version_string:
+            name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
+
+        formatted.append(self.formatter.head_four(name_and_version, self.level))
+        if deprecated_descr:
+            formatted.append(self.formatter.para(italic(deprecated_descr)))
         formatted.append(self.formatter.para(prop_descr))
 
         # Add the URIs for this action.

@@ -10,6 +10,7 @@ Brief: Test for correct output of version information in Action details.
 
 import os
 import copy
+import re
 from unittest.mock import patch
 import pytest
 from doc_generator import DocGenerator
@@ -32,7 +33,6 @@ base_config = {
 }
 
 
-@pytest.mark.skip()
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_action_has_version_added_markdown(mockRequest):
     """ This is the initial example, from the Processor schema """
@@ -46,13 +46,12 @@ def test_action_has_version_added_markdown(mockRequest):
     output = docGen.generate_docs()
 
     expected_output = '''
+##### Reset *(v1.6+)*
 '''
 
-    # assert expected_output in output
-    assert False
+    assert expected_output in output
 
 
-@pytest.mark.skip()
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_action_has_version_added_html(mockRequest):
     """ This is the initial example, from the Processor schema """
@@ -66,8 +65,4 @@ def test_action_has_version_added_html(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    expected_output = '''
-'''
-
-    # assert expected_output in output
-    assert False
+    assert re.search('<h4[^>]*>Reset <i>\\(v1\\.6\\+\\)</i></h4>', output)
