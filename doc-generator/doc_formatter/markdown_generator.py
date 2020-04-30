@@ -84,46 +84,24 @@ class MarkdownGenerator(DocFormatter):
         self.current_depth = current_depth
         parent_depth = current_depth - 1
 
-        version_added = None
-        version_deprecated = None
-        version_deprecated_explanation = ''
         if isinstance(prop_info, list):
-            version_added = prop_info[0].get('versionAdded')
-            version_deprecated = prop_info[0].get('versionDeprecated')
-            version_deprecated_explanation = prop_info[0].get('deprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
             prop_ref = prop_info[0].get('_ref_uri')
             ref_name = prop_info[0].get('_prop_name')
         elif isinstance(prop_info, dict):
-            version_added = prop_info.get('versionAdded')
-            version_deprecated = prop_info.get('versionDeprecated')
-            version_deprecated_explanation = prop_info.get('deprecated')
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
             prop_ref = prop_info.get('_ref_uri')
             ref_name = prop_info.get('_prop_name')
+
+        version_strings = self.format_version_strings(prop_info)
         if prop_name:
             name_and_version = self.formatter.bold(self.escape_for_markdown(prop_name,
                                                                   self.config.get('escape_chars', [])))
         else:
             name_and_version = ''
 
-        deprecated_descr = None
-
-        version = None
-        if version_added:
-            version = self.format_version(version_added)
-        self.current_version[current_depth] = version
-
-
-        # Don't display version if there is a parent version and this is not newer:
-        if version and self.current_version.get(parent_depth):
-            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
-                version = None
-
-        version_strings = self.format_version_strings(version, version_deprecated,
-                                                         version_deprecated_explanation)
         if version_strings['version_string']:
             name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
         deprecated_descr = version_strings['deprecated_descr']
@@ -593,11 +571,38 @@ class MarkdownGenerator(DocFormatter):
         return self.formatter.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
 
 
-    def format_version_strings(self, version_added, version_deprecated, version_deprecated_explanation):
+    # def format_version_strings(self, version_added, version_deprecated, version_deprecated_explanation):
+    def format_version_strings(self, prop_info):
         """ Generate version added, version deprecated strings """
 
         version_string = deprecated_descr = None
         version = version_depr = deprecated_descr = None
+
+        version_added = None
+        version_deprecated = None
+        version_deprecated_explanation = ''
+        if isinstance(prop_info, list):
+            version_added = prop_info[0].get('versionAdded')
+            version_deprecated = prop_info[0].get('versionDeprecated')
+            version_deprecated_explanation = prop_info[0].get('deprecated')
+        elif isinstance(prop_info, dict):
+            version_added = prop_info.get('versionAdded')
+            version_deprecated = prop_info.get('versionDeprecated')
+            version_deprecated_explanation = prop_info.get('deprecated')
+
+        deprecated_descr = None
+
+        version = None
+        if version_added:
+            version = self.format_version(version_added)
+        self.current_version[self.current_depth] = version
+
+        # Don't display version if there is a parent version and this is not newer:
+        parent_depth = self.current_depth - 1
+        if version and self.current_version.get(parent_depth):
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+                version = None
+
         if version_added:
             version = self.format_version(version_added)
         if version_deprecated:

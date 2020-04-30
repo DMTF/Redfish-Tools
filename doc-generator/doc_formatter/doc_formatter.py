@@ -1356,9 +1356,11 @@ class DocFormatter:
                 params = self.extend_property_info(schema_ref, params)
                 action_parameters[action_param] = params
 
-            # action_parameters should include "required" indicators, but does not ... always?
             # import pdb; pdb.set_trace()
-            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters, profile)
+
+            # version_strings = self.format_version_strings(version, version_deprecated,
+            #                                                 version_deprecated_explanation)
+            action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters, profile) # , version_strings)
 
             if prop_info.get('actionResponse'):
                 action_response = prop_info['actionResponse']

@@ -210,37 +210,16 @@ pre.code{
         self.current_depth = current_depth
         parent_depth = current_depth - 1
 
-        version_added = None
-        version_deprecated = None
-        version_deprecated_explanation = ''
         if isinstance(prop_info, list):
-            version_added = prop_info[0].get('versionAdded')
-            version_deprecated = prop_info[0].get('versionDeprecated')
-            version_deprecated_explanation = prop_info[0].get('deprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
         elif isinstance(prop_info, dict):
-            version_added = prop_info.get('versionAdded')
-            version_deprecated = prop_info.get('versionDeprecated')
-            version_deprecated_explanation = prop_info.get('deprecated')
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
 
+        version_strings = self.format_version_strings(prop_info)
         name_and_version = self.formatter.bold(html.escape(prop_name, False))
-        deprecated_descr = None
 
-        version = version_depr = None
-        if version_added:
-            version = self.format_version(version_added)
-        self.current_version[current_depth] = version
-
-        # Don't display version if there is a parent version and this is not newer:
-        if version and self.current_version.get(parent_depth):
-            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
-                version = None
-
-        version_strings = self.format_version_strings(version, version_deprecated,
-                                                         version_deprecated_explanation)
         if version_strings['version_string']:
             name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
         deprecated_descr = version_strings['deprecated_descr']
@@ -633,11 +612,15 @@ pre.code{
         return '\n'.join(contents) + '\n'
 
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
-                                     version_string=None):
+                                     version_strings=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
         anchor = schema_ref + '|action_details|' + prop_name
+        version_string = deprecated_descr = None
+        if version_strings:
+            version_string = version_strings.get('version_string')
+            deprecated_descr = version_strings.get('deprecated_descr')
 
         action_name = prop_name
         if prop_name.startswith('#'): # expected
@@ -646,7 +629,13 @@ pre.code{
             prop_name = prop_name_parts[-1]
             action_name = action_name[1:]
 
-        formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
+        name_and_version = prop_name
+        if version_string:
+            name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
+
+        formatted.append(self.formatter.head_four(name_and_version, self.level, anchor))
+        if deprecated_descr:
+            formatted.append(self.formatter.para(italic(deprecated_descr)))
         formatted.append(self.formatter.para(prop_descr))
 
         # Add the URIs for this action.
@@ -1099,11 +1088,39 @@ pre.code{
         return '<a href="#' + anchor + '">' + text + '</a>'
 
 
-    def format_version_strings(self, version_added, version_deprecated, version_deprecated_explanation):
+    # def format_version_strings(self, version_added, version_deprecated, version_deprecated_explanation):
+    def format_version_strings(self, prop_info):
         """ Generate version added, version deprecated strings """
 
         version_string = deprecated_descr = None
         version = version_depr = deprecated_descr = None
+
+        version_added = None
+        version_deprecated = None
+        version_deprecated_explanation = ''
+        if isinstance(prop_info, list):
+            version_added = prop_info[0].get('versionAdded')
+            version_deprecated = prop_info[0].get('versionDeprecated')
+            version_deprecated_explanation = prop_info[0].get('deprecated')
+        elif isinstance(prop_info, dict):
+            version_added = prop_info.get('versionAdded')
+            version_deprecated = prop_info.get('versionDeprecated')
+            version_deprecated_explanation = prop_info.get('deprecated')
+
+        deprecated_descr = None
+
+        version = version_depr = None
+        if version_added:
+            version = self.format_version(version_added)
+        self.current_version[self.current_depth] = version
+
+        # Don't display version if there is a parent version and this is not newer:
+        parent_depth = self.current_depth - 1
+        if version and self.current_version.get(parent_depth):
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+                version = None
+
+
         if version_added:
             version = self.format_version(version_added)
         if version_deprecated:
