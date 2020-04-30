@@ -1357,6 +1357,7 @@ class DocFormatter:
                 action_parameters[action_param] = params
 
             # action_parameters should include "required" indicators, but does not ... always?
+            # import pdb; pdb.set_trace()
             action_details = self.format_action_parameters(schema_ref, prop_name, descr, action_parameters, profile)
 
             if prop_info.get('actionResponse'):

@@ -232,8 +232,6 @@ pre.code{
         version = version_depr = None
         if version_added:
             version = self.format_version(version_added)
-        if version_deprecated:
-            version_depr = self.format_version(version_deprecated)
         self.current_version[current_depth] = version
 
         # Don't display version if there is a parent version and this is not newer:
@@ -241,24 +239,11 @@ pre.code{
             if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 version = None
 
-        if version and version != '1.0.0':
-            version_text = html.escape(version, False)
-            version_display = self.truncate_version(version_text, 2) + '+'
-            if version_deprecated:
-                version_depr_text = html.escape(version_depr, False)
-                deprecated_display = self.truncate_version(version_depr_text, 2)
-                name_and_version += ' ' + self.formatter.italic('(v' + version_display +
-                                                      ', deprecated v' + deprecated_display +  ')')
-                deprecated_descr = html.escape("Deprecated in v" + deprecated_display + ' and later. ' +
-                                                   version_deprecated_explanation, False)
-            else:
-                name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
-        elif version_deprecated:
-            version_depr_text = html.escape(version_depr, False)
-            deprecated_display = self.truncate_version(version_depr_text, 2)
-            name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
-            deprecated_descr = html.escape( "Deprecated in v" + deprecated_display + ' and later. ' +
-                                                version_deprecated_explanation, False)
+        version_strings = self.format_version_strings(version, version_deprecated,
+                                                         version_deprecated_explanation)
+        if version_strings['version_string']:
+            name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
+        deprecated_descr = version_strings['deprecated_descr']
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
@@ -647,7 +632,8 @@ pre.code{
 
         return '\n'.join(contents) + '\n'
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
+                                     version_string=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -1111,6 +1097,36 @@ pre.code{
     def link_to_anchor(self, text, anchor):
         """ Link to arbitrary same-page anchor """
         return '<a href="#' + anchor + '">' + text + '</a>'
+
+
+    def format_version_strings(self, version_added, version_deprecated, version_deprecated_explanation):
+        """ Generate version added, version deprecated strings """
+
+        version_string = deprecated_descr = None
+        version = version_depr = deprecated_descr = None
+        if version_added:
+            version = self.format_version(version_added)
+        if version_deprecated:
+            version_depr = self.format_version(version_deprecated)
+
+        if version and version != '1.0.0':
+            version_text = html.escape(version, False)
+            version_display = self.truncate_version(version_text, 2) + '+'
+            if version_deprecated:
+                version_depr_text = html.escape(version_depr, False)
+                deprecated_display = self.truncate_version(version_depr_text, 2)
+                version_string = '(v' + version_display + ', deprecated v' + deprecated_display +  ')'
+                deprecated_descr = html.escape("Deprecated in v" + deprecated_display + ' and later. ' +
+                                                   version_deprecated_explanation, False)
+            else:
+                version_string = '(v' + version_display + ')'
+        elif version_deprecated:
+            version_depr_text = html.escape(version_depr, False)
+            deprecated_display = self.truncate_version(version_depr_text, 2)
+            version_string = '(deprecated v' + deprecated_display +  ')'
+            deprecated_descr = html.escape( "Deprecated in v" + deprecated_display + ' and later. ' +
+                                                version_deprecated_explanation, False)
+        return {"version_string": version_string, "deprecated_descr": deprecated_descr}
 
 
     def get_documentation_link(self, ref_uri):

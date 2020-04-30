@@ -114,8 +114,6 @@ class MarkdownGenerator(DocFormatter):
         version = None
         if version_added:
             version = self.format_version(version_added)
-        if version_deprecated:
-            version_depr = self.format_version(version_deprecated)
         self.current_version[current_depth] = version
 
 
@@ -124,23 +122,11 @@ class MarkdownGenerator(DocFormatter):
             if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
                 version = None
 
-        if version and version != '1.0.0':
-            version_display = self.truncate_version(version, 2) + '+'
-            if version_deprecated:
-                deprecated_display = self.truncate_version(version_depr, 2)
-                name_and_version += ' ' + self.formatter.italic('(v' + version_display +
-                                                        ', deprecated v' + deprecated_display +  ')')
-                deprecated_descr = ("Deprecated in v" + deprecated_display + ' and later. ' +
-                                    self.escape_for_markdown(version_deprecated_explanation,
-                                                                 self.config.get('escape_chars', [])))
-            else:
-                name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
-        elif version_deprecated:
-            deprecated_display = self.truncate_version(version_depr, 2)
-            name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
-            deprecated_descr =  ("Deprecated in v" + deprecated_display + ' and later. ' +
-                                 self.escape_for_markdown(version_deprecated_explanation,
-                                                          self.config.get('escape_chars', [])))
+        version_strings = self.format_version_strings(version, version_deprecated,
+                                                         version_deprecated_explanation)
+        if version_strings['version_string']:
+            name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
+        deprecated_descr = version_strings['deprecated_descr']
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
@@ -605,6 +591,36 @@ class MarkdownGenerator(DocFormatter):
     def link_to_outside_schema(self, schema_full_uri):
         """Format a reference to a schema_uri, which should be a valid URI"""
         return self.formatter.italic('['+ schema_full_uri + '](' + schema_full_uri + ')')
+
+
+    def format_version_strings(self, version_added, version_deprecated, version_deprecated_explanation):
+        """ Generate version added, version deprecated strings """
+
+        version_string = deprecated_descr = None
+        version = version_depr = deprecated_descr = None
+        if version_added:
+            version = self.format_version(version_added)
+        if version_deprecated:
+            version_depr = self.format_version(version_deprecated)
+
+        if version and version != '1.0.0':
+            version_display = self.truncate_version(version, 2) + '+'
+            if version_deprecated:
+                deprecated_display = self.truncate_version(version_depr, 2)
+                version_string = '(v' + version_display + ', deprecated v' + deprecated_display +  ')'
+                deprecated_descr = ("Deprecated in v" + deprecated_display + ' and later. ' +
+                                    self.escape_for_markdown(version_deprecated_explanation,
+                                                                 self.config.get('escape_chars', [])))
+            else:
+                version_string = '(v' + version_display + ')'
+        elif version_deprecated:
+            deprecated_display = self.truncate_version(version_depr, 2)
+            version_string = '(deprecated v' + deprecated_display +  ')'
+            deprecated_descr =  ("Deprecated in v" + deprecated_display + ' and later. ' +
+                                 self.escape_for_markdown(version_deprecated_explanation,
+                                                          self.config.get('escape_chars', [])))
+
+        return {"version_string": version_string, "deprecated_descr": deprecated_descr}
 
 
     def emit(self):
