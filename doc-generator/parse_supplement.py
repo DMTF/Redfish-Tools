@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016, 2019 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -40,6 +40,7 @@ def parse_file(filehandle):
         '# FullDescription Overrides', # list of property name:description to substitute throughout the doc
         '# Schema URI Mapping',    # map URI(s) to local repo(s)
         '# Profile URI Mapping',   # map URI(s) for profiles to local repo(s)
+        '# Registry URI Mapping',  # map URI(s) for registries to local repo(s)
         '# Enum Deprecations',     # Version and description info for deprecated enums
         '# Units Translation',     # String-replace mapping for unit abbreviations
         ]
@@ -104,6 +105,13 @@ def parse_file(filehandle):
             parsed['Profile URI Mapping'])
         if not parsed.get('profile_uri_to_local'):
             warnings.warn("Profile URI Mapping found in supplemental document didn't provide any mappings. " +
+                          "Output is likely to be incomplete.\n\n")
+
+    if 'Registry URI Mapping' in parsed:
+        parsed['registry_local_to_uri'], parsed['registry_uri_to_local'] = parse_uri_mapping(
+            parsed['Registry URI Mapping'])
+        if not parsed.get('registry_uri_to_local'):
+            warnings.warn("Registry URI Mapping found in supplemental document didn't provide any mappings. " +
                           "Output is likely to be incomplete.\n\n")
 
     if 'Enum Deprecations' in parsed:

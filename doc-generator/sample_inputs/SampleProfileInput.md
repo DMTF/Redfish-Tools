@@ -4,6 +4,8 @@ Map profile URIs to local files. You may omit the protocol (e.g., https://) from
 The doc generator will use the local files when specified and otherwise
 follow the full URI, including data from remote files if possible.
 
+Registry URI Mapping may be specified in the same way, with the heading "Registry URI Mapping".
+
 ## Local-repo: redfish.dmtf.org/profiles ../Redfish-Tools/doc-generator/sample_inputs
 
 # Keyword Configuration
