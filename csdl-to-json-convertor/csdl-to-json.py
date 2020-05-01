@@ -303,7 +303,7 @@ class CSDLToJSON:
         for prop_name, prop in base_def["properties"].items():
             if "excerpt" in prop:
                 count = count + 1
-                for e in prop["excerpt"].split(","):
+                for e in prop["excerpt"].split( "," ):
                     if e not in excerpt_list:
                          excerpt_list.append(e)
             if "excerptCopyOnly" in prop:
@@ -328,7 +328,7 @@ class CSDLToJSON:
             remove_list = []
             for prop_name, prop in excerpt_def["properties"].items():
                 if "excerpt" in prop:
-                    if ( excerpt not in prop["excerpt"].split(",") ) and ( prop["excerpt"] != base_name ):
+                    if ( excerpt not in prop["excerpt"].split( "," ) ) and ( prop["excerpt"] != base_name ):
                         remove_list.append( prop_name )
                 elif "excerptCopyOnly" not in prop:
                     remove_list.append( prop_name )
@@ -340,6 +340,14 @@ class CSDLToJSON:
                 if "requiredOnCreate" in excerpt_def:
                     if prop_name in excerpt_def["requiredOnCreate"]:
                         excerpt_def["requiredOnCreate"].remove( prop_name )
+
+            # Strip out the required and requiredOnCreate terms if needed
+            if "required" in excerpt_def:
+                if len( excerpt_def["required"] ) == 0:
+                    excerpt_def.pop( "required" )
+            if "requiredOnCreate" in excerpt_def:
+                if len( excerpt_def["requiredOnCreate"] ) == 0:
+                    excerpt_def.pop( "requiredOnCreate" )
 
             # Add the definition to the unversioned namespace if it's the latest errata
             if self.is_latest_errata( self.namespace_under_process ):
@@ -1062,7 +1070,7 @@ class CSDLToJSON:
             # Excerpt
             if term == "Redfish.Excerpt":
                 excerpt_namespace = self.namespace_under_process.split( "." )[0]
-                json_type_def["excerpt"] = excerpt_namespace + self.get_attrib( annotation, "String", False, "" ).replace(",", "," + excerpt_namespace)
+                json_type_def["excerpt"] = excerpt_namespace + self.get_attrib( annotation, "String", False, "" ).replace( ",", "," + excerpt_namespace )
 
             # Excerpt Copy
             if term == "Redfish.ExcerptCopy":
