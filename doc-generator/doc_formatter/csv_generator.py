@@ -179,7 +179,7 @@ class CsvGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, parent_prop_info, anchor=None, profile={}):
+                                supplemental_details, parent_prop_info, profile={}):
         """Generate a formatted table of enum information for inclusion in Property Details."""
 
         # Property details are not included in CSV output.
@@ -275,7 +275,7 @@ class CsvGenerator(DocFormatter):
         return "\n".join(formatted)
 
 
-    def add_section(self, text, link_id=False):
+    def add_section(self, text, link_id=False, schema_ref=False):
         """ Rather than a top-level heading, for CSV we set the first column (schema name) """
         if ' ' in text:
             self.schema_name, self.schema_version = text.split(' ', 1)
@@ -304,11 +304,6 @@ class CsvGenerator(DocFormatter):
         """ Add the row to the buffer. Unlike other formats, for CSV the argument is list of lists.  """
         for row in rows:
             self.writer.writerow(row)
-
-
-    def add_property_details(self, formatted_details):
-        """Add a chunk of property details information for the current section/schema."""
-        self.this_section['property_details'].append(formatted_details)
 
 
     def add_registry_reqs(self, registry_reqs):

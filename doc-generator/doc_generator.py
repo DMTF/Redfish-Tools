@@ -1112,12 +1112,17 @@ class DocGenerator:
             # command-line arguments override the config file.
             config_args = [
                 'supfile', 'format', 'outfile', 'payload_dir', 'normative',
-                'profile_doc', 'profile_terse', 'subset_doc',
+                'profile_doc', 'subset_doc',
                 'property_index', 'property_index_config_out', 'escape_chars',
                 ]
             for x in config_args:
                 if config_data.get(x) and (x not in combined_args or combined_args[x] is None):
                     combined_args[x] = config_data[x]
+
+            # "terse" mode is a flag that can only be specified as true on the command line, and
+            # otherwise will be False (not None) at this point:
+            if config_data.get('profile_terse'):
+                combined_args['profile_terse'] = True
 
             # import_from is special: command-line parsing will always produce a list, sometimes empty.
             if config_data.get('import_from') and not combined_args.get('import_from'):

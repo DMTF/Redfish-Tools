@@ -1,0 +1,8 @@
+In the Manager schema, there are two properties named
+"ConnectTypesSupported." One is within GraphicalConsole and the other
+within CommandShell, and they have distinct definitions.
+
+Previous versions of the doc generator assumed that a property name
+was unique within a schema, and would expand just one of these
+ConnectTypesSupported properties in the "Property details"
+section. They should both appear, with distinct headings.

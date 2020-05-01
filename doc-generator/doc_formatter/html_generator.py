@@ -210,55 +210,19 @@ pre.code{
         self.current_depth = current_depth
         parent_depth = current_depth - 1
 
-        version_added = None
-        version_deprecated = None
-        version_deprecated_explanation = ''
         if isinstance(prop_info, list):
-            version_added = prop_info[0].get('versionAdded')
-            version_deprecated = prop_info[0].get('versionDeprecated')
-            version_deprecated_explanation = prop_info[0].get('deprecated')
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
         elif isinstance(prop_info, dict):
-            version_added = prop_info.get('versionAdded')
-            version_deprecated = prop_info.get('versionDeprecated')
-            version_deprecated_explanation = prop_info.get('deprecated')
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
 
+        version_strings = self.format_version_strings(prop_info)
         name_and_version = self.formatter.bold(html.escape(prop_name, False))
-        deprecated_descr = None
 
-        version = version_depr = None
-        if version_added:
-            version = self.format_version(version_added)
-        if version_deprecated:
-            version_depr = self.format_version(version_deprecated)
-        self.current_version[current_depth] = version
-
-        # Don't display version if there is a parent version and this is not newer:
-        if version and self.current_version.get(parent_depth):
-            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
-                version = None
-
-        if version and version != '1.0.0':
-            version_text = html.escape(version, False)
-            version_display = self.truncate_version(version_text, 2) + '+'
-            if version_deprecated:
-                version_depr_text = html.escape(version_depr, False)
-                deprecated_display = self.truncate_version(version_depr_text, 2)
-                name_and_version += ' ' + self.formatter.italic('(v' + version_display +
-                                                      ', deprecated v' + deprecated_display +  ')')
-                deprecated_descr = html.escape("Deprecated in v" + deprecated_display + ' and later. ' +
-                                                   version_deprecated_explanation, False)
-            else:
-                name_and_version += ' ' + self.formatter.italic('(v' + version_display + ')')
-        elif version_deprecated:
-            version_depr_text = html.escape(version_depr, False)
-            deprecated_display = self.truncate_version(version_depr_text, 2)
-            name_and_version += ' ' + self.formatter.italic('(deprecated v' + deprecated_display +  ')')
-            deprecated_descr = html.escape( "Deprecated in v" + deprecated_display + ' and later. ' +
-                                                version_deprecated_explanation, False)
+        if version_strings['version_string']:
+            name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
+        deprecated_descr = version_strings['deprecated_descr']
 
         formatted_details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
@@ -449,11 +413,10 @@ pre.code{
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                    supplemental_details, parent_prop_info, anchor=None, profile=None):
+                                    supplemental_details, parent_prop_info, profile=None):
         """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
-        contents.append(self.formatter.head_four(html.escape(prop_name, False) + ':', self.level, anchor))
 
         parent_version = parent_prop_info.get('versionAdded')
         if parent_version:
@@ -551,11 +514,11 @@ pre.code{
 
                 if profile_mode and profile_mode != 'subset':
                     if enum_name in profile_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_min_support_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_parameter_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_recommended_values:
                         cells.append('Recommended')
                     else:
@@ -619,11 +582,11 @@ pre.code{
                 cells = [enum_name]
                 if profile_mode and profile_mode != 'subset':
                     if enum_name in profile_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_min_support_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_parameter_values:
-                        cells.append('Required')
+                        cells.append('Mandatory')
                     elif enum_name in profile_recommended_values:
                         cells.append('Recommended')
                     else:
@@ -648,11 +611,16 @@ pre.code{
 
         return '\n'.join(contents) + '\n'
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
+                                     version_strings=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
         anchor = schema_ref + '|action_details|' + prop_name
+        version_string = deprecated_descr = None
+        if version_strings:
+            version_string = version_strings.get('version_string')
+            deprecated_descr = version_strings.get('deprecated_descr')
 
         action_name = prop_name
         if prop_name.startswith('#'): # expected
@@ -661,7 +629,13 @@ pre.code{
             prop_name = prop_name_parts[-1]
             action_name = action_name[1:]
 
-        formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
+        name_and_version = prop_name
+        if version_string:
+            name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
+
+        formatted.append(self.formatter.head_four(name_and_version, self.level, anchor))
+        if deprecated_descr:
+            formatted.append(self.formatter.para(italic(deprecated_descr)))
         formatted.append(self.formatter.para(prop_descr))
 
         # Add the URIs for this action.
@@ -744,7 +718,32 @@ pre.code{
             if section.get('property_details'):
                 deets = []
                 deets.append(self.formatter.head_three('Property details', self.level))
-                deets.append(self.formatter.make_div('\n'.join(section['property_details']),
+                # Sort and output property details
+                detail_names = [x for x in section['property_details'].keys()]
+                detail_names.sort(key=str.lower)
+                deets_content = []
+                for detail_name in detail_names:
+                    det_info = section['property_details'][detail_name]
+                    anchor = section['schema_ref'] + '|details|' + detail_name
+                    deets_content.append(self.formatter.head_four(html.escape(detail_name, False) + ':', 0, anchor))
+
+                    if len(det_info) == 1:
+                        for x in det_info.values():
+                            deets_content.append(x['formatted_descr'])
+                    else:
+                        path_to_ref = {}
+                        for ref, info in det_info.items():
+                            paths_as_text = [": ".join(x) for x in info['paths']]
+                            paths_as_text = ', '.join(paths_as_text)
+                            path_to_ref[paths_as_text] = ref
+                        paths_sorted = [x for x in path_to_ref.keys()]
+                        paths_sorted.sort(key=str.lower)
+                        for path in paths_sorted:
+                            info = det_info[path_to_ref[path]]
+                            deets_content.append(self.formatter.head_five("In " + path + ":", 0))
+                            deets_content.append(info['formatted_descr'])
+
+                deets.append(self.formatter.make_div('\n'.join(deets_content),
                                            'property-details-content'))
                 contents.append(self.formatter.make_div('\n'.join(deets), 'property-details'))
 
@@ -913,12 +912,12 @@ pre.code{
         return '\n'.join(intro)
 
 
-    def add_section(self, text, link_id=False):
-        """ Add a top-level heading """
+    def add_section(self, text, link_id=False, schema_ref=False):
+        """ Add a container for all the information in a section """
 
         self.this_section = {
             'properties': [],
-            'property_details': [],
+            'property_details': {},
             'head': '',
             'heading': ''
             }
@@ -929,6 +928,7 @@ pre.code{
             self.this_section['head'] = text
             self.this_section['heading'] = self.formatter.head_two(section_text, self.level, link_id)
             self.this_section['link_id'] = link_id
+            self.this_section['schema_ref'] = schema_ref or text
 
         self.sections.append(self.this_section)
 
@@ -999,11 +999,6 @@ pre.code{
         self.this_section['properties'].append(formatted_text)
 
 
-    def add_property_details(self, formatted_details):
-        """Add a chunk of property details information for the current section/schema."""
-        self.this_section['property_details'].append(formatted_details)
-
-
     def add_registry_reqs(self, registry_reqs):
         """Add registry messages. registry_reqs includes profile annotations."""
 
@@ -1041,10 +1036,9 @@ pre.code{
             self.registry_sections.append(this_section)
 
 
-    def format_as_prop_details(self, prop_name, prop_description, rows, anchor=None):
+    def format_as_prop_details(self, prop_name, prop_description, rows):
         """ Take the formatted rows and other strings from prop_info, and create a formatted block suitable for the prop_details section """
         contents = []
-        contents.append(self.formatter.head_four(html.escape(prop_name, False) + ':', 0, anchor))
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
@@ -1094,6 +1088,64 @@ pre.code{
         return '<a href="#' + anchor + '">' + text + '</a>'
 
 
+    # def format_version_strings(self, version_added, version_deprecated, version_deprecated_explanation):
+    def format_version_strings(self, prop_info):
+        """ Generate version added, version deprecated strings """
+
+        version_string = deprecated_descr = None
+        version = version_depr = deprecated_descr = None
+
+        version_added = None
+        version_deprecated = None
+        version_deprecated_explanation = ''
+        if isinstance(prop_info, list):
+            version_added = prop_info[0].get('versionAdded')
+            version_deprecated = prop_info[0].get('versionDeprecated')
+            version_deprecated_explanation = prop_info[0].get('deprecated')
+        elif isinstance(prop_info, dict):
+            version_added = prop_info.get('versionAdded')
+            version_deprecated = prop_info.get('versionDeprecated')
+            version_deprecated_explanation = prop_info.get('deprecated')
+
+        deprecated_descr = None
+
+        version = version_depr = None
+        if version_added:
+            version = self.format_version(version_added)
+        self.current_version[self.current_depth] = version
+
+        # Don't display version if there is a parent version and this is not newer:
+        parent_depth = self.current_depth - 1
+        if version and self.current_version.get(parent_depth):
+            if DocGenUtilities.compare_versions(version, self.current_version.get(parent_depth)) <= 0:
+                version = None
+
+
+        if version_added:
+            version = self.format_version(version_added)
+        if version_deprecated:
+            version_depr = self.format_version(version_deprecated)
+
+        if version and version != '1.0.0':
+            version_text = html.escape(version, False)
+            version_display = self.truncate_version(version_text, 2) + '+'
+            if version_deprecated:
+                version_depr_text = html.escape(version_depr, False)
+                deprecated_display = self.truncate_version(version_depr_text, 2)
+                version_string = '(v' + version_display + ', deprecated v' + deprecated_display +  ')'
+                deprecated_descr = html.escape("Deprecated in v" + deprecated_display + ' and later. ' +
+                                                   version_deprecated_explanation, False)
+            else:
+                version_string = '(v' + version_display + ')'
+        elif version_deprecated:
+            version_depr_text = html.escape(version_depr, False)
+            deprecated_display = self.truncate_version(version_depr_text, 2)
+            version_string = '(deprecated v' + deprecated_display +  ')'
+            deprecated_descr = html.escape( "Deprecated in v" + deprecated_display + ' and later. ' +
+                                                version_deprecated_explanation, False)
+        return {"version_string": version_string, "deprecated_descr": deprecated_descr}
+
+
     def get_documentation_link(self, ref_uri):
         """ Provide a link to documentation, if provided """
 
@@ -1101,6 +1153,15 @@ pre.code{
         if target:
             return 'See <a href="' + target + '" target="_blank">' + target + '</a>'
         return False
+
+
+    def add_object_close(self, rows, indentation_string, brace_string, num_cols):
+        """ Modify rows with whatever we use to close an object in this format """
+        tmp_row = rows[-1]
+        tmp_row = self._add_closing_brace(tmp_row, '', '}')
+        rows[-1] = tmp_row
+        return rows
+
 
     def _add_closing_brace(self, html_blob, indentation_string, brace_string):
         """ Add a closing } to the last row of this blob of rows. """
