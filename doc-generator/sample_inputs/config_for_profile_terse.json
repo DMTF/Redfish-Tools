@@ -5,6 +5,7 @@
     "import_from": [ "./json-schema" ],
     "outfile": "profile-terse.md",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
+    "registry_uri_to_local": {"example.org/registries": "example_org_registries"},
     "profile_doc": "../Redfish-Tools/doc-generator/sample_inputs/OCPBasicServer.v1_0_0.json",
     "profile_terse": true,
     "supfile": "../Redfish-Tools/doc-generator/sample_inputs/SampleProfileInput.md",

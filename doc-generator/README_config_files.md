@@ -34,6 +34,8 @@ into property details:
 The following properties would otherwise be parsed from the supplemental markdown file. For examples, see the config files in the sample_inputs directory:
 
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
+- profile_uri_to_local: For profile mode only, an object like uri_mapping, for locations of profiles.
+- registry_uri_to_local: For profile mode only, an object like uri_mapping, for locations of registries.
 - add_toc: Boolean. If true, generate a table of contents and either substitute it for [add_toc] in the supplemental markdown, or place it at the beginning of the output document. Makes sense only for HTML mode.
 - omit_version_in_headers: Boolean. If true, omit schema versions in section headers.
 - actions_in_property_table: Boolean. If true, omit "Actions" from the property tables.

@@ -1,0 +1,19 @@
+{
+    "SchemaDefinition": "RedfishInteroperabilityProfile.v1_0_0",
+    "ProfileName": "BasicClassProfile",
+    "ProfileVersion": "1.0.3",
+    "Purpose": "A base profile (to be used as a RequiredProfile) for the doc generator test suite.",
+    "OwningEntity": "DMTF",
+    "ContactInfo": "redfish@example.org",
+    "Resources": {
+        "NetworkDeviceFunction": {
+            "PropertyRequirements": {
+                "AssignablePhysicalPorts": {},
+                "DeviceEnabled": {
+		    "ReadRequirement": "Recommended",
+		    "WriteRequirement": "Recommended"
+                }
+            }
+        }
+    }
+}

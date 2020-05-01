@@ -119,7 +119,28 @@ class DocGenerator:
         reg_minversion = registry_profile.get('MinVersion', '1.0.0')
         registry_reqs['minversion'] = reg_minversion
         registry_reqs['profile_requirement'] = registry_profile.get('ReadRequirement', 'Mandatory')
-        reg_uri = self.get_versioned_uri(reg_name, reg_repo, reg_minversion)
+
+        # Retrieve registry data.
+        # reg_repo will be a fully-qualified URI. It may be overridden by
+        # uri-to-local mapping.
+        base_uri = '/'.join([reg_repo, reg_name])
+        if '://' in base_uri:                                  # This is expected.
+            protocol, base_uri = base_uri.split('://')
+
+        is_local_file = False
+        registry_uri_to_local = self.config.get('registry_uri_to_local')
+        if registry_uri_to_local:
+            for partial_uri in registry_uri_to_local.keys():
+                if base_uri.startswith(partial_uri):
+                    local_path = registry_uri_to_local[partial_uri]
+                    if partial_uri.endswith(reg_name):
+                        reg_repo = local_path[0:-len(reg_name)]
+                    else:
+                        reg_repo = local_path
+                    is_local_file = True
+                    break
+
+        reg_uri = self.get_versioned_uri(reg_name, reg_repo, reg_minversion, is_local_file)
 
         if not reg_uri:
             warnings.warn("Unable to find registry file for " + reg_repo + ", " + reg_name +
@@ -127,7 +148,11 @@ class DocGenerator:
             return registry_reqs
 
         # Generate data based on profile
-        registry_data = DocGenUtilities.http_load_as_json(reg_uri)
+        if is_local_file:
+            registry_data = DocGenUtilities.load_as_json(reg_uri)
+        else:
+            registry_data = DocGenUtilities.http_load_as_json(reg_uri)
+
         if registry_data:
             registry_reqs['current_release'] = registry_data['RegistryVersion']
             registry_reqs.update(registry_data)
@@ -1071,6 +1096,7 @@ class DocGenerator:
             supplemental_data = {}
 
         uri_mapping_from_config = config_data.get('uri_to_local')
+        registry_uri_mapping_from_config = config_data.get('registry_uri_to_local')
         cwd = os.getcwd()
 
         # config will become the combined config dictionary.
@@ -1091,6 +1117,7 @@ class DocGenerator:
             'uri_replacements': {},
             'local_to_uri': {},
             'uri_to_local': {},
+            'registry_uri_to_local': {},
             'profile_mode': False,
             'profile_doc': None,
             'profile_resources': {},
@@ -1134,7 +1161,8 @@ class DocGenerator:
             config_flags = [
                 'add_toc', 'units_translation', 'suppress_version_history',
                 'actions_in_property_table', 'html_title',
-                'uri_to_local', 'local_to_uri', 'combine_multiple_refs'
+                'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
+                'combine_multiple_refs'
                 ]
             for x in config_flags:
                 if x in config_data:
@@ -1328,11 +1356,16 @@ class DocGenerator:
         if not uri_mapping_from_config:
             if 'uri_to_local' in supplemental_data:
                 config['uri_to_local'] = supplemental_data['uri_to_local']
+                config['local_to_uri'] = supplemental_data['local_to_uri']
 
-            if 'profile_local_to_uri' in supplemental_data:
-                config['profile_local_to_uri'] = supplemental_data['profile_local_to_uri']
+            if 'profile_uri_to_local' in supplemental_data:
+                config['profile_uri_to_local'] = supplemental_data['profile_uri_to_local']
 
-        config['profile_uri_to_local'] = supplemental_data.get('profile_uri_to_local', {})
+        if 'profile_uri_to_local' not in config:
+            config['profile_uri_to_local'] = supplemental_data.get('profile_uri_to_local', {})
+
+        if not registry_uri_mapping_from_config:
+            config['registry_uri_to_local'] = supplemental_data.get('registry_uri_to_local', {})
 
         if 'enum_deprecations' in supplemental_data:
             config['enum_deprecations'] = supplemental_data['enum_deprecations']

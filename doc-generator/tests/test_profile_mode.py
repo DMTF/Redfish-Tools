@@ -92,3 +92,27 @@ def test_profile_basic_conditional_reqs (mockRequest):
 
     for name, expected_description in expected_conditional_props.items():
         assert expected_description in  condreq_output.get(name, '')
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_registry_uri_mapping (mockRequest):
+    """ User can specify URI mapping for registry. Test accesses a mapped registry by its URI. """
+
+    config = copy.deepcopy(base_config)
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'registry_mapping', 'NetworkPort'))
+    profile_dir = os.path.abspath(os.path.join(testcase_path, 'registry_mapping', 'profiles'))
+    registry_dir = os.path.abspath(os.path.join(testcase_path, 'registry_mapping', 'registries'))
+    profile_json = os.path.abspath(os.path.join(profile_dir, 'ProfileWithFakeRegistry.v1_0_0.json'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+    config['profile_doc'] = profile_json
+    config['profile_uri_to_local'] = { 'redfish.dmtf.org/profiles': profile_dir }
+    config['registry_uri_to_local'] = { 'contoso.com/registries': registry_dir }
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+
+    registry_name = 'ContosoPizzaMessages'
+    registry_summary = docGen.process_registry(registry_name, config['profile']['Registries'][registry_name])
+
+    assert registry_summary.get('Name') == 'Fake Message Registry'

@@ -1,0 +1,7 @@
+{
+    "RegistryVersion": "1.0.3",
+    "Name": "Fake Message Registry",
+    "Messages": {
+        "FooMessage": {}
+    }
+}
