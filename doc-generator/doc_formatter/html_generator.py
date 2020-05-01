@@ -202,6 +202,7 @@ pre.code{
 
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
+        format_annotation = None
 
         if current_depth < self.current_depth:
             for i in range(current_depth, self.current_depth):
@@ -213,9 +214,13 @@ pre.code{
         if isinstance(prop_info, list):
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
+            if 'format' in prop_info[0]:
+                format_annotation = prop_info[0]['format']
         elif isinstance(prop_info, dict):
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
+            if 'format' in prop_info:
+                format_annotation = prop_info['format']
 
         version_strings = self.format_version_strings(prop_info)
         name_and_version = self.formatter.bold(html.escape(prop_name, False))
@@ -315,6 +320,8 @@ pre.code{
         prop_type = html.escape(formatted_details['prop_type'], False)
         if has_enum:
             prop_type += '<br>(enum)'
+        if format_annotation:
+            prop_type += '<br>(' + format_annotation + ')'
         if formatted_details['prop_units']:
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
         if is_excerpt:
