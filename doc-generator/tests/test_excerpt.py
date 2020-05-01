@@ -61,7 +61,7 @@ def test_excerpt_circuit(mockRequest):
 | } |   |   |"""
 
     expected_excerpt = """| **Current** *(v0.9+)* { | object<br>(excerpt) | The current sensor for this circuit. This object is an excerpt of the *Sensor* resource located at the URI shown in DataSourceUri. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**DataSourceUri** | string<br><br>*read-only<br>(null)* | A link to the resource that provides the data for this object. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**DataSourceUri** | string<br>(URI)<br><br>*read-only<br>(null)* | A link to the resource that provides the data for this object. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PeakReading** | number<br><br>*read-only<br>(null)* | The peak reading value for this sensor. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the area or device to which this sensor measurement applies. *For the possible property values, see PhysicalContext in Property details.* |
