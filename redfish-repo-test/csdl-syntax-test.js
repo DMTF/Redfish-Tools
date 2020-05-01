@@ -50,6 +50,14 @@ const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310'
                                     'CBC_DES', 'CFB128_AES128' ];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
+//Properties that have units but don't have the unit names in them
+const PropertyNamesWithoutCorrectUnits = ['AccountLockoutDuration', 'AccountLockoutCounterResetAfter', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'CapableSpeedGbs', 
+                                          'Latitude', 'Longitude', 'MaxFrameSize', 'NegotiatedSpeedGbs', 'OperatingSpeedMhz', 'PercentComplete', 'PercentageComplete', 'ReactiveVAR', 'SessionTimeout', 
+                                          'LowerThresholdCritical', 'LowerThresholdNonCritical', 'LowerThresholdFatal', 'LowerThresholdUser', 'MaxReadingRangeTemp', 'MaxReadingRange', 'MaxAllowableOperatingValue', 
+                                          'MinReadingRangeTemp', 'MinReadingRange', 'MinAllowableOperatingValue', 'UpperThresholdNonCritical', 'UpperThresholdCritical', 'UpperThresholdFatal', 'UpperThresholdUser'];
+//Values that have other acceptable Unit nomenclature
+const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml', 'ClassOfService_v1.xml', 'ConsistencyGroup_v1.xml', 'ConsistencyGroupCollection_v1.xml',
@@ -139,6 +147,7 @@ describe('CSDL Tests', () => {
         it('All definitions shall include Description and LongDescription annotations', () => {definitionsHaveAnnotations(csdl);});
         it('All versioned, non-errata namespaces have Release', () => {schemaReleaseCheck(csdl);});
       }
+      it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
     });
   });
 });
@@ -362,15 +371,15 @@ function validUnitsTest(csdl) {
     if(pos !== -1) {
       unitName = unitName.substring(0, pos);
     }
-    if(ucum.units.includes(unitName)) {
+    if(Object.keys(ucum.units).includes(unitName)) {
       //Have unit, all good...
       return;
     }
-    else if(ucum.prefixes.includes(unitName[0]) && ucum.units.includes(unitName.substring(1))) {
+    else if(Object.keys(ucum.prefixes).includes(unitName[0]) && Object.keys(ucum.units).includes(unitName.substring(1))) {
       //Have prefix and unit, all good...
       return;
     }
-    else if(ucum.prefixes.includes(unitName.substring(0,2)) && ucum.units.includes(unitName.substring(2))) {
+    else if(Object.keys(ucum.prefixes).includes(unitName.substring(0,2)) && Object.keys(ucum.units).includes(unitName.substring(2))) {
       //Have prefix and unit, all good...
       return;
     }
@@ -1575,6 +1584,59 @@ function schemaReleaseCheck(csdl) {
       }
       if((release.length !== 0) && !schemas[i]._Name.endsWith('_0')) {
         throw new Error('Namespace '+schemas[i]._Name+' contains an unexpected Release term!');
+      }
+    }
+  }
+}
+
+function propertyNameUnitCheck(csdl) {
+  let props = CSDL.search(csdl, 'Property');
+  if(props.length === 0) {
+    return;
+  }
+  for(let i = 0; i < props.length; i++) {
+    if(props[i].Annotations !== undefined && props[i].Annotations['Measures.Unit'] !== undefined) {
+      let propName = props[i].Name;
+      if(PropertyNamesWithoutCorrectUnits.includes(propName)) {
+        //Skip this property
+        continue;
+      }
+      let unitCode = props[i].Annotations['Measures.Unit'].String;
+      let originalCode = unitCode;
+      let pos = unitCode.indexOf('/s');
+      if(pos !== -1) {
+        unitCode = unitCode.substring(0, pos);
+      }
+      if(unitsWhiteList.includes(unitCode)) {
+        if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
+          continue;
+        }
+        if(propName.endsWith(unitCode)) {
+          continue;
+        }
+      }
+      let unit = ucum.units[unitCode];
+      if(unit === undefined) {
+        let prefix = ucum.prefixes[unitCode[0]]
+        unit = ucum.units[unitCode.substring(1)];
+        if(unit === undefined) {
+          prefix = ucum.prefixes[unitCode.substring(0,2)]
+          unit = ucum.units[unitCode.substring(2)];
+          if(unit === undefined) {
+            throw new Error('Unknown unit code '+unitCode+' for property '+propName);
+          }
+        }
+        unit = unit.charAt(0).toUpperCase()+unit.substring(1);
+        unit = prefix+unit
+      }
+      unit = unit.charAt(0).toUpperCase()+unit.substring(1);
+      if(!propName.endsWith(unit)) {
+        if(!propName.endsWith(unit+'s')) {
+          if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
+            continue;
+          }
+          throw new Error('Property '+propName+' has unit '+unit+' but does not end with that name.');
+        }
       }
     }
   }

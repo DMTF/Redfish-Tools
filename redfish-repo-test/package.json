@@ -9,7 +9,6 @@
   "author": "",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "mocha": "^6.0.2",
     "CSDLParser": "^0.2.2",
     "config": "^3.0.1",
     "fuzzy": "^0.1.1",
@@ -21,6 +20,7 @@
     "jsonlint": "^1.6.2",
     "jsonschema": "^1.1.1",
     "marked": "^0.6.0",
+    "mocha": "^6.0.2",
     "request": "^2.69",
     "swagger-parser": "^6.0.5",
     "traverse": "^0.6.6",

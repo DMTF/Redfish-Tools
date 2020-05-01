@@ -1,7 +1,7 @@
 const request = require('request');
 const xmljs = require('libxmljs');
 
-let obj = {prefixes: [], units: []};
+let obj = {prefixes: {}, units: {}};
 
 request({url: 'http://unitsofmeasure.org/ucum-essence.xml', timeout: 5000}, (error, response, body) => {
   let doc = xmljs.parseXml(body);
@@ -13,12 +13,28 @@ request({url: 'http://unitsofmeasure.org/ucum-essence.xml', timeout: 5000}, (err
     switch(name) {
       case 'prefix':
         code = children[i].attr('Code');
-        obj.prefixes.push(code.value());
+        childNodes = children[i].childNodes();
+        name = '';
+        for(let j = 0; j < childNodes.length; j++) {
+          if(childNodes[j].name() === 'name') {
+            name = childNodes[j].text();
+            break;
+          }
+        }
+        obj.prefixes[code.value()] = name;
         break;
       case 'base-unit':
       case 'unit':
         code = children[i].attr('Code');
-        obj.units.push(code.value());
+        childNodes = children[i].childNodes();
+        name = '';
+        for(let j = 0; j < childNodes.length; j++) {
+          if(childNodes[j].name() === 'name') {
+            name = childNodes[j].text();
+            break;
+          }
+        }
+        obj.units[code.value()] = name;
         break;
       default:
         break;
@@ -26,3 +42,4 @@ request({url: 'http://unitsofmeasure.org/ucum-essence.xml', timeout: 5000}, (err
   }
   console.log(JSON.stringify(obj));
 });
+/* vim: set tabstop=2 shiftwidth=2 expandtab: */
