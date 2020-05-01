@@ -35,7 +35,7 @@ GET_RESPONSES = [ 200 ]
 PATCH_RESPONSES = [ 200, 202, 204 ]
 PUT_RESPONSES = [ 200, 202, 204 ]
 CREATE_RESPONSES = [ 201, 202, 204 ]
-ACTION_RESPONSES = [ 200, 202, 204 ]
+ACTION_RESPONSES = [ 200, 201, 202, 204 ]
 DELETE_RESPONSES = [ 200, 202, 204 ]
 
 # Default configurations
@@ -621,8 +621,15 @@ class JSONToYAML:
                     response["content"] = content_error
         elif http_status == 201:
             # 201 Created: Resource is returned
-            response["description"] = "A resource of type {} has been created".format( self.uri_cache[uri]["requestBody"].rsplit( "/" )[-1] )
-            response["content"] = content_created
+            if not self.uri_cache[uri]["action"]:
+                response["description"] = "A resource of type {} has been created".format( self.uri_cache[uri]["requestBody"].rsplit( "/" )[-1] )
+                response["content"] = content_created
+            else:
+                response["description"] = "The response contains the results of the {} action".format( uri.rsplit( "." )[-1] )
+                if self.uri_cache[uri]["actionResponse"] is not None:
+                    response["content"] = content_action_response
+                else:
+                    response["content"] = content_error
         elif http_status == 202:
             # 202 Accepted: Task is returned
             response["description"] = "Accepted; a Task has been generated"
