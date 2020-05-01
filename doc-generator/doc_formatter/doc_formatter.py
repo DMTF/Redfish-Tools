@@ -46,6 +46,10 @@ class DocFormatter:
         self.current_uris = []
         self.ref_deduplicator = {} # Tracks use of refs within a schema to assist in combining them for output.
         self.ref_counts = {}       # Summarized data from self.ref_deduplicator
+        self.format_annotation_strings = { # map format annotations to desired output
+                                           'uri': 'URI',
+                                           'uri-reference': 'URI'
+                                            }
 
         if self.config.get('profile_mode'):
             self.config['MinVersionLT1.6'] = False

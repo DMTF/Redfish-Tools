@@ -96,6 +96,8 @@ class MarkdownGenerator(DocFormatter):
             if 'format' in prop_info:
                 format_annotation = prop_info['format']
 
+        format_annotation = self.format_annotation_strings.get(format_annotation, format_annotation)
+
         version_strings = self.format_version_strings(prop_info)
         if prop_name:
             name_and_version = self.formatter.bold(self.escape_for_markdown(prop_name,

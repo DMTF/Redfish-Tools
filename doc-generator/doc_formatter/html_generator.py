@@ -222,6 +222,8 @@ pre.code{
             if 'format' in prop_info:
                 format_annotation = prop_info['format']
 
+        format_annotation = self.format_annotation_strings.get(format_annotation, format_annotation)
+
         version_strings = self.format_version_strings(prop_info)
         name_and_version = self.formatter.bold(html.escape(prop_name, False))
 
