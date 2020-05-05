@@ -26,6 +26,11 @@ if(config.has('Redfish.AdditionalSchemaDirs')) {
 //Setup a global cache for speed
 options.cache = new CSDL.cache(options.useLocal, options.useNetwork);
 
+var skipCheckSchemaList = [];
+if(config.has('Redfish.ExternalOwnedSchemas')) {
+  skipCheckSchemaList = config.get('Redfish.ExternalOwnedSchemas');
+}
+
 /***************** White lists ******************************/
 //Units that don't exist in UCUM
 const unitsWhiteList = ['RPM', 'V.A'];
@@ -121,7 +126,9 @@ describe('CSDL Tests', () => {
         it('Complex Types Should Not Have Permissions', () => {complexTypesPermissions(csdl);});
       }
       it('Descriptions have trailing periods', () => {if (!isYang) descriptionPeriodCheck(csdl);});
-      it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
+      if(skipCheckSchemaList.indexOf(fileName) === -1) {
+        it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
+      }
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
       it('No plural Schemas', () => {noPluralSchemas(csdl);});
       it('BaseTypes are valid', () => {checkBaseTypes(csdl);});
