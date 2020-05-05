@@ -612,7 +612,7 @@ class DocFormatter:
 
         formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
         if formatted:
-            frag_gen.add_section('')
+            frag_gen.add_section('', '', schema_ref)
             frag_gen.current_version = {}
 
             # Skip "Actions" if requested. Everything else is output.
