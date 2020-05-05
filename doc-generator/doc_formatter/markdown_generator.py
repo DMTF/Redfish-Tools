@@ -819,7 +819,8 @@ search: true
         self.this_section = {'head': text,
                              'heading': '\n' + self.formatter.head_one(text, self.level),
                              'properties': [],
-                             'property_details': {}
+                             'property_details': {},
+                             'schema_ref': '',
                             }
         self.sections.append(self.this_section)
 

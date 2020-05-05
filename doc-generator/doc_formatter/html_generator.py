@@ -928,7 +928,8 @@ pre.code{
             'properties': [],
             'property_details': {},
             'head': '',
-            'heading': ''
+            'heading': '',
+            'schema_ref': '',
             }
 
         if text:
