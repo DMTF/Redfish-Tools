@@ -612,7 +612,7 @@ class DocFormatter:
 
         formatted = frag_gen.format_property_row(schema_ref, prop_name, prop_infos, [])
         if formatted:
-            frag_gen.add_section('')
+            frag_gen.add_section('', '', schema_ref)
             frag_gen.current_version = {}
 
             # Skip "Actions" if requested. Everything else is output.
@@ -1958,7 +1958,7 @@ class DocFormatter:
                         prop_details[key][ref] = det[ref]
                     else:
                         if prop_details[key][ref]['formatted_descr'] != det[ref]['formatted_descr']:
-                            warnings.warn("mismatch detected in descriptions for " + key)
+                            warnings.warn("mismatch detected in descriptions for " + key + " in " + self.this_section['head'])
                         for path in det[ref]['paths']:
                             prop_details[key][ref]['paths'].append(path)
 

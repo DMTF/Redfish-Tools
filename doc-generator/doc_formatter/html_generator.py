@@ -928,17 +928,19 @@ pre.code{
             'properties': [],
             'property_details': {},
             'head': '',
-            'heading': ''
+            'heading': '',
+            'schema_ref': '',
             }
 
         if text:
             section_text = html.escape(text, False)
-
             self.this_section['head'] = text
             self.this_section['heading'] = self.formatter.head_two(section_text, self.level, link_id)
             self.this_section['link_id'] = link_id
-            self.this_section['schema_ref'] = schema_ref or text
-
+        if schema_ref:
+            self.this_section['schema_ref'] = schema_ref
+        elif text:
+            self.this_section['schema_ref'] = section_text
         self.sections.append(self.this_section)
 
 
