@@ -216,9 +216,14 @@ class PropertyIndexGenerator(DocFormatter):
         pass
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings):
         """Generate a formatted Actions section from parameters data"""
-        pass
+        return ''
+
+
+    def format_action_response(self, schema_ref, action_param_name, action_response):
+        """Format the data from an actionResponse"""
+        return ''
 
 
     def add_registry_reqs(self, registry_reqs):
@@ -417,6 +422,11 @@ class PropertyIndexGenerator(DocFormatter):
                     }
                 prop_config.append(found_entry)
                 config_by_schema[schema_name] = found_entry
+
+
+    def escape_text(self, text, chars=None):
+        """Escape text in whatever way is appropriate to this output format. """
+        return html.escape(text, False)
 
 
     def format_tabular_output(self):
