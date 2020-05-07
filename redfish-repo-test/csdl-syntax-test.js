@@ -116,6 +116,9 @@ describe('CSDL Tests', () => {
       it('Valid Syntax', () => {
         assert.notEqual(csdl, null);
       });
+      if(skipCheckSchemaList.indexOf(fileName) !== -1) {
+        return;
+      }
       //These tests are only valid for new format CSDL...
       if(file.indexOf('_v') !== -1) {
         it('Units are valid', () => {validUnitsTest(csdl);});
@@ -126,9 +129,7 @@ describe('CSDL Tests', () => {
         it('Complex Types Should Not Have Permissions', () => {complexTypesPermissions(csdl);});
       }
       it('Descriptions have trailing periods', () => {if (!isYang) descriptionPeriodCheck(csdl);});
-      if(skipCheckSchemaList.indexOf(fileName) === -1) {
-        it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
-      }
+      it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
       it('No plural Schemas', () => {noPluralSchemas(csdl);});
       it('BaseTypes are valid', () => {checkBaseTypes(csdl);});
