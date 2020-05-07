@@ -31,6 +31,11 @@ if(config.has('Redfish.BypassVersionCheck')) {
   skipVersionTest = config.get('Redfish.BypassVersionCheck');
 }
 
+var skipCheckSchemaList = [];
+if(config.has('Redfish.ExternalOwnedSchemas')) {
+  skipCheckSchemaList = config.get('Redfish.ExternalOwnedSchemas');
+}
+
 /***************** White lists ******************************/
 //Units that don't exist in UCUM
 const unitsWhiteList = ['RPM', 'V.A'];
@@ -116,6 +121,9 @@ describe('CSDL Tests', () => {
       it('Valid Syntax', () => {
         assert.notEqual(csdl, null);
       });
+      if(skipCheckSchemaList.indexOf(fileName) !== -1) {
+        return;
+      }
       //These tests are only valid for new format CSDL...
       if(file.indexOf('_v') !== -1) {
         it('Units are valid', () => {validUnitsTest(csdl);});
