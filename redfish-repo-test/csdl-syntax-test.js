@@ -26,6 +26,11 @@ if(config.has('Redfish.AdditionalSchemaDirs')) {
 //Setup a global cache for speed
 options.cache = new CSDL.cache(options.useLocal, options.useNetwork);
 
+var skipVersionTest = false;
+if(config.has('Redfish.BypassVersionCheck')) {
+  skipVersionTest = config.get('Redfish.BypassVersionCheck');
+}
+
 var skipCheckSchemaList = [];
 if(config.has('Redfish.ExternalOwnedSchemas')) {
   skipCheckSchemaList = config.get('Redfish.ExternalOwnedSchemas');
@@ -149,7 +154,9 @@ describe('CSDL Tests', () => {
       }
       it('All EntityType defintions have Actions', () => {if (!isYang) entityTypesHaveActions(csdl);});
       it('NavigationProperties for Collections cannot be Nullable', () => {navigationPropNullCheck(csdl);});
-      it('All new schemas are one version off published', () => {schemaVersionCheck(csdl, publishedSchemas);});
+      if(!skipVersionTest) {
+        it('All new schemas are one version off published', () => {schemaVersionCheck(csdl, publishedSchemas);});
+      }
       //Skip OEM extentions and metadata files
       if(ContosoSchemaFileList.indexOf(fileName) === -1 && fileName !== 'index.xml' && fileName !== 'Volume_v1.xml') {
         it('All definitions shall include Description and LongDescription annotations', () => {definitionsHaveAnnotations(csdl);});
