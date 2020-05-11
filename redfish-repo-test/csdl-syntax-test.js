@@ -38,7 +38,7 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
 
 /***************** White lists ******************************/
 //Units that don't exist in UCUM
-const unitsWhiteList = ['RPM', 'V.A'];
+const unitsWhiteList = ['RPM', 'V.A', '{tot}', '1/s/TBy'];
 //Enumeration Member names that are non-Pascal Cased
 const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -57,24 +57,35 @@ const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310'
                                     'NEMA_5_15R', 'NEMA_5_20R', 'NEMA_L5_20R', 'NEMA_L5_30R', 'NEMA_L6_20R',
                                     'NEMA_L6_30R', 'CEE_7_Type_E', 'CEE_7_Type_F', 'SEV_1011_TYPE_12',
                                     'SEV_1011_TYPE_23', 'BS_1363_Type_G', 'TLS_SSL', 'CRAM_MD5', 'HMAC_MD5', 'HMAC_SHA96',
-                                    'CBC_DES', 'CFB128_AES128' ];
+                                    'CBC_DES', 'CFB128_AES128', 'EC_X25519', 'EC_X448', 'EC_Ed25519', 'EC_Ed448',
+                                    'NFSv4_0', 'NFSv4_1', 'SMBv3_0', 'SMBv2_1', 'SMBv2_0', 'SMBv3_1_1',
+                                    'SMBv3_0_2', 'Bits_0', 'Bits_128', 'Bits_192', 'Bits_256', 'Bits_112',
+                                    'ISO8859_1', 'UTF_8', 'UTF_16', 'UCS_2', 'RPCSEC_GSS' ];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 //Properties that have units but don't have the unit names in them
-const PropertyNamesWithoutCorrectUnits = ['AccountLockoutDuration', 'AccountLockoutCounterResetAfter', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'CapableSpeedGbs', 
-                                          'Latitude', 'Longitude', 'MaxFrameSize', 'NegotiatedSpeedGbs', 'OperatingSpeedMhz', 'PercentComplete', 'PercentageComplete', 'ReactiveVAR', 'SessionTimeout', 
-                                          'LowerThresholdCritical', 'LowerThresholdNonCritical', 'LowerThresholdFatal', 'LowerThresholdUser', 'MaxReadingRangeTemp', 'MaxReadingRange', 'MaxAllowableOperatingValue', 
-                                          'MinReadingRangeTemp', 'MinReadingRange', 'MinAllowableOperatingValue', 'UpperThresholdNonCritical', 'UpperThresholdCritical', 'UpperThresholdFatal', 'UpperThresholdUser'];
+const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'CapableSpeedGbs', 'Duration',
+                                          'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser', 'MaxAllowableOperatingValue', 'MaxBytesPerSecond',
+                                          'MaxFrameSize', 'MaxIOOperationsPerSecondPerTerabyte', 'MaxReadingRange', 'MaxReadingRangeTemp', 'MaxSamplePeriod', 'MaxSupportedBytesPerSecond', 'MinAllowableOperatingValue',
+                                          'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests', 'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS',
+                                          'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical', 
+                                          'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated', 'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized',
+                                          'WriteHitIORequests', 'WriteIORequests'];
 //Values that have other acceptable Unit nomenclature
-const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage'};
+const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
-const SwordfishSchemaFileList = [ 'Capacity_v1.xml', 'ClassOfService_v1.xml', 'ConsistencyGroup_v1.xml', 'ConsistencyGroupCollection_v1.xml',
-                                  'DataStorageLoSCapabilities_v1.xml', 'EndpointGroupCollection_v1.xml', 'FileSystemCollection_v1.xml',
-                                  'HostedStorageServices_v1.xml', 'IOStatistics_v1.xml', 'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml',
-                                  'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml', 'StorageReplicaInfo_v1.xml',
-                                  'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
+const SwordfishSchemaFileList = [ 'Capacity_v1.xml', 'ClassOfService_v1.xml', 'ClassOfServiceCollection_v1.xml', 'ConsistencyGroup_v1.xml', 'ConsistencyGroupCollection_v1.xml', 
+                                  'DataProtectionLineOfService_v1.xml', 'DataProtectionLoSCapabilities_v1.xml', 'DataSecurityLineOfService_v1.xml', 
+                                  'DataSecurityLoSCapabilities_v1.xml', 'DataStorageLineOfService_v1.xml', 'DataStorageLoSCapabilities_v1.xml', 
+                                  'DriveCollection_v1.xml', 'EndpointGroup_v1.xml', 'EndpointGroupCollection_v1.xml', 'FeaturesRegistry_v1.xml', 'FeaturesRegistryCollection_v1.xml',
+                                  'FeaturesRegistryService_v1.xml', 'FileShare_v1.xml', 'FileShareCollection_v1.xml', 'FileSystem_v1.xml', 'FileSystemCollection_v1.xml', 
+                                  'HostedStorageServices_v1.xml', 
+                                  'IOConnectivityLineOfService_v1.xml', 'IOConnectivityLoSCapabilities_v1.xml', 'IOPerformanceLineOfService_v1.xml', 
+                                  'IOPerformanceLoSCapabilities_v1.xml', 'IOStatistics_v1.xml', 'LineOfService_v1.xml', 'LineOfServiceCollection_v1.xml',
+                                  'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml', 
+                                  'StorageReplicaInfo_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
                                   'VolumeCollection_v1.xml' ];
 const ContosoSchemaFileList = [ 'ContosoExtensions_v1.xml', 'TurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'TurboencabulatorService' ];
@@ -106,7 +117,7 @@ describe('CSDL Tests', () => {
     describe(file, () => {
       let fileName = file.substring(file.lastIndexOf('/')+1);
       let csdl = null;
-      let isYang = false
+      let isYang = false;
       before(function(done) {
         this.timeout(120000);
         CSDL.parseMetadataFile(file, options, (err, data) => {
@@ -114,7 +125,7 @@ describe('CSDL Tests', () => {
             throw err;
           }
           csdl = data;
-          isYang = ifYangSchema(data)
+          isYang = ifYangSchema(data);
           done();
         });
       });
@@ -276,6 +287,10 @@ describe('Mockup Syntax Tests', () => {
 
             if(!isLink(this.key)) return;
             let link = url.parse(this.node);
+            if(link.protocol !== null) {
+              //Skip non-relative (i.e. external links)
+              return;
+            }
             let filepath = linkToFile[link.pathname];
             if(filepath === undefined && link.pathname.substr(link.pathname.length - 1) === '/') {
               //Try without the trailing slash...
@@ -1622,6 +1637,9 @@ function propertyNameUnitCheck(csdl) {
       if(pos !== -1) {
         unitCode = unitCode.substring(0, pos);
       }
+      if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
+        continue;
+      }
       if(unitsWhiteList.includes(unitCode)) {
         if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
           continue;
@@ -1645,8 +1663,8 @@ function propertyNameUnitCheck(csdl) {
         unit = prefix+unit
       }
       unit = unit.charAt(0).toUpperCase()+unit.substring(1);
-      if(!propName.endsWith(unit)) {
-        if(!propName.endsWith(unit+'s')) {
+      if(!propName.endsWith(unit) && !propName.toLowerCase().endsWith(unit.toLowerCase())) {
+        if(!propName.endsWith(unit+'s') && !propName.toLowerCase().endsWith(unit.toLowerCase()+'s')) {
           if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
             continue;
           }
