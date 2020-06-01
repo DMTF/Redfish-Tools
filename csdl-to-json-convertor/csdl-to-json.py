@@ -231,6 +231,10 @@ class CSDLToJSON:
                         if term == "Redfish.Release":
                             self.json_out[self.namespace_under_process]["release"] = self.get_attrib( child, "String" )
 
+                        # Language
+                        if term == "Redfish.Language":
+                            self.json_out[self.namespace_under_process]["language"] = self.get_attrib( child, "String" )
+
     def process_versioned_namespace( self ):
         """
         Adds the definitions to the JSON output for a versioned namespace
@@ -285,6 +289,10 @@ class CSDLToJSON:
                                 version2 = get_version_details( self.namespace_under_process )
                                 if version1[0] == version2[0] and version1[1] == version2[1]:
                                     self.json_out[self.namespace_under_process]["release"] = self.get_attrib( child, "String" )
+
+                        # Language
+                        if term == "Redfish.Language":
+                            self.json_out[self.namespace_under_process]["language"] = self.get_attrib( child, "String" )
 
     def process_excerpts( self ):
         """
@@ -471,6 +479,10 @@ class CSDLToJSON:
                 if term == "OData.LongDescription":
                     json_def[name]["longDescription"] = self.get_attrib( child, "String" )
 
+                # Object Translation
+                if term == "Redfish.Translation":
+                    json_def[name]["translation"] = self.get_attrib( child, "String" )
+
     def generate_object( self, object, namespace, json_def, name = None ):
         """
         Processes an EntityType or ComplexType to generate the JSON definition structure
@@ -509,6 +521,10 @@ class CSDLToJSON:
                 # Object Long Description
                 if ( term == "OData.LongDescription" ) and ( "longDescription" not in json_def[name] ):
                     json_def[name]["longDescription"] = self.get_attrib( child, "String" )
+
+                # Object Translation
+                if ( term == "Redfish.Translation" ) and ( "translation" not in json_def[name] ):
+                    json_def[name]["translation"] = self.get_attrib( child, "String" )
 
                 # Additional Properties
                 if term == "OData.AdditionalProperties":
@@ -665,6 +681,9 @@ class CSDLToJSON:
                 # Enum Long Description
                 if term == "OData.LongDescription":
                     json_def[name]["longDescription"] = self.get_attrib( child, "String" )
+                # Enum Translation
+                if term == "Redfish.Translation":
+                    json_def[name]["translation"] = self.get_attrib( child, "String" )
                 # Enum Deprecated
                 if term == "Redfish.Deprecated":
                     json_def[name]["deprecated"] = self.get_attrib( child, "String" )
@@ -696,6 +715,12 @@ class CSDLToJSON:
                         if "enumLongDescriptions" not in json_def[name]:
                             json_def[name]["enumLongDescriptions"] = {}
                         json_def[name]["enumLongDescriptions"][member_name] = self.get_attrib( annotation, "String" )
+
+                    # Member Translation
+                    if term == "Redfish.Translation":
+                        if "enumTranslations" not in json_def[name]:
+                            json_def[name]["enumTranslations"] = {}
+                        json_def[name]["enumTranslations"][member_name] = self.get_attrib( annotation, "String" )
 
                     # Member Deprecated
                     if term == "Redfish.Deprecated":
@@ -761,6 +786,10 @@ class CSDLToJSON:
                 if term == "OData.LongDescription":
                     json_def[name]["longDescription"] = self.get_attrib( child, "String" )
 
+                # Enum Translation
+                if term == "Redfish.Translation":
+                    json_def[name]["translation"] = self.get_attrib( child, "String" )
+
                 # Enum Members
                 if term == "Redfish.Enumeration":
                     # Step into the Redfish Enumeration annotation to pull out the members
@@ -797,6 +826,12 @@ class CSDLToJSON:
                                     if "enumLongDescriptions" not in json_def[name]:
                                         json_def[name]["enumLongDescriptions"] = {}
                                     json_def[name]["enumLongDescriptions"][member_name] = self.get_attrib( rec_annotation, "String" )
+
+                                # Member Translation
+                                if rec_term == "Redfish.Translation":
+                                    if "enumTranslations" not in json_def[name]:
+                                        json_def[name]["enumTranslations"] = {}
+                                    json_def[name]["enumTranslations"][member_name] = self.get_attrib( rec_annotation, "String" )
 
                                 # Member Deprecated
                                 if rec_term == "Redfish.Deprecated":
@@ -1021,6 +1056,10 @@ class CSDLToJSON:
             # Long Description
             if term == "OData.LongDescription":
                 json_type_def["longDescription"] = self.get_attrib( annotation, "String" )
+
+            # Translation
+            if term == "Redfish.Translation":
+                json_type_def["translation"] = self.get_attrib( annotation, "String" )
 
             # Permissions
             if term == "OData.Permissions":
