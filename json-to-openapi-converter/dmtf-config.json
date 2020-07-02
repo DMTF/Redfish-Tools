@@ -10,8 +10,8 @@
         }
     },
     "OutputFile": "openapi.yaml",
-    "TaskRef": "http://redfish.dmtf.org/schemas/v1/Task.v1_4_3.yaml#/components/schemas/Task",
-    "MessageRef": "http://redfish.dmtf.org/schemas/v1/Message.v1_1_0.yaml#/components/schemas/Message",
+    "TaskRef": "http://redfish.dmtf.org/schemas/v1/Task.v1_4_3.yaml#/components/schemas/Task.v1_4_3.Task",
+    "MessageRef": "http://redfish.dmtf.org/schemas/v1/Message.v1_1_0.yaml#/components/schemas/Message.v1_1_0.Message",
     "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml",
     "DoNotWrite": [ "Volume.", "VolumeCollection.", "redfish-error.", "redfish-payload-annotations.", "redfish-schema.", "redfish-schema-" ]
 }
