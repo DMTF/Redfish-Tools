@@ -39,8 +39,8 @@ ACTION_RESPONSES = [ 200, 201, 202, 204 ]
 DELETE_RESPONSES = [ 200, 202, 204 ]
 
 # Default configurations
-CONFIG_DEF_MESSAGE_REF = "http://redfish.dmtf.org/schemas/v1/Message.v1_0_8.yaml#/components/schemas/Message_v1_0_8_Message"
-CONFIG_DEF_TASK_REF = "http://redfish.dmtf.org/schemas/v1/Task.v1_4_2.yaml#/components/schemas/Task_v1_4_2_Task"
+CONFIG_DEF_MESSAGE_REF = "http://redfish.dmtf.org/schemas/v1/Message.v1_1_0.yaml#/components/schemas/Message_v1_1_0_Message"
+CONFIG_DEF_TASK_REF = "http://redfish.dmtf.org/schemas/v1/Task.v1_4_3.yaml#/components/schemas/Task_v1_4_3_Task"
 CONFIG_DEF_ODATA_SCHEMA_LOC = "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml"
 CONFIG_DEF_OUT_FILE = "openapi.yaml"
 CONFIG_DEF_EXTENSIONS = {}
@@ -85,8 +85,7 @@ class JSONToYAML:
         for filename in os.listdir( input ):
             if filename.endswith( ".json" ):
                 print( "Generating YAML for: {}".format( filename ) )
-                self.current_schema = filename.rsplit( ".", 1 )[0]
-                self.current_schema = self.current_schema.replace(".", "_")
+                self.current_schema = filename.rsplit( ".", 1 )[0].replace( ".", "_" )
                 json_data = None
                 try:
                     with open( input + os.path.sep + filename ) as json_file:
@@ -261,7 +260,29 @@ class JSONToYAML:
                             else:
                                 reference = re.search( "^(.+)\/\w+\.json", definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"] ).group( 1 )
                             reference = reference + "/" + def_name + ".yaml#/components/schemas/" + def_name + "_" + def_name
-                            request_body = build_external_reference( definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"] )
+
+                            # Pull out the filename of the collection members to see if it's being converted now
+                            mem_filename_full = definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"].split( "#", 1 )[0]
+                            mem_filename = mem_filename_full.rsplit( "/", 1 )[1]
+                            mem_definition = definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"].rsplit( "/", 1 )[-1]
+                            try:
+                                with open( self.input_dir + os.path.sep + mem_filename ) as json_file:
+                                    mem_json_data = json.load( json_file )
+                                    request_body = build_external_reference( mem_json_data["definitions"][mem_definition]["anyOf"][-1]["$ref"] )
+                            except:
+                                retry_count = 0
+                                retry_count_max = 20
+                                while retry_count < retry_count_max:
+                                    try:
+                                        req = urllib.request.Request( mem_filename_full )
+                                        response = urllib.request.urlopen( req )
+                                        mem_json_data = json.loads( response.read().decode() )
+                                        request_body = build_external_reference( mem_json_data["definitions"][mem_definition]["anyOf"][-1]["$ref"] )
+                                        break
+                                    except OSError as e:
+                                        if e.errno != errno.ECONNRESET:
+                                            break
+                                        retry_count += 1
                         else:
                             reference = build_external_reference( definition["anyOf"][-1]["$ref"] )
                             request_body = reference
@@ -616,7 +637,7 @@ class JSONToYAML:
         if http_status == 200:
             # 200 OK: Resource is returned
             if not self.uri_cache[uri]["action"]:
-                response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1] )
+                response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1].split( "_", 1 )[0] )
                 response["content"] = content_resource
             else:
                 response["description"] = "The response contains the results of the {} action".format( uri.rsplit( "." )[-1] )
@@ -627,7 +648,7 @@ class JSONToYAML:
         elif http_status == 201:
             # 201 Created: Resource is returned
             if not self.uri_cache[uri]["action"]:
-                response["description"] = "A resource of type {} has been created".format( self.uri_cache[uri]["requestBody"].rsplit( "/" )[-1] )
+                response["description"] = "A resource of type {} has been created".format( self.uri_cache[uri]["requestBody"].rsplit( "/" )[-1].split( "_", 1 )[0] )
                 response["content"] = content_created
             else:
                 response["description"] = "The response contains the results of the {} action".format( uri.rsplit( "." )[-1] )
@@ -739,10 +760,7 @@ def build_external_reference( ref ):
     Returns:
         A string for the OpenAPI external reference
     """
-    filename = ref.split( "#", 1 )[0]
-    filename = filename.rsplit( ".", 1 )[0]
-    filename = filename.rsplit( "/", 1 )[1]
-    filename = filename.replace(".", "_")
+    filename = ref.split( "#", 1 )[0].rsplit( ".", 1 )[0].rsplit( "/", 1 )[1].replace( ".", "_" )
     return ref.replace( ".json#/definitions/", ".yaml#/components/schemas/" + filename + "_", 1 )
 
 if __name__ == '__main__':
