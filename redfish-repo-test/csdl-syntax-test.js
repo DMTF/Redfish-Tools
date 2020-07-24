@@ -174,6 +174,12 @@ describe('CSDL Tests', () => {
         it('All versioned, non-errata namespaces have Release', () => {schemaReleaseCheck(csdl);});
       }
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
+      it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);}); 
+      it('Insert restrictions only on collections', () => {insertCollections(csdl);});
+      //Pendantic tests...
+      if(process.env.PEDANTIC == 1) {
+        it('Descriptions have double space after periods', () => {if (!isYang) descriptionSpaceCheck(csdl);});
+      }
     });
   });
 });
@@ -530,10 +536,33 @@ function descriptionMayCheck(csdl) {
   }
 }
 
+function descriptionSpaceCheck(csdl) {
+  let descriptions = CSDL.search(csdl, 'Annotation', 'OData.Description');
+  if(descriptions.length !== 0) {
+    for(let i = 0; i < descriptions.length; i++) {
+      descriptionPeriodSpace(descriptions[i]);
+    }
+  }
+  let long_descriptions = CSDL.search(csdl, 'Annotation', 'OData.LongDescription');
+  if(long_descriptions.length !== 0) {
+    for(let i = 0; i < long_descriptions.length; i++) {
+      descriptionPeriodSpace(long_descriptions[i]);
+    }
+  }
+}
+
 function descriptionEndsInPeriod(desc) {
   let str = desc.String;
   if(str.slice(-1) !== '.') {
     throw new Error('"' + str + '" does not end in a period!');
+  }
+}
+
+function descriptionPeriodSpace(desc) {
+  let str = desc.String;
+  const regex = /\D\.\s\S/g;
+  if(str.match(regex)) {
+    throw new Error('"' + str + '" is not double spaced!');
   }
 }
 
@@ -1671,6 +1700,44 @@ function propertyNameUnitCheck(csdl) {
           throw new Error('Property '+propName+' has unit '+unit+' but does not end with that name.');
         }
       }
+    }
+  }
+}
+
+function updatableReadWrite(csdl) {
+  let updateRes = CSDL.search(csdl, 'Annotation', 'Capabilities.UpdateRestrictions');
+  if(updateRes.length === 0) {
+    return;
+  }
+  let updatable = updateRes[0].Record.PropertyValues.Updatable.Bool;
+  let perms = CSDL.search(csdl, 'Annotation', 'OData.Permissions');
+  let found = false;
+  for(let i = 0; i < perms.length; i++) {
+    let perm = perms[i].EnumMember;
+    if(perm == 'OData.Permission/ReadWrite' && !updatable) {
+      throw new Error('CSDL is not updatable but has read/write properties!');
+    } else if(perm == 'OData.Permission/ReadWrite') {
+      found = true;
+    }
+  }
+  if(!found && updatable) {
+    throw new Error('CSDL is updatable but has no read/write properties!');
+  }
+}
+
+function insertCollections(csdl) {
+  let insertRes = CSDL.search(csdl, 'Annotation', 'Capabilities.InsertRestrictions');
+  if(insertRes.length === 0) {
+    return;
+  }
+  let insertable = insertRes[0].Record.PropertyValues.Insertable.Bool;
+  let entities = CSDL.search(csdl, 'EntityType');
+  for(let i = 0; i < entities.length; i++) {
+    if(entities[i].BaseType === 'Resource.v1_0_0.ResourceCollection' && !insertable) {
+      //throw new Error('CSDL is not insertable but this is a resource collection!');
+      //This is pretty common, let's not allow list it... just allow it
+    } else if(entities[i].BaseType !== 'Resource.v1_0_0.ResourceCollection' && insertable) {
+      throw new Error('CSDL is insertable but this is not a resource collection!');
     }
   }
 }
