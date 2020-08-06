@@ -24,7 +24,7 @@ import yaml
 # List of terms that have a simple one to one conversion
 ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDescriptions", "enumDeprecated", "enumVersionDeprecated", "enumVersionAdded",
                              "units", "requiredOnCreate", "owningEntity", "autoExpand", "release", "versionDeprecated", "versionAdded", "filter",
-                             "excerpt", "excerptCopy", "excerptCopyOnly" ]
+                             "excerpt", "excerptCopy", "excerptCopyOnly", "translation", "enumTranslations", "language" ]
 
 # List of terms that are removed from the file
 REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter", "actionResponse" ]
