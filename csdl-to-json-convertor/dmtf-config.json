@@ -4,5 +4,5 @@
     "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata-v4.json",
     "Location": "http://redfish.dmtf.org/schemas/v1/",
     "ResourceLocation": "http://redfish.dmtf.org/schemas/v1/",
-    "DoNotWrite": [ "Volume.", "VolumeCollection.", "RedfishError.", "RedfishExtensions.", "Validation." ]
+    "DoNotWrite": [ "VolumeCollection.", "RedfishError.", "RedfishExtensions.", "Validation." ]
 }
