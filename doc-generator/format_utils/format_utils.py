@@ -12,6 +12,8 @@ Initial author: Second Rise LLC.
 
 class FormatUtils():
 
+    last_caption = ""
+
     def head_one(self, text, level, anchor_id=None):
         """Add a top-level heading, relative to the generator's level"""
         add_level = '' + '#' * level
@@ -92,3 +94,11 @@ class FormatUtils():
         header_rows.append(self._make_separator_row(numcells))
 
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
+
+    def add_table_caption(self, caption):
+        self.last_caption = caption
+        return 'Table: Table TBL_nn: <a name=table_TBL_nn>' + caption + '</a>'
+
+    def add_table_reference(self, lead_in):
+        return lead_in + '[Table TBL_nn++](#table_TBL_nn \"' + self.last_caption + '\").'
+

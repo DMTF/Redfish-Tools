@@ -181,13 +181,18 @@ class DocFormatter:
 
     def add_release_history(self, release_history):
         """ Add the release history. """
+
         summarized = self.summarize_release_history(release_history)
         versions = []
         releases = []
         for elt in summarized:
             versions.append(self.formatter.italic(elt['version']))
             releases.append(elt['release'])
-        formatted = self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)])
+        header = self.formatter.make_header_row(['Version', 'Release'])
+        heading = head_three("Revision history", self.level);
+        caption = self.formatter.add_table_caption("Revision history");
+        reference = self.formatter.add_table_reference("The revision history for XXX is summarized in ");
+        formatted = reference + '\n\n' + self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)], [header]) + caption
         self.this_section['release_history'] = formatted
 
 
@@ -433,9 +438,13 @@ class DocFormatter:
                     req += ', must be ' + comparison + ' ' + ', '.join(['"' + val + '"' for val in values])
             rows.append(self.formatter.make_row([req_desc, req, purpose]))
 
+        table_id = self.get_next_table_id();
+        preamble = "JMS format_conditional_details" # self.add_table_reference(table_id, "The properties of CLASS are summarized in")
+        caption = self.add_table_caption("CLASS properties")
+
         formatted.append(self.formatter.make_table(rows))
 
-        return "\n".join(formatted)
+        return "\n" + preable + "\n".join(formatted) + "\n" + caption
 
 
     def append_unique_values(self, value_list, target_list):
@@ -777,7 +786,12 @@ class DocFormatter:
             item_text = self.format_uris_for_table(uris)
             rows.append(self.formatter.make_row([collection_name, item_text]))
         doc = self.formatter.make_table(rows, [header], 'uris')
-        return doc
+
+        table_id = self.get_next_table_id();
+        preamble = "JMS generate_collections_doc" # self.add_table_reference(table_id, "The collections are summarized in")
+        caption = self.add_table_caption(table_id, "CLASS collections")
+
+        return preamble + "\n" + doc + "\n" + caption
 
 
     def get_collections_uris(self):

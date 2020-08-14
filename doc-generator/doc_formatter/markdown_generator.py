@@ -451,7 +451,11 @@ class MarkdownGenerator(DocFormatter):
                 else:
                     contents.append('| ' + enum_name + ' | ')
 
-        return '\n'.join(contents) + '\n'
+        caption = self.formatter.add_table_caption(prop_name + " property values")
+        preamble = self.formatter.add_table_reference("The defined property values are listed in ")
+
+        return preamble + '\n'.join(contents) + caption
+
 
 
     def format_action_details(self, prop_name, action_details):
@@ -526,9 +530,11 @@ class MarkdownGenerator(DocFormatter):
             # Add a closing } row:
             rows.append('| ' + ' | '.join(['}', ' ',' ',' ']) + ' |')
 
-            formatted.append(self.formatter.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
 
-            formatted.append('\n'.join(rows))
+            caption = self.formatter.add_table_caption(prop_name + " action parameters")
+            preamble = self.formatter.add_table_reference("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in")
+            formatted.append(preamble + "\n" + '\n'.join(rows) + "\n" + caption)
+
 
         else:
             formatted.append(self.formatter.para("(This action takes no parameters.)"))
@@ -608,9 +614,18 @@ class MarkdownGenerator(DocFormatter):
                 contents.append(section['json_payload'])
             # something is awry if there are no properties, but ...
             if section.get('properties'):
-                contents.append('|     |     |     |')
+                caption = self.formatter.add_table_caption(section["head"] + " properties")
+                preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ")
+
+                # properites are a peer of URIs, if they exist
+                # TODO: this should use make_table()
+                contents.append('\n' + self.formatter.head_two('Properties', self.level))
+                contents.append(preamble + "\n")
+                contents.append('|Property     |Type     |Notes     |')
+
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
+                contents.append(caption + '\n')
 
             if section.get('profile_conditional_details'):
                 # sort them now; these can be sub-properties so may not be in alpha order.
