@@ -974,7 +974,7 @@ class DocFormatter:
 
                             if link_detail:
                                 link_props = {'type': 'string',
-                                              'readonly': True,
+                                              'readonly': prop_info.get('readonly', True),
                                               'description': '',
                                               }
                                 if not ref_fulldescription_override:
@@ -1485,6 +1485,10 @@ class DocFormatter:
                     if excerpt_copy_name.endswith('Excerpt'): # It should.
                         excerpt_copy_name = excerpt_copy_name[:-7]
                     prop_item['excerptCopy'] = excerpt_copy_name
+
+                # Pass "readonly" along with the prop_item, if present:
+                if 'readonly' in prop_info:
+                    prop_item['readonly'] = prop_info['readonly']
 
                 prop_items = self.extend_property_info(schema_ref, prop_item)
                 # TODO: maybe capture dups here

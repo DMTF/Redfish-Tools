@@ -24,7 +24,7 @@ import yaml
 # List of terms that have a simple one to one conversion
 ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDescriptions", "enumDeprecated", "enumVersionDeprecated", "enumVersionAdded",
                              "units", "requiredOnCreate", "owningEntity", "autoExpand", "release", "versionDeprecated", "versionAdded", "filter",
-                             "excerpt", "excerptCopy", "excerptCopyOnly" ]
+                             "excerpt", "excerptCopy", "excerptCopyOnly", "translation", "enumTranslations", "language" ]
 
 # List of terms that are removed from the file
 REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter", "actionResponse" ]
@@ -39,8 +39,8 @@ ACTION_RESPONSES = [ 200, 201, 202, 204 ]
 DELETE_RESPONSES = [ 200, 202, 204 ]
 
 # Default configurations
-CONFIG_DEF_MESSAGE_REF = "http://redfish.dmtf.org/schemas/v1/Message.v1_0_8.yaml#/components/schemas/Message"
-CONFIG_DEF_TASK_REF = "http://redfish.dmtf.org/schemas/v1/Task.v1_4_2.yaml#/components/schemas/Task"
+CONFIG_DEF_MESSAGE_REF = "http://redfish.dmtf.org/schemas/v1/Message.v1_1_0.yaml#/components/schemas/Message_v1_1_0_Message"
+CONFIG_DEF_TASK_REF = "http://redfish.dmtf.org/schemas/v1/Task.v1_4_3.yaml#/components/schemas/Task_v1_4_3_Task"
 CONFIG_DEF_ODATA_SCHEMA_LOC = "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml"
 CONFIG_DEF_OUT_FILE = "openapi.yaml"
 CONFIG_DEF_EXTENSIONS = {}
@@ -71,6 +71,7 @@ class JSONToYAML:
         self.uri_cache = {}
         self.action_cache = {}
         self.input_dir = input
+        self.current_schema = None
 
         # Initialize the caches if extending an existing definition
         if base_file is not None:
@@ -84,6 +85,7 @@ class JSONToYAML:
         for filename in os.listdir( input ):
             if filename.endswith( ".json" ):
                 print( "Generating YAML for: {}".format( filename ) )
+                self.current_schema = filename.rsplit( ".", 1 )[0].replace( ".", "_" )
                 json_data = None
                 try:
                     with open( input + os.path.sep + filename ) as json_file:
@@ -109,6 +111,8 @@ class JSONToYAML:
                         json_data["x-copyright"] = json_data.pop( "copyright" )
                     if "definitions" in json_data:
                         json_data["components"] = { "schemas": json_data.pop( "definitions" ) }
+                        for definition in list( json_data["components"]["schemas"].keys() ):
+                            json_data["components"]["schemas"][self.current_schema + "_" + definition] = json_data["components"]["schemas"].pop( definition )
 
                     # Process the object (and sub-objects) as needed for further conversion
                     self.update_object( json_data )
@@ -255,10 +259,32 @@ class JSONToYAML:
                                 reference = "http://redfish.dmtf.org/schemas/swordfish/v1"
                             else:
                                 reference = re.search( "^(.+)\/\w+\.json", definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"] ).group( 1 )
-                            reference = reference + "/" + def_name + ".yaml#/components/schemas/" + def_name
-                            request_body = definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"].replace( ".json#/definitions/", ".yaml#/components/schemas/", 1 )
+                            reference = reference + "/" + def_name + ".yaml#/components/schemas/" + def_name + "_" + def_name
+
+                            # Pull out the filename of the collection members to see if it's being converted now
+                            mem_filename_full = definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"].split( "#", 1 )[0]
+                            mem_filename = mem_filename_full.rsplit( "/", 1 )[1]
+                            mem_definition = definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"].rsplit( "/", 1 )[-1]
+                            try:
+                                with open( self.input_dir + os.path.sep + mem_filename ) as json_file:
+                                    mem_json_data = json.load( json_file )
+                                    request_body = build_external_reference( mem_json_data["definitions"][mem_definition]["anyOf"][-1]["$ref"] )
+                            except:
+                                retry_count = 0
+                                retry_count_max = 20
+                                while retry_count < retry_count_max:
+                                    try:
+                                        req = urllib.request.Request( mem_filename_full )
+                                        response = urllib.request.urlopen( req )
+                                        mem_json_data = json.loads( response.read().decode() )
+                                        request_body = build_external_reference( mem_json_data["definitions"][mem_definition]["anyOf"][-1]["$ref"] )
+                                        break
+                                    except OSError as e:
+                                        if e.errno != errno.ECONNRESET:
+                                            break
+                                        retry_count += 1
                         else:
-                            reference = definition["anyOf"][-1]["$ref"].replace( ".json#/definitions/", ".yaml#/components/schemas/", 1 )
+                            reference = build_external_reference( definition["anyOf"][-1]["$ref"] )
                             request_body = reference
                     else:
                         print( "ERROR: No anyOf term found in {} for {}".format( filename, def_name ) )
@@ -327,9 +353,9 @@ class JSONToYAML:
                 if yaml_file not in self.action_cache:
                     self.action_cache[yaml_file] = {}
                 self.action_cache[yaml_file][action] = {}
-                self.action_cache[yaml_file][action]["reference"] = "#/components/schemas/" + action_def + "RequestBody"
+                self.action_cache[yaml_file][action]["reference"] = "#/components/schemas/" + self.current_schema + "_" + action_def + "RequestBody"
                 if "actionResponse" in json_data["definitions"][action_def]:
-                    self.action_cache[yaml_file][action]["actionResponse"] = "#/components/schemas/" + json_data["definitions"][action_def]["actionResponse"]["$ref"].rsplit( "/" )[-1]
+                    self.action_cache[yaml_file][action]["actionResponse"] = "#/components/schemas/" + self.current_schema + "_" + json_data["definitions"][action_def]["actionResponse"]["$ref"].rsplit( "/" )[-1]
                 else:
                     self.action_cache[yaml_file][action]["actionResponse"] = None
 
@@ -432,7 +458,7 @@ class JSONToYAML:
         if "$ref" in json_data:
             if json_data["$ref"][0] == "#":
                 # Local reference
-                json_data["$ref"] = json_data["$ref"].replace( "#/definitions/", "#/components/schemas/", 1 )
+                json_data["$ref"] = json_data["$ref"].replace( "#/definitions/", "#/components/schemas/" + self.current_schema + "_", 1 )
             else:
                 # External reference; find the definition and check if it's a link to a resource or some other definition
                 id_ref = False
@@ -480,9 +506,9 @@ class JSONToYAML:
 
                 # If idRef was found, this is a link; otherwise this is another data type (like an enum or an object)
                 if id_ref:
-                    json_data["$ref"] = self.odata_schema + "#/components/schemas/idRef"
+                    json_data["$ref"] = self.odata_schema + "#/components/schemas/odata-v4_idRef"
                 else:
-                    json_data["$ref"] = json_data["$ref"].replace( ".json#/definitions/", ".yaml#/components/schemas/", 1 )
+                    json_data["$ref"] = build_external_reference( json_data["$ref"] )
 
         # Perform the same process on all other objects in the structure
         for key in json_data:
@@ -611,7 +637,7 @@ class JSONToYAML:
         if http_status == 200:
             # 200 OK: Resource is returned
             if not self.uri_cache[uri]["action"]:
-                response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1] )
+                response["description"] = "The response contains a representation of the {} resource".format( self.uri_cache[uri]["reference"].rsplit( "/" )[-1].split( "_", 1 )[0] )
                 response["content"] = content_resource
             else:
                 response["description"] = "The response contains the results of the {} action".format( uri.rsplit( "." )[-1] )
@@ -622,7 +648,7 @@ class JSONToYAML:
         elif http_status == 201:
             # 201 Created: Resource is returned
             if not self.uri_cache[uri]["action"]:
-                response["description"] = "A resource of type {} has been created".format( self.uri_cache[uri]["requestBody"].rsplit( "/" )[-1] )
+                response["description"] = "A resource of type {} has been created".format( self.uri_cache[uri]["requestBody"].rsplit( "/" )[-1].split( "_", 1 )[0] )
                 response["content"] = content_created
             else:
                 response["description"] = "The response contains the results of the {} action".format( uri.rsplit( "." )[-1] )
@@ -723,6 +749,19 @@ def is_unversioned( name ):
     if re.search( "v([0-9]+)_([0-9]+)_([0-9]+).json$", name ) is None:
         return True
     return False
+
+def build_external_reference( ref ):
+    """
+    Builds a reference link based on a JSON Schema reference
+
+    Args:
+        ref: The external reference
+
+    Returns:
+        A string for the OpenAPI external reference
+    """
+    filename = ref.split( "#", 1 )[0].rsplit( ".", 1 )[0].rsplit( "/", 1 )[1].replace( ".", "_" )
+    return ref.replace( ".json#/definitions/", ".yaml#/components/schemas/" + filename + "_", 1 )
 
 if __name__ == '__main__':
 
