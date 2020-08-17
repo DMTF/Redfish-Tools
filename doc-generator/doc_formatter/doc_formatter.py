@@ -189,7 +189,7 @@ class DocFormatter:
             versions.append(self.formatter.italic(elt['version']))
             releases.append(elt['release'])
         header = self.formatter.make_header_row(['Version', 'Release'])
-        heading = head_three("Revision history", self.level);
+        heading = self.formatter.head_three("Revision history", self.level);
         caption = self.formatter.add_table_caption("Revision history");
         reference = self.formatter.add_table_reference("The revision history for XXX is summarized in ");
         formatted = reference + '\n\n' + self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)], [header]) + caption
