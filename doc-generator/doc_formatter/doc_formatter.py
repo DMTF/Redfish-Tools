@@ -191,8 +191,8 @@ class DocFormatter:
         header = self.formatter.make_header_row(['Version', 'Release'])
         heading = self.formatter.head_three("Revision history", self.level);
         caption = self.formatter.add_table_caption("Revision history");
-        reference = self.formatter.add_table_reference("The revision history for XXX is summarized in ");
-        formatted = reference + '\n\n' + self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)], [header]) + caption
+        reference = self.formatter.add_table_reference("The revision history is summarized in ");
+        formatted = reference + "\n\n" + self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)], [header]) + "\n\n" +caption
         self.this_section['release_history'] = formatted
 
 

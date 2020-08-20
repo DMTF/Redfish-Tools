@@ -494,9 +494,10 @@ class MarkdownGenerator(DocFormatter):
         if version_string:
             name_and_version += ' ' + self.formatter.italic(version_strings['version_string'])
 
-        formatted.append(self.formatter.head_four(name_and_version, self.level))
+        formatted.append(self.formatter.head_three(name_and_version, self.level))
         if deprecated_descr:
             formatted.append(self.formatter.para(italic(deprecated_descr)))
+        formatted.append(self.formatter.head_four("Description", self.level))
         formatted.append(self.formatter.para(prop_descr))
 
         # Add the URIs for this action.
@@ -532,8 +533,9 @@ class MarkdownGenerator(DocFormatter):
 
 
             caption = self.formatter.add_table_caption(prop_name + " action parameters")
-            preamble = self.formatter.add_table_reference("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in")
-            formatted.append(preamble + "\n" + '\n'.join(rows) + "\n" + caption)
+            heading = self.formatter.head_four("Action parameters", self.level)
+            preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")
+            formatted.append(preamble + "\n\n" + '\n'.join(rows) + "\n\n" + caption)
 
 
         else:
@@ -785,12 +787,12 @@ search: true
 
     def add_description(self, text):
         """ Add the schema description """
-        self.this_section['description'] = text + '\n'
+        self.this_section['description'] = "## Description\n\n" + text + '\n'
 
 
     def add_uris(self, uris):
         """ Add the URIs (which should be a list) """
-        uri_block = "**URIs**:\n"
+        uri_block = "## URIs\n"
         for uri in sorted(uris, key=str.lower):
             uri_block += "\n" + self.format_uri(uri)
         self.this_section['uris'] = uri_block + "\n"
@@ -803,7 +805,7 @@ search: true
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_block = "**URIs**:\n"
+        uri_block = self.formatter.head_four("Action URIs", self.level)
         for uri in sorted(uris, key=str.lower):
             uri = uri + "/Actions/" + action
             uri_block += "\n" + self.format_uri(uri)
