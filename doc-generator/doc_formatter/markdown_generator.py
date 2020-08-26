@@ -454,7 +454,7 @@ class MarkdownGenerator(DocFormatter):
         caption = self.formatter.add_table_caption(prop_name + " property values")
         preamble = self.formatter.add_table_reference("The defined property values are listed in ")
 
-        return preamble + '\n'.join(contents) + caption
+        return preamble + '\n'.join(contents) + '\n' + caption
 
 
 
@@ -508,11 +508,8 @@ class MarkdownGenerator(DocFormatter):
         if action_parameters:
             rows = []
             # Table start:
-            rows.append("|     |     |     |")
+            rows.append("| Parameter Name     | Type     | Notes     |")
             rows.append("| --- | --- | --- |")
-
-            # Add a "start object" row for this parameter:
-            rows.append('| ' + ' | '.join(['{', ' ',' ',' ']) + ' |')
 
             param_names = [x for x in action_parameters.keys()]
 
@@ -523,23 +520,19 @@ class MarkdownGenerator(DocFormatter):
 
             param_names.sort(key=str.lower)
 
+        heading = self.formatter.head_four("Action parameters", self.level)
         if len(param_names):
             for param_name in param_names:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
                 rows.append(formatted_parameters.get('row'))
 
-            # Add a closing } row:
-            rows.append('| ' + ' | '.join(['}', ' ',' ',' ']) + ' |')
-
-
             caption = self.formatter.add_table_caption(prop_name + " action parameters")
-            heading = self.formatter.head_four("Action parameters", self.level)
             preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")
             formatted.append(preamble + "\n\n" + '\n'.join(rows) + "\n\n" + caption)
 
 
         else:
-            formatted.append(self.formatter.para("(This action takes no parameters.)"))
+            formatted.append(self.formatter.para(heading + "\n\nThis action takes no parameters."))
 
         return "\n".join(formatted)
 
