@@ -172,6 +172,7 @@ describe('CSDL Tests', () => {
       if(ContosoSchemaFileList.indexOf(fileName) === -1 && fileName !== 'index.xml' && fileName !== 'Volume_v1.xml') {
         it('All definitions shall include Description and LongDescription annotations', () => {definitionsHaveAnnotations(csdl);});
         it('All versioned, non-errata namespaces have Release', () => {schemaReleaseCheck(csdl);});
+        it('Resources specify capabilities', () => {resourcesSpecifyCapabilities(csdl);});
       }
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
       it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);}); 
@@ -1699,6 +1700,27 @@ function propertyNameUnitCheck(csdl) {
           }
           throw new Error('Property '+propName+' has unit '+unit+' but does not end with that name.');
         }
+      }
+    }
+  }
+}
+
+function resourcesSpecifyCapabilities(csdl) {
+  let entities = CSDL.search(csdl, 'EntityType');
+  for(let i = 0; i < entities.length; i++) {
+    if(entities[i].BaseType === 'Resource.v1_0_0.ResourceCollection' || entities[i].BaseType === 'Resource.v1_0_0.Resource') {
+      // Base definition of a resource; check that it contains InsertRestrictions, UpdateRestrictions, and DeleteRestrictions
+      let insertRes = CSDL.search(entities[i], 'Annotation', 'Capabilities.InsertRestrictions');
+      if(insertRes.length === 0) {
+        throw new Error(entities[i].Name+' does not specify InsertRestrictions.');
+      }
+      let updateRes = CSDL.search(entities[i], 'Annotation', 'Capabilities.UpdateRestrictions');
+      if(updateRes.length === 0) {
+        throw new Error(entities[i].Name+' does not specify UpdateRestrictions.');
+      }
+      let deleteRes = CSDL.search(entities[i], 'Annotation', 'Capabilities.DeleteRestrictions');
+      if(deleteRes.length === 0) {
+        throw new Error(entities[i].Name+' does not specify DeleteRestrictions.');
       }
     }
   }
