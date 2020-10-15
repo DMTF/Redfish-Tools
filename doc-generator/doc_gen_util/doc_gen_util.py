@@ -1,6 +1,6 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
-# Copyright 2017 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2017-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -39,7 +39,7 @@ class DocGenUtilities:
             data = json.load(jsondata)
             jsondata.close()
         except (OSError, json.JSONDecodeError) as ex:
-            warnings.warn('Unable to read ' + filename + ': ' + str(ex))
+            warnings.warn('Unable to read %(filename)s: %(message)s' % {'filename': filename, 'message': str(ex)})
 
         return data
 
@@ -63,7 +63,7 @@ class DocGenUtilities:
             return json_data
 
         except Exception as ex:
-            warnings.warn("Unable to retrieve data from '" + uri + "': " + str(ex))
+            warnings.warn("Unable to retrieve data from '%(uri)s': %(message)s" % {'uri': uri, 'message': str(ex)})
             return None
 
 
@@ -78,7 +78,7 @@ class DocGenUtilities:
             return f.read().decode('utf-8')
 
         except Exception as ex:
-            warnings.warn("Unable to retrieve data from '" + uri + "': " + str(ex))
+            warnings.warn("Unable to retrieve data from '%(uri)s': %(message)s" % {'uri': uri, 'message': str(ex)})
             return None
 
 

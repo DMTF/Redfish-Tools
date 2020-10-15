@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -22,13 +22,6 @@ import warnings
 from doc_gen_util import DocGenUtilities
 from . import DocFormatter
 from . import ToCParser
-
-# Format user warnings simply
-def simple_warning_format(message, category, filename, lineno, file=None, line=None):
-    """ a basic format for warnings from this program """
-    return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
-
-warnings.formatwarning = simple_warning_format
 
 class PropertyIndexGenerator(DocFormatter):
     """Provides methods for generating Property Index docs from Redfish schemas."""
@@ -56,7 +49,7 @@ class PropertyIndexGenerator(DocFormatter):
                 config_out = open(config['write_config_to'], 'w', encoding="utf8")
                 self.write_config_fh = config_out
             except (OSError) as ex:
-                warnings.warn('Unable to open ' + config['write_config_to'] + ' to write: ' + str(ex))
+                warnings.warn('Unable to open %(filename)s to write: %(message)s', {'fileanme': config['write_config_to'], 'message': str(ex)})
 
         self.properties_by_name = {}
         self.coalesced_properties = {}
@@ -103,7 +96,7 @@ class PropertyIndexGenerator(DocFormatter):
             if frontmatter:
                 output = frontmatter
             else:
-                output = self.formatter.head_one("Property Index", 0)
+                output = self.formatter.head_one(_('Property Index'), 0)
             output += self.format_tabular_output()
             output += backmatter
 
@@ -143,7 +136,7 @@ class PropertyIndexGenerator(DocFormatter):
         if within_action:
             prop_name_parts = prop_name.split('.')
             if len(prop_name_parts) == 2:
-                prop_name = prop_name_parts[1] + ' (Action)'
+                prop_name = _('%(property_name)s (Action)') % {'property_name': prop_name_parts[1]}
 
         details = self.parse_property_info(schema_ref, prop_name, prop_info, prop_path)
 
@@ -159,7 +152,7 @@ class PropertyIndexGenerator(DocFormatter):
             prop_type = ', '.join(sorted(prop_type_values))
 
         if has_enum:
-            prop_type += " (enum)"
+            prop_type += ' ' + _('(enum)')
 
         prop_units = details.get('prop_units')
         if prop_units:
@@ -459,7 +452,7 @@ class PropertyIndexGenerator(DocFormatter):
             json.dump(updated_config, config_out, indent=4, sort_keys=True)
             config_out.close()
 
-        headers = self.formatter.make_header_row(['Property Name', 'Defined In Schema(s)', 'Type', 'Description'])
+        headers = self.formatter.make_header_row([_('Property Name'), _('Defined In Schema(s)'), _('Type'), _('Description')])
         table = self.formatter.make_table(rows, [headers])
         return table
 
@@ -467,7 +460,7 @@ class PropertyIndexGenerator(DocFormatter):
     @staticmethod
     def add_html_boilerplate(htmlblob):
 
-        headlines = ['<head>', '<meta charset="utf-8">', '<title>' + 'Property Index' + '</title>']
+        headlines = ['<head>', '<meta charset="utf-8">', '<title>' + _('Property Index') + '</title>']
         styles = """
 <style>
 table{
@@ -501,7 +494,7 @@ table.properties{
     def format_schema_list(schema_list, formatter):
         sep = ', ' + formatter.br()
         if len(schema_list) > 10:
-            return formatter.italic('various') + formatter.br() + '(' + sep.join(schema_list[:2]) + ' ... )'
+            return formatter.italic(_('various')) + formatter.br() + '(' + sep.join(schema_list[:2]) + ' ... )'
         else:
             return sep.join(schema_list)
 
@@ -524,7 +517,7 @@ table.properties{
         writer = csv.writer(csv_out)
 
         rows = []
-        rows.append(['Property Name', 'Schema', 'Type', 'Description'])
+        rows.append([_('Property Name'), _('Schema'), _('Type'), _('Description')])
 
         property_names = sorted(self.coalesced_properties.keys())
         for prop_name in property_names:

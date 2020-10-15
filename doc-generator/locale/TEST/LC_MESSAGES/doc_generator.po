@@ -1,0 +1,472 @@
+# Copyright Notice:
+# Copyright 2020 Distributed Management Task Force, Inc. All rights reserved.
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+#
+# Faked-up translation with ALL-CAPS strings, for testing.
+
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2020-09-25 12:10-0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: doc_formatter/csv_generator.py:36 doc_formatter/csv_generator.py:56
+msgid "Schema Name"
+msgstr "SCHEMA NAME"
+
+#: doc_formatter/csv_generator.py:37 doc_formatter/csv_generator.py:57
+msgid "Schema Version"
+msgstr "SCHEMA VERSION"
+
+#: doc_formatter/csv_generator.py:38 doc_formatter/csv_generator.py:58
+msgid "Property Name (chain)"
+msgstr "PROPERTY NAME (CHAIN)"
+
+#: doc_formatter/csv_generator.py:39
+msgid "Read Requirement"
+msgstr "READ REQUIREMENT"
+
+#: doc_formatter/csv_generator.py:40
+msgid "Write Requirement"
+msgstr "WRITE REQUIREMENT"
+
+#: doc_formatter/csv_generator.py:41
+msgid "Minimum Count"
+msgstr "MINIMUM COUNT"
+
+#: doc_formatter/csv_generator.py:42
+msgid "Conditional Requirement"
+msgstr "CONDITIONAL REQUIREMENT"
+
+#: doc_formatter/csv_generator.py:43
+msgid "Purpose"
+msgstr "PURPOSE"
+
+#: doc_formatter/csv_generator.py:44 doc_formatter/csv_generator.py:59
+#: doc_formatter/property_index_generator.py:455
+#: doc_formatter/property_index_generator.py:520
+msgid "Type"
+msgstr "TYPE"
+
+#: doc_formatter/csv_generator.py:45 doc_formatter/csv_generator.py:62
+msgid "Nullable"
+msgstr "NULLABLE"
+
+#: doc_formatter/csv_generator.py:46 doc_formatter/csv_generator.py:63
+#: doc_formatter/html_generator.py:466 doc_formatter/html_generator.py:779
+#: doc_formatter/markdown_generator.py:321
+#: doc_formatter/markdown_generator.py:324
+#: doc_formatter/markdown_generator.py:661
+#: doc_formatter/property_index_generator.py:455
+#: doc_formatter/property_index_generator.py:520
+msgid "Description"
+msgstr "DESCRIPTION"
+
+#: doc_formatter/csv_generator.py:47 doc_formatter/csv_generator.py:64
+msgid "Normative Description"
+msgstr "NORMATIVE DESCRIPTION"
+
+#: doc_formatter/csv_generator.py:48 doc_formatter/csv_generator.py:65
+msgid "Units"
+msgstr "UNITS"
+
+#: doc_formatter/csv_generator.py:49 doc_formatter/csv_generator.py:66
+msgid "Minimum Value"
+msgstr "MINIMUM VALUE"
+
+#: doc_formatter/csv_generator.py:50 doc_formatter/csv_generator.py:67
+msgid "Maximum Value"
+msgstr "MAXIMUM VALUE"
+
+#: doc_formatter/csv_generator.py:51 doc_formatter/csv_generator.py:68
+msgid "Enumerations"
+msgstr "ENUMERATIONS"
+
+#: doc_formatter/csv_generator.py:52 doc_formatter/csv_generator.py:69
+msgid "Pattern"
+msgstr "PATTERN"
+
+#: doc_formatter/csv_generator.py:60
+msgid "Permissions"
+msgstr "PERMISSIONS"
+
+#: doc_formatter/csv_generator.py:61
+msgid "Required"
+msgstr "REQUIRED"
+
+#: doc_formatter/csv_generator.py:252
+msgid "Resource instance is subordinate to %(phrase)s"
+msgstr "RESOURCE INSTANCE IS SUBORDINATE TO %(phrase)s"
+
+#: doc_formatter/csv_generator.py:252 doc_formatter/doc_formatter.py:413
+msgid "from"
+msgstr "FROM"
+
+#: doc_formatter/csv_generator.py:257 doc_formatter/doc_formatter.py:422
+msgid "to"
+msgstr "TO"
+
+#: doc_formatter/csv_generator.py:265
+msgid "\"%(property)s\" is %(comparison)s"
+msgstr "\"%(property)s\" IS %(comparison)s"
+
+#: doc_formatter/doc_formatter.py:144
+msgid "(v%(version_number)s, deprecated v%(deprecated_version)s"
+msgstr "(V%(version_number)s, DEPRECATED V%(deprecated_version)s"
+
+#: doc_formatter/doc_formatter.py:145 doc_formatter/doc_formatter.py:153
+#: doc_formatter/markdown_generator.py:433
+msgid "Deprecated in v%(deprecated_version)s and later. %(explanation)s"
+msgstr "DEPRECATED IN V%(deprecated_version)s AND LATER. %(explanation)s"
+
+#: doc_formatter/doc_formatter.py:148 doc_formatter/html_generator.py:505
+#: doc_formatter/html_generator.py:581 doc_formatter/markdown_generator.py:355
+#: doc_formatter/markdown_generator.py:428
+msgid "(v%(version_number)s)"
+msgstr "(V%(version_number)s)"
+
+#: doc_formatter/doc_formatter.py:152
+msgid "(deprecated v%(deprecated_version)s)"
+msgstr "(DEPRECATED V%(deprecated_version)s)"
+
+#: doc_formatter/doc_formatter.py:369
+msgid "%(access_condition)s (Read-only)"
+msgstr "%(access_condition)s (READ-ONLY)"
+
+#: doc_formatter/doc_formatter.py:371 doc_formatter/doc_formatter.py:378
+msgid "%(access_condition)s (Read/Write)"
+msgstr "%(access_condition)s (READ/WRITE)"
+
+#: doc_formatter/doc_formatter.py:373 doc_formatter/doc_formatter.py:376
+msgid "%(access_condition)s (Read)"
+msgstr "%(access_condition)s (READ)"
+
+#: doc_formatter/doc_formatter.py:384
+msgid "Minimum %(count)s"
+msgstr "MINIMUM %(count)s"
+
+#: doc_formatter/doc_formatter.py:413
+msgid "Resource instance is subordinate to %(resource_list)s"
+msgstr "RESOURCE INSTANCE IS SUBORDINATE TO %(resource_list)s"
+
+#: doc_formatter/doc_formatter.py:417
+msgid "Applies if Protocol version is 1.6+"
+msgstr "APPLIES IF PROTOCOL VERSION IS 1.6+"
+
+#: doc_formatter/doc_formatter.py:429
+msgid "and"
+msgstr "AND"
+
+#: doc_formatter/doc_formatter.py:430
+msgid "is"
+msgstr "IS"
+
+#: doc_formatter/doc_formatter.py:437
+msgid ", must be %(comparison_word)s %(list)s"
+msgstr ", MUST BE %(comparison_word)s %(list)s"
+
+#: doc_formatter/doc_formatter.py:777
+msgid "Collection Type"
+msgstr "COLLECTION TYPE"
+
+#: doc_formatter/doc_formatter.py:777 doc_formatter/markdown_generator.py:791
+msgid "URIs"
+msgstr "URIS"
+
+#: doc_formatter/doc_formatter.py:891
+msgid "This object is an excerpt of the %(link)s resource located at the URI shown in DataSourceUri."
+msgstr "THIS OBJECT IS AN EXCERPT OF THE %(link)s RESOURCE LOCATED AT THE URI SHOWN IN DATASOURCEURI."
+
+#: doc_formatter/doc_formatter.py:896
+msgid "For more information about this property, see %(link)s in Property Details."
+msgstr "FOR MORE INFORMATION ABOUT THIS PROPERTY, SEE %(link)s IN PROPERTY DETAILS."
+
+#: doc_formatter/doc_formatter.py:914
+msgid "Contains a link to a resource."
+msgstr "CONTAINS A LINK TO A RESOURCE."
+
+#: doc_formatter/doc_formatter.py:920
+msgid "Link to Collection of %(schema_links)s. See the %(schema_name)s schema for details."
+msgstr "LINK TO COLLECTION OF %(schema_links)s. SEE THE %(schema_name)s SCHEMA FOR DETAILS."
+
+#: doc_formatter/doc_formatter.py:927
+msgid "Link to another %(name)s resource."
+msgstr "LINK TO ANOTHER %(name)s RESOURCE."
+
+#: doc_formatter/doc_formatter.py:930
+msgid "Link to a %(name)s resource. See the Links section and the %(schema_link)s schema for details."
+msgstr "LINK TO A %(name)s RESOURCE. SEE THE LINKS SECTION AND THE %(schema_link)s SCHEMA FOR DETAILS."
+
+#: doc_formatter/doc_formatter.py:935
+msgid "See the %(schema_link)s schema for details on this property."
+msgstr "SEE THE %(schema_link)s SCHEMA FOR DETAILS ON THIS PROPERTY."
+
+#: doc_formatter/doc_formatter.py:957
+msgid "For property details, see %(schema_link)s v%(version_number)s)."
+msgstr "FOR PROPERTY DETAILS, SEE %(schema_link)s V%(version_number)s)."
+
+#: doc_formatter/doc_formatter.py:961
+msgid "For property details, see %(schema_link)s."
+msgstr "FOR PROPERTY DETAILS, SEE %(schema_link)s."
+
+#: doc_formatter/doc_formatter.py:1734
+msgid "The unique identifier for a resource."
+msgstr "THE UNIQUE IDENTIFIER FOR A RESOURCE."
+
+#: doc_formatter/doc_formatter.py:1735
+msgid "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification."
+msgstr "THE VALUE OF THIS PROPERTY SHALL BE THE UNIQUE IDENTIFIER FOR THE RESOURCE AND IT SHALL BE OF THE FORM DEFINED IN THE REDFISH SPECIFICATION."
+
+#: doc_formatter/doc_formatter.py:1761
+msgid "%(descr)s Pattern: %(pattern)s"
+msgstr "%(descr)s PATTERN: %(pattern)s"
+
+#: doc_formatter/doc_formatter.py:1851
+msgid "Property names follow regular expression pattern \"%(pattern)s\""
+msgstr "PROPERTY NAMES FOLLOW REGULAR EXPRESSION PATTERN \"%(pattern)s\""
+
+#: doc_formatter/doc_formatter.py:2182
+msgid "If Implemented"
+msgstr "IF IMPLEMENTED"
+
+#: doc_formatter/doc_formatter.py:2183 doc_formatter/html_generator.py:374
+#: doc_formatter/html_generator.py:376 doc_formatter/html_generator.py:720
+#: doc_formatter/markdown_generator.py:786
+msgid "Conditional Requirements"
+msgstr "CONDITIONAL REQUIREMENTS"
+
+#: doc_formatter/doc_formatter.py:2184
+msgid "Mandatory"
+msgstr "MANDATORY"
+
+#: doc_formatter/doc_formatter.py:2185
+msgid "Recommended"
+msgstr "RECOMMENDED"
+
+#: doc_formatter/html_generator.py:297 doc_formatter/markdown_generator.py:175
+msgid "For the possible property values, see %(link)s in Property details."
+msgstr "FOR THE POSSIBLE PROPERTY VALUES, SEE %(link)s IN PROPERTY DETAILS."
+
+#: doc_formatter/html_generator.py:300 doc_formatter/markdown_generator.py:177
+msgid "For more information about this property, see Property details."
+msgstr "FOR MORE INFORMATION ABOUT THIS PROPERTY, SEE PROPERTY DETAILS."
+
+#: doc_formatter/html_generator.py:309
+msgid "For more information, see the %(link)s section below."
+msgstr "FOR MORE INFORMATION, SEE THE %(link)s SECTION BELOW."
+
+#: doc_formatter/html_generator.py:310 doc_formatter/html_generator.py:727
+msgid "Actions"
+msgstr "ACTIONS"
+
+#: doc_formatter/html_generator.py:341 doc_formatter/html_generator.py:348
+#: doc_formatter/markdown_generator.py:215
+#: doc_formatter/markdown_generator.py:222
+msgid "read-only"
+msgstr "READ-ONLY"
+
+#: doc_formatter/html_generator.py:350 doc_formatter/markdown_generator.py:224
+msgid "read-write"
+msgstr "READ-WRITE"
+
+#: doc_formatter/html_generator.py:353 doc_formatter/markdown_generator.py:229
+#: doc_formatter/markdown_generator.py:234
+msgid "required"
+msgstr "REQUIRED"
+
+#: doc_formatter/html_generator.py:355 doc_formatter/markdown_generator.py:236
+msgid "required on create"
+msgstr "REQUIRED ON CREATE"
+
+#: doc_formatter/html_generator.py:357 doc_formatter/markdown_generator.py:231
+msgid "optional"
+msgstr "OPTIONAL"
+
+#: doc_formatter/html_generator.py:360 doc_formatter/markdown_generator.py:239
+msgid "(null)"
+msgstr "(NULL)"
+
+#: doc_formatter/html_generator.py:367
+msgid "Profile Purpose: %(purpose)s"
+msgstr "PROFILE PURPOSE: %(purpose)s"
+
+#: doc_formatter/html_generator.py:373
+msgid "See %(link)s, below, for more information."
+msgstr "SEE %(link)s, BELOW, FOR MORE INFORMATION."
+
+#: doc_formatter/html_generator.py:383
+msgid "MUST BE %(comparison_word)s (%(values)s)"
+msgstr ""
+
+#: doc_formatter/html_generator.py:468 doc_formatter/html_generator.py:541
+#: doc_formatter/markdown_generator.py:321
+#: doc_formatter/markdown_generator.py:387
+msgid "Profile Specifies"
+msgstr "PROFILE SPECIFIES"
+
+#: doc_formatter/html_generator.py:497 doc_formatter/html_generator.py:572
+#: doc_formatter/markdown_generator.py:349
+#: doc_formatter/markdown_generator.py:424
+msgid "(v%(version_number)s, deprecated v%(deprecated_version)s)"
+msgstr "(V%(version_number)s, DEPRECATED v%(deprecated_version)s)"
+
+#: doc_formatter/html_generator.py:501 doc_formatter/html_generator.py:511
+#: doc_formatter/html_generator.py:577 doc_formatter/html_generator.py:589
+#: doc_formatter/markdown_generator.py:352
+#: doc_formatter/markdown_generator.py:360
+msgid "Deprecated in v%(version_number)s and later. %(explanation)s"
+msgstr "DEPRECATED IN V%(version_number)s AND LATER. %(explanation)s"
+
+#: doc_formatter/html_generator.py:509 doc_formatter/html_generator.py:586
+#: doc_formatter/markdown_generator.py:358
+msgid "(deprecated v%(version_number)s)"
+msgstr "(DEPRECATED V%(version_number)s)"
+
+#: doc_formatter/html_generator.py:608 doc_formatter/markdown_generator.py:189
+msgid "enum"
+msgstr "ENUM"
+
+#: doc_formatter/html_generator.py:621 doc_formatter/markdown_generator.py:466
+msgid "Example Action POST:"
+msgstr "EXAMPLE ACTION POST:"
+
+#: doc_formatter/html_generator.py:682
+msgid "Perform the action using a POST to the specific Action URI for this resource. Parameters for the action are passed in a JSON body and are defined as follows:"
+msgstr "PERFORM THE ACTION USING A POST TO THE SPECIFIC ACTION URI FOR THIS RESOURCE. PARAMETERS FOR THE ACTION ARE PASSED IN A JSON BODY AND ARE DEFINED AS FOLLOWS:"
+
+#: doc_formatter/html_generator.py:687
+msgid "Perform the action using a POST to the specific Action URI for this resource. This action takes no parameters."
+msgstr "PERFORM THE ACTION USING A POST TO THE SPECIFIC ACTION URI FOR THIS RESOURCE. THIS ACTION TAKES NO PARAMETERS."
+
+#: doc_formatter/html_generator.py:732
+msgid "Property details"
+msgstr "PROPERTY DETAILS"
+
+#: doc_formatter/html_generator.py:763
+msgid "Example response"
+msgstr "EXAMPLE RESPONSE"
+
+#: doc_formatter/html_generator.py:775 doc_formatter/markdown_generator.py:657
+msgid "Messages"
+msgstr "MESSAGES"
+
+#: doc_formatter/html_generator.py:777 doc_formatter/markdown_generator.py:659
+msgid "Requirement"
+msgstr "REQUIREMENT"
+
+#: doc_formatter/html_generator.py:962
+msgid "URIs:"
+msgstr "URIS"
+
+#: doc_formatter/html_generator.py:968
+msgid "Conditional Requirements:"
+msgstr "CONDITIONAL REQUIREMENTS:"
+
+#: doc_formatter/html_generator.py:973
+msgid "Action URI: %(link)s"
+msgstr "ACTION URI: %(link)s"
+
+#: doc_formatter/html_generator.py:1030
+msgid "Registry v%(version_number)s+"
+msgstr "REGISTRY V%(version_number)s+"
+
+#: doc_formatter/html_generator.py:1032
+#: doc_formatter/markdown_generator.py:827
+msgid "(current release: v%(version_number)s)"
+msgstr "(CURRENT RELEASE: V%(version_number)s)"
+
+#: doc_formatter/html_generator.py:1035
+#: doc_formatter/markdown_generator.py:830
+msgid "Requirement: %(req)s"
+msgstr "REQUIREMENT: %(req)s"
+
+#: doc_formatter/html_generator.py:1110
+msgid "See %(link)s"
+msgstr "SEE %(link)s"
+
+#: doc_formatter/markdown_generator.py:181
+msgid "For more information, see the Actions section below."
+msgstr "FOR MORE INFORMATION, SEE THE ACTIONS SECTION BELOW."
+
+#: doc_formatter/markdown_generator.py:198
+msgid "excerpt"
+msgstr "EXCERPT"
+
+#: doc_formatter/markdown_generator.py:420
+msgid "(v%(version_number)s, deprecated v%(deprecated_version)s. %(explanation)s"
+msgstr "(V%(version_number)s, DEPRECATED V%(deprecated_version)s. %(explanation)s"
+
+#: doc_formatter/markdown_generator.py:436
+msgid "(deprecated in v%(deprecated_version)s and later.)"
+msgstr "(DEPRECATED IN v%(deprecated_version)s AND LATER.)"
+
+#: doc_formatter/markdown_generator.py:529
+msgid "The following table shows the parameters for the action which are included in the POST body to the URI shown in the \"target\" property of the Action."
+msgstr "THE FOLLOWING TABLE SHOWS THE PARAMETERS FOR THE ACTION WHICH ARE INCLUDED IN THE POST BODY TO THE URI SHOWN IN THE \"TARGET\" PROPERTY OF THE ACTION."
+
+#: doc_formatter/markdown_generator.py:534
+msgid "(This action takes no parameters.)"
+msgstr "(THIS ACTION TAKES NO PARAMETERS.)"
+
+#: doc_formatter/markdown_generator.py:550
+msgid "(Read-only)"
+msgstr "(READ-ONLY)"
+
+#: doc_formatter/markdown_generator.py:552
+#: doc_formatter/markdown_generator.py:558
+msgid "(Read/Write)"
+msgstr "(READ/WRITE)"
+
+#: doc_formatter/markdown_generator.py:554
+#: doc_formatter/markdown_generator.py:557
+msgid "(Read)"
+msgstr "(READ)"
+
+#: doc_formatter/markdown_generator.py:563
+msgid "Minimum %(min_count)s"
+msgstr "MINIMUM %(min_count)s"
+
+#: doc_formatter/markdown_generator.py:679
+msgid "Schema Documentation"
+msgstr "SCHEMA DOCUMENTATION"
+
+#: doc_formatter/markdown_generator.py:825
+msgid "%(Name)s Registry v%(version_number)s+"
+msgstr "%(Name)s REGISTRY V%(version_number)s+"
+
+#: doc_formatter/property_index_generator.py:99
+#: doc_formatter/property_index_generator.py:463
+msgid "Property Index"
+msgstr "PROPERTY INDEX"
+
+#: doc_formatter/property_index_generator.py:139
+msgid "%(property_name)s (Action)"
+msgstr "%(property_name)s (ACTION)"
+
+#: doc_formatter/property_index_generator.py:155
+msgid "(ENUM)"
+msgstr ""
+
+#: doc_formatter/property_index_generator.py:455
+msgid "Defined In Schema(s)"
+msgstr "DEFINED IN SCHEMA(S)"
+
+#: doc_formatter/property_index_generator.py:455
+#: doc_formatter/property_index_generator.py:520
+msgid "Property Name"
+msgstr "PROPERTY NAME"
+
+#: doc_formatter/property_index_generator.py:497
+msgid "various"
+msgstr "VARIOUS"
+
+#: doc_formatter/property_index_generator.py:520
+msgid "Schema"
+msgstr "SCHEMA"

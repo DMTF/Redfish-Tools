@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016, 2017, 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -15,14 +15,6 @@ import warnings
 from doc_gen_util import DocGenUtilities
 from . import DocFormatter
 from format_utils import FormatUtils
-
-# Format user warnings simply
-def simple_warning_format(message, category, filename, lineno, file=None, line=None):
-    """ a basic format for warnings from this program """
-    return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
-
-warnings.formatwarning = simple_warning_format
-
 
 class MarkdownGenerator(DocFormatter):
     """Provides methods for generating markdown from Redfish schemas.
@@ -88,11 +80,13 @@ class MarkdownGenerator(DocFormatter):
         if isinstance(prop_info, list):
             has_enum = 'enum' in prop_info[0]
             is_excerpt = prop_info[0].get('_is_excerpt') or prop_info[0].get('excerptCopy')
+            translated_name = prop_info[0].get('translation')
             if 'format' in prop_info[0]:
                 format_annotation = prop_info[0]['format']
         elif isinstance(prop_info, dict):
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
+            translated_name = prop_info.get('translation')
             if 'format' in prop_info:
                 format_annotation = prop_info['format']
 
@@ -103,6 +97,9 @@ class MarkdownGenerator(DocFormatter):
         if prop_name:
             name_and_version = self.formatter.bold(self.escape_for_markdown(prop_name,
                                                                   self.config.get('escape_chars', [])))
+            if translated_name:
+                name_and_version += ' ' + self.formatter.italic(self.escape_for_markdown('(' + translated_name + ')',
+                                                                    self.config.get('escape_chars', [])))
         else:
             name_and_version = ''
 
@@ -180,13 +177,13 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 # If there are prop_details (enum details), add a note to the description:
                 if has_enum:
-                    text_descr = 'For the possible property values, see ' + prop_name + ' in Property details.'
+                    text_descr = _('For the possible property values, see %(link)s in Property details.') % {'link': prop_name}
                 else:
-                    text_descr = 'For more information about this property, see Property details.'
+                    text_descr = _('For more information about this property, see Property details.')
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
             if formatted_details['has_action_details']:
-                text_descr = 'For more information, see the Actions section below.'
+                text_descr = _('For more information, see the Actions section below.')
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
 
         if deprecated_descr:
@@ -194,7 +191,7 @@ class MarkdownGenerator(DocFormatter):
 
         prop_type = formatted_details['prop_type']
         if has_enum:
-            prop_type += '<br>(enum)'
+            prop_type += '<br>(' + _('enum') + ')'
 
         if format_annotation:
             prop_type += '<br>(' + format_annotation + ')'
@@ -203,7 +200,7 @@ class MarkdownGenerator(DocFormatter):
             prop_type += '<br>(' + formatted_details['prop_units'] + ')'
 
         if is_excerpt:
-            prop_type += '<br>(excerpt)'
+            prop_type += '<br>(' + _('excerpt') + ')'
 
         if in_array:
             prop_type = 'array (' + prop_type + ')'
@@ -220,31 +217,31 @@ class MarkdownGenerator(DocFormatter):
                 and not formatted_details.get('array_of_objects')
                 and not as_action_parameters):
             if formatted_details['read_only']:
-                prop_access = 'read-only'
+                prop_access = _('read-only')
             else:
                 # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
                 # emit read-only.
                 if ((self.config.get('profile_mode') == 'subset')
                         and formatted_details.get('profile_write_req')
                         and (formatted_details['profile_write_req'] == 'None')):
-                        prop_access = 'read-only'
+                        prop_access = _('read-only')
                 else:
-                    prop_access = 'read-write'
+                    prop_access = _('read-write')
 
         # Action parameters don't have read/write properties, but they can be required/optional.
         if as_action_parameters:
             if formatted_details['prop_required'] or formatted_details['required_parameter']:
-                prop_access = 'required'
+                prop_access = _('required')
             else:
-                prop_access = 'optional'
+                prop_access = _('optional')
         else:
             if formatted_details['prop_required'] or formatted_details['required_parameter']:
-                prop_access += ' required'
+                prop_access += ' ' + _('required')
             elif formatted_details['prop_required_on_create']:
-                prop_access += ' required on create'
+                prop_access += ' ' + _('required on create')
 
         if formatted_details['nullable']:
-            prop_access += '<br>(null)'
+            prop_access += '<br>' + _('(null)')
 
         # If profile reqs are present, massage them:
         profile_access = self.format_base_profile_access(formatted_details)
@@ -324,16 +321,19 @@ class MarkdownGenerator(DocFormatter):
         if supplemental_details:
             contents.append('\n' + supplemental_details + '\n')
 
+        enum_translations = parent_prop_info.get('enumTranslations', {})
+
         if enum_details:
             if profile_mode and profile_mode != 'subset':
-                contents.append('| ' + prop_type + ' | Description | Profile Specifies |')
+                contents.append('| ' + prop_type + ' | ' + _('Description') + ' | ' + _('Profile Specifies') + ' |')
                 contents.append('| --- | --- | --- |')
             else:
-                contents.append('| ' + prop_type + ' | Description |')
+                contents.append('| ' + prop_type + ' | ' + _('Description') + ' |')
                 contents.append('| --- | --- |')
             enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = enum_item
+                enum_translation = enum_translations.get(enum_item)
                 version = version_depr = deprecated_descr = None
                 version_display = None
                 if parent_prop_info.get('enumVersionAdded'):
@@ -347,6 +347,9 @@ class MarkdownGenerator(DocFormatter):
                 if parent_prop_info.get('enumDeprecated'):
                     deprecated_descr = parent_prop_info.get('enumDeprecated').get(enum_name)
 
+                if enum_translation:
+                    enum_name += ' (' + enum_translation + ')'
+
                 if version:
                     if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_display = self.truncate_version(version, 2) + '+'
@@ -354,16 +357,19 @@ class MarkdownGenerator(DocFormatter):
                 if version_display:
                     if version_depr:
                         deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
+                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s, deprecated v%(deprecated_version)s)') %
+                                                                     {'version_number': version_display, 'deprecated_version': deprecated_display})
                         if deprecated_descr:
-                            deprecated_descr = 'Deprecated in v' + deprecated_display + ' and later. ' + deprecated_descr
+                            deprecated_descr = (_('Deprecated in v%(version_number)s and later. %(explanation)s') %
+                                                    {'version_number': deprecated_display, 'explanation': deprecated_descr})
                     else:
-                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
+                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s)') % {'version_number': version_display})
                 elif version_depr:
                     deprecated_display = self.truncate_version(version_depr, 2)
-                    enum_name += ' ' + self.formatter.italic('(deprecated v' + deprecated_display + ')')
+                    enum_name += ' ' + self.formatter.italic(_('(deprecated v%(version_number)s)') % {'version_number': deprecated_display})
                     if deprecated_descr:
-                        deprecated_descr = 'Deprecated in v' + deprecated_display + ' and later. ' + deprecated_descr
+                        deprecated_descr = (_('Deprecated in v%(version_number)s and later. %(explanation)s') %
+                                                {'version_number': deprecated_display, 'explanation': deprecated_descr})
 
                 descr = enum_details.get(enum_item, '')
                 if deprecated_descr:
@@ -374,21 +380,22 @@ class MarkdownGenerator(DocFormatter):
 
                 if profile_mode and profile_mode != 'subset':
                     profile_spec = ''
-                    if enum_name in profile_values:
+                    # Note: don't wrap the following strings for trnaslation; self.text_map handles that.
+                    if enum_item in profile_values:
                         profile_spec = 'Mandatory'
-                    elif enum_name in profile_min_support_values:
+                    elif enum_item in profile_min_support_values:
                         profile_spec = 'Mandatory'
-                    elif enum_name in profile_parameter_values:
+                    elif enum_item in profile_parameter_values:
                         profile_spec = 'Mandatory'
-                    elif enum_name in profile_recommended_values:
+                    elif enum_item in profile_recommended_values:
                         profile_spec = 'Recommended'
-                    contents.append('| ' + enum_name + ' | ' + descr + ' | ' + profile_spec + ' |')
+                    contents.append('| ' + enum_name + ' | ' + descr + ' | ' + self.text_map(profile_spec) + ' |')
                 else:
                     contents.append('| ' + enum_name + ' | ' + descr + ' |')
 
         elif enum:
             if profile_mode and profile_mode != 'subset':
-                contents.append('| ' + prop_type + ' | Profile Specifies |')
+                contents.append('| ' + prop_type + ' | '+ _('Profile Specifies') + ' |')
                 contents.append('| --- | --- |')
             else:
                 contents.append('| ' + prop_type + ' |')
@@ -421,23 +428,27 @@ class MarkdownGenerator(DocFormatter):
                     if version_depr:
                         deprecated_display = self.truncate_version(version_depr, 2)
                         if deprecated_descr:
-                            enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display +
-                                                                         '+. ' + deprecated_descr)
+                            enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s, deprecated v%(deprecated_version)s. %(explanation)s') %
+                                                                         { 'version_number': version_display, 'deprecated_version': deprecated_display,
+                                                                               'explanation': deprecated_descr})
                         else:
-                            enum_name += ' ' + self.formatter.italic('(v' + version_display + ', deprecated v' + deprecated_display + ')')
+                            enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s, deprecated v%(deprecated_version)s)') %
+                                                                         {'version_number': version_display, 'deprecated_version': deprecated_display})
 
                     else:
-                        enum_name += ' ' + self.formatter.italic('(v' + version_display + ')')
+                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s)') % {'version_number': version_display})
                 else:
                     if version_depr:
                         deprecated_display = self.truncate_version(version_depr, 2)
                         if deprecated_descr:
-                            enum_name += ' ' + self.formatter.italic('Deprecated in v' + deprecated_display + ' and later. ' + deprecated_descr)
+                            enum_name += ' ' + self.formatter.italic(_('Deprecated in v%(deprecated_version)s and later. %(explanation)s') %
+                                                                         {'deprecated_version': deprecated_display, 'explanation': deprecated_descr})
                         else:
-                            enum_name += ' ' + self.formatter.italic('(deprecated in v' + deprecated_display + ' and later.)')
+                            enum_name += ' ' + self.formatter.italic(_('(deprecated in v%(deprecated_version)s and later.)') % {'deprecated_version': deprecated_display})
 
                 if profile_mode and profile_mode != 'subset':
                     profile_spec = ''
+                    # Note: don't wrap the following strings for trnaslation; self.text_map handles that.
                     if enum_name in profile_values:
                         profile_spec = 'Mandatory'
                     elif enum_name in profile_min_support_values:
@@ -447,7 +458,7 @@ class MarkdownGenerator(DocFormatter):
                     elif enum_name in profile_recommended_values:
                         profile_spec = 'Recommended'
 
-                    contents.append('| ' + enum_name + ' | ' + profile_spec + ' |')
+                    contents.append('| ' + enum_name + ' | ' + self.text_map(profile_spec) + ' |')
                 else:
                     contents.append('| ' + enum_name + ' | ')
 
@@ -463,7 +474,7 @@ class MarkdownGenerator(DocFormatter):
             contents.append(action_details.get('text'))
         if action_details.get('example'):
             example = '```json\n' + action_details['example'] + '\n```\n'
-            contents.append('Example Action POST:\n')
+            contents.append(_('Example Action POST:') + '\n')
             contents.append(example)
 
         return '\n'.join(contents) + '\n'
@@ -526,12 +537,12 @@ class MarkdownGenerator(DocFormatter):
             # Add a closing } row:
             rows.append('| ' + ' | '.join(['}', ' ',' ',' ']) + ' |')
 
-            formatted.append(self.formatter.para('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.'))
+            formatted.append(self.formatter.para(_('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.')))
 
             formatted.append('\n'.join(rows))
 
         else:
-            formatted.append(self.formatter.para("(This action takes no parameters.)"))
+            formatted.append(self.formatter.para(_('(This action takes no parameters.)')))
 
         return "\n".join(formatted)
 
@@ -547,20 +558,20 @@ class MarkdownGenerator(DocFormatter):
         if not read_req:
             read_req = 'Mandatory' # This is the default if nothing is specified.
         if read_only:
-            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read-only)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' ' + _('(Read-only)')
         elif read_req == write_req:
-            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read/Write)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' ' + _('(Read/Write)')
         elif not write_req:
-            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read)'
+            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' ' + _('(Read)')
         else:
             # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-            profile_access = (self.formatter.nobr(self.text_map(read_req)) + ' (Read),' +
-                              self.formatter.nobr(self.text_map(write_req)) + ' (Read/Write)')
+            profile_access = (self.formatter.nobr(self.text_map(read_req)) + ' ' + _('(Read)') + ',' +
+                              self.formatter.nobr(self.text_map(write_req)) + ' ' + _('(Read/Write)'))
 
         if min_count:
             if profile_access:
                 profile_access += ", "
-            profile_access += self.formatter.nobr("Minimum " + str(min_count))
+            profile_access += self.formatter.nobr(_('Minimum %(min_count)s') % {'min_count':  str(min_count)})
 
         return profile_access
 
@@ -654,11 +665,11 @@ class MarkdownGenerator(DocFormatter):
             if section.get('description'):
                 contents.append(self.formatter.para(section['description']))
             if section.get('messages'):
-                contents.append(self.formatter.head_two('Messages', self.level))
+                contents.append(self.formatter.head_two(_('Messages'), self.level))
                 message_rows = [self.formatter.make_row(x) for x in section['messages']]
-                header_cells = ['', 'Requirement']
+                header_cells = ['', _('Requirement')]
                 if self.config.get('profile_mode') != 'terse':
-                    header_cells.append('Description')
+                    header_cells.append(_('Description'))
                 header_row = self.formatter.make_row(header_cells)
                 contents.append(self.formatter.make_table(message_rows, [header_row], 'messages'))
                 contents.append('\n')
@@ -676,7 +687,7 @@ class MarkdownGenerator(DocFormatter):
         if 'Title' in supplemental:
             doc_title = supplemental['Title']
         else:
-            doc_title = 'Schema Documentation'
+            doc_title = _('Schema Documentation')
 
         prelude = "---\ntitle: " + doc_title + """
 
@@ -783,12 +794,12 @@ search: true
 
     def add_conditional_requirements(self, text):
         """ Add a conditional requirements, which should already be formatted """
-        self.this_section['conditional_requirements'] = "\n**Conditional Requirements:**\n\n" + text + "\n"
+        self.this_section['conditional_requirements'] = "\n**" + _('Conditional Requirements') + ":**\n\n" + text + "\n"
 
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_block = "**URIs**:\n"
+        uri_block = "**" + _('URIs') + "**:\n"
         for uri in sorted(uris, key=str.lower):
             uri = uri + "/Actions/" + action
             uri_block += "\n" + self.format_uri(uri)
@@ -822,12 +833,12 @@ search: true
                 'description': reg.get('Description', ''),
                 'messages': []
                 }
-            heading = reg_name + ' Registry v' + reg['minversion']  + '+'
+            heading = _('%(Name)s Registry v%(version_number)s+') % {'Name': reg_name, 'version_number': reg['minversion']}
             if reg.get('current_release', reg['minversion']) != reg['minversion']:
-                heading += ' (current release: v' + reg['current_release'] + ')'
+                heading += ' ' + (_('(current release: v%(version_number)s)') % {'version_number': reg['current_release']})
 
             this_section['heading'] = self.formatter.head_one(heading, self.level)
-            this_section['requirement'] = 'Requirement: ' + reg.get('profile_requirement', '')
+            this_section['requirement'] = _('Requirement: %(req)s') % {'req': reg.get('profile_requirement')}
 
             msgs = reg.get('Messages', {})
             msg_keys = [x for x in msgs.keys()]

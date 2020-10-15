@@ -1,0 +1,1750 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/ComputerSystem.v1_13_0.json",
+    "$ref": "#/definitions/ComputerSystem",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2020 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "Actions": {
+            "additionalProperties": false,
+            "description": "THE AVAILABLE ACTIONS FOR THIS RESOURCE.",
+            "longDescription": "THIS TYPE SHALL CONTAIN THE AVAILABLE ACTIONS FOR THIS RESOURCE.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "#ComputerSystem.AddResourceBlock": {
+                    "$ref": "#/definitions/AddResourceBlock"
+                },
+                "#ComputerSystem.RemoveResourceBlock": {
+                    "$ref": "#/definitions/RemoveResourceBlock"
+                },
+                "#ComputerSystem.Reset": {
+                    "$ref": "#/definitions/Reset"
+                },
+                "#ComputerSystem.SetDefaultBootOrder": {
+                    "$ref": "#/definitions/SetDefaultBootOrder"
+                },
+                "Oem": {
+                    "$ref": "#/definitions/OemActions",
+                    "description": "THE AVAILABLE OEM-SPECIFIC ACTIONS FOR THIS RESOURCE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE AVAILABLE OEM-SPECIFIC ACTIONS FOR THIS RESOURCE."
+                }
+            },
+            "type": "object"
+        },
+        "AddResourceBlock": {
+            "additionalProperties": false,
+            "description": "THIS ACTION ADDS A RESOURCE BLOCK TO A SYSTEM.",
+            "longDescription": "THIS ACTION SHALL ADD A RESOURCE BLOCK TO A SYSTEM.",
+            "parameters": {
+                "ComputerSystemETag": {
+                    "description": "THE CURRENT ETAG OF THE SYSTEM.",
+                    "longDescription": "THIS PARAMETER SHALL CONTAIN THE CURRENT ETAG OF THE SYSTEM.  IF THE CLIENT-PROVIDED ETAG DOES NOT MATCH THE CURRENT ETAG OF THE SYSTEM, THE SERVICE SHALL RETURN THE HTTP 428 (PRECONDITION REQUIRED) STATUS CODE TO REJECT THE REQUEST.",
+                    "type": "string"
+                },
+                "ResourceBlock": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/ResourceBlock.json#/definitions/ResourceBlock",
+                    "description": "THE RESOURCE BLOCK TO ADD TO THE SYSTEM.",
+                    "longDescription": "THIS PARAMETER SHALL CONTAIN A LINK TO THE SPECIFIED RESOURCE BLOCK TO ADD TO THE SYSTEM.",
+                    "requiredParameter": true
+                },
+                "ResourceBlockETag": {
+                    "description": "THE CURRENT ETAG OF THE RESOURCE BLOCK TO ADD TO THE SYSTEM.",
+                    "longDescription": "THIS PARAMETER SHALL CONTAIN THE CURRENT ETAG OF THE RESOURCE BLOCK TO ADD TO THE SYSTEM.  IF THE CLIENT-PROVIDED ETAG DOES NOT MATCH THE CURRENT ETAG OF THE RESOURCE BLOCK THAT THE RESOURCEBLOCK PARAMETER SPECIFIES, THE SERVICE SHALL RETURN THE HTTP 428 (PRECONDITION REQUIRED) STATUS CODE TO REJECT THE REQUEST.",
+                    "type": "string"
+                }
+            },
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "target": {
+                    "description": "Link to invoke action",
+                    "format": "uri-reference",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Friendly action name",
+                    "type": "string"
+                }
+            },
+            "type": "object",
+            "versionAdded": "v1_6_0"
+        },
+        "AutomaticRetryConfig": {
+            "enum": [
+                "Disabled",
+                "RetryAttempts",
+                "RetryAlways"
+            ],
+            "enumDescriptions": {
+                "Disabled": "DISABLE AUTOMATIC RETRYING OF BOOTING.",
+                "RetryAlways": "ALWAYS AUTOMATICALLY RETRY BOOTING.",
+                "RetryAttempts": "AUTOMATIC RETRYING OF BOOTING IS BASED ON A SPECIFIED RETRY COUNT."
+            },
+            "enumLongDescriptions": {
+                "Disabled": "THIS VALUE SHALL INDICATE THAT AUTOMATIC RETRYING OF BOOTING IS DISABLED.",
+                "RetryAlways": "THIS VALUE SHALL INDICATE THAT THE SYSTEM WILL ALWAYS AUTOMATICALLY RETRY BOOTING.",
+                "RetryAttempts": "THIS VALUE SHALL INDICATE THAT THE NUMBER OF RETRIES OF BOOTING IS BASED ON THE AUTOMATICRETRYATTEMPTS PROPERTY, AND THE REMAININGAUTOMATICRETRYATTEMPTS PROPERTY INDICATES THE NUMBER OF REMAINING ATTEMPTS."
+            },
+            "type": "string"
+        },
+        "Boot": {
+            "additionalProperties": false,
+            "description": "THE BOOT INFORMATION FOR THIS RESOURCE.",
+            "longDescription": "THIS TYPE SHALL CONTAIN PROPERTIES THAT DESCRIBE BOOT INFORMATION FOR A SYSTEM.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "AliasBootOrder": {
+                    "description": "ORDERED ARRAY OF BOOT SOURCE ALIASES REPRESENTING THE PERSISTENT BOOT ORDER ASSOCIATED WITH THIS COMPUTER SYSTEM.",
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "http://redfish.dmtf.org/schemas/v1/ComputerSystem.json#/definitions/BootSource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN AN ORDERED ARRAY OF BOOT SOURCE ALIASES OF THE BOOTSOURCE TYPE THAT REPRESENTS THE PERSISTENT BOOT ORDER OF THIS COMPUTER SYSTEM.",
+                    "readonly": false,
+                    "type": "array",
+                    "versionAdded": "v1_6_0"
+                },
+                "AutomaticRetryAttempts": {
+                    "description": "THE NUMBER OF ATTEMPTS THE SYSTEM WILL AUTOMATICALLY RETRY BOOTING.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE NUMBER OF ATTEMPTS THE SYSTEM WILL AUTOMATICALLY RETRY BOOTING IN THE EVENT THE SYSTEM ENTERS AN ERROR STATE ON BOOT.",
+                    "minimum": 0,
+                    "readonly": false,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "versionAdded": "v1_11_0"
+                },
+                "AutomaticRetryConfig": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/AutomaticRetryConfig"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE CONFIGURATION OF HOW THE SYSTEM RETRIES BOOTING AUTOMATICALLY.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE CONFIGURATION OF HOW THE SYSTEM RETRY BOOTING AUTOMATICALLY.",
+                    "readonly": false,
+                    "versionAdded": "v1_11_0"
+                },
+                "BootNext": {
+                    "description": "THE BOOTOPTIONREFERENCE OF THE BOOT OPTION TO PERFORM A ONE-TIME BOOT FROM WHEN BOOTSOURCEOVERRIDETARGET IS `UEFIBOOTNEXT`.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE BOOTOPTIONREFERENCE OF THE UEFI BOOT OPTION FOR ONE TIME BOOT, AS DEFINED BY THE UEFI SPECIFICATION.  THE VALID VALUES FOR THIS PROPERTY ARE SPECIFIED IN THE VALUES OF THE BOOTORDER ARRAY.  BOOTSOURCEOVERRIDEENABLED SET TO `CONTINUOUS` IS NOT SUPPORTED FOR BOOTSOURCEOVERRIDETARGET SET TO `UEFIBOOTNEXT` BECAUSE THIS SETTING IS DEFINED IN UEFI AS A ONE-TIME BOOT SETTING.",
+                    "readonly": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_5_0"
+                },
+                "BootOrder": {
+                    "description": "AN ARRAY OF BOOTOPTIONREFERENCE STRINGS THAT REPRESENT THE PERSISTENT BOOT ORDER FOR WITH THIS COMPUTER SYSTEM.",
+                    "items": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN AN ARRAY OF BOOTOPTIONREFERENCE STRINGS THAT REPRESENT THE PERSISTENT BOOT ORDER FOR THIS COMPUTER SYSTEM.  FOR UEFI SYSTEMS, THIS IS THE UEFI SPECIFICATION-DEFINED UEFI BOOTORDER.",
+                    "readonly": false,
+                    "type": "array",
+                    "versionAdded": "v1_5_0"
+                },
+                "BootOrderPropertySelection": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BootOrderTypes"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE NAME OF THE BOOT ORDER PROPERTY THAT THE SYSTEM USES FOR THE PERSISTENT BOOT ORDER.",
+                    "longDescription": "THIS PROPERTY SHALL INDICATE WHICH BOOT ORDER PROPERTY THE SYSTEM USES FOR THE PERSISTENT BOOT ORDER.",
+                    "readonly": false,
+                    "versionAdded": "v1_6_0"
+                },
+                "BootSourceOverrideEnabled": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BootSourceOverrideEnabled"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE STATE OF THE BOOT SOURCE OVERRIDE FEATURE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN `ONCE` FOR A ONE-TIME BOOT OVERRIDE, AND `CONTINUOUS` FOR A REMAIN-ACTIVE-UNTIL-CANCELLED OVERRIDE.  IF SET TO `ONCE`, THE VALUE IS RESET TO `DISABLED` AFTER THE BOOTSOURCEOVERRIDETARGET ACTIONS HAVE COMPLETED SUCCESSFULLY.  CHANGES TO THIS PROPERTY DO NOT ALTER THE BIOS PERSISTENT BOOT ORDER CONFIGURATION.",
+                    "readonly": false
+                },
+                "BootSourceOverrideMode": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BootSourceOverrideMode"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE BIOS BOOT MODE TO USE WHEN THE SYSTEM BOOTS FROM THE BOOTSOURCEOVERRIDETARGET BOOT SOURCE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE BIOS BOOT MODE TO USE WHEN THE SYSTEM BOOTS FROM THE BOOTSOURCEOVERRIDETARGET BOOT SOURCE.",
+                    "readonly": false,
+                    "versionAdded": "v1_1_0"
+                },
+                "BootSourceOverrideTarget": {
+                    "anyOf": [
+                        {
+                            "$ref": "http://redfish.dmtf.org/schemas/v1/ComputerSystem.json#/definitions/BootSource"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE CURRENT BOOT SOURCE TO USE AT THE NEXT BOOT INSTEAD OF THE NORMAL BOOT DEVICE, IF BOOTSOURCEOVERRIDEENABLED IS `TRUE`.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE SOURCE TO BOOT THE SYSTEM FROM, OVERRIDING THE NORMAL BOOT ORDER.  THE REDFISH.ALLOWABLEVALUES ANNOTATION SPECIFIES THE VALID VALUES FOR THIS PROPERTY.  `PXE` INDICATES TO PXE BOOT FROM THE PRIMARY NIC; `FLOPPY`, `CD`, `USB`, AND `HDD` INDICATE TO BOOT FROM THEIR DEVICES RESPECTIVELY.  `BIOSSETUP` INDICATES TO BOOT INTO THE NATIVE BIOS SCREEN SETUP.  `UTILITIES` AND `DIAGS` INDICATE TO BOOT FROM THE LOCAL UTILITIES OR DIAGS PARTITIONS.  `UEFITARGET` INDICATES TO BOOT FROM THE UEFI DEVICE PATH FOUND IN UEFITARGETBOOTSOURCEOVERRIDE.  `UEFIBOOTNEXT` INDICATES TO BOOT FROM THE UEFI BOOTOPTIONREFERENCE FOUND IN BOOTNEXT.  CHANGES TO THIS PROPERTY DO NOT ALTER THE BIOS PERSISTENT BOOT ORDER CONFIGURATION.",
+                    "readonly": false
+                },
+                "Certificates": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/CertificateCollection.json#/definitions/CertificateCollection",
+                    "description": "THE LINK TO A COLLECTION OF CERTIFICATES USED FOR BOOTING THROUGH HTTPS BY THIS COMPUTER SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN A LINK TO A RESOURCE COLLECTION OF TYPE CERTIFICATECOLLECTION.",
+                    "readonly": true,
+                    "versionAdded": "v1_7_0"
+                },
+                "HttpBootUri": {
+                    "description": "THE URI TO BOOT FROM WHEN BOOTSOURCEOVERRIDETARGET IS SET TO `UEFIHTTP`.",
+                    "format": "uri-reference",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE URI TO PERFORM AN HTTP OR HTTPS BOOT WHEN BOOTSOURCEOVERRIDETARGET IS SET TO `UEFIHTTP`.",
+                    "readonly": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_9_0"
+                },
+                "RemainingAutomaticRetryAttempts": {
+                    "description": "THE NUMBER OF REMAINING AUTOMATIC RETRY BOOTS.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE NUMBER OF ATTEMPTS REMAINING THE SYSTEM WILL RETRY BOOTING IN THE EVENT THE SYSTEM ENTERS AN ERROR STATE ON BOOT.  IF `0`, THE SYSTEM HAS NO REMAINING AUTOMATIC BOOT RETRY ATTEMPTS AND SHALL NOT AUTOMATICALLY RETRY BOOTING IF THE SYSTEM ENTERS AN ERROR STATE.  THIS PROPERTY SHALL BE RESET TO THE VALUE OF AUTOMATICRETRYATTEMPTS UPON A SUCCESSFUL BOOT ATTEMPT.",
+                    "minimum": 0,
+                    "readonly": true,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "versionAdded": "v1_11_0"
+                },
+                "UefiTargetBootSourceOverride": {
+                    "description": "THE UEFI DEVICE PATH OF THE DEVICE FROM WHICH TO BOOT WHEN BOOTSOURCEOVERRIDETARGET IS `UEFITARGET`.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE UEFI DEVICE PATH OF THE OVERRIDE BOOT TARGET.  CHANGES TO THIS PROPERTY DO NOT ALTER THE BIOS PERSISTENT BOOT ORDER CONFIGURATION.",
+                    "readonly": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "type": "object"
+        },
+        "BootOrderTypes": {
+            "description": "THE ENUMERATIONS OF BOOTORDERTYPES SPECIFY THE CHOICE OF BOOT ORDER PROPERTY TO USE WHEN CONTROLLER THE PERSISTENT BOOT ORDER FOR THIS COMPUTER SYSTEM.",
+            "enum": [
+                "BootOrder",
+                "AliasBootOrder"
+            ],
+            "enumDescriptions": {
+                "AliasBootOrder": "THE SYSTEM USES THE ALIASBOOTORDER PROPERTY TO SPECIFY THE PERSISTENT BOOT ORDER.",
+                "BootOrder": "THE SYSTEM USES THE BOOTORDER PROPERTY TO SPECIFY THE PERSISTENT BOOT ORDER."
+            },
+            "type": "string"
+        },
+        "BootProgress": {
+            "additionalProperties": false,
+            "description": "THIS OBJECT DESCRIBES THE LAST BOOT PROGRESS STATE.",
+            "longDescription": "THIS OBJECT SHALL CONTAIN THE LAST BOOT PROGRESS STATE AND TIME.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "LastState": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BootProgressTypes"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE LAST BOOT PROGRESS STATE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE LAST BOOT PROGRESS STATE.",
+                    "readonly": true,
+                    "versionAdded": "v1_13_0"
+                },
+                "LastStateTime": {
+                    "description": "THE DATE AND TIME WHEN THE LAST BOOT STATE WAS UPDATED.",
+                    "format": "date-time",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE DATE AND TIME WHEN THE LAST BOOT STATE WAS UPDATED.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "Oem": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem",
+                    "description": "THE OEM EXTENSION PROPERTY.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE OEM EXTENSIONS.  ALL VALUES FOR PROPERTIES CONTAINED IN THIS OBJECT SHALL CONFORM TO THE REDFISH SPECIFICATION-DESCRIBED REQUIREMENTS.",
+                    "versionAdded": "v1_13_0"
+                },
+                "OemLastState": {
+                    "description": "THE OEM-SPECIFIC LAST STATE, IF THE LASTSTATE TYPE IS `OEM`.",
+                    "longDescription": "THIS PROPERTY SHALL REPRESENT THE OEM-SPECIFIC LASTSTATE OF THE BOOTPROGRESS.  THIS PROPERTY SHALL ONLY BE PRESENT IF LASTSTATE IS `OEM`.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                }
+            },
+            "type": "object"
+        },
+        "BootProgressTypes": {
+            "enum": [
+                "None",
+                "PrimaryProcessorInitializationStarted",
+                "BusInitializationStarted",
+                "MemoryInitializationStarted",
+                "SecondaryProcessorInitializationStarted",
+                "PCIResourceConfigStarted",
+                "SystemHardwareInitializationComplete",
+                "OSBootStarted",
+                "OSRunning",
+                "OEM"
+            ],
+            "enumDescriptions": {
+                "BusInitializationStarted": "THE SYSTEM HAS STARTED INITIALIZING THE BUSES.",
+                "MemoryInitializationStarted": "THE SYSTEM HAS STARTED INITIALIZING THE MEMORY.",
+                "None": "THE SYSTEM IS NOT BOOTING.",
+                "OEM": "A BOOT PROGRESS STATE IN AN OEM-DEFINED FORMAT.",
+                "OSBootStarted": "THE OPERATING SYSTEM HAS STARTED BOOTING.",
+                "OSRunning": "THE OPERATING SYSTEM IS RUNNING.",
+                "PCIResourceConfigStarted": "THE SYSTEM HAS STARTED INITIALIZING THE PCI RESOURCES.",
+                "PrimaryProcessorInitializationStarted": "THE SYSTEM HAS STARTED INITIALIZING THE PRIMARY PROCESSOR.",
+                "SecondaryProcessorInitializationStarted": "THE SYSTEM HAS STARTED INITIALIZING THE REMAINING PROCESSORS.",
+                "SystemHardwareInitializationComplete": "THE SYSTEM HAS COMPLETED INITIALIZING ALL HARDWARE."
+            },
+            "enumLongDescriptions": {
+                "BusInitializationStarted": "THIS VALUE SHALL INDICATE THAT THE SYSTEM HAS STARTED TO INITIALIZE THE BUSES.",
+                "MemoryInitializationStarted": "THIS VALUE SHALL INDICATE THAT THE SYSTEM HAS STARTED TO INITIALIZE MEMORY.",
+                "None": "THIS VALUE SHALL INDICATE THAT THE SYSTEM IS NOT BOOTING OR RUNNING, SUCH AS THE SYSTEM IS POWERED OFF.",
+                "OEM": "THIS VALUE SHALL INDICATE AN OEM-DEFINED BOOT PROGRESS STATE.",
+                "OSBootStarted": "THIS VALUE SHALL INDICATE THAT THE OPERATING SYSTEM HAS STARTED TO BOOT.",
+                "OSRunning": "THIS VALUE SHALL INDICATE THAT THE OPERATING SYSTEM IS RUNNING AND SHALL INDICATE THE FINAL BOOT PROGRESS STATE.",
+                "PCIResourceConfigStarted": "THIS VALUE SHALL INDICATE THAT THE SYSTEM HAS STARTED TO INITIALIZE PCI RESOURCES.",
+                "PrimaryProcessorInitializationStarted": "THIS VALUE SHALL INDICATE THAT THE SYSTEM HAS STARTED TO INITIALIZE THE PRIMARY PROCESSOR.",
+                "SecondaryProcessorInitializationStarted": "THIS VALUE SHALL INDICATE THAT THE SYSTEM HAS STARTED TO INITIALIZE THE SECONDARY PROCESSORS.",
+                "SystemHardwareInitializationComplete": "THIS VALUE SHALL INDICATE THAT THE SYSTEM HAS COMPLETED INITIALIZING ALL HARDWARE."
+            },
+            "type": "string"
+        },
+        "BootSourceOverrideEnabled": {
+            "enum": [
+                "Disabled",
+                "Once",
+                "Continuous"
+            ],
+            "enumDescriptions": {
+                "Continuous": "THE SYSTEM BOOTS TO THE TARGET SPECIFIED IN THE BOOTSOURCEOVERRIDETARGET PROPERTY UNTIL THIS PROPERTY IS `DISABLED`.",
+                "Disabled": "THE SYSTEM BOOTS NORMALLY.",
+                "Once": "ON ITS NEXT BOOT CYCLE, THE SYSTEM BOOTS ONE TIME TO THE BOOT SOURCE OVERRIDE TARGET.  THEN, THE BOOTSOURCEOVERRIDEENABLED VALUE IS RESET TO `DISABLED`."
+            },
+            "enumTranslations": {
+                "Continuous": "CONTINUOUS",
+                "Disabled": "DISABLED",
+                "Once": "ONCE"
+            },
+            "type": "string"
+        },
+        "BootSourceOverrideMode": {
+            "enum": [
+                "Legacy",
+                "UEFI"
+            ],
+            "enumDescriptions": {
+                "Legacy": "THE SYSTEM BOOTS IN NON-UEFI BOOT MODE TO THE BOOT SOURCE OVERRIDE TARGET.",
+                "UEFI": "THE SYSTEM BOOTS IN UEFI BOOT MODE TO THE BOOT SOURCE OVERRIDE TARGET."
+            },
+            "type": "string"
+        },
+        "ComputerSystem": {
+            "additionalProperties": false,
+            "description": "THE COMPUTERSYSTEM SCHEMA REPRESENTS A COMPUTER OR SYSTEM INSTANCE AND THE SOFTWARE-VISIBLE RESOURCES, OR ITEMS WITHIN THE DATA PLANE, SUCH AS MEMORY, CPU, AND OTHER DEVICES THAT IT CAN ACCESS.  DETAILS OF THOSE RESOURCES OR SUBSYSTEMS ARE ALSO LINKED THROUGH THIS RESOURCE.",
+            "longDescription": "THIS RESOURCE SHALL REPRESENT A COMPUTING SYSTEM IN THE REDFISH SPECIFICATION.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "@odata.context": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/context"
+                },
+                "@odata.etag": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/etag"
+                },
+                "@odata.id": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/id"
+                },
+                "@odata.type": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/type"
+                },
+                "Actions": {
+                    "$ref": "#/definitions/Actions",
+                    "description": "THE AVAILABLE ACTIONS FOR THIS RESOURCE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE AVAILABLE ACTIONS FOR THIS RESOURCE."
+                },
+                "AssetTag": {
+                    "description": "THE USER-DEFINABLE TAG THAT CAN TRACK THIS COMPUTER SYSTEM FOR INVENTORY OR OTHER CLIENT PURPOSES.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE SYSTEM ASSET TAG VALUE.",
+                    "readonly": false,
+                    "translation": "Its Mine",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "Bios": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Bios.json#/definitions/Bios",
+                    "description": "THE LINK TO THE BIOS SETTINGS ASSOCIATED WITH THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN A LINK TO A RESOURCE OF TYPE BIOS THAT LISTS THE BIOS SETTINGS FOR THIS SYSTEM.",
+                    "readonly": true,
+                    "versionAdded": "v1_1_0"
+                },
+                "BiosVersion": {
+                    "description": "THE VERSION OF THE SYSTEM BIOS OR PRIMARY SYSTEM FIRMWARE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE VERSION STRING OF THE CURRENTLY INSTALLED AND RUNNING BIOS FOR X86 SYSTEMS.  FOR OTHER SYSTEMS, THE PROPERTY MIGHT CONTAIN A VERSION STRING THAT REPRESENTS THE PRIMARY SYSTEM FIRMWARE.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "Boot": {
+                    "$ref": "#/definitions/Boot",
+                    "description": "THE BOOT SETTINGS FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE BOOT SETTINGS FOR THIS SYSTEM."
+                },
+                "BootProgress": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/BootProgress"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THIS OBJECT DESCRIBES THE LAST BOOT PROGRESS STATE.",
+                    "longDescription": "THIS OBJECT SHALL CONTAIN THE LAST BOOT PROGRESS STATE AND TIME.",
+                    "versionAdded": "v1_13_0"
+                },
+                "Description": {
+                    "anyOf": [
+                        {
+                            "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Description"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "readonly": true
+                },
+                "GraphicalConsole": {
+                    "$ref": "#/definitions/GraphicalConsole",
+                    "description": "THE INFORMATION ABOUT THE GRAPHICAL CONSOLE (KVM-IP) SERVICE OF THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE INFORMATION ABOUT THE GRAPHICAL CONSOLE (KVM-IP) SERVICE OF THIS SYSTEM.",
+                    "versionAdded": "v1_13_0"
+                },
+                "HostName": {
+                    "description": "THE DNS HOST NAME, WITHOUT ANY DOMAIN INFORMATION.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE HOST NAME FOR THIS SYSTEM, AS REPORTED BY THE OPERATING SYSTEM OR HYPERVISOR.  A SERVICE RUNNING IN THE HOST OPERATING SYSTEM TYPICALLY REPORTS THIS VALUE TO THE MANAGER.",
+                    "readonly": false,
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "HostWatchdogTimer": {
+                    "$ref": "#/definitions/WatchdogTimer",
+                    "description": "THE HOST WATCHDOG TIMER FUNCTIONALITY FOR THIS SYSTEM.",
+                    "longDescription": "THIS OBJECT SHALL CONTAIN PROPERTIES THAT DESCRIBE THE HOST WATCHDOG TIMER FUNCTIONALITY FOR THIS COMPUTERSYSTEM.",
+                    "versionAdded": "v1_5_0"
+                },
+                "HostedServices": {
+                    "$ref": "#/definitions/HostedServices",
+                    "description": "THE SERVICES THAT THIS COMPUTER SYSTEM SUPPORTS.",
+                    "longDescription": "THIS PROPERTY SHALL DESCRIBE SERVICES THAT THIS COMPUTER SYSTEM SUPPORTS.",
+                    "versionAdded": "v1_2_0"
+                },
+                "HostingRoles": {
+                    "description": "THE HOSTING ROLES THAT THIS COMPUTER SYSTEM SUPPORTS.",
+                    "items": {
+                        "$ref": "#/definitions/HostingRole"
+                    },
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE HOSTING ROLES THAT THIS COMPUTER SYSTEM SUPPORTS.",
+                    "readonly": true,
+                    "type": "array",
+                    "versionAdded": "v1_2_0"
+                },
+                "Id": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Id",
+                    "readonly": true
+                },
+                "IndicatorLED": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/IndicatorLED"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "deprecated": "This property has been deprecated in favor of the LocationIndicatorActive property.",
+                    "description": "THE STATE OF THE INDICATOR LED, WHICH IDENTIFIES THE SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE STATE OF THE INDICATOR LIGHT, WHICH IDENTIFIES THIS SYSTEM.",
+                    "readonly": false,
+                    "versionDeprecated": "v1_13_0"
+                },
+                "LastResetTime": {
+                    "description": "THE DATE AND TIME WHEN THE SYSTEM WAS LAST RESET OR REBOOTED.",
+                    "format": "date-time",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE DATE AND TIME WHEN THE SYSTEM LAST CAME OUT OF A RESET OR WAS REBOOTED.",
+                    "readonly": true,
+                    "type": "string",
+                    "versionAdded": "v1_12_0"
+                },
+                "Links": {
+                    "$ref": "#/definitions/Links",
+                    "description": "THE LINKS TO OTHER RESOURCES THAT ARE RELATED TO THIS RESOURCE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN LINKS TO RESOURCES THAT ARE RELATED TO BUT ARE NOT CONTAINED BY, OR SUBORDINATE TO, THIS RESOURCE."
+                },
+                "LocationIndicatorActive": {
+                    "description": "AN INDICATOR ALLOWING AN OPERATOR TO PHYSICALLY LOCATE THIS RESOURCE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE STATE OF THE INDICATOR USED TO PHYSICALLY IDENTIFY OR LOCATE THIS RESOURCE.  A WRITE TO THIS PROPERTY SHALL UPDATE THE VALUE OF INDICATORLED IN THIS RESOURCE, IF SUPPORTED, TO REFLECT THE IMPLEMENTATION OF THE LOCATING FUNCTION.",
+                    "readonly": false,
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "Manufacturer": {
+                    "description": "THE MANUFACTURER OR OEM OF THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN A VALUE THAT REPRESENTS THE MANUFACTURER OF THE SYSTEM.",
+                    "readonly": true,
+                    "translation": "Who Made This",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "MemorySummary": {
+                    "$ref": "#/definitions/MemorySummary",
+                    "description": "THE CENTRAL MEMORY OF THE SYSTEM IN GENERAL DETAIL.",
+                    "longDescription": "THIS PROPERTY SHALL DESCRIBE THE CENTRAL MEMORY FOR THIS RESOURCE."
+                },
+                "Model": {
+                    "description": "THE PRODUCT NAME FOR THIS SYSTEM, WITHOUT THE MANUFACTURER NAME.",
+                    "longDescription": "THIS PROPERTY SHALL DESCRIBE HOW THE MANUFACTURER REFERS TO THIS SYSTEM.  TYPICALLY, THIS VALUE IS THE PRODUCT NAME FOR THIS SYSTEM WITHOUT THE MANUFACTURER NAME.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "Name": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Name",
+                    "readonly": true
+                },
+                "Oem": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem",
+                    "description": "The OEM extension property.",
+                    "longDescription": "This property shall contain the OEM extensions.  All values for properties that this object contains shall conform to the Redfish Specification-described requirements."
+                },
+                "PartNumber": {
+                    "description": "THE PART NUMBER FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE MANUFACTURER-DEFINED PART NUMBER FOR THE SYSTEM.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "PowerCycleDelaySeconds": {
+                    "description": "THE NUMBER OF SECONDS TO DELAY POWER ON AFTER A `RESET` ACTION REQUESTING `POWERCYCLE`.  ZERO SECONDS INDICATES NO DELAY.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE NUMBER OF SECONDS TO DELAY POWER ON AFTER A `RESET` ACTION REQUESTING `POWERCYCLE`.  THE VALUE `0` SHALL INDICATE NO DELAY TO POWER ON.",
+                    "readonly": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "PowerOffDelaySeconds": {
+                    "description": "THE NUMBER OF SECONDS TO DELAY POWER OFF DURING A RESET.  ZERO SECONDS INDICATES NO DELAY TO POWER OFF.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE NUMBER OF SECONDS TO DELAY POWER OFF DURING A RESET.  THE VALUE `0` SHALL INDICATE NO DELAY TO POWER OFF.",
+                    "readonly": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "PowerOnDelaySeconds": {
+                    "description": "THE NUMBER OF SECONDS TO DELAY POWER ON AFTER A POWER CYCLE OR DURING A RESET.  ZERO SECONDS INDICATES NO DELAY TO POWER UP.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE NUMBER OF SECONDS TO DELAY POWER ON AFTER A POWER CYCLE OR DURING A RESET.  THE VALUE `0` SHALL INDICATE NO DELAY TO POWER ON.",
+                    "readonly": false,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "PowerRestorePolicy": {
+                    "$ref": "#/definitions/PowerRestorePolicyTypes",
+                    "description": "THE DESIRED POWER STATE OF THE SYSTEM WHEN POWER IS RESTORED AFTER A POWER LOSS.",
+                    "longDescription": "THIS PROPERTY SHALL INDICATE THE DESIRED POWERSTATE OF THE SYSTEM WHEN POWER IS APPLIED TO THE SYSTEM.  THE `LASTSTATE` VALUE SHALL RETURN THE SYSTEM TO THE POWERSTATE IT WAS IN WHEN POWER WAS LOST.",
+                    "readonly": false,
+                    "versionAdded": "v1_6_0"
+                },
+                "PowerState": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/PowerState"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE CURRENT POWER STATE OF THE SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE POWER STATE OF THE SYSTEM.",
+                    "readonly": true
+                },
+                "ProcessorSummary": {
+                    "$ref": "#/definitions/ProcessorSummary",
+                    "description": "THE CENTRAL PROCESSORS OF THE SYSTEM IN GENERAL DETAIL.",
+                    "longDescription": "THIS PROPERTY SHALL DESCRIBE THE CENTRAL PROCESSORS FOR THIS RESOURCE.  PROCESSORS DESCRIBED BY THIS PROPERTY SHALL BE LIMITED TO THE PROCESSORS THAT EXECUTE SYSTEM CODE, AND SHALL NOT INCLUDE PROCESSORS USED FOR OFFLOAD FUNCTIONALITY."
+                },
+                "SKU": {
+                    "description": "THE MANUFACTURER SKU FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE SKU FOR THE SYSTEM.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "SerialConsole": {
+                    "$ref": "#/definitions/SerialConsole",
+                    "description": "THE SERIAL CONSOLE SERVICES THAT THIS SYSTEM PROVIDES.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN INFORMATION ABOUT THE SERIAL CONSOLE SERVICES OF THIS SYSTEM.",
+                    "versionAdded": "v1_13_0"
+                },
+                "SerialNumber": {
+                    "description": "THE SERIAL NUMBER FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE SERIAL NUMBER FOR THE SYSTEM.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "Status": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status",
+                    "description": "THE STATUS AND HEALTH OF THE RESOURCE AND ITS SUBORDINATE OR DEPENDENT RESOURCES.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN ANY STATUS OR HEALTH PROPERTIES OF THE RESOURCE."
+                },
+                "SubModel": {
+                    "description": "THE SUB-MODEL FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE INFORMATION ABOUT THE SUB-MODEL (OR CONFIG) OF THE SYSTEM.  THIS SHALL NOT INCLUDE THE MODEL/PRODUCT NAME OR THE MANUFACTURER NAME.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_5_0"
+                },
+                "SystemType": {
+                    "$ref": "#/definitions/SystemType",
+                    "description": "THE TYPE OF COMPUTER SYSTEM THAT THIS RESOURCE REPRESENTS.",
+                    "longDescription": "AN ENUMERATION THAT INDICATES THE KIND OF SYSTEM THAT THIS RESOURCE REPRESENTS.",
+                    "readonly": true
+                },
+                "TrustedModules": {
+                    "description": "AN ARRAY OF TRUSTED MODULES IN THE SYSTEM.",
+                    "items": {
+                        "$ref": "#/definitions/TrustedModules"
+                    },
+                    "longDescription": "THIS OBJECT SHALL CONTAIN AN ARRAY OF OBJECTS WITH PROPERTIES THAT DESCRIBE THE TRUSTED MODULES FOR THIS RESOURCE.",
+                    "type": "array",
+                    "versionAdded": "v1_1_0"
+                },
+                "UUID": {
+                    "anyOf": [
+                        {
+                            "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/UUID"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE UUID FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE UNIVERSAL UNIQUE IDENTIFIER NUMBER FOR THIS SYSTEM.  RFC4122 DESCRIBES METHODS TO CREATE THIS VALUE.  THE VALUE SHOULD BE CONSIDERED TO BE OPAQUE.  CLIENT SOFTWARE SHOULD ONLY TREAT THE OVERALL VALUE AS A UUID AND SHOULD NOT INTERPRET ANY SUB-FIELDS WITHIN THE UUID.  IF THE SYSTEM SUPPORTS SMBIOS, THE PROPERTY VALUE SHOULD FOLLOW THE SMBIOS 2.6 AND LATER RECOMMENDATION FOR CONVERTING THE SMBIOS 16-BYTE UUID STRUCTURE INTO THE REDFISH CANONICAL `XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX` STRING FORMAT, SO THAT THE PROPERTY VALUE MATCHES THE BYTE ORDER PRESENTED BY CURRENT OS APIS, SUCH AS WMI AND DMIDECODE.",
+                    "readonly": true
+                },
+                "VirtualMediaConfig": {
+                    "$ref": "#/definitions/VirtualMediaConfig",
+                    "description": "THE INFORMATION ABOUT THE VIRTUAL MEDIA SERVICE OF THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE INFORMATION ABOUT THE VIRTUAL MEDIA SERVICE OF THIS SYSTEM.",
+                    "versionAdded": "v1_13_0"
+                }
+            },
+            "required": [
+                "@odata.id",
+                "@odata.type",
+                "Id",
+                "Name"
+            ],
+            "type": "object"
+        },
+        "GraphicalConnectTypesSupported": {
+            "enum": [
+                "KVMIP",
+                "OEM"
+            ],
+            "enumDescriptions": {
+                "KVMIP": "THE CONTROLLER SUPPORTS A GRAPHICAL CONSOLE CONNECTION THROUGH A KVM-IP (REDIRECTION OF KEYBOARD, VIDEO, MOUSE OVER IP) PROTOCOL.",
+                "OEM": "THE CONTROLLER SUPPORTS A GRAPHICAL CONSOLE CONNECTION THROUGH AN OEM-SPECIFIC PROTOCOL."
+            },
+            "type": "string"
+        },
+        "GraphicalConsole": {
+            "additionalProperties": false,
+            "description": "THE INFORMATION ABOUT A GRAPHICAL CONSOLE SERVICE FOR THIS SYSTEM.",
+            "longDescription": "THIS TYPE SHALL DESCRIBE A GRAPHICAL CONSOLE SERVICE FOR A COMPUTER SYSTEM.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "ConnectTypesSupported": {
+                    "description": "THIS PROPERTY ENUMERATES THE GRAPHICAL CONSOLE CONNECTION TYPES THAT THE IMPLEMENTATION ALLOWS.",
+                    "items": {
+                        "$ref": "#/definitions/GraphicalConnectTypesSupported"
+                    },
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN AN ARRAY OF THE ENUMERATIONS.  KVMIP SHALL BE INCLUDED IF A VENDOR-DEFINE KVM-IP PROTOCOL IS SUPPORTED.",
+                    "readonly": true,
+                    "type": "array",
+                    "versionAdded": "v1_13_0"
+                },
+                "MaxConcurrentSessions": {
+                    "description": "THE MAXIMUM NUMBER OF SERVICE SESSIONS, REGARDLESS OF PROTOCOL, THAT THIS SYSTEM CAN SUPPORT.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE MAXIMUM NUMBER OF CONCURRENT SERVICE SESSIONS THAT THIS IMPLEMENTATION SUPPORTS.",
+                    "minimum": 0,
+                    "readonly": true,
+                    "type": "integer",
+                    "versionAdded": "v1_13_0"
+                },
+                "Port": {
+                    "description": "THE PROTOCOL PORT.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE PORT ASSIGNED TO THE SERVICE.",
+                    "minimum": 0,
+                    "readonly": false,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "ServiceEnabled": {
+                    "description": "AN INDICATION OF WHETHER THE SERVICE IS ENABLED FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL INDICATE WHETHER THE PROTOCOL FOR THE SERVICE IS ENABLED.",
+                    "readonly": false,
+                    "type": "boolean",
+                    "versionAdded": "v1_13_0"
+                }
+            },
+            "type": "object"
+        },
+        "HostedServices": {
+            "additionalProperties": false,
+            "description": "THE SERVICES THAT MIGHT BE RUNNING OR INSTALLED ON THE SYSTEM.",
+            "longDescription": "THIS TYPE SHALL DESCRIBE SERVICES THAT A COMPUTER SYSTEM SUPPORTS.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "Oem": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem",
+                    "description": "THE OEM EXTENSION PROPERTY.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE OEM EXTENSIONS.  ALL VALUES FOR PROPERTIES CONTAINED IN THIS OBJECT SHALL CONFORM TO THE REDFISH SPECIFICATION-DESCRIBED REQUIREMENTS.",
+                    "versionAdded": "v1_2_0"
+                }
+            },
+            "type": "object"
+        },
+        "HostingRole": {
+            "description": "THE ENUMERATIONS OF HOSTINGROLES SPECIFY DIFFERENT FEATURES THAT THE HOSTING COMPUTERSYSTEM SUPPORTS.",
+            "enum": [
+                "ApplicationServer",
+                "StorageServer",
+                "Switch",
+                "Appliance",
+                "BareMetalServer",
+                "VirtualMachineServer",
+                "ContainerServer"
+            ],
+            "enumDescriptions": {
+                "Appliance": "THE SYSTEM HOSTS FUNCTIONALITY THAT SUPPORTS THE SYSTEM ACTING AS AN APPLIANCE.",
+                "ApplicationServer": "THE SYSTEM HOSTS FUNCTIONALITY THAT SUPPORTS GENERAL PURPOSE APPLICATIONS.",
+                "BareMetalServer": "THE SYSTEM HOSTS FUNCTIONALITY THAT SUPPORTS THE SYSTEM ACTING AS A BARE METAL SERVER.",
+                "ContainerServer": "THE SYSTEM HOSTS FUNCTIONALITY THAT SUPPORTS THE SYSTEM ACTING AS A CONTAINER SERVER.",
+                "StorageServer": "THE SYSTEM HOSTS FUNCTIONALITY THAT SUPPORTS THE SYSTEM ACTING AS A STORAGE SERVER.",
+                "Switch": "THE SYSTEM HOSTS FUNCTIONALITY THAT SUPPORTS THE SYSTEM ACTING AS A SWITCH.",
+                "VirtualMachineServer": "THE SYSTEM HOSTS FUNCTIONALITY THAT SUPPORTS THE SYSTEM ACTING AS A VIRTUAL MACHINE SERVER."
+            },
+            "enumVersionAdded": {
+                "Appliance": "v1_10_0",
+                "BareMetalServer": "v1_10_0",
+                "ContainerServer": "v1_10_0",
+                "VirtualMachineServer": "v1_10_0"
+            },
+            "type": "string"
+        },
+        "IndicatorLED": {
+            "enum": [
+                "Unknown",
+                "Lit",
+                "Blinking",
+                "Off"
+            ],
+            "enumDeprecated": {
+                "Unknown": "This value has been deprecated in favor of returning null if the state is unknown."
+            },
+            "enumDescriptions": {
+                "Blinking": "THE INDICATOR LED IS BLINKING.",
+                "Lit": "THE INDICATOR LED IS LIT.",
+                "Off": "THE INDICATOR LED IS OFF.",
+                "Unknown": "THE STATE OF THE INDICATOR LED CANNOT BE DETERMINED."
+            },
+            "enumLongDescriptions": {
+                "Blinking": "THIS VALUE SHALL REPRESENT THAT THE INDICATOR LED IS IN A BLINKING STATE WHERE THE LED IS BEING TURNED ON AND OFF IN REPETITION.  IF THE SERVICE DOES NOT SUPPORT THIS VALUE, IT SHALL REJECT PATCH OR PUT REQUESTS CONTAINING THIS VALUE BY RETURNING THE HTTP 400 (BAD REQUEST) STATUS CODE.",
+                "Lit": "THIS VALUE SHALL REPRESENT THAT THE INDICATOR LED IS IN A SOLID ON STATE.  IF THE SERVICE DOES NOT SUPPORT THIS VALUE, IT SHALL REJECT PATCH OR PUT REQUESTS CONTAINING THIS VALUE BY RETURNING THE HTTP 400 (BAD REQUEST) STATUS CODE.",
+                "Off": "THIS VALUE SHALL REPRESENT THAT THE INDICATOR LED IS IN A SOLID OFF STATE.  IF THE SERVICE DOES NOT SUPPORT THIS VALUE, IT SHALL REJECT PATCH OR PUT REQUESTS CONTAINING THIS VALUE BY RETURNING THE HTTP 400 (BAD REQUEST) STATUS CODE.",
+                "Unknown": "THIS VALUE SHALL REPRESENT THAT THE INDICATOR LED IS IN AN UNKNOWN STATE.  THE SERVICE SHALL REJECT PATCH OR PUT REQUESTS CONTAINING THIS VALUE BY RETURNING THE HTTP 400 (BAD REQUEST) STATUS CODE."
+            },
+            "enumVersionDeprecated": {
+                "Unknown": "v1_1_0"
+            },
+            "type": "string"
+        },
+        "InterfaceType": {
+            "enum": [
+                "TPM1_2",
+                "TPM2_0",
+                "TCM1_0"
+            ],
+            "enumDescriptions": {
+                "TCM1_0": "TRUSTED CRYPTOGRAPHY MODULE (TCM) 1.0.",
+                "TPM1_2": "TRUSTED PLATFORM MODULE (TPM) 1.2.",
+                "TPM2_0": "TRUSTED PLATFORM MODULE (TPM) 2.0."
+            },
+            "type": "string"
+        },
+        "InterfaceTypeSelection": {
+            "description": "THE ENUMERATIONS OF INTERFACETYPESELECTION SPECIFY THE METHOD FOR SWITCHING THE TRUSTEDMODULE INTERFACETYPE, FOR INSTANCE BETWEEN TPM1_2 AND TPM2_0, IF SUPPORTED.",
+            "enum": [
+                "None",
+                "FirmwareUpdate",
+                "BiosSetting",
+                "OemMethod"
+            ],
+            "enumDescriptions": {
+                "BiosSetting": "THE TRUSTEDMODULE SUPPORTS SWITCHING INTERFACETYPE THROUGH PLATFORM SOFTWARE, SUCH AS A BIOS CONFIGURATION ATTRIBUTE.",
+                "FirmwareUpdate": "THE TRUSTEDMODULE SUPPORTS SWITCHING INTERFACETYPE THROUGH A FIRMWARE UPDATE.",
+                "None": "THE TRUSTEDMODULE DOES NOT SUPPORT SWITCHING THE INTERFACETYPE.",
+                "OemMethod": "THE TRUSTEDMODULE SUPPORTS SWITCHING INTERFACETYPE THROUGH AN OEM PROPRIETARY MECHANISM."
+            },
+            "type": "string"
+        },
+        "Links": {
+            "additionalProperties": false,
+            "description": "THE LINKS TO OTHER RESOURCES THAT ARE RELATED TO THIS RESOURCE.",
+            "longDescription": "THIS REDFISH SPECIFICATION-DESCRIBED TYPE SHALL CONTAIN LINKS TO RESOURCES THAT ARE RELATED TO BUT ARE NOT CONTAINED BY, OR SUBORDINATE TO, THIS RESOURCE.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "ConsumingComputerSystems": {
+                    "description": "AN ARRAY OF LINKS TO COMPUTERSYSTEMS THAT ARE REALIZED, IN WHOLE OR IN PART, FROM THIS COMPUTERSYSTEM.",
+                    "items": {
+                        "$ref": "http://redfish.dmtf.org/schemas/v1/ComputerSystem.json#/definitions/ComputerSystem"
+                    },
+                    "longDescription": "THE VALUE SHALL BE AN ARRAY OF LINKS TO COMPUTERSYSTEMS THAT ARE REALIZED, IN WHOLE OR IN PART, FROM THIS COMPUTERSYSTEM.",
+                    "readonly": true,
+                    "type": "array",
+                    "versionAdded": "v1_5_0"
+                },
+                "ConsumingComputerSystems@odata.count": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/count"
+                },
+                "CooledBy": {
+                    "description": "AN ARRAY OF LINKS TO RESOURCES OR OBJECTS THAT THAT COOL THIS COMPUTER SYSTEM.  NORMALLY, THE LINK IS FOR EITHER A CHASSIS OR A SPECIFIC SET OF FANS.",
+                    "items": {
+                        "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/idRef"
+                    },
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN AN ARRAY OF LINKS TO RESOURCES OR OBJECTS THAT COOL THIS COMPUTER SYSTEM.",
+                    "readonly": true,
+                    "type": "array"
+                },
+                "CooledBy@odata.count": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/count"
+                },
+                "Oem": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem",
+                    "description": "The OEM extension property.",
+                    "longDescription": "This property shall contain the OEM extensions.  All values for properties contained in this object shall conform to the Redfish Specification-described requirements."
+                },
+                "PoweredBy": {
+                    "description": "AN ARRAY OF LINKS TO RESOURCES OR OBJECTS THAT POWER THIS COMPUTER SYSTEM.  NORMALLY, THE LINK IS FOR EITHER A CHASSIS OR A SPECIFIC SET OF POWER SUPPLIES.",
+                    "items": {
+                        "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/idRef"
+                    },
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN AN ARRAY OF LINKS TO RESOURCES OR OBJECTS THAT POWER THIS COMPUTER SYSTEM.",
+                    "readonly": true,
+                    "type": "array"
+                },
+                "PoweredBy@odata.count": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/count"
+                },
+                "ResourceBlocks": {
+                    "description": "AN ARRAY OF LINKS TO THE RESOURCE BLOCKS THAT ARE USED IN THIS COMPUTER SYSTEM.",
+                    "items": {
+                        "$ref": "http://redfish.dmtf.org/schemas/v1/ResourceBlock.json#/definitions/ResourceBlock"
+                    },
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN AN ARRAY OF LINKS TO RESOURCES OF TYPE RESOURCEBLOCK THAT SHOW THE RESOURCE BLOCKS THAT ARE USED IN THIS COMPUTER SYSTEM.",
+                    "readonly": false,
+                    "type": "array",
+                    "versionAdded": "v1_4_0"
+                },
+                "ResourceBlocks@odata.count": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/count"
+                },
+                "SupplyingComputerSystems": {
+                    "description": "AN ARRAY OF LINKS TO COMPUTERSYSTEMS THAT CONTRIBUTE, IN WHOLE OR IN PART, TO THE IMPLEMENTATION OF THIS COMPUTERSYSTEM.",
+                    "items": {
+                        "$ref": "http://redfish.dmtf.org/schemas/v1/ComputerSystem.json#/definitions/ComputerSystem"
+                    },
+                    "longDescription": "THE VALUE SHALL BE AN ARRAY OF LINKS TO COMPUTERSYSTEMS THAT CONTRIBUTE, IN WHOLE OR IN PART, TO THE IMPLEMENTATION OF THIS COMPUTERSYSTEM.",
+                    "readonly": true,
+                    "type": "array",
+                    "versionAdded": "v1_5_0"
+                },
+                "SupplyingComputerSystems@odata.count": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/count"
+                }
+            },
+            "type": "object"
+        },
+        "MemoryMirroring": {
+            "enum": [
+                "System",
+                "DIMM",
+                "Hybrid",
+                "None"
+            ],
+            "enumDescriptions": {
+                "DIMM": "THE SYSTEM SUPPORTS DIMM MIRRORING AT THE DIMM LEVEL.  INDIVIDUAL DIMMS CAN BE MIRRORED.",
+                "Hybrid": "THE SYSTEM SUPPORTS A HYBRID MIRRORING AT THE SYSTEM AND DIMM LEVELS.  INDIVIDUAL DIMMS CAN BE MIRRORED.",
+                "None": "THE SYSTEM DOES NOT SUPPORT DIMM MIRRORING.",
+                "System": "THE SYSTEM SUPPORTS DIMM MIRRORING AT THE SYSTEM LEVEL.  INDIVIDUAL DIMMS ARE NOT PAIRED FOR MIRRORING IN THIS MODE."
+            },
+            "type": "string"
+        },
+        "MemorySummary": {
+            "additionalProperties": false,
+            "description": "THE MEMORY OF THE SYSTEM IN GENERAL DETAIL.",
+            "longDescription": "THIS TYPE SHALL CONTAIN PROPERTIES THAT DESCRIBE THE CENTRAL MEMORY FOR A SYSTEM.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "MemoryMirroring": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/MemoryMirroring"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE ABILITY AND TYPE OF MEMORY MIRRORING THAT THIS COMPUTER SYSTEM SUPPORTS.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE ABILITY AND TYPE OF MEMORY MIRRORING THAT THIS COMPUTER SYSTEM SUPPORTS.",
+                    "readonly": true,
+                    "versionAdded": "v1_1_0"
+                },
+                "Status": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status",
+                    "description": "THE STATUS AND HEALTH OF THE RESOURCE AND ITS SUBORDINATE OR DEPENDENT RESOURCES.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN ANY STATUS OR HEALTH PROPERTIES OF THE RESOURCE."
+                },
+                "TotalSystemMemoryGiB": {
+                    "description": "THE TOTAL CONFIGURED OPERATING SYSTEM-ACCESSIBLE MEMORY (RAM), MEASURED IN GIB.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE AMOUNT OF CONFIGURED SYSTEM GENERAL PURPOSE VOLATILE (RAM) MEMORY AS MEASURED IN GIBIBYTES.",
+                    "minimum": 0,
+                    "readonly": true,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "units": "GiBy"
+                },
+                "TotalSystemPersistentMemoryGiB": {
+                    "description": "THE TOTAL CONFIGURED, SYSTEM-ACCESSIBLE PERSISTENT MEMORY, MEASURED IN GIB.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE TOTAL AMOUNT OF CONFIGURED PERSISTENT MEMORY AVAILABLE TO THE SYSTEM AS MEASURED IN GIBIBYTES.",
+                    "minimum": 0,
+                    "readonly": true,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "units": "GiBy",
+                    "versionAdded": "v1_4_0"
+                }
+            },
+            "type": "object"
+        },
+        "OemActions": {
+            "additionalProperties": true,
+            "description": "THE AVAILABLE OEM-SPECIFIC ACTIONS FOR THIS RESOURCE.",
+            "longDescription": "THIS TYPE SHALL CONTAIN THE AVAILABLE OEM-SPECIFIC ACTIONS FOR THIS RESOURCE.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {},
+            "type": "object"
+        },
+        "PowerRestorePolicyTypes": {
+            "description": "THE ENUMERATIONS OF POWERRESTOREPOLICYTYPES SPECIFY THE CHOICE OF POWER STATE FOR THE SYSTEM WHEN POWER IS APPLIED.",
+            "enum": [
+                "AlwaysOn",
+                "AlwaysOff",
+                "LastState"
+            ],
+            "enumDescriptions": {
+                "AlwaysOff": "THE SYSTEM ALWAYS REMAINS POWERED OFF WHEN POWER IS APPLIED.",
+                "AlwaysOn": "THE SYSTEM ALWAYS POWERS ON WHEN POWER IS APPLIED.",
+                "LastState": "THE SYSTEM RETURNS TO ITS LAST ON OR OFF POWER STATE WHEN POWER IS APPLIED."
+            },
+            "type": "string"
+        },
+        "PowerState": {
+            "enum": [
+                "On",
+                "Off",
+                "PoweringOn",
+                "PoweringOff"
+            ],
+            "enumDescriptions": {
+                "Off": "THE SYSTEM IS POWERED OFF, ALTHOUGH SOME COMPONENTS MIGHT CONTINUE TO HAVE AUX POWER SUCH AS MANAGEMENT CONTROLLER.",
+                "On": "THE SYSTEM IS POWERED ON.",
+                "PoweringOff": "A TEMPORARY STATE BETWEEN ON AND OFF.  THE POWER OFF ACTION CAN TAKE TIME WHILE THE OS IS IN THE SHUTDOWN PROCESS.",
+                "PoweringOn": "A TEMPORARY STATE BETWEEN OFF AND ON.  THIS TEMPORARY STATE CAN BE VERY SHORT."
+            },
+            "type": "string"
+        },
+        "ProcessorSummary": {
+            "additionalProperties": false,
+            "description": "THE CENTRAL PROCESSORS OF THE SYSTEM IN GENERAL DETAIL.",
+            "longDescription": "THIS TYPE SHALL CONTAIN PROPERTIES THAT DESCRIBE THE CENTRAL PROCESSORS FOR A SYSTEM.  PROCESSORS DESCRIBED BY THIS TYPE SHALL BE LIMITED TO THE PROCESSORS THAT EXECUTE SYSTEM CODE, AND SHALL NOT INCLUDE PROCESSORS USED FOR OFFLOAD FUNCTIONALITY.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "Count": {
+                    "description": "THE NUMBER OF PHYSICAL PROCESSORS IN THE SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE NUMBER OF PHYSICAL CENTRAL PROCESSORS IN THE SYSTEM.",
+                    "minimum": 0,
+                    "readonly": true,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "LogicalProcessorCount": {
+                    "description": "THE NUMBER OF LOGICAL PROCESSORS IN THE SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE NUMBER OF LOGICAL CENTRAL PROCESSORS IN THE SYSTEM.",
+                    "minimum": 0,
+                    "readonly": true,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "versionAdded": "v1_5_0"
+                },
+                "Model": {
+                    "description": "THE PROCESSOR MODEL FOR THE PRIMARY OR MAJORITY OF PROCESSORS IN THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE PROCESSOR MODEL FOR THE CENTRAL PROCESSORS IN THE SYSTEM, PER THE DESCRIPTION IN THE PROCESSOR INFORMATION - PROCESSOR FAMILY SECTION OF THE SMBIOS SPECIFICATION DSP0134 2.8 OR LATER.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "Status": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status",
+                    "description": "THE STATUS AND HEALTH OF THE RESOURCE AND ITS SUBORDINATE OR DEPENDENT RESOURCES.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN ANY STATUS OR HEALTH PROPERTIES OF THE RESOURCE."
+                }
+            },
+            "type": "object"
+        },
+        "RemoveResourceBlock": {
+            "additionalProperties": false,
+            "description": "THIS ACTION REMOVES A RESOURCE BLOCK FROM A SYSTEM.",
+            "longDescription": "THIS ACTION SHALL REMOVE A RESOURCE BLOCK FROM A SYSTEM.",
+            "parameters": {
+                "ComputerSystemETag": {
+                    "description": "THE CURRENT ETAG OF THE SYSTEM.",
+                    "longDescription": "THIS PARAMETER SHALL CONTAIN THE CURRENT ETAG OF THE SYSTEM.  IF THE CLIENT-PROVIDED ETAG DOES NOT MATCH THE CURRENT ETAG OF THE SYSTEM, THE SERVICE SHALL RETURN THE HTTP 428 (PRECONDITION REQUIRED) STATUS CODE TO REJECT THE REQUEST.",
+                    "type": "string"
+                },
+                "ResourceBlock": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/ResourceBlock.json#/definitions/ResourceBlock",
+                    "description": "THE RESOURCE BLOCK TO REMOVE FROM THE SYSTEM.",
+                    "longDescription": "THIS PARAMETER SHALL CONTAIN A LINK TO THE SPECIFIED RESOURCE BLOCK TO REMOVE FROM THE SYSTEM.",
+                    "requiredParameter": true
+                },
+                "ResourceBlockETag": {
+                    "description": "THE CURRENT ETAG OF THE RESOURCE BLOCK TO REMOVE FROM THE SYSTEM.",
+                    "longDescription": "THIS PARAMETER SHALL CONTAIN THE CURRENT ETAG OF THE RESOURCE BLOCK TO REMOVE FROM THE SYSTEM.  IF THE CLIENT-PROVIDED ETAG DOES NOT MATCH THE CURRENT ETAG OF THE RESOURCE BLOCK THAT THE RESOURCEBLOCK PARAMETER SPECIFIES, THE SERVICE SHALL RETURN THE HTTP 428 (PRECONDITION REQUIRED) STATUS CODE TO REJECT THE REQUEST.",
+                    "type": "string"
+                }
+            },
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "target": {
+                    "description": "Link to invoke action",
+                    "format": "uri-reference",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Friendly action name",
+                    "type": "string"
+                }
+            },
+            "type": "object",
+            "versionAdded": "v1_6_0"
+        },
+        "Reset": {
+            "additionalProperties": false,
+            "description": "THIS ACTION RESETS THE SYSTEM.",
+            "longDescription": "THIS ACTION SHALL RESET THE SYSTEM REPRESENTED BY THE RESOURCE.  FOR SYSTEMS THAT IMPLEMENT ACPI POWER BUTTON FUNCTIONALITY, THE PUSHPOWERBUTTON VALUE SHALL PERFORM OR EMULATE AN ACPI POWER BUTTON PUSH.  THE FORCEOFF VALUE SHALL REMOVE POWER FROM THE SYSTEM OR PERFORM AN ACPI POWER BUTTON OVERRIDE, COMMONLY KNOWN AS A FOUR-SECOND HOLD OF THE POWER BUTTON.  THE FORCERESTART VALUE SHALL PERFORM A FORCEOFF ACTION, FOLLOWED BY AN ON ACTION.",
+            "parameters": {
+                "ResetType": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/ResetType",
+                    "description": "THE TYPE OF RESET.",
+                    "longDescription": "THIS PARAMETER SHALL CONTAIN THE TYPE OF RESET.  THE SERVICE CAN ACCEPT A REQUEST WITHOUT THE PARAMETER AND PERFORM AN IMPLEMENTATION-SPECIFIC DEFAULT RESET.  SERVICES SHOULD INCLUDE THE @REDFISH.ALLOWABLEVALUES ANNOTATION FOR THIS PARAMETER TO ENSURE COMPATIBILITY WITH CLIENTS, EVEN WHEN ACTIONINFO HAS BEEN IMPLEMENTED.",
+                    "translation": "YOU WANNA RESET THIS THING"
+                }
+            },
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "target": {
+                    "description": "Link to invoke action",
+                    "format": "uri-reference",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Friendly action name",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "SerialConsole": {
+            "additionalProperties": false,
+            "description": "THE INFORMATION ABOUT THE SERIAL CONSOLE SERVICES THAT THIS SYSTEM PROVIDES.",
+            "longDescription": "THIS TYPE SHALL DESCRIBE THE SERIAL CONSOLE SERVICES FOR A COMPUTER SYSTEM.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "IPMI": {
+                    "$ref": "#/definitions/SerialConsoleProtocol",
+                    "description": "THE CONNECTION DETAILS FOR AN IPMI SERIAL-OVER-LAN SERVICE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN CONNECTION DETAILS FOR A SERIAL CONSOLE SERVICE THAT USES THE IPMI SERIAL-OVER-LAN (SOL) PROTOCOL.",
+                    "versionAdded": "v1_13_0"
+                },
+                "MaxConcurrentSessions": {
+                    "description": "THE MAXIMUM NUMBER OF SERVICE SESSIONS, REGARDLESS OF PROTOCOL, THAT THIS SYSTEM CAN SUPPORT.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE MAXIMUM NUMBER OF CONCURRENT SERVICE SESSIONS THAT THIS IMPLEMENTATION SUPPORTS.",
+                    "minimum": 0,
+                    "readonly": true,
+                    "type": "integer",
+                    "versionAdded": "v1_13_0"
+                },
+                "SSH": {
+                    "$ref": "#/definitions/SerialConsoleProtocol",
+                    "description": "THE CONNECTION DETAILS FOR AN SSH SERIAL CONSOLE SERVICE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN CONNECTION DETAILS FOR A SERIAL CONSOLE SERVICE THAT USES THE SECURE SHELL (SSH) PROTOCOL.",
+                    "versionAdded": "v1_13_0"
+                },
+                "Telnet": {
+                    "$ref": "#/definitions/SerialConsoleProtocol",
+                    "description": "THE CONNECTION DETAILS FOR A TELNET SERIAL CONSOLE SERVICE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN CONNECTION DETAILS FOR A SERIAL CONSOLE SERVICE THAT USES THE TELNET PROTOCOL.",
+                    "versionAdded": "v1_13_0"
+                }
+            },
+            "type": "object"
+        },
+        "SerialConsoleProtocol": {
+            "additionalProperties": false,
+            "description": "THE INFORMATION ABOUT A SERIAL CONSOLE SERVICE THAT THIS SYSTEM PROVIDES.",
+            "longDescription": "THIS TYPE SHALL DESCRIBE A SERIAL CONSOLE SERVICE FOR A COMPUTER SYSTEM.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "ConsoleEntryCommand": {
+                    "description": "THE COMMAND STRING PASSED TO THE SERVICE TO SELECT OR ENTER THE SYSTEM'S SERIAL CONSOLE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN A COMMAND STRING THAT CAN BE PROVIDED BY A CLIENT TO SELECT OR ENTER THE SYSTEM'S SERIAL CONSOLE, WHEN THE CONSOLE IS SHARED AMONG SEVERAL SYSTEMS OR A MANAGER CLI.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "HotKeySequenceDisplay": {
+                    "description": "THE HOTKEY SEQUENCE AVAILABLE FOR THE USER TO EXIT THE SERIAL CONSOLE SESSION.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN A STRING THAT CAN BE PROVIDED TO A USER TO DESCRIBE THE HOTKEY SEQUENCE USED TO EXIT THE SERIAL CONSOLE SESSION, OR, IF SHARED WITH A MANAGER CLI, TO RETURN TO THE CLI.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "Port": {
+                    "description": "THE PROTOCOL PORT.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE PORT ASSIGNED TO THE PROTOCOL.",
+                    "minimum": 0,
+                    "readonly": false,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "ServiceEnabled": {
+                    "description": "AN INDICATION OF WHETHER THE SERVICE IS ENABLED FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL INDICATE WHETHER THE PROTOCOL FOR THE SERVICE IS ENABLED.",
+                    "readonly": false,
+                    "type": "boolean",
+                    "versionAdded": "v1_13_0"
+                },
+                "SharedWithManagerCLI": {
+                    "description": "INDICATES WHETHER THE SERIAL CONSOLE SERVICE IS SHARED WITH ACCESS TO THE MANAGER'S COMMAND-LINE INTERFACE (CLI).",
+                    "longDescription": "THIS PROPERTY SHALL INDICATE WHETHER THE SERIAL CONSOLE SERVICE IS SHARED WITH ACCESS TO THE MANAGER'S COMMAND-LINE INTERFACE (CLI).",
+                    "readonly": true,
+                    "type": "boolean",
+                    "versionAdded": "v1_13_0"
+                }
+            },
+            "type": "object"
+        },
+        "SetDefaultBootOrder": {
+            "additionalProperties": false,
+            "description": "THIS ACTION SETS THE BOOTORDER TO THE DEFAULT SETTINGS.",
+            "longDescription": "THIS ACTION SHALL SET THE BOOTORDER ARRAY TO THE DEFAULT SETTINGS.",
+            "parameters": {},
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "target": {
+                    "description": "Link to invoke action",
+                    "format": "uri-reference",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Friendly action name",
+                    "type": "string"
+                }
+            },
+            "type": "object",
+            "versionAdded": "v1_5_0"
+        },
+        "SystemType": {
+            "enum": [
+                "Physical",
+                "Virtual",
+                "OS",
+                "PhysicallyPartitioned",
+                "VirtuallyPartitioned",
+                "Composed"
+            ],
+            "enumDescriptions": {
+                "Composed": "A COMPUTER SYSTEM CONSTRUCTED BY BINDING RESOURCE BLOCKS TOGETHER.",
+                "OS": "AN OPERATING SYSTEM INSTANCE.",
+                "Physical": "A COMPUTER SYSTEM.",
+                "PhysicallyPartitioned": "A HARDWARE-BASED PARTITION OF A COMPUTER SYSTEM.",
+                "Virtual": "A VIRTUAL MACHINE INSTANCE RUNNING ON THIS SYSTEM.",
+                "VirtuallyPartitioned": "A VIRTUAL OR SOFTWARE-BASED PARTITION OF A COMPUTER SYSTEM."
+            },
+            "enumLongDescriptions": {
+                "Composed": "A SYSTEMTYPE OF COMPOSED TYPICALLY REPRESENTS A SINGLE SYSTEM CONSTRUCTED FROM DISAGGREGATED RESOURCES THROUGH THE REDFISH COMPOSITION SERVICE.",
+                "OS": "A SYSTEMTYPE OF OS TYPICALLY REPRESENTS AN OS OR HYPERVISOR VIEW OF THE SYSTEM.",
+                "Physical": "A SYSTEMTYPE OF PHYSICAL TYPICALLY REPRESENTS THE HARDWARE ASPECTS OF A SYSTEM, SUCH AS A MANAGEMENT CONTROLLER.",
+                "PhysicallyPartitioned": "A SYSTEMTYPE OF PHYSICALLYPARTITION TYPICALLY REPRESENTS A SINGLE SYSTEM CONSTRUCTED FROM ONE OR MORE PHYSICAL SYSTEMS THROUGH A FIRMWARE OR HARDWARE-BASED SERVICE.",
+                "Virtual": "A SYSTEMTYPE OF VIRTUAL TYPICALLY REPRESENTS A SYSTEM THAT IS ACTUALLY A VIRTUAL MACHINE INSTANCE.",
+                "VirtuallyPartitioned": "A SYSTEMTYPE OF VIRTUALLYPARTITION TYPICALLY REPRESENTS A SINGLE SYSTEM CONSTRUCTED FROM ONE OR MORE VIRTUAL SYSTEMS THROUGH A SOFTWARE-BASED SERVICE."
+            },
+            "enumVersionAdded": {
+                "Composed": "v1_4_0"
+            },
+            "type": "string"
+        },
+        "TrustedModules": {
+            "additionalProperties": false,
+            "description": "THE TRUSTED MODULE INSTALLED IN THE SYSTEM.",
+            "longDescription": "THIS TYPE SHALL DESCRIBE A TRUSTED MODULE FOR A SYSTEM.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "FirmwareVersion": {
+                    "description": "THE FIRMWARE VERSION OF THIS TRUSTED MODULE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE FIRWMARE VERSION AS DEFINED BY THE MANUFACTURER FOR THE TRUSTED MODULE.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_1_0"
+                },
+                "FirmwareVersion2": {
+                    "description": "THE SECOND FIRMWARE VERSION OF THIS TRUSTED MODULE, IF APPLICABLE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE 2ND FIRMWARE VERSION, IF APPLICABLE, AS DEFINED BY THE MANUFACTURER FOR THE TRUSTED MODULE.",
+                    "readonly": true,
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "versionAdded": "v1_3_0"
+                },
+                "InterfaceType": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/InterfaceType"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE INTERFACE TYPE OF THE TRUSTED MODULE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE INTERFACE TYPE OF THE INSTALLED TRUSTED MODULE.",
+                    "readonly": true,
+                    "versionAdded": "v1_1_0"
+                },
+                "InterfaceTypeSelection": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/InterfaceTypeSelection"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE INTERFACE TYPE SELECTION SUPPORTED BY THIS TRUSTED MODULE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE INTERFACE TYPE SELECTION METHOD (FOR EXAMPLE TO SWITCH BETWEEN TPM1_2 AND TPM2_0) THAT IS SUPPORTED BY THIS TRUSTEDMODULE.",
+                    "readonly": true,
+                    "versionAdded": "v1_3_0"
+                },
+                "Oem": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem",
+                    "description": "THE OEM EXTENSION PROPERTY.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE OEM EXTENSIONS.  ALL VALUES FOR PROPERTIES CONTAINED IN THIS OBJECT SHALL CONFORM TO THE REDFISH SPECIFICATION-DESCRIBED REQUIREMENTS.",
+                    "versionAdded": "v1_1_0"
+                },
+                "Status": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status",
+                    "description": "THE STATUS AND HEALTH OF THE RESOURCE AND ITS SUBORDINATE OR DEPENDENT RESOURCES.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN ANY STATUS OR HEALTH PROPERTIES OF THE RESOURCE.",
+                    "versionAdded": "v1_1_0"
+                }
+            },
+            "type": "object"
+        },
+        "VirtualMediaConfig": {
+            "additionalProperties": false,
+            "description": "THE INFORMATION ABOUT VIRTUAL MEDIA SERVICE FOR THIS SYSTEM.",
+            "longDescription": "THIS TYPE SHALL DESCRIBE A VIRTUAL MEDIA SERVICE SERVICE FOR A COMPUTER SYSTEM.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "Port": {
+                    "description": "THE PROTOCOL PORT.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE PORT ASSIGNED TO THE SERVICE.",
+                    "minimum": 0,
+                    "readonly": false,
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "versionAdded": "v1_13_0"
+                },
+                "ServiceEnabled": {
+                    "description": "AN INDICATION OF WHETHER THE SERVICE IS ENABLED FOR THIS SYSTEM.",
+                    "longDescription": "THIS PROPERTY SHALL INDICATE WHETHER THE PROTOCOL FOR THE SERVICE IS ENABLED.",
+                    "readonly": false,
+                    "type": "boolean",
+                    "versionAdded": "v1_13_0"
+                }
+            },
+            "type": "object"
+        },
+        "WatchdogTimeoutActions": {
+            "description": "THE ENUMERATIONS OF WATCHDOGTIMEOUTACTIONS SPECIFY THE CHOICE OF ACTION TO TAKE WHEN THE HOST WATCHDOG TIMER REACHES ITS TIMEOUT VALUE.",
+            "enum": [
+                "None",
+                "ResetSystem",
+                "PowerCycle",
+                "PowerDown",
+                "OEM"
+            ],
+            "enumDescriptions": {
+                "None": "NO ACTION TAKEN.",
+                "OEM": "PERFORM AN OEM-DEFINED ACTION.",
+                "PowerCycle": "POWER CYCLE THE SYSTEM.",
+                "PowerDown": "POWER DOWN THE SYSTEM.",
+                "ResetSystem": "RESET THE SYSTEM."
+            },
+            "type": "string"
+        },
+        "WatchdogTimer": {
+            "additionalProperties": false,
+            "description": "THIS TYPE DESCRIBES THE HOST WATCHDOG TIMER FUNCTIONALITY FOR THIS SYSTEM.",
+            "longDescription": "THIS TYPE SHALL CONTAIN PROPERTIES THAT DESCRIBE THE HOST WATCHDOG TIMER FUNCTIONALITY FOR THIS COMPUTERSYSTEM.",
+            "patternProperties": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                    "description": "This property shall specify a valid odata or Redfish property.",
+                    "type": [
+                        "array",
+                        "boolean",
+                        "integer",
+                        "number",
+                        "null",
+                        "object",
+                        "string"
+                    ]
+                }
+            },
+            "properties": {
+                "FunctionEnabled": {
+                    "description": "AN INDICATION OF WHETHER A USER HAS ENABLED THE HOST WATCHDOG TIMER FUNCTIONALITY.  THIS PROPERTY INDICATES ONLY THAT A USER HAS ENABLED THE TIMER.  TO ACTIVATE THE TIMER, INSTALLATION OF ADDITIONAL HOST-BASED SOFTWARE IS NECESSARY; AN UPDATE TO THIS PROPERTY DOES NOT INITIATE THE TIMER.",
+                    "longDescription": "THIS PROPERTY SHALL INDICATE WHETHER A USER HAS ENABLED THE HOST WATCHDOG TIMER FUNCTIONALITY.  THIS PROPERTY INDICATES ONLY THAT A USER HAS ENABLED THE TIMER.  TO ACTIVATE THE TIMER, INSTALLATION OF ADDITIONAL HOST-BASED SOFTWARE IS NECESSARY; AN UPDATE TO THIS PROPERTY DOES NOT INITIATE THE TIMER.",
+                    "readonly": false,
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "versionAdded": "v1_5_0"
+                },
+                "Oem": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Oem",
+                    "description": "THE OEM EXTENSION PROPERTY.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE OEM EXTENSIONS.  ALL VALUES FOR PROPERTIES CONTAINED IN THIS OBJECT SHALL CONFORM TO THE REDFISH SPECIFICATION-DESCRIBED REQUIREMENTS.",
+                    "versionAdded": "v1_5_0"
+                },
+                "Status": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Status",
+                    "description": "THE STATUS AND HEALTH OF THE RESOURCE AND ITS SUBORDINATE OR DEPENDENT RESOURCES.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN ANY STATUS OR HEALTH PROPERTIES OF THE RESOURCE.",
+                    "versionAdded": "v1_5_0"
+                },
+                "TimeoutAction": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/WatchdogTimeoutActions"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE ACTION TO PERFORM WHEN THE WATCHDOG TIMER REACHES ITS TIMEOUT VALUE.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE ACTION TO PERFORM WHEN THE WATCHDOG TIMER REACHES ITS TIMEOUT VALUE.",
+                    "readonly": false,
+                    "versionAdded": "v1_5_0"
+                },
+                "WarningAction": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/definitions/WatchdogWarningActions"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "THE ACTION TO PERFORM WHEN THE WATCHDOG TIMER IS CLOSE TO REACHING ITS TIMEOUT VALUE.  THIS ACTION TYPICALLY OCCURS FROM THREE TO TEN SECONDS BEFORE TO THE TIMEOUT VALUE, BUT THE EXACT TIMING IS DEPENDENT ON THE IMPLEMENTATION.",
+                    "longDescription": "THIS PROPERTY SHALL CONTAIN THE ACTION TO PERFORM BEFORE THE WATCHDOG TIMER EXPIRES.  THIS ACTION TYPICALLY OCCURS FROM THREE TO TEN SECONDS BEFORE TO THE TIMEOUT VALUE, BUT THE EXACT TIMING IS DEPENDENT ON THE IMPLEMENTATION.",
+                    "readonly": false,
+                    "versionAdded": "v1_5_0"
+                }
+            },
+            "required": [
+                "FunctionEnabled",
+                "TimeoutAction"
+            ],
+            "type": "object"
+        },
+        "WatchdogWarningActions": {
+            "description": "THE ENUMERATIONS OF WATCHDOGWARNINGACTIONS SPECIFY THE CHOICE OF ACTION TO TAKE WHEN THE HOST WATCHDOG TIMER IS CLOSE (TYPICALLY 3-10 SECONDS) TO REACHING ITS TIMEOUT VALUE.",
+            "enum": [
+                "None",
+                "DiagnosticInterrupt",
+                "SMI",
+                "MessagingInterrupt",
+                "SCI",
+                "OEM"
+            ],
+            "enumDescriptions": {
+                "DiagnosticInterrupt": "RAISE A (TYPICALLY NON-MASKABLE) DIAGNOSTIC INTERRUPT.",
+                "MessagingInterrupt": "RAISE A LEGACY IPMI MESSAGING INTERRUPT.",
+                "None": "NO ACTION TAKEN.",
+                "OEM": "PERFORM AN OEM-DEFINED ACTION.",
+                "SCI": "RAISE AN INTERRUPT USING THE ACPI SYSTEM CONTROL INTERRUPT (SCI).",
+                "SMI": "RAISE A SYSTEMS MANAGEMENT INTERRUPT (SMI)."
+            },
+            "type": "string"
+        }
+    },
+    "language": "TEST",
+    "owningEntity": "DMTF",
+    "release": "2020.3",
+    "title": "#ComputerSystem.v1_13_0.ComputerSystem"
+}

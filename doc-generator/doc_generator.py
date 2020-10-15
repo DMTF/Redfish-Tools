@@ -1,14 +1,12 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
-# Copyright 2016, 2017, 2018, 2019, 2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
 File: doc_generator.py
 
-Brief: Reads redfish json schema files and generates a GitHub-flavored markdown document
-suitable for use with the Slate documentation tool (https://github.com/tripit/slate)
-
+Brief: Reads redfish json schema files and generates formatted documentation.
 
 Initial author: Second Rise LLC.
 """
@@ -21,25 +19,16 @@ import json
 import copy
 import functools
 import warnings
+import gettext
 from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
 import parse_supplement
 
 
-# Format user warnings simply
 class InfoWarning(UserWarning):
     """ A warning class for informational messages that don't need a stack trace. """
     pass
 
-def simple_warning_format(message, category, filename, lineno, file=None, line=None):
-    """ a basic format for warnings from this program """
-    if category == InfoWarning:
-        return '  Info: %s' % (message) + "\n"
-    else:
-        return '  Warning: %s (%s:%s)' % (message, filename, lineno) + "\n"
-
-
-warnings.formatwarning = simple_warning_format
 
 class DocGenerator:
     """Redfish Documentation Generator class. Provides 'generate_docs' method."""
@@ -51,6 +40,23 @@ class DocGenerator:
         self.property_data = {} # This is an object property for ease of testing.
         self.schema_ref_to_filename = {}
         self.config['payloads'] = None
+
+        # Localization
+        languages = [config.get('locale', 'en')]
+        localedir = os.path.join(os.path.dirname(__file__), 'locale')
+        translations = gettext.translation('doc_generator', localedir=localedir, languages=languages)
+        translations.install()
+        _ = translations.gettext
+
+        # Set up our simplified warning format. We need _ defined with the correct language before we do this.
+        def simple_warning_format(message, category, filename, lineno, file=None, line=None):
+            """ a basic format for warnings from this program """
+            if category == InfoWarning:
+                return '  Info: %(message)s' % {'message': message} + "\n"
+            else:
+                return '  Warning: %(message)s (%(filename)s: %(lineno)s)' % {'message': message, 'filename': filename, 'lineno': lineno} + "\n"
+        warnings.formatwarning = simple_warning_format
+
 
         if config.get('payload_dir'):
             payload_dir = config.get('payload_dir')
@@ -143,8 +149,8 @@ class DocGenerator:
         reg_uri = self.get_versioned_uri(reg_name, reg_repo, reg_minversion, is_local_file)
 
         if not reg_uri:
-            warnings.warn("Unable to find registry file for " + reg_repo + ", " + reg_name +
-                          ", minimum version " + reg_minversion)
+            warnings.warn('Unable to find registry file for %(repo)s, %(name)s, minimum version %(minversion)s' %
+                              {'repo': reg_repo, 'name': reg_name, 'minversion': reg_minversion})
             return registry_reqs
 
         # Generate data based on profile
@@ -159,10 +165,11 @@ class DocGenerator:
 
             for msg in registry_profile['Messages']:
                 if msg in registry_reqs['Messages']:
-                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get('ReadRequirement', 'Mandatory')
+                    registry_reqs['Messages'][msg]['profile_requirement'] = registry_profile['Messages'][msg].get(
+                        'ReadRequirement', 'Mandatory')
                 else:
-                    warnings.warn("Profile specifies requirement for nonexistent Registry Message: " +
-                                  reg_name + " " + msg)
+                    warnings.warn('Profile specifies requirement for nonexistent Registry Message: %(name)s %(message)s'
+                                      % {'name': reg_name, 'message': msg})
 
         return registry_reqs
 
@@ -263,8 +270,8 @@ class DocGenerator:
                                                  version_string, is_local_file)
 
         if not req_profile_uri:
-            warnings.warn("Unable to find Profile for " + req_profile_repo + ", " +
-                          req_profile_name + ", minimum version: " + req_profile_minversion)
+            warnings.warn('Unable to find Profile for %(repo)s, %(name)s, minimum version: %(minversion)s'
+                              % {'repo': req_profile_repo, 'name': req_profile_name, 'minversion': req_profile_minversion})
             return merged_data
 
 
@@ -311,7 +318,7 @@ class DocGenerator:
                     # dict1 wins
                     dict2[k] = v
                 else:
-                    warnings.warn("Merging two items with different types would fail. Probably attempting to merge two profiles; debugging here may be required.")
+                    warnings.warn('Merging two items with different types would fail. Probably attempting to merge two profiles; debugging here may be required.')
             else:
                 dict2[k] = v
 
@@ -322,18 +329,21 @@ class DocGenerator:
     def get_files(text_input):
         """From text input (command line or parsed from file), create a list of files. """
         files_to_process = []
+
         for file_to_import in text_input:
+            start_count = len(files_to_process)
             if os.path.isdir(file_to_import):
-                for root, _, files in os.walk(file_to_import):
-                    # NB: this is an adequate sort for file-grouping purposes. It's not guaranteed to sort versions correctly.
-                    files.sort(key=str.lower)
-                    for filename in files:
-                        if filename[-4:] == 'json':
-                            files_to_process.append(os.path.join(root, filename))
+                for dir_entry in os.scandir(file_to_import):
+                    if dir_entry.is_file():
+                        if dir_entry.path[-4:] == 'json':
+                            files_to_process.append(dir_entry.path)
+
+                # NB: this is an adequate sort for file-grouping purposes. It's not guaranteed to sort versions correctly.
+                files_to_process.sort(key=str.lower)
             elif os.path.isfile(file_to_import):
-                files_to_process.append(file_to_import)
-            else:
-                warnings.warn('Oops, ' + file_to_import + ' not found, or contains no .json files.\n')
+                files_to_process.append(os.path.abspath(file_to_import))
+            if len(files_to_process) == start_count:
+                warnings.warn('Oops, %(filename)s not found, or contains no .json files.' % {'filename': file_to_import} + "\n")
         return files_to_process
 
 
@@ -354,7 +364,7 @@ class DocGenerator:
             if not data:
                 # If we're in profile mode, this is probably normal.
                 if not self.config['profile_mode']:
-                    warnings.warn("Unable to process files for " + normalized_uri)
+                    warnings.warn('Unable to process files for %(uri)s' % {'uri': normalized_uri})
                 continue
             data['uris'] = schema_data[normalized_uri].get('_uris', [])
 
@@ -371,9 +381,16 @@ class DocGenerator:
             latest_data['_is_collection_of'] = latest_info.get('_is_collection_of')
             latest_data['_schema_name'] = latest_info.get('schema_name')
 
+            if self.config.get('locale'):
+                translated_file = os.path.join(latest_info['root'], self.config.get('locale'), latest_info['filename'])
+                if os.path.isfile(translated_file):
+                    translated_data = DocGenUtilities.load_as_json(translated_file)
+                    latest_data = self.apply_translated_data(latest_data, translated_data)
+
             # If we have data in the unversioned file, we need to overlay that.
             # We did this the same way for property_data. (Simplify?)
             latest_data = self.apply_unversioned_data_file(normalized_uri, latest_data)
+
             schema_data[normalized_uri] = latest_data
 
         # Also process and version definitions in any "other" files. These are files without top-level $ref objects.
@@ -564,8 +581,8 @@ class DocGenerator:
             if numfiles <= 10:
                 missing_files_list = '\n   '.join(missing_files)
             else:
-                missing_files_list = '\n   '.join(missing_files[0:9]) + "\n   and " + str(numfiles - 10) + " more."
-            warnings.warn(str(numfiles) + " referenced files were missing: \n   " + missing_files_list)
+                missing_files_list = '\n   '.join(missing_files[0:9]) + "\n   " + 'and %(number)s more.' % {'number': str(numfiles - 10)}
+            warnings.warn( '%(number)s referenced files were missing: ' % {'number': str(numfiles)} + "\n   " + missing_files_list)
 
         return grouped_files, all_schemas
 
@@ -605,10 +622,18 @@ class DocGenerator:
         profile = self.config.get('profile_resources', {})
 
         data = DocGenUtilities.load_as_json(filename)
+
+        # Check for a localized file and pull in translated text:
+        if self.config.get('locale'):
+            translated_file = os.path.join(ref['root'], self.config.get('locale'), ref['filename'])
+            if os.path.isfile(translated_file):
+                translated_data = DocGenUtilities.load_as_json(translated_file)
+                data = self.apply_translated_data(data, translated_data)
+
+
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
 
         version = self.get_version_string(ref['filename'])
-
 
         property_data['schema_name'] = schema_name
         property_data['name_and_version'] = schema_name
@@ -632,10 +657,11 @@ class DocGenerator:
                     min_version = schema_profile.get('MinVersion')
                     if min_version:
                         if version:
-                            property_data['name_and_version'] += ' v' + min_version + '+ (current release: v' + version + ')'
+                            property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s'
+                                % {'minversion': min_version, 'version': version})
                         else:
                             # this is unlikely
-                            property_data['name_and_version'] += ' v' + min_version + '+'
+                            property_data['name_and_version'] += ' ' + ' v%(version)s+' % {'version': min_version}
                     elif version:
                         property_data['name_and_version'] += ' ' + version
             else:
@@ -650,8 +676,8 @@ class DocGenerator:
             property_data['definitions'] = {}
 
         if (version == '1.0.0') and (schema_ref in property_data):
-            warnings.warn('Check', schema_ref, 'for version problems.',
-                          'Are there two files with either version 1.0.0 or no version?')
+            warnings.warn('Check %(schema_ref)s for version problems. Are there two files with either version 1.0.0 or no version?'
+                              % {'schema_ref': schema_ref})
 
         try:
             property_data['definitions'] = data['definitions']
@@ -671,7 +697,7 @@ class DocGenerator:
             property_data['properties'] = properties
 
         except KeyError:
-            warnings.warn('Unable to find properties in path ' + ref['ref'] + ' from ' + filename)
+            warnings.warn('Unable to find properties in path %(ref)s from %(filename)s' % { 'ref': ref['ref'], 'filename': filename})
             return {}
 
         return property_data
@@ -695,6 +721,15 @@ class DocGenerator:
         # If there is no definitions block, there's nothing to do:
         if 'definitions' not in data:
             return property_data
+
+
+        # Look for a localized schema file and apply it first, if found.
+        if self.config.get('locale'):
+            (path_head, path_tail) = os.path.split(filename)
+            translated_file = os.path.join(path_head, self.config.get('locale'), path_tail)
+            if os.path.isfile(translated_file):
+                translated_data = DocGenUtilities.load_as_json(translated_file)
+                data = self.apply_translated_data(data, translated_data)
 
         ref = data.get('$ref', '')
         element_to_skip = False
@@ -720,6 +755,54 @@ class DocGenerator:
             property_data['definitions'][prop_name] = prop_info
 
         return property_data
+
+
+    def apply_translated_data(self, data, translated_data):
+        """ Gather translated strings from translated_data and apply them to data.
+        This assumes that translated_data is essentially a copy of data with translations
+        and annotations applied -- this is done on a file-by-file basis.
+        """
+
+        # If there is no definitions block, there's nothing to do:
+        if 'definitions' not in translated_data or 'definitions' not in data:
+            return data
+
+        definitions = translated_data['definitions']
+        for prop_name, prop_info in definitions.items():
+            if prop_name in data['definitions']:
+                prop_data = data['definitions'].get(prop_name)
+                data['definitions'][prop_name] = self.apply_translation_to_prop(prop_data, prop_info)
+
+        return data
+
+
+    def apply_translation_to_prop(self, data, translated_data):
+        """ Apply translated strings and annotations on a per-property basis.
+        Recurses through properties, etc. Does not follow $refs; this is intended to "overlay"
+        data from a translated schema onto the original. """
+
+        for x in ['description', 'longDescription', 'translation']:
+            if translated_data.get(x):
+                data[x] = translated_data.get(x)
+
+        for x in ['enumDescriptions', 'enumLongDescriptions']:
+            if x in data and x in translated_data:
+                for y in data[x]:
+                    data[x][y] = translated_data.get(x, {}).get(y, data[x][y])
+
+        # enumTranslations are additional annotations we need to add during output.
+        if 'enumTranslations' in translated_data:
+            data['enumTranslations'] = translated_data['enumTranslations']
+
+        for x in ['properties', 'parameters']:
+            if x in translated_data and x in data:
+                translated_properties = translated_data[x]
+                for prop_name, prop_info in data[x].items():
+                    if translated_properties.get(prop_name):
+                        data[x][prop_name] = self.apply_translation_to_prop(data[x][prop_name], translated_properties[prop_name])
+
+        return data
+
 
 
     def process_unversioned_files(self, schema_data, uri_to_local):
@@ -814,7 +897,7 @@ class DocGenerator:
 
                 ref_info = traverser.find_ref_data(this_ref)
                 if not ref_info:
-                    warnings.warn("Can't find schema file for " + this_ref)
+                    warnings.warn("Can't find schema file for %{ref}s", {'ref': this_ref})
                     continue
                 if 'properties' in ref_info:
                     ref_properties = ref_info['properties']
@@ -1031,10 +1114,11 @@ class DocGenerator:
                         config_data['local_to_uri'][vpath] = k
                 config_file_read = True
         except (OSError) as ex:
-            warnings.warn('Unable to open ' + config_fn + ' to read: ' + str(ex))
+            warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename':  config_fn, 'message': str(ex)})
             sys.exit()
         except (json.decoder.JSONDecodeError) as ex:
-            warnings.warn(config_fn + " appears to be invalid JSON. JSON decoder reports: " + str(ex))
+            warnings.warn('%(filename)s appears to be invalid JSON. JSON decoder reports: %(message)s' %
+                              {'filename': config_fn, 'message': str(ex)})
             sys.exit()
 
         return config_data
@@ -1053,10 +1137,9 @@ class DocGenerator:
             supfile.close()
         except (OSError) as ex:
             if supfile_specified:
-                warnings.warn('Unable to open ' + supfn + ' to read: ' +  str(ex))
+                warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename': supfn, 'message': str(ex)})
             else:
-                warnings.warn('No supplemental file specified and ' + supfn +
-                                  ' not found. Proceeding.')
+                warnings.warn('No supplemental file specified and %(filename)s not found. Proceeding.' % {'filename': supfn})
         return supfile_data
 
 
@@ -1071,9 +1154,9 @@ class DocGenerator:
                 if '[insert property index]' in boilerplate:
                     return boilerplate
                 else:
-                    warnings.warn("Supplemental input file lacks the '[insert property index]' marker; ignoring.")
+                    warnings.warn("Supplemental input file lacks the '%(marker)s' marker; ignoring." % {'marker': '[insert property index]'})
         except (OSError) as ex:
-            warnings.warn('Unable to open ' + supfn + ' to read: ' +  str(ex))
+            warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename': supfn,  'message': str(ex)})
 
         return None
 
@@ -1141,6 +1224,7 @@ class DocGenerator:
                 'supfile', 'format', 'outfile', 'payload_dir', 'normative',
                 'profile_doc', 'subset_doc',
                 'property_index', 'property_index_config_out', 'escape_chars',
+                'locale'
                 ]
             for x in config_args:
                 if config_data.get(x) and (x not in combined_args or combined_args[x] is None):
@@ -1175,8 +1259,8 @@ class DocGenerator:
                 valid_keys = ['common_object', 'include']
                 for x, refs in obj_ref_disp.items():
                     if x not in valid_keys:
-                        warnings.warn('Config file entry "object_reference_disposition" contains an unrecognized key: "'
-                                          + x + '", ignoring it.')
+                        warnings.warn('Config file entry "object_reference_disposition" contains an unrecognized key: "%(key)s", ignoring it.'
+                                          % {'key': x})
                     else:
                         for ref in refs:
                             ref_disp_map[ref] = x
@@ -1231,10 +1315,10 @@ class DocGenerator:
                 if os.path.isdir(combined_args['payload_dir']):
                     config['payload_dir'] = combined_args['payload_dir']
                 else:
-                    warnings.warn('"' + combined_args['payload_dir'] + '" is not a directory. Exiting.')
+                    warnings.warn('"%(dirname)s" is not a directory. Exiting.' % {'dirname': combined_args['payload_dir']})
                     sys.exit();
             except (Exception) as ex:
-                warnings.warn('Unable to read payload_dir "' + payload_dir + '"; ' + str(ex))
+                warnings.warn('Unable to read payload_dir "%(dirname)s": %(message)s' % {'dirname': combined_args['payload_dir'], 'message': str(ex)})
                 sys.exit();
 
         if config.get('output_content') == 'property_index':
@@ -1259,7 +1343,7 @@ class DocGenerator:
                 profile = open(profile_doc, 'r', encoding="utf8")
                 config['profile_doc'] = profile_doc
             except (OSError) as ex:
-                warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
+                warnings.warn('Unable to open %(filename)s to read: %(message)s' %  {'filename': profile_doc, 'message': str(ex)})
                 sys.exit()
 
         if combined_args.get('subset_doc'):
@@ -1269,11 +1353,13 @@ class DocGenerator:
                 profile = open(profile_doc, 'r', encoding="utf8")
                 config['profile_doc'] = profile_doc
             except (OSError) as ex:
-                warnings.warn('Unable to open ' + profile_doc + ' to read: ' +  str(ex))
+                warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename': profile_doc, 'message': str(ex)})
                 sys.exit()
 
         if combined_args.get('profile_terse') and not combined_args.get('profile_doc'):
-            warnings.warn('"Terse output (-t or --terse) requires a profile (--profile).', InfoWarning)
+            warnings.warn('Terse output (%(arg_t)s or %(arg_terse)s) requires a profile (--%(arg_profile)s).' %
+                              {'arg_t': '-t', 'arg_terse': '--terse', 'arg_profile': 'profile'},
+                              InfoWarning)
             sys.exit()
 
         if 'keywords' in supplemental_data:
@@ -1349,9 +1435,10 @@ class DocGenerator:
             config['local_to_uri'] = supplemental_data['local_to_uri']
 
         if not config['local_to_uri']:
-            warnings.warn("Schema URI Mapping was not found or empty. " +
-                              "URI mapping may be provided via config file or supplemental markdown. " +
-                              "Output is likely to be incomplete.\n\n")
+            warnings.warn(' '.join(['Schema URI Mapping was not found or empty.',
+                                        'URI mapping may be provided via config file or supplemental markdown.',
+                                        'Output is likely to be incomplete.',
+                                        "\n\n"]))
 
         if not uri_mapping_from_config:
             if 'uri_to_local' in supplemental_data:
@@ -1380,8 +1467,9 @@ class DocGenerator:
         config['normative'] = combined_args.get('normative', False)
 
         if config['combine_multiple_refs'] == 1:
-            warnings.warn("The combine_multiple_refs setting of 1 does not make sense. " +
-                              "It should be 2 or more, or 0 to prevent combining. Assuming 0 was intended.\n\n")
+            warnings.warn(' '.join(['The combine_multiple_refs setting of 1 does not make sense.',
+                                        'It should be 2 or more, or 0 to prevent combining. Assuming 0 was intended.',
+                                        "\n\n"]))
             config['combine_multiple_refs'] == 0
 
         # Apply defaults for parameters that were not explicitly set:
@@ -1390,6 +1478,9 @@ class DocGenerator:
 
         if combined_args.get('escape_chars'):
             config['escape_chars'] = [x for x in combined_args['escape_chars']]
+
+        if combined_args.get('locale'):
+            config['locale'] = combined_args['locale']
 
         return config
 
@@ -1440,7 +1531,7 @@ def main():
     try:
         outfile = open(config['outfile_name'], 'w', encoding="utf8")
     except (OSError) as ex:
-        warnings.warn('Unable to open ' + config['outfile_name'] + ' to write: ' + str(ex))
+        warnings.warn('Unable to open %(filename)s to write: %(message)s' % {'filename': config['outfile_name'], 'message': str(ex)})
         sys.exit();
 
     doc_generator = DocGenerator(config['import_from'], outfile, config)

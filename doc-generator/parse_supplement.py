@@ -104,15 +104,15 @@ def parse_file(filehandle):
         parsed['profile_local_to_uri'], parsed['profile_uri_to_local'] = parse_uri_mapping(
             parsed['Profile URI Mapping'])
         if not parsed.get('profile_uri_to_local'):
-            warnings.warn("Profile URI Mapping found in supplemental document didn't provide any mappings. " +
-                          "Output is likely to be incomplete.\n\n")
+            warnings.warn("Profile URI Mapping found in supplemental document didn't provide any mappings." + ' ' +
+                              'Output is likely to be incomplete.' + "\n\n")
 
     if 'Registry URI Mapping' in parsed:
         parsed['registry_local_to_uri'], parsed['registry_uri_to_local'] = parse_uri_mapping(
             parsed['Registry URI Mapping'])
         if not parsed.get('registry_uri_to_local'):
-            warnings.warn("Registry URI Mapping found in supplemental document didn't provide any mappings. " +
-                          "Output is likely to be incomplete.\n\n")
+            warnings.warn("Registry URI Mapping found in supplemental document didn't provide any mappings." + ' ' +
+                              'Output is likely to be incomplete.' + "\n\n")
 
     if 'Enum Deprecations' in parsed:
         parsed['enum_deprecations'] = parse_enum_deprecations(parsed['Enum Deprecations'])
@@ -212,9 +212,9 @@ def parse_uri_mapping(markdown_blob):
                     local_to_uri[abs_local_path] = uri
                     uri_to_local[uri] = abs_local_path
                 else:
-                    warnings.warn('URI mapping in Supplemental file has a bad local path "' + local_path + '"')
+                    warnings.warn('URI mapping in Supplemental file has a bad local path "%(path)s"' % {'path': local_path})
             else:
-                warnings.warn('Could not parse URI mapping from Supplemental file: "' + line + '"')
+                warnings.warn('Could not parse URI mapping from Supplemental file: "%(line)s"' % {'line': line})
 
     return local_to_uri, uri_to_local
 
@@ -357,27 +357,23 @@ def parse_schema_details(markdown_blob):
                         if 200 <= response.status < 300:
                             mockup = response.read().decode('utf-8') # JSON is UTF-8 by spec.
                         else:
-                            warnings.warn('Unable to retrieve Mockup from URL "'
-                                          + mockup_location + '":', "Server returned",
-                                          response.status, "status")
+                            warnings.warn('Unable to retrieve Mockup from URL "%(uri)s": Server returned %(status_code)s status' %
+                                              {'uri': mockup_location, 'status_code': response.status})
                     except Exception as ex:
-                        warnings.warn('Unable to retrieve Mockup from URL "{0}": {1}'
-                                      .format(mockup_location, ex))
+                        warnings.warn('Unable to retrieve Mockup from URL "%(uri)s": %(ex)s' % {'uri': mockup_location, 'ex': str(ex)})
                 else:
                     # treat it as a local file
                     try:
                         mockup_file = open(mockup_location, 'r', encoding="utf8")
                         mockup = mockup_file.read()
                     except Exception as ex:
-                        warnings.warn('Unable to open Mockup file "{0}" to read: {1}'
-                                      .format(mockup_location, ex))
+                        warnings.warn('Unable to open Mockup file "%(uri)s" to read: %(ex)s' % {'uri': mockup_location, 'ex': str(ex)})
                 break
 
         if mockup:
             mockup = '```json\n' + mockup + '\n```\n'
             if parsed.get('jsonpayload'):
-                warnings.warn('Warning: Mockup and JSONPayload both specified; using Mockup ' +
-                              mockup_location)
+                warnings.warn('Warning: Mockup and JSONPayload both specified; using Mockup %(uri)s' % {'uri': mockup_location})
             parsed['jsonpayload'] = mockup
 
     return parsed
