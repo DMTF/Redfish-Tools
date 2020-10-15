@@ -19,6 +19,7 @@ import functools
 from doc_gen_util import DocGenUtilities
 from format_utils import FormatUtils
 
+
 class DocFormatter:
     """Generic class for schema documentation formatter"""
 
@@ -92,7 +93,8 @@ class DocFormatter:
         self.parent_props = [
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
             'readonly', 'prop_required', 'prop_required_on_create', 'requiredParameter', 'required_parameter',
-            'versionAdded', 'versionDeprecated', 'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated'
+            'versionAdded', 'versionDeprecated', 'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated',
+            'translation'
             ]
 
 
@@ -140,17 +142,18 @@ class DocFormatter:
             if version_deprecated:
                 version_depr_text = self.escape_text(version_depr)
                 deprecated_display = self.truncate_version(version_depr_text, 2)
-                version_string = '(v' + version_display + ', deprecated v' + deprecated_display +  ')'
-                deprecated_descr = self.escape_text("Deprecated in v" + deprecated_display + ' and later. ' +
-                                                    version_deprecated_explanation)
+                version_string = _('(v%(version_number)s, deprecated v%(deprecated_version)s') % {'version_number': version_display, 'deprecated_version':  deprecated_display}
+                deprecated_descr = self.escape_text(_('Deprecated in v%(deprecated_version)s and later. %(explanation)s') % {'deprecated_version': deprecated_display,
+                                                                                                                                'explanation': version_deprecated_explanation})
             else:
-                version_string = '(v' + version_display + ')'
+                version_string = _('(v%(version_number)s)') % {'version_number': version_display}
         elif version_deprecated:
             version_depr_text = self.escape_text(version_depr)
             deprecated_display = self.truncate_version(version_depr_text, 2)
-            version_string = '(deprecated v' + deprecated_display +  ')'
-            deprecated_descr = self.escape_text( "Deprecated in v" + deprecated_display + ' and later. ' +
-                                                version_deprecated_explanation)
+            version_string = _('(deprecated v%(deprecated_version)s)') % {'deprecated_version': deprecated_display}
+            deprecated_descr = self.escape_text(_('Deprecated in v%(deprecated_version)s and later. %(explanation)s') %
+                                                    {'deprecated_version': deprecated_display,
+                                                        'explanation': version_deprecated_explanation})
         return {"version_string": version_string, "deprecated_descr": deprecated_descr}
 
 
@@ -364,21 +367,22 @@ class DocFormatter:
         if not read_req:
             read_req = 'Mandatory' # This is the default if nothing is specified.
         if read_only:
-            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read-only)'
+            profile_access = _('%(access_condition)s (Read-only)') % {'access_condition': self.formatter.nobr(self.text_map(read_req))}
         elif read_req == write_req:
-            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read/Write)'
+            profile_access = _('%(access_condition)s (Read/Write)') % {'access_condition': self.formatter.nobr(self.text_map(read_req))}
         elif not write_req:
-            profile_access = self.formatter.nobr(self.text_map(read_req)) + ' (Read)'
+            profile_access = _('%(access_condition)s (Read)') % {'access_condition': self.formatter.nobr(self.text_map(read_req))}
         else:
             # Presumably Read is Mandatory and Write is Recommended; nothing else makes sense.
-            profile_access = (self.formatter.nobr(self.text_map(read_req)) + ' (Read)' + self.formatter.br() +
-                              self.formatter.nobr(self.text_map(write_req)) + ' (Read/Write)')
+            profile_access = (_('%(access_condition)s (Read)') % {'access_condition': self.formatter.nobr(self.text_map(read_req))}
+                                  + self.formatter.br() +
+                                  _('%(access_condition)s (Read/Write)') % {'access_condition': self.formatter.nobr(self.text_map(read_req))})
 
         if min_count:
             if profile_access:
                 profile_access += self.formatter.br()
 
-            profile_access += self.formatter.nobr("Minimum " + str(min_count))
+            profile_access += self.formatter.nobr(_('Minimum %(count)s') % {'count': str(min_count)})
 
         return profile_access
 
@@ -407,30 +411,31 @@ class DocFormatter:
                 # Don't output the base requirement
                 continue
             elif subordinate_to:
-                req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
+                req_desc = _('Resource instance is subordinate to %(resource_list)s') % {'resource_list':  (' ' + _('from') + ' ').join('"' + x + '"' for x in subordinate_to)}
             elif uris:
                 req_desc = "Resource URI is: " + self.format_uris_for_table(uris)
                 if self.config['MinVersionLT1.6']:
-                    purpose = "Applies if Protocol version is 1.6+"
+                    purpose = _('Applies if Protocol version is 1.6+')
 
             if compare_property:
                 compare_to = creq.get('CompareType', '')
                 if compare_to in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
-                    compare_to += ' to'
+                    compare_to += ' ' +  _('to')
 
                 compare_values = creq.get('CompareValues')
                 if compare_values:
                     compare_values = ', '.join(['"' + x + '"' for x in compare_values])
 
                 if req_desc:
-                    req_desc += ' and '
-                req_desc += '"' + compare_property + '"' + ' is ' + compare_to
+                    req_desc += ' ' + _('and') + ' '
+                req_desc += '"' + compare_property + '" ' + _('is') + ' ' + compare_to
 
                 if compare_values:
                     req_desc += ' ' + compare_values
 
                 if comparison and len(values):
-                    req += ', must be ' + comparison + ' ' + ', '.join(['"' + val + '"' for val in values])
+                    # req += ', must be ' + comparison + ' ' + ', '.join(['"' + val + '"' for val in values])
+                    req += _(', must be %(comparison_word)s %(list)s') % {'comparison_word': comparison, 'list': ', '.join(['"' + val + '"' for val in values])}
             rows.append(self.formatter.make_row([req_desc, req, purpose]))
 
         formatted.append(self.formatter.make_table(rows))
@@ -634,8 +639,7 @@ class DocFormatter:
             config['strip_top_object'] = True
 
         if not ref:
-            warnings.warn("Can't generate fragment for '" + ref +
-                          "': could not parse as schema URI.")
+            warnings.warn("Can't generate fragment for '%(reference)s': could not parse as schema URI." % {'reference': ref})
             return ''
 
         frag_gen = self.__class__(self.property_data, self.traverser, config, self.level)
@@ -660,7 +664,7 @@ class DocFormatter:
         frag_gen.common_properties = self.common_properties
 
         if not prop_info:
-            warnings.warn("Can't generate fragment for '" + ref + "': could not find data.")
+            warnings.warn("Can't generate fragment for '%(reference)s': could not find data." % {'reference': ref})
             return ''
 
         schema_ref = prop_info['_from_schema_ref']
@@ -771,7 +775,7 @@ class DocFormatter:
             return ''
 
         doc = ""
-        header = self.formatter.make_header_row(['Collection Type', 'URIs'])
+        header = self.formatter.make_header_row([_('Collection Type'), _('URIs')])
         rows = []
         for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
             item_text = self.format_uris_for_table(uris)
@@ -843,13 +847,13 @@ class DocFormatter:
             ref_info = traverser.find_ref_data(prop_ref)
 
             if not ref_info:
-                warnings.warn("Unable to find data for " + prop_ref)
+                warnings.warn('Unable to find data for %(reference)s' % {'reference': prop_ref})
 
             else:
                 # Update version info from the ref, provided that it is within the same schema.
                 # Make the comparison by unversioned ref, in respect of the way common_properties are keyed
                 from_schema_ref = ref_info.get('_from_schema_ref')
-                from_schema_uri, _, _ = ref_info.get('_ref_uri', '').partition('#')
+                from_schema_uri, _discard, _discard = ref_info.get('_ref_uri', '').partition('#')
                 unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
                 requested_ref_uri = ref_info['_ref_uri']
                 is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref)
@@ -885,13 +889,13 @@ class DocFormatter:
                             excerpt_link = self.link_to_outside_schema(from_schema_uri)
                         if excerpt_copy_name:
                             ref_info['_is_excerpt'] = True
-                            ref_info['add_link_text'] = ("This object is an excerpt of the "
-                                                         + excerpt_link +
-                                                         " resource located at the URI shown in DataSourceUri.")
+                            ref_info['add_link_text'] = (_('This object is an excerpt of the %(link)s resource located at the URI shown in DataSourceUri.')
+                                                             % {'link': excerpt_link})
 
                     elif self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']:
                         anchor = schema_ref + '|details_combined_ref|' + prop_name
-                        ref_info['add_link_text'] = ("For more information about this property, see " + self.link_to_anchor(prop_name, anchor) + " in Property Details.")
+                        ref_info['add_link_text'] = (_('For more information about this property, see %(link)s in Property Details.')
+                                                         % {'link': self.link_to_anchor(prop_name, anchor)})
                         ref_info['_ref_description'] = ref_info['description']
                         ref_info['_ref_longDescription'] = ref_info['longDescription']
 
@@ -900,6 +904,7 @@ class DocFormatter:
                         wants_common_objects = self.config.get('wants_common_objects')
                         ref_description = ref_info.get('description')
                         ref_longDescription = ref_info.get('longDescription')
+                        ref_translation = ref_info.get('translation')
                         ref_fulldescription_override = ref_info.get('fulldescription_override')
                         ref_pattern = ref_info.get('pattern')
                         link_detail = ''
@@ -908,28 +913,29 @@ class DocFormatter:
                         # Links to other Redfish resources are a special case.
                         if is_other_schema or is_ref_to_same_schema:
                             if is_collection_of:
-                                append_ref = 'Contains a link to a resource.'
+                                append_ref = _('Contains a link to a resource.')
                                 ref_schema_name = self.traverser.get_schema_name(is_collection_of)
 
                                 if 'redfish.dmtf.org/schemas/v1/odata' in from_schema_uri:
                                     from_schema_uri = 'http://' + is_collection_of
 
-                                link_detail = ('Link to Collection of ' + self.link_to_own_schema(is_collection_of, from_schema_uri)
-                                               + '. See the ' + ref_schema_name + ' schema for details.')
+                                link_detail = (_('Link to Collection of %(schema_links)s. See the %(schema_name)s schema for details.')
+                                                   % {'schema_links': self.link_to_own_schema(is_collection_of, from_schema_uri),
+                                                          'schema_name': ref_schema_name})
 
                             else:
                                 if is_ref_to_same_schema:
                                     # e.g., a Chassis is contained by another Chassis
-                                    link_detail = ('Link to another ' + prop_name + ' resource.')
+                                    link_detail = _('Link to another %(name)s resource.') % {'name': prop_name}
 
                                 elif is_documented_schema:
-                                    link_detail = ('Link to a ' + prop_name + ' resource. See the Links section and the '
-                                                   + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                                   ' schema for details.')
+                                    link_detail = (_('Link to a %(name)s resource. See the Links section and the %(schema_link)s schema for details.') %
+                                                    {'name': prop_name,
+                                                     'schema_link': self.link_to_own_schema(from_schema_ref, from_schema_uri)})
                                 if not is_ref_to_same_schema and reference_disposition != 'include':
                                     if is_documented_schema or not wants_common_objects:
-                                        append_ref = ('See the ' + self.link_to_own_schema(from_schema_ref, from_schema_uri) +
-                                                      ' schema for details on this property.')
+                                        append_ref = (_('See the %(schema_link)s schema for details on this property.')
+                                                          % {'schema_link': self.link_to_own_schema(from_schema_ref, from_schema_uri)})
                                     else:
                                         # This looks like a Common Object! We should have an unversioned ref for this.
                                         ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
@@ -950,10 +956,12 @@ class DocFormatter:
                                                 # of IPv6GatewayStaticAddress.
                                                 ref_info['type'] = 'object'
                                             if specific_version:
-                                                append_ref = ('For property details, see ' + self.link_to_common_property(ref_key) + ' '
-                                                              + '(v' + str(specific_version) + ').')
+                                                append_ref = (_('For property details, see %(schema_link)s v%(version_number)s).') %
+                                                                 {'schema_link': self.link_to_common_property(ref_key),
+                                                                      'version_number': str(specific_version)})
                                             else:
-                                                append_ref = ('For property details, see ' + self.link_to_common_property(ref_key) + '.' )
+                                                append_ref = (_('For property details, see %(schema_link)s.') % {'schema_link': self.link_to_common_property(ref_key)})
+
 
                             new_ref_info = {
                                 'description': ref_description,
@@ -964,7 +972,11 @@ class DocFormatter:
                                 '_ref_longDescription': ref_longDescription
                                 }
 
-                            props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly', '_ref_description', '_ref_longDescription']
+                            if ref_translation: # Don't even set this parameter if it's null/empty.
+                                new_ref_info['translation'] = ref_translation
+                                new_ref_info['_ref_translation'] = ref_translation
+
+                            props_to_add = ['_prop_name', '_from_schema_ref', '_schema_name', 'type', 'readonly', '_ref_description', '_ref_longDescription', '_ref_translation']
                             for x in props_to_add:
                                 if ref_info.get(x):
                                     new_ref_info[x] = ref_info[x]
@@ -1100,7 +1112,7 @@ class DocFormatter:
     def filter_props_by_profile(self, prop_names, profile, schema_requires, is_action=False):
 
         if profile is None:
-            warnings.warn("filter_props_by_profile was called with no profile data" )
+            warnings.warn("filter_props_by_profile was called with no profile data")
             return prop_names
 
         if profile.get('PropertyRequirements') is None and not is_action:
@@ -1552,7 +1564,7 @@ class DocFormatter:
             action_config = self.config['supplemental']['action details']
             action_name = prop_name
             if '.' in action_name:
-                _, _, action_name = action_name.rpartition('.')
+                _discard, _discard, action_name = action_name.rpartition('.')
             if action_config.get(schema_name) and action_name in action_config[schema_name].keys():
                 supplemental_actions = action_config[schema_name][action_name]
                 supplemental_actions['action_name'] = action_name
@@ -1725,8 +1737,8 @@ class DocFormatter:
                              {'@odata.id':
                               {'type': 'string',
                                'readonly': True,
-                               "description": "The unique identifier for a resource.",
-                               "longDescription": "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification.",
+                               "description": _('The unique identifier for a resource.'),
+                               "longDescription": _('The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification.'),
                                }
                               }
                              }
@@ -1752,7 +1764,7 @@ class DocFormatter:
             descr = non_normative_descr
 
         if self.config.get('normative') and pattern:
-            descr = descr + ' Pattern: ' + pattern
+            descr = _('%(descr)s Pattern: %(pattern)s') % {'descr': descr, 'pattern': pattern}
 
         return descr
 
@@ -1842,7 +1854,7 @@ class DocFormatter:
                     base_pattern_info = self.apply_overrides(base_pattern_info, schema_name, None)
 
                     # Override the description, if any, with a line describing the pattern.
-                    description = 'Property names follow regular expression pattern "' + self.escape_regexp(pattern) + '"'
+                    description = _('Property names follow regular expression pattern "%(pattern)s"') % {'pattern': self.escape_regexp(pattern)}
                     base_pattern_info['description'] = base_pattern_info['longDescription'] = description
                     base_pattern_info['verbatim_description'] = True
 
@@ -2020,7 +2032,7 @@ class DocFormatter:
                         prop_details[key][ref] = det[ref]
                     else:
                         if prop_details[key][ref]['formatted_descr'] != det[ref]['formatted_descr']:
-                            warnings.warn("mismatch detected in descriptions for " + key + " in " + self.this_section['head'])
+                            warnings.warn('mismatch detected in descriptions for %(key)s in %(heading)s' % {'key': key, 'heading': self.this_section['head']})
                         for path in det[ref]['paths']:
                             prop_details[key][ref]['paths'].append(path)
 
@@ -2170,11 +2182,13 @@ class DocFormatter:
 
     @staticmethod
     def text_map(text):
-        """Replace string for output -- used to replace strings with nicer English text"""
+        """Replace string for output -- used to replace strings with natural language text"""
 
         output_map = {
-            'IfImplemented': 'If Implemented',
-            'Conditional': 'Conditional Requirements',
+            'IfImplemented': _('If Implemented'),
+            'Conditional': _('Conditional Requirements'),
+            'Mandatory': _('Mandatory'),
+            'Recommended': _('Recommended'),
             }
         return output_map.get(text, text)
 

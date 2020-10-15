@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2017 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2017-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -33,40 +33,40 @@ class CsvGenerator(DocFormatter):
 
         if self.config.get('profile_mode'):
             headings = [
-                'Schema Name',
-                'Schema Version',
-                'Property Name (chain)',
-                'Read Requirement',
-                'Write Requirement',
-                'Minimum Count',
-                'Conditional Requirement',
-                'Purpose',
-                'Type',
-                'Nullable',
-                'Description',
-                'Normative Description',
-                'Units',
-                'Minimum Value',
-                'Maximum Value',
-                'Enumerations',
-                'Pattern',
+                _('Schema Name'),
+                _('Schema Version'),
+                _('Property Name (chain)'),
+                _('Read Requirement'),
+                _('Write Requirement'),
+                _('Minimum Count'),
+                _('Conditional Requirement'),
+                _('Purpose'),
+                _('Type'),
+                _('Nullable'),
+                _('Description'),
+                _('Normative Description'),
+                _('Units'),
+                _('Minimum Value'),
+                _('Maximum Value'),
+                _('Enumerations'),
+                _('Pattern'),
                 '']
         else:
             headings = [
-                'Schema Name',
-                'Schema Version',
-                'Property Name (chain)',
-                'Type',
-                'Permissions',
-                'Required',
-                'Nullable',
-                'Description',
-                'Normative Description',
-                'Units',
-                'Minimum Value',
-                'Maximum Value',
-                'Enumerations',
-                'Pattern',
+                _('Schema Name'),
+                _('Schema Version'),
+                _('Property Name (chain)'),
+                _('Type'),
+                _('Permissions'),
+                _('Required'),
+                _('Nullable'),
+                _('Description'),
+                _('Normative Description'),
+                _('Units'),
+                _('Minimum Value'),
+                _('Maximum Value'),
+                _('Enumerations'),
+                _('Pattern'),
                 '']
         self.writer.writerow(headings)
 
@@ -249,12 +249,12 @@ class CsvGenerator(DocFormatter):
                 continue
 
             elif subordinate_to:
-                req_desc = 'Resource instance is subordinate to ' + ' from '.join('"' + x + '"' for x in subordinate_to)
+                req_desc = _('Resource instance is subordinate to %(phrase)s') % {'phrase': (' ' + _('from') + ' ').join('"' + x + '"' for x in subordinate_to)}
 
             if compare_property:
                 comparison = creq.get('Comparison')
                 if comparison in ['Equal', 'LessThanOrEqual', 'GreaterThanOrEqual', 'NotEqual']:
-                    comparison += ' to'
+                    comparison += ' ' + _('to')
 
                 compare_values = creq.get('CompareValues') or creq.get('Values') # Which is right?
                 if compare_values:
@@ -262,7 +262,7 @@ class CsvGenerator(DocFormatter):
 
                 if req_desc:
                     req_desc += ' and '
-                req_desc += '"' + compare_property + '"' + ' is ' + comparison
+                req_desc += _('"%(property)s" is %(comparison)s') % {'property': compare_property, 'comparison': comparison}
 
                 if compare_values:
                     req_desc += ' ' + compare_values
