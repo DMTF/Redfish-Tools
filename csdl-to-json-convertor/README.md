@@ -41,20 +41,14 @@ optional arguments:
 
 The config file can contain up to five parameters; parameters not defined will have a default value in the tool:
 * Copyright: The copyright string to include in the JSON Schema files
-* RedfishSchema: A pointer to the Redfish extensions to JSON Schema
-* ODataSchema: A pointer to the OData extensions to JSON Schema
 * Location: A pointer to the web folder where the resulting JSON Schema files will be published
-* ResourceLocation: A pointer to the web folder where the core Resource_v1.xml file can be found
 * DoNotWrite: A list of the output files to filter out when writing the JSON files
 
 Sample File and Default Values:
 ```
 {
     "Copyright": "Copyright 2014-2017 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
-    "RedfishSchema": "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_2_0.json",
-    "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata.4.0.0.json",
     "Location": "http://redfish.dmtf.org/schemas/v1/",
-    "ResourceLocation": "http://redfish.dmtf.org/schemas/v1/",
     "DoNotWrite": []
 }
 ```

@@ -795,8 +795,7 @@ if __name__ == '__main__':
     # Manage the configuration data
     if "OutputFile" not in config_data:
         config_data["OutputFile"] = CONFIG_DEF_OUT_FILE
-    if "ODataSchema" not in config_data:
-        config_data["ODataSchema"] = CONFIG_DEF_ODATA_SCHEMA_LOC
+    config_data["ODataSchema"] = CONFIG_DEF_ODATA_SCHEMA_LOC
     if "MessageRef" not in config_data:
         config_data["MessageRef"] = CONFIG_DEF_MESSAGE_REF
     if "TaskRef" not in config_data:
