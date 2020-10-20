@@ -46,6 +46,11 @@ The following properties would otherwise be parsed from the supplemental markdow
 - ExcludedProperties: synonym for excluded_properties; supported for only for property index output (for backward compatibility).
 - DescriptionOverrides: for property index output (only). See the config_for_property_index.json file for examples.
 
+The following property can be supplied only in the config file:
+
+- locale: specifies a locale code (case-sensitive) for localized output. Localization of strings supplied by the doc generator code uses gettext. Locale files go in the "locale" directory in the doc_generator root. Translated descriptions and annotations may be supplied in localized JSON schema files.
+
+
 
 ## Examples
 
