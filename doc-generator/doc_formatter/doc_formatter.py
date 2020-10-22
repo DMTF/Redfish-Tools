@@ -64,6 +64,9 @@ class DocFormatter:
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
 
+        # We need this flag to distinguish "slate" markdown from standard markdown:
+        self.markdown_mode = config.get('output_format', 'markdown')
+
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
         self.documented_schemas = []
@@ -393,7 +396,10 @@ class DocFormatter:
 
         if prop_name:
             anchor = schema_ref + '|conditional_reqs|' + prop_name
-            formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
+            if self.markdown_mode == 'slate':
+                formatted.append(self.formatter.head_five(prop_name, self.level, anchor))
+            else:
+                formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
 
         rows = []
         for creq in conditional_reqs:

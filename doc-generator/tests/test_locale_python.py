@@ -29,7 +29,7 @@ base_config = {
     'profile': {},
     'escape_chars': [],
 
-    'output_format': 'markdown',
+    'output_format': 'slate',
 }
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.

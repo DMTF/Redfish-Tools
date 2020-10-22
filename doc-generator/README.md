@@ -1,12 +1,13 @@
 # Redfish Documentation Generator
 
-Copyright 2016-2018 Distributed Management Task Force, Inc. All rights reserved.
+Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
 
 ## About
 
-The `doc_generator.py` is a Python tool that parses a set of JSON schema files (typically the entire set for a version) and generates a Markdown document.
+The `doc_generator.py` is a Python tool that parses a set of JSON schema files (typically the entire set for a version) and generates a formatted documentation.
 
-Output is GitHub-flavored Markdown targeted for the [Slate API docs generator](https://github.com/tripit/slate).
+The default output is GitHub-flavored Markdown targeted for the [Slate API docs generator](https://github.com/tripit/slate). Other options include markdown tuned to the DMTF document publication process, HTML, "property index" documentation, and CSV.
+
 
 ## Installation
 
@@ -43,7 +44,7 @@ would otherwise be included in the Supplemental Material Document. See
 
 ```
 usage: doc_generator.py [-h] [--config CONFIG_FILE] [-n]
-                        [--format {markdown,html,csv}] [--out OUTFILE]
+                        [--format {slate,markdown,html,csv}] [--out OUTFILE]
                         [--sup SUPFILE] [--payload_dir payload_dir]
                         [--profile PROFILE_DOC] [-t] [--subset SUBSET_DOC]
                         [--property_index]
@@ -62,7 +63,7 @@ optional arguments:
   --config CONFIG_FILE  Path to a config file, containing configuration in
                         JSON format.
   -n, --normative       Produce normative (developer-focused) output
-  --format {markdown,html,csv}
+  --format {slate,markdown,html,csv}
                         Output format
   --out OUTFILE         Output file (default depends on output format:
                         output.md for Markdown, index.html for HTML,

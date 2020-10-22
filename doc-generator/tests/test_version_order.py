@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -33,7 +33,7 @@ base_config = {
     'profile': {},
     'escape_chars': [],
 
-    'output_format': 'markdown',
+    'output_format': 'slate',
 }
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.

@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -35,7 +35,7 @@ base_config = {
 def test_gather(mockRequest):
 
     config = copy.deepcopy(base_config)
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'network_sample'))
 
@@ -81,7 +81,7 @@ def test_identifier_versioning(mockRequest):
 def test_markdown_output(mockRequest):
 
     config = copy.deepcopy(base_config)
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
     config['supplemental'] = {'Introduction': "# Common Objects\n\n[insert_common_objects]\n"}
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'network_sample'))
