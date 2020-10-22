@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2019 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2019-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -35,7 +35,7 @@ def test_excerpt_circuit(mockRequest):
     """ The Circuit schema contains many references to excerpts """
 
     config = copy.deepcopy(base_config)
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'circuit'))
 
@@ -103,7 +103,7 @@ def test_excerpt_pdm(mockRequest):
     """
 
     config = copy.deepcopy(base_config)
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'power_distribution_metrics'))
 

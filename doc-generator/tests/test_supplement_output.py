@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -157,10 +157,10 @@ def test_supplement_description_vs_full_html (mockRequest):
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_supplement_output_markdown (mockRequest):
+def test_supplement_output_slate (mockRequest):
 
     config = copy.deepcopy(base_config)
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'ipaddresses'))
 

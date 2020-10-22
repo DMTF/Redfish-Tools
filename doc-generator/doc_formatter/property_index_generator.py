@@ -61,7 +61,7 @@ class PropertyIndexGenerator(DocFormatter):
         self.config['wants_common_objects'] = True
 
         # get the formatter, so we can use the appropriate markup.
-        output_format = self.config.get('output_format', 'markdown')
+        output_format = self.config.get('output_format', 'slate')
         if output_format == 'html':
             from format_utils import HtmlUtils
             self.formatter = HtmlUtils()
@@ -73,7 +73,7 @@ class PropertyIndexGenerator(DocFormatter):
     def emit(self):
         """ Return the data! """
         self.coalesce_properties()
-        output_format = self.config.get('output_format', 'markdown')
+        output_format = self.config.get('output_format', 'slate')
         output = ''
         frontmatter = backmatter = ''
         if 'property_index_boilerplate' in self.config:
@@ -92,7 +92,7 @@ class PropertyIndexGenerator(DocFormatter):
 
             output = self.add_html_boilerplate(output)
 
-        if output_format == 'markdown':
+        if output_format == 'slate':
             if frontmatter:
                 output = frontmatter
             else:

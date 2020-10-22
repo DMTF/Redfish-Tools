@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -85,11 +85,11 @@ def test_collection_uris_captured_when_collections_excluded (mockRequest):
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_uris_in_regular_schema_markdown_output (mockRequest):
+def test_uris_in_regular_schema_slate_output (mockRequest):
 
     config = copy.deepcopy(base_config)
     config['excluded_schemas_by_match'] = [ 'Collection' ]
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'input'))
 
@@ -111,11 +111,11 @@ def test_uris_in_regular_schema_markdown_output (mockRequest):
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_uris_in_collection_schema_markdown_output (mockRequest):
+def test_uris_in_collection_schema_slate_output (mockRequest):
 
     config = copy.deepcopy(base_config)
     config['excluded_schemas_by_match'] = [ 'Collection' ]
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
     config['supplemental'] = {'Introduction': "# Redfish Collections\n\n[insert_collections]\n"}
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'input'))
@@ -173,7 +173,7 @@ def test_action_uris (mockRequest):
     """
     config = copy.deepcopy(base_config)
     config['excluded_schemas_by_match'] = [ 'Collection' ]
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'actions'))
 
@@ -202,7 +202,7 @@ def test_actions_not_suppressed (mockRequest):
     """ By default, "Actions" appear in property tables. """
     config = copy.deepcopy(base_config)
     config['excluded_schemas_by_match'] = [ 'Collection' ]
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'actions'))
 
@@ -223,7 +223,7 @@ def test_actions_suppressed (mockRequest):
     """
     config = copy.deepcopy(base_config)
     config['excluded_schemas_by_match'] = [ 'Collection' ]
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
     config['actions_in_property_table'] = False
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'actions'))
