@@ -174,6 +174,10 @@ class DocFormatter:
         """ Add the schema description """
         raise NotImplementedError
 
+    def add_deprecation_text(self, deprecation_text):
+        """ Add deprecation text for a schema """
+        raise NotImplementedError
+
 
     def add_uris(self, uris):
         """ Add the uris """
@@ -549,6 +553,9 @@ class DocFormatter:
 
             if description:
                 self.add_description(description)
+
+            if details.get('deprecated'):
+                self.add_deprecation_text(details['deprecated'])
 
             if len(uris):
                 self.add_uris(uris)
@@ -2226,6 +2233,8 @@ class DocFormatter:
             num_releases = num_releases + 1
             if len(summarized) <= max_entries:
                 version = DocFormatter.truncate_version(elt['version'], 2, True)
+                if elt['deprecated']:
+                    version += ' Deprecated'
                 summarized.append({"version": "v" + version, "release": latest_release})
             else:
                 summarized.append({"version": "...", "release": "..."})

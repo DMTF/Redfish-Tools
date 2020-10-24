@@ -714,6 +714,9 @@ pre.code{
             if section.get('conditional_requirements'):
                 contents.append(section['conditional_requirements'])
 
+            if section.get('deprecation_text'):
+                contents.append(section['deprecation_text'])
+
             if section.get('description'):
                 contents.append(section['description'])
 
@@ -961,6 +964,13 @@ pre.code{
     def add_description(self, text):
         """ Add the schema description """
         self.this_section['description'] = self.formatter.markdown_to_html(text)
+
+
+    def add_deprecation_text(self, deprecation_text):
+        """ Add deprecation text for a schema """
+        depr_text = self.formatter.markdown_to_html(deprecation_text, no_para=True)
+        depr_text = self.formatter.italic(_('This schema has been deprecated and use in new implementations is discouraged except to retain compatibility with existing products.')) + ' ' + depr_text
+        self.this_section['deprecation_text'] = depr_text
 
 
     def add_uris(self, uris):

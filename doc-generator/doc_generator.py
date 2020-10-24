@@ -630,7 +630,6 @@ class DocGenerator:
                 translated_data = DocGenUtilities.load_as_json(translated_file)
                 data = self.apply_translated_data(data, translated_data)
 
-
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
 
         version = self.get_version_string(ref['filename'])
@@ -639,13 +638,17 @@ class DocGenerator:
         property_data['name_and_version'] = schema_name
         property_data['normalized_uri'] = normalized_uri
         property_data['latest_version'] = version
+        if 'deprecated' in data:
+            property_data['deprecated'] = data['deprecated']
+            property_data['versionDeprecated'] = data.get('versionDeprecated')
 
         if data.get('release'):
             release_history = property_data.get('release_history')
             if not release_history:
                 property_data['release_history'] = []
                 release_history = property_data.get('release_history')
-            release_history.append({'version': version, 'release': data.get('release')})
+            release_text = data.get('release', '')
+            release_history.append({'version': version, 'release': release_text, 'deprecated': ('deprecated' in property_data)})
 
         min_version = False
         if profile_mode:
@@ -669,6 +672,9 @@ class DocGenerator:
                 return {}
         elif version:
             property_data['name_and_version'] += ' ' + version
+
+        if 'deprecated' in property_data:
+            property_data['name_and_version'] += ' (deprecated)'
 
         if 'properties' not in property_data:
             property_data['properties'] = {}

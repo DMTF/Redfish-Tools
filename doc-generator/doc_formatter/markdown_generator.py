@@ -628,6 +628,8 @@ class MarkdownGenerator(DocFormatter):
                 contents.append(section['release_history'])
             if section.get('conditional_requirements'):
                 contents.append(section['conditional_requirements'])
+            if section.get('deprecation_text'):
+                contents.append(section['deprecation_text'])
             if section.get('description'):
                 contents.append(section['description'])
             if section.get('uris'):
@@ -806,6 +808,12 @@ search: true
     def add_description(self, text):
         """ Add the schema description """
         self.this_section['description'] = text + '\n'
+
+
+    def add_deprecation_text(self, deprecation_text):
+        """ Add deprecation text for a schema """
+        depr_text = self.formatter.italic(_('This schema has been deprecated and use in new implementations is discouraged except to retain compatibility with existing products.')) + ' ' + deprecation_text
+        self.this_section['deprecation_text'] = depr_text + '\n'
 
 
     def add_uris(self, uris):
