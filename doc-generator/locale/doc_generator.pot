@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2020-10-23 17:07-0700\n"
+"POT-Creation-Date: 2020-10-26 12:16-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -248,6 +248,10 @@ msgstr ""
 msgid "Recommended"
 msgstr ""
 
+#: doc_formatter/doc_formatter.py:2243
+msgid "Deprecated"
+msgstr ""
+
 #: doc_formatter/html_generator.py:302 doc_formatter/markdown_generator.py:193
 msgid "For the possible property values, see %(link)s in Property details."
 msgstr ""
@@ -471,5 +475,9 @@ msgstr ""
 
 #: doc_formatter/property_index_generator.py:520
 msgid "Schema"
+msgstr ""
+
+#: doc_generator.py:677
+msgid "(deprecated)"
 msgstr ""
 

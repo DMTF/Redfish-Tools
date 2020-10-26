@@ -674,7 +674,7 @@ class DocGenerator:
             property_data['name_and_version'] += ' ' + version
 
         if 'deprecated' in property_data:
-            property_data['name_and_version'] += ' (deprecated)'
+            property_data['name_and_version'] += ' ' + _('(deprecated)')
 
         if 'properties' not in property_data:
             property_data['properties'] = {}

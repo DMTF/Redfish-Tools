@@ -2240,7 +2240,7 @@ class DocFormatter:
                 if versionDeprecated:
                     compare = DocGenUtilities.compare_versions(version, versionDepr_cleaned)
                     if compare >= 0:
-                        version += ' Deprecated'
+                        version += ' ' + _('Deprecated')
                 summarized.append({"version": "v" + version, "release": latest_release})
             else:
                 summarized.append({"version": "...", "release": "..."})
