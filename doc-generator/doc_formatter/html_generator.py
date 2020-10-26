@@ -386,7 +386,7 @@ pre.code{
         # Comparison
         if formatted_details['profile_values']:
             comparison_descr = (_('Must be %(comparison_word)s (%(values)s)') %
-                                    {'comparison_words': formatted_details['profile_comparison'],
+                                    {'comparison_word': formatted_details['profile_comparison'],
                                      'values': ', '.join('"' + x + '"' for x in formatted_details['profile_values'])})
             profile_access += '<br>' + self.formatter.italic(comparison_descr)
 
