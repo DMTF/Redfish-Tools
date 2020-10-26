@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2019 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2019-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -123,7 +123,7 @@ def test_config_defaults():
     cwd = os.getcwd()
 
     config = DocGenerator.combine_configs()
-    assert config['output_format'] == 'markdown'
+    assert config['output_format'] == 'slate'
     assert config['output_content'] == 'full_doc'
     assert config['outfile_name'] == 'output.md'
     assert config['cwd'] == cwd

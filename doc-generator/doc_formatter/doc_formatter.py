@@ -64,6 +64,9 @@ class DocFormatter:
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
 
+        # We need this flag to distinguish "slate" markdown from standard markdown:
+        self.markdown_mode = config.get('output_format', 'markdown')
+
         # Get a list of schemas that will appear in the documentation. We need this to know
         # when to create an internal link, versus a link to a URI.
         self.documented_schemas = []
@@ -171,6 +174,10 @@ class DocFormatter:
         """ Add the schema description """
         raise NotImplementedError
 
+    def add_deprecation_text(self, deprecation_text):
+        """ Add deprecation text for a schema """
+        raise NotImplementedError
+
 
     def add_uris(self, uris):
         """ Add the uris """
@@ -182,9 +189,9 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def add_release_history(self, release_history):
+    def add_release_history(self, release_history, versionDeprecated=False):
         """ Add the release history. """
-        summarized = self.summarize_release_history(release_history)
+        summarized = self.summarize_release_history(release_history, versionDeprecated)
         versions = []
         releases = []
         for elt in summarized:
@@ -393,7 +400,10 @@ class DocFormatter:
 
         if prop_name:
             anchor = schema_ref + '|conditional_reqs|' + prop_name
-            formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
+            if self.markdown_mode == 'slate':
+                formatted.append(self.formatter.head_five(prop_name, self.level, anchor))
+            else:
+                formatted.append(self.formatter.head_four(prop_name, self.level, anchor))
 
         rows = []
         for creq in conditional_reqs:
@@ -544,6 +554,9 @@ class DocFormatter:
             if description:
                 self.add_description(description)
 
+            if details.get('deprecated'):
+                self.add_deprecation_text(details['deprecated'])
+
             if len(uris):
                 self.add_uris(uris)
                 self.current_uris = uris
@@ -551,7 +564,7 @@ class DocFormatter:
                 self.current_uris = []
 
             if details.get('release_history') and not self.config.get('suppress_version_history'):
-                self.add_release_history(details['release_history'])
+                self.add_release_history(details['release_history'], details.get('versionDeprecated'))
 
             if conditional_details:
                 self.add_conditional_requirements(conditional_details)
@@ -2199,7 +2212,7 @@ class DocFormatter:
 
 
     @staticmethod
-    def summarize_release_history(release_history):
+    def summarize_release_history(release_history, versionDeprecated=False):
         """ Create a summary of the given release history, which is assumed to be ordered oldest-first:
 
         * last 6 entries by major/minor version
@@ -2213,6 +2226,10 @@ class DocFormatter:
         latest_release = ''
         num_releases = 0
 
+        if versionDeprecated:
+            versionDepr_cleaned = versionDeprecated.replace('_', '.')
+            versionDepr_cleaned = versionDepr_cleaned[1:] # Remove leading 'v'
+
         for elt in all:
             if elt['release'] == latest_release:
                 continue
@@ -2220,6 +2237,10 @@ class DocFormatter:
             num_releases = num_releases + 1
             if len(summarized) <= max_entries:
                 version = DocFormatter.truncate_version(elt['version'], 2, True)
+                if versionDeprecated:
+                    compare = DocGenUtilities.compare_versions(version, versionDepr_cleaned)
+                    if compare >= 0:
+                        version += ' ' + _('Deprecated')
                 summarized.append({"version": "v" + version, "release": latest_release})
             else:
                 summarized.append({"version": "...", "release": "..."})

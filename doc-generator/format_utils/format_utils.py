@@ -30,12 +30,12 @@ class FormatUtils():
     def head_four(self, text, level, anchor_id=None):
         """Add a fourth-level heading, relative to the generator's level"""
         add_level = '' + '#' * level
-        return add_level + '##### ' + text + "\n"
+        return add_level + '#### ' + text + "\n"
 
     def head_five(self, text, level, anchor_id=None):
         """Add a fifth-level heading, relative to the generator's level"""
         add_level = '' + '#' * level
-        return add_level + '###### ' + text + "\n"
+        return add_level + '##### ' + text + "\n"
 
     @staticmethod
     def para(text):

@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -33,7 +33,7 @@ property_index_config = {
 
 base_config = {
     'output_content': 'property_index',
-    'output_format': 'markdown',
+    'output_format': 'slate',
     'excluded_by_match': ['@odata.count', '@odata.navigationLink'],
     'profile_resources': {},
     'units_translation': {},
@@ -139,7 +139,7 @@ def test_property_index_config_overrides(mockRequest):
     """ Test that overrides are applied. """
 
     config = copy.deepcopy(base_config)
-    config['output_format'] = 'markdown'
+    config['output_format'] = 'slate'
 
     override_desc = "This is an override description for NetDevFuncCapbilities, a string."
 

@@ -1,0 +1,46 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/Power.json",
+    "$ref": "#/definitions/Power",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2020 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "Power": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/idRef"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Power.v1_0_11.json#/definitions/Power"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Power.v1_1_9.json#/definitions/Power"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Power.v1_2_9.json#/definitions/Power"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Power.v1_3_7.json#/definitions/Power"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Power.v1_4_6.json#/definitions/Power"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Power.v1_5_5.json#/definitions/Power"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Power.v1_6_0.json#/definitions/Power"
+                }
+            ],
+            "deletable": false,
+            "description": "The Power schema describes power metrics and represents the properties for power consumption and power limiting.",
+            "insertable": false,
+            "longDescription": "This resource shall contain the power metrics for a Redfish implementation.",
+            "updatable": true,
+            "uris": [
+                "/redfish/v1/Chassis/{ChassisId}/Power"
+            ]
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#Power.Power"
+}

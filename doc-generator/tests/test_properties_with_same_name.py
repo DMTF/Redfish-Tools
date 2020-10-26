@@ -30,7 +30,7 @@ base_config = {
     'wants_common_objects': True,
     'profile': {},
     'escape_chars': [],
-    'output_format': 'markdown',
+    'output_format': 'slate',
 }
 
 

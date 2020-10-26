@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2019 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2019-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -29,37 +29,44 @@ base_config = {
     'profile': {},
     'escape_chars': [],
 
-    'output_format': 'markdown',
+    'output_format': 'slate',
 }
 
 expected_release_history = [
     {
     "version": "1.0.6",
-    "release": "2016.1"
+    "release": "2016.1",
+    'deprecated': False,
     },
     {
     "version": "1.1.5",
-    "release": "2016.2"
+    "release": "2016.2",
+    'deprecated': False,
     },
     {
     "version": "1.2.3",
-    "release": "2017.1"
+    "release": "2017.1",
+    'deprecated': False,
     },
     {
     "version": "1.3.3",
-    "release": "2017.2"
+    "release": "2017.2",
+    'deprecated': False,
     },
     {
     "version": "1.4.2",
-    "release": "2017.3"
+    "release": "2017.3",
+    'deprecated': False,
     },
     {
     "version": "1.5.1",
-    "release": "2018.2"
+    "release": "2018.2",
+    'deprecated': False,
     },
     {
     "version": "1.6.0",
-    "release": "2018.3"
+    "release": "2018.3",
+    'deprecated': False,
     }
 ]
 
@@ -104,11 +111,11 @@ def test_release_history_summary_data(mockRequest):
     # Insert a few additional version entries, as we can expect future schemas to include
     # release data from day 1 -- meaning we will see the same release repeated a few times.
     release_history = copy.deepcopy(expected_release_history)
-    release_history.insert(4, {"version": "1.4.1", "release": "2017.3"})
-    release_history.insert(4, {"version": "1.4.0", "release": "2017.3"})
-    release_history.insert(3, {"version": "1.3.2", "release": "2017.2"})
-    release_history.insert(3, {"version": "1.3.1", "release": "2017.2"})
-    release_history.insert(3, {"version": "1.3.0", "release": "2017.2"})
+    release_history.insert(4, {"version": "1.4.1", "release": "2017.3", 'deprecated': False})
+    release_history.insert(4, {"version": "1.4.0", "release": "2017.3", 'deprecated': False})
+    release_history.insert(3, {"version": "1.3.2", "release": "2017.2", 'deprecated': False})
+    release_history.insert(3, {"version": "1.3.1", "release": "2017.2", 'deprecated': True})
+    release_history.insert(3, {"version": "1.3.0", "release": "2017.2", 'deprecated': True})
 
     summary = DocFormatter.summarize_release_history(release_history)
 
@@ -119,27 +126,27 @@ def test_release_history_summary_data(mockRequest):
         },
         {
         "version": "v1.5",
-        "release": "2018.2"
+        "release": "2018.2",
         },
         {
         "version": "v1.4",
-        "release": "2017.3"
+        "release": "2017.3",
         },
         {
         "version": "v1.3",
-        "release": "2017.2"
+        "release": "2017.2",
         },
         {
         "version": "v1.2",
-        "release": "2017.1"
+        "release": "2017.1",
         },
         {
         "version": "v1.1",
-        "release": "2016.2"
+        "release": "2016.2",
         },
         {
         "version": "v1.0",
-        "release": "2016.1"
+        "release": "2016.1",
         },
         ]
     assert summary == expected_summary
