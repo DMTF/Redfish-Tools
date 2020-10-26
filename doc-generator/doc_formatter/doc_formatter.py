@@ -189,9 +189,9 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def add_release_history(self, release_history):
+    def add_release_history(self, release_history, versionDeprecated=False):
         """ Add the release history. """
-        summarized = self.summarize_release_history(release_history)
+        summarized = self.summarize_release_history(release_history, versionDeprecated)
         versions = []
         releases = []
         for elt in summarized:
@@ -564,7 +564,7 @@ class DocFormatter:
                 self.current_uris = []
 
             if details.get('release_history') and not self.config.get('suppress_version_history'):
-                self.add_release_history(details['release_history'])
+                self.add_release_history(details['release_history'], details.get('versionDeprecated'))
 
             if conditional_details:
                 self.add_conditional_requirements(conditional_details)
@@ -2212,7 +2212,7 @@ class DocFormatter:
 
 
     @staticmethod
-    def summarize_release_history(release_history):
+    def summarize_release_history(release_history, versionDeprecated=False):
         """ Create a summary of the given release history, which is assumed to be ordered oldest-first:
 
         * last 6 entries by major/minor version
@@ -2226,6 +2226,10 @@ class DocFormatter:
         latest_release = ''
         num_releases = 0
 
+        if versionDeprecated:
+            versionDepr_cleaned = versionDeprecated.replace('_', '.')
+            versionDepr_cleaned = versionDepr_cleaned[1:] # Remove leading 'v'
+
         for elt in all:
             if elt['release'] == latest_release:
                 continue
@@ -2233,8 +2237,10 @@ class DocFormatter:
             num_releases = num_releases + 1
             if len(summarized) <= max_entries:
                 version = DocFormatter.truncate_version(elt['version'], 2, True)
-                if elt['deprecated']:
-                    version += ' Deprecated'
+                if versionDeprecated:
+                    compare = DocGenUtilities.compare_versions(version, versionDepr_cleaned)
+                    if compare >= 0:
+                        version += ' Deprecated'
                 summarized.append({"version": "v" + version, "release": latest_release})
             else:
                 summarized.append({"version": "...", "release": "..."})
