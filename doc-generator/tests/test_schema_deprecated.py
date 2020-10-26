@@ -32,6 +32,7 @@ base_config = {
     'output_format': 'markdown',
 }
 
+
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_schema_deprecated_latest_output_markdown(mockRequest):
     """ Verify markdown output contains expected deprecation info. Deprecation is at latest (current) version."""
@@ -81,6 +82,68 @@ def test_schema_deprecated_latest_output_html(mockRequest):
     expected_strings = [
         'Power 1.6.0 (deprecated)',
         'v1.6 Deprecated',
+        'This schema has been deprecated and use in new implementations is discouraged except to retain compatibility with existing products.',
+        'This schema has been deprecated because absolute power corrupts absolutely.',
+        ]
+
+    for expected in expected_strings:
+        if expected not in output:
+            discrepancies.append('"' + expected + '" not found')
+
+    assert [] == discrepancies
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_schema_deprecated_earlier_output_markdown(mockRequest):
+    """ Verify markdown output contains expected deprecation info. Deprecation starts at previous version."""
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'earlier_deprecated', 'input'))
+
+    config = copy.deepcopy(base_config)
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+    config['output_format'] = 'markdown'
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    discrepancies = DiscrepancyList()
+
+    expected_strings = [
+        'Power 1.6.0 (deprecated)',
+        'v1.6 Deprecated',
+        'v1.5 Deprecated',
+        'This schema has been deprecated and use in new implementations is discouraged except to retain compatibility with existing products.',
+        'This schema has been deprecated because absolute power corrupts absolutely.',
+        ]
+
+    for expected in expected_strings:
+        if expected not in output:
+            discrepancies.append('"' + expected + '" not found')
+
+    assert [] == discrepancies
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_schema_deprecated_earlier_output_html(mockRequest):
+    """ Verify HTML output contains expected deprecation info. Deprecation starts at previous version."""
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'earlier_deprecated', 'input'))
+
+    config = copy.deepcopy(base_config)
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+    config['output_format'] = 'html'
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    discrepancies = DiscrepancyList()
+
+    expected_strings = [
+        'Power 1.6.0 (deprecated)',
+        'v1.6 Deprecated',
+        'v1.5 Deprecated',
         'This schema has been deprecated and use in new implementations is discouraged except to retain compatibility with existing products.',
         'This schema has been deprecated because absolute power corrupts absolutely.',
         ]
