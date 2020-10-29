@@ -47,7 +47,8 @@ class MarkdownGenerator(DocFormatter):
             self.format_head_four = self.formatter.head_three
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False,
+                                in_schema_ref=None):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':

@@ -158,7 +158,8 @@ pre.code{
 </style>
 """
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False,
+                                in_schema_ref=None):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', 'action_details', and 'profile_conditional_details':
@@ -170,6 +171,9 @@ pre.code{
 
         This may include embedded objects with their own properties.
         """
+
+        if not in_schema_ref:
+            in_schema_ref = schema_ref
 
         traverser = self.traverser
         formatted = []     # The row itself
@@ -298,7 +302,7 @@ pre.code{
             # If there are prop_details (enum details), add a note to the description:
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 if has_enum:
-                    anchor = schema_ref + '|details|' + prop_name
+                    anchor = in_schema_ref + '|details|' + prop_name
                     text_descr = (_('For the possible property values, see %(link)s in Property details.') %
                                       {'link': '<a href="#' + anchor + '">' + prop_name + '</a>'})
                 else:
@@ -310,7 +314,7 @@ pre.code{
 
             # If this is an Action with details, add a note to the description:
             if formatted_details['has_action_details']:
-                anchor = schema_ref + '|action_details|' + prop_name
+                anchor = in_schema_ref + '|action_details|' + prop_name
                 text_descr = (_('For more information, see the %(link)s section below.') %
                                   {'link': '<a href="#' + anchor + '">' + _('Actions') + '</a>'})
                 formatted_details['descr'] += '<br>' + self.formatter.italic(text_descr)
@@ -374,7 +378,7 @@ pre.code{
         # Conditional Requirements
         cond_req = formatted_details['profile_conditional_req']
         if cond_req:
-            anchor = schema_ref + '|conditional_reqs|' + prop_name
+            anchor = in_schema_ref + '|conditional_reqs|' + prop_name
             cond_req_text = (_('See %(link)s, below, for more information.') %
                                  {'link': '<a href="#' + anchor + '">' + _('Conditional Requirements') + '</a>'})
             descr += ' ' + self.formatter.nobr(self.formatter.italic(cond_req_text))

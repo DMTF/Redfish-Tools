@@ -71,7 +71,8 @@ class CsvGenerator(DocFormatter):
         self.writer.writerow(headings)
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False,
+                                in_schema_ref=None):
         """Format information for a single property.
 
         Returns an object with 'row', 'details', and 'action_details':

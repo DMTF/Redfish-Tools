@@ -1,0 +1,96 @@
+{
+	"SchemaDefinition": "RedfishInteroperabilityProfile.v1_2_0",
+	"ProfileName": "Redfish Translation Layer",
+	"ProfileVersion": "0.8.0",
+	"Purpose": "Schema and annotations for Redfish Translation Layer",
+	"OwningEntity": "DMTF",
+	"Resources": {
+		"Chassis": {
+	        	"PropertyRequirements": {
+				"ChassisType": {
+					"Comparison": "AnyOf",
+					"Values": ["RackMount", "Drawer", "Shelf"]
+			},
+				"Id": {},
+				"IndicatorLED": {
+					"ReadRequirement": "Mandatory",
+					"WriteRequirement": "Mandatory",
+					"Comparison": "AnyOf",
+					"Values": ["Lit", "Off", "Blinking"]
+				},
+				"Links": {
+	        			"PropertyRequirements": {
+						"ComputerSystems": {
+					             "MinCount": 1
+						},
+						"ManagedBy": {
+					             "MinCount": 1
+						}
+					}
+				},
+				"Manufacturer": {},
+				"Model": {},
+				"Name": {},
+				"Power": {},
+				"PowerState": {},
+				"SerialNumber": {},
+				"SKU": {},
+				"Status": {
+	        			 "PropertyRequirements": {
+						"Health": {
+							"ReadRequirement" : "IfPopulated"
+						},
+						"State": {}
+					}
+				},
+				"Thermal": {}
+			}
+		},
+		"EthernetInterface": {
+	        	"PropertyRequirements": {
+				"Id": {},
+				"InterfaceEnabled": {},
+				"IPv4Addresses": {
+	        			 "PropertyRequirements": {
+						"Address": {
+							"ReadRequirement" : "IfPopulated"
+						}
+					 }
+				},
+				"IPv6Addresses": {
+	        			 "PropertyRequirements": {
+						"Address": {
+							"ReadRequirement" : "IfPopulated"
+						}
+					 }
+				},
+				"LinkStatus": {
+					"Comparison": "AnyOf",
+					"Values": ["LinkUp", "NoLink", "LinkDown"]
+				},
+				"MACAddress": {},
+				"Name": {},
+				"SpeedMbps": {},
+				"Status": {
+	        			 "PropertyRequirements": {
+						"State": {}
+					}
+				}
+			}
+		}
+	},
+	"Registries": {
+		"Base": {
+			"Repository": "http://redfish.dmtf.org/registries"
+		},
+		"ResourceEvent": {
+			"Repository": "http://redfish.dmtf.org/registries",
+			"Messages": {
+				"ResourceChanged": {},
+				"ResourceStatusChangedOK": {},
+				"ResourceStatusChangedWarning": {},
+				"ResourceStatusChangedCritical": {}
+			}
+		}
+	}
+}

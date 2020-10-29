@@ -1,0 +1,48 @@
+{
+	"version": "0.8.0",
+	"description": "Redfish Translation Layer",
+	"format": "html",
+	"import_from": ["../json-schema"],
+	"outfile": "./RedfishTranslationLayer.html",
+	"uri_mapping": {
+		"redfish.dmtf.org/schemas/v1": "../json-schema"
+	},
+	"subset_doc": "./RedfishTranslationLayer.json",
+	"actions_in_property_table": false,
+	"excluded_properties": [
+		"@odata.context",
+		"@odata.type",
+		"@odata.id",
+		"@odata.etag",
+		"Oem",
+		"HealthRollup"
+
+	],
+	"excluded_annotations": [
+		"*@odata.count",
+		"*@odata.navigationLink"
+	],
+	"excluded_schemas": [
+		"*Collection",
+		"HostedStorageServices",
+		"StorageService",
+		"StorageSystem",
+		"StorageServiceCollection",
+		"StorageSystemCollection",
+		"idRef"
+	],
+	"excluded_pattern_properties": [
+		"^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$"
+	],
+	"units_translation": {
+		"s": "seconds",
+		"Mb/s": "Mbits/second",
+		"By": "bytes",
+		"Cel": "Celsius",
+		"MiBy": "mebibytes",
+		"W": "Watts",
+		"V": "Volts",
+		"mW": "milliWatts",
+		"m": "meters"
+	}
+}
