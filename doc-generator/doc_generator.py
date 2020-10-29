@@ -88,6 +88,12 @@ class DocGenerator:
             profile_resources = self.merge_dicts(profile_merged.get('Resources', {}),
                                                      self.config.get('profile', {}).get('Resources', {}))
 
+            # Warn the user if a profile specifies items in selected schemas that "don't make sense":
+            for schema_name in ['IPAddresses', 'Redundancy', 'Resource', 'Settings']:
+                if schema_name in profile_resources:
+                    warnings.warn('Profiles should not specify requirements directly on the "%(name)s" schema.' %
+                                      {'name': schema_name})
+
             if config['profile_mode'] != 'subset':
                 profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
                                                      self.config.get('profile', {}).get('Protocol', {}))

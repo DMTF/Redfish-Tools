@@ -97,7 +97,7 @@ class DocFormatter:
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
             'readonly', 'prop_required', 'prop_required_on_create', 'requiredParameter', 'required_parameter',
             'versionAdded', 'versionDeprecated', 'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated',
-            'translation'
+            'translation', '_profile'
             ]
 
 
@@ -257,7 +257,8 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False,
+                                in_schema_ref=None):
         """Format information for a single property. Returns an object with 'row' and 'details'.
 
         'row': content for the main table being generated.
@@ -586,6 +587,8 @@ class DocFormatter:
                 if self.config.get('combine_multiple_refs', 0) > 1:
                     for prop_name in prop_names:
                         prop_info = properties[prop_name]
+                        if profile:
+                            prop_info['_profile'] = profile.get('PropertyRequirements', {}.get(prop_name))
 
                         # Note: we are calling extend_property_info here solely for the purpose of counting refs.
                         # In the next loop we call it again to generate the data to format -- we need to get the complete count
@@ -607,6 +610,9 @@ class DocFormatter:
                     prop_info['parent_requires'] = required
                     prop_info['parent_requires_on_create'] = required_on_create
                     prop_info['required_parameter'] = prop_info.get('requiredParameter')
+                    if profile:
+                        prop_info['_profile'] = profile.get('PropertyRequirements', {}).get(prop_name)
+
                     prop_infos = self.extend_property_info(schema_ref, prop_info)
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                     if formatted:
@@ -824,6 +830,8 @@ class DocFormatter:
         outside_ref = None
         schema_name = traverser.get_schema_name(schema_ref)
 
+        profile = prop_info.get('_profile', None)
+
         excerpt_copy_name = prop_info.get('excerptCopy')
         if excerpt_copy_name and excerpt_copy_name.endswith('Excerpt'): # It should.
             excerpt_copy_name = excerpt_copy_name[:-7]
@@ -879,6 +887,7 @@ class DocFormatter:
                 prop_name = ref_info.get('_prop_name', False)
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
                 reference_disposition = self.config.get('reference_disposition') and self.config['reference_disposition'].get(prop_ref)
+                include_per_profile = profile is not None
 
                 if is_collection_of and ref_info.get('anyOf'):
                     anyof_ref = None
@@ -895,7 +904,7 @@ class DocFormatter:
                 if ref_info.get('type') == 'object':
                     # If this is an excerpt, it will also be an object, and we want to expand-in-place.
                     # The same applies (or should) if config explicitly says to include:
-                    if excerpt_copy_name or (reference_disposition == 'include'):
+                    if excerpt_copy_name or (reference_disposition == 'include') or include_per_profile:
                         if is_documented_schema:
                             excerpt_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
                         else: # This is not expected.
@@ -1263,7 +1272,7 @@ class DocFormatter:
                   'profile_comparison': None
                  }
 
-        profile = None
+        profile = fallback_profile = None
         # Skip profile data if prop_name is blank -- this is just an additional row of info and
         # the "parent" row will have the profile info.
         if self.config.get('profile_mode') and prop_name:
@@ -1272,7 +1281,7 @@ class DocFormatter:
                 profile_section = 'ActionRequirements'
             path_to_prop = prop_path.copy()
             path_to_prop.append(prop_name)
-            profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
+            fallback_profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
         anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path)
                          for x in prop_infos]
@@ -1315,6 +1324,11 @@ class DocFormatter:
         parsed['prop_required_on_create'] = details[0]['prop_required_on_create']
         parsed['required_parameter'] = details[0].get('requiredParameter') == True
 
+        if '_profile' in parsed:
+            profile = parsed['_profile']
+        else:
+            profile = fallback_profile
+
         if profile is not None:
             parsed['is_in_profile'] = True
             parsed['profile_read_req'] = profile.get('ReadRequirement', 'Mandatory')
@@ -1353,7 +1367,6 @@ class DocFormatter:
         """
         traverser = self.traverser
 
-        # TODO: should this be true for any path that starts with 'Actions'?
         within_action = prop_path == ['Actions']
 
         # type may be a string or a list.
@@ -1379,7 +1392,9 @@ class DocFormatter:
         # Skip profile data if prop_name is blank -- this is just an additional row of info and
         # the "parent" row will have the profile info.
         profile = None
-        if self.config.get('profile_mode') and prop_name:
+        if '_profile' in prop_info:
+            profile = prop_info['_profile']
+        elif self.config.get('profile_mode') and prop_name: # TODO: unclear if this clause is still needed.
             prop_brief_name = prop_name
             profile_section = 'PropertyRequirements'
             if within_action:
@@ -1499,6 +1514,10 @@ class DocFormatter:
         promote_me = False # Special case to replace enclosing array with combined array/simple-type
 
         if isinstance(prop_item, dict):
+
+            if '_profile' in prop_info:
+                prop_item['_profile'] = prop_info['_profile'] # carry through the profile, if present.
+
             if 'type' in prop_item and 'properties' not in prop_item:
                 prop_items = [prop_item]
                 collapse_description = True
@@ -1516,7 +1535,7 @@ class DocFormatter:
                     prop_item['readonly'] = prop_info['readonly']
 
                 prop_items = self.extend_property_info(schema_ref, prop_item)
-                # TODO: maybe capture dups here
+
                 if excerpt_copy_name:
                     excerpt_ref_uri = prop_items[0].get('_ref_uri')
                     excerpt_schema_ref = prop_items[0].get('_from_schema_ref')
@@ -1792,8 +1811,9 @@ class DocFormatter:
         conditional_details = {}
 
         # If prop_info was extracted from a different schema, it will be present as _from_schema_ref
+        in_schema_ref = schema_ref
         schema_ref = prop_info.get('_from_schema_ref', schema_ref)
-        schema_name = self.traverser.get_schema_name(schema_ref)
+        in_schema_name = self.traverser.get_schema_name(in_schema_ref)
 
         required = prop_info.get('required', [])
         required_on_create = prop_info.get('requiredOnCreate', [])
@@ -1801,18 +1821,22 @@ class DocFormatter:
         parent_requires = prop_info.get('parent_requires', [])
         parent_requires_on_create = prop_info.get('parent_requires_on_create', [])
 
-        prop_names = patterns = False
+        prop_names = patterns = profile = False
+        if len(prop_path) and prop_path[0] == 'Actions':
+            profile_section = 'ActionRequirements'
+        else:
+            profile_section = 'PropertyRequirements'
 
         if properties:
 
             prop_names = [x for x in properties.keys()]
 
             if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
-                if len(prop_path) and prop_path[0] == 'Actions':
-                    profile_section = 'ActionRequirements'
+
+                if '_profile' in prop_info:
+                    profile = prop_info['_profile']
                 else:
-                    profile_section = 'PropertyRequirements'
-                profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
+                    profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
 
                 if profile:
                     prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
@@ -1833,7 +1857,9 @@ class DocFormatter:
                 base_detail_info['prop_required'] = base_detail_info.get('prop_required') or prop_name in parent_requires
                 base_detail_info['prop_required_on_create'] = (base_detail_info.get('prop_required_on_create') or
                                                                    prop_name in parent_requires_on_create)
-                base_detail_info = self.apply_overrides(base_detail_info, schema_name, prop_name)
+                base_detail_info = self.apply_overrides(base_detail_info, in_schema_name, prop_name)
+                if profile:
+                    base_detail_info['_profile'] = profile.get(profile_section, {}).get(prop_name)
                 detail_info = self.extend_property_info(schema_ref, base_detail_info)
 
                 if is_action:
@@ -1842,7 +1868,7 @@ class DocFormatter:
 
                 new_path = prop_path.copy()
 
-                formatted = self.format_property_row(schema_ref, prop_name, detail_info, new_path)
+                formatted = self.format_property_row(schema_ref, prop_name, detail_info, new_path, in_schema_ref=in_schema_ref)
                 if formatted:
                     output.append(formatted['row'])
                     if formatted['details']:
@@ -1864,7 +1890,7 @@ class DocFormatter:
                     base_pattern_info['prop_required'] = False
                     base_pattern_info['prop_required_on_create'] = False
 
-                    base_pattern_info = self.apply_overrides(base_pattern_info, schema_name, None)
+                    base_pattern_info = self.apply_overrides(base_pattern_info, in_schema_name, None)
 
                     # Override the description, if any, with a line describing the pattern.
                     description = _('Property names follow regular expression pattern "%(pattern)s"') % {'pattern': self.escape_regexp(pattern)}
@@ -1873,7 +1899,7 @@ class DocFormatter:
 
                     pattern_info = self.extend_property_info(schema_ref, base_pattern_info)
 
-                    formatted = self.format_property_row(schema_ref, prop_name, pattern_info, prop_path)
+                    formatted = self.format_property_row(schema_ref, prop_name, pattern_info, prop_path, in_schema_ref=in_schema_ref)
                     if formatted:
                         output.append(formatted['row'])
                         if formatted['details']:
