@@ -1435,14 +1435,11 @@ def main():
     # Set up defaults for missing configuration fields
     if "Copyright" not in config_data:
         config_data["Copyright"] = CONFIG_DEF_COPYRIGHT
-    if "RedfishSchema" not in config_data:
-        config_data["RedfishSchema"] = CONFIG_DEF_REDFISH_SCHEMA
-    if "ODataSchema" not in config_data:
-        config_data["ODataSchema"] = CONFIG_DEF_ODATA_SCHEMA
+    config_data["RedfishSchema"] = CONFIG_DEF_REDFISH_SCHEMA
+    config_data["ODataSchema"] = CONFIG_DEF_ODATA_SCHEMA
     if "Location" not in config_data:
         config_data["Location"] = CONFIG_DEF_LOCATION
-    if "ResourceLocation" not in config_data:
-        config_data["ResourceLocation"] = CONFIG_DEF_RESOURCE_LOCATION
+    config_data["ResourceLocation"] = CONFIG_DEF_RESOURCE_LOCATION
     if "DoNotWrite" not in config_data:
         config_data["DoNotWrite"] = []
 
