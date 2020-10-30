@@ -29,6 +29,7 @@ import errno
 
 global_namespaces = {}
 local_directory = None
+service_path = None
 
 CSDL_NAMES = ['Edmx', 'DataServices', 'Reference', 'Include', 'IncludeAnnotations', 'Schema',
               'Property', 'NavigationProperty', 'ReferentialConstraint', 'OnDelete', 'EntityType',
@@ -1310,50 +1311,22 @@ class MetaData(Element):
         self.uri = uri
         self.rootUri = None
         self.error_id = uri
-        if self.uri.lower().startswith('http'):
-            # Get the file name at the end of the URI
-            filelocation = self.uri.rfind('/')
-            if filelocation > 0:
-                filename = self.uri[filelocation + 1:]
-            else:
-                filename = self.uri
 
-            # Try to open the file from the local directory being processed
-            if (local_directory is not None) and (os.path.isfile(local_directory + os.path.sep + filename)):
-                try:
-                    self.data = ET.parse(local_directory + os.path.sep + filename)
-                    self.raw_data = self.data.getroot()
-                except Exception as error:
-                    print("Error Opening or parsing schema file: {}".format(local_directory + os.path.sep + filename))
-                    print("  Exception: {}".format(error))
-                    sys.exit(0)
-            # If not available, go open via HTTP
-            else:
-                retry_count = 0
-                retry_count_max = 20
-                while retry_count < retry_count_max:
-                    try:
-                        req = urllib.request.Request(self.uri)
-                        response = urllib.request.urlopen(req)
-                        self.data = response.read()
-                        self.raw_data = ET.fromstring(self.data)
-                        self.rootUri=self.uri
-                        break
-                    except OSError as error:
-                        if error.errno != errno.ECONNRESET:
-                            print("Error downloading schema file: {}".format(self.uri))
-                            print("  Exception: {}".format(error))
-                            sys.exit(0)
-                    except Exception as error:
-                        print("Error Opening or parsing schema file: {}".format(self.uri))
-                        print("  Exception: {}".format(error))
-                        sys.exit(0)
-                    retry_count += 1
-                if retry_count >= retry_count_max:
-                    print("Could not open " + self.uri)
-                    print("Too many connection resets")
-                    sys.exit(0)
-        else:
+        # Get the file name at the end of the URI
+        filename = self.uri.rsplit('/', 1)[-1]
+
+        # Get the file
+        if (local_directory is not None) and (os.path.isfile(local_directory + os.path.sep + filename)):
+            # A local directory is specified and the file exists; use that copy
+            try:
+                self.data = ET.parse(local_directory + os.path.sep + filename)
+                self.raw_data = self.data.getroot()
+            except Exception as error:
+                print("Error Opening or parsing schema file: {}".format(local_directory + os.path.sep + filename))
+                print("  Exception: {}".format(error))
+                sys.exit(0)
+        elif os.path.isfile(self.uri):
+            # A local directory is not specified, but the URI matches a local file; use that copy
             try:
                 self.data = ET.parse(self.uri)
                 self.raw_data = self.data.getroot()
@@ -1361,6 +1334,42 @@ class MetaData(Element):
                 print("Error Opening or parsing schema file: {}".format(self.uri))
                 print("  Exception: {}".format(error))
                 sys.exit(0)
+        else:
+            # No local matches; try HTTP
+            # Add the service path if this is a relative URI
+            if self.uri.startswith('/'):
+                try:
+                    self.uri = service_path + self.uri
+                except:
+                    print("Error Opening or parsing schema file: {}".format(self.uri))
+                    print("  Unable to build full URI from relative URI")
+                    sys.exit(0)
+
+            retry_count = 0
+            retry_count_max = 20
+            while retry_count < retry_count_max:
+                try:
+                    req = urllib.request.Request(self.uri)
+                    response = urllib.request.urlopen(req)
+                    self.data = response.read()
+                    self.raw_data = ET.fromstring(self.data)
+                    self.rootUri=self.uri
+                    break
+                except OSError as error:
+                    if error.errno != errno.ECONNRESET:
+                        print("Error downloading schema file: {}".format(self.uri))
+                        print("  Exception: {}".format(error))
+                        sys.exit(0)
+                except Exception as error:
+                    print("Error Opening or parsing schema file: {}".format(self.uri))
+                    print("  Exception: {}".format(error))
+                    sys.exit(0)
+                retry_count += 1
+            if retry_count >= retry_count_max:
+                print("Could not open " + self.uri)
+                print("Too many connection resets")
+                sys.exit(0)
+
         # Start with a ! to ensure it does not overlap with a possible namespace name
         self.namespaces = {'!Included Alias': {}}
         self.annotation = []
@@ -5604,6 +5613,13 @@ def main():
 
     if args.MetaData.lower().startswith('http') or os.path.isfile(args.MetaData):
         #Metadata points to a uri or a local file
+        global service_path
+        try:
+            # Try to extract the path to the service in case the request is a remote URI
+            # This will be used later to resolve relative references
+            service_path = re.search("^https?:\/\/[^/]+", args.MetaData).group(0)
+        except:
+            pass
         MetaData(args.MetaData)
     elif os.path.isdir(args.MetaData):
         #Metadata points to a directory
