@@ -102,7 +102,26 @@ const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
 const PluralSchemaWhiteList = ['ChassisCollection', 'MemoryChunksCollection', 'TriggersCollection'];
+let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
+                                 'DeepOperations', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
+                                 'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
+                                 'RegistryEntries', 'ResourceBlockLimits', 'Status', 'Thresholds', 'UpdateParameters', 'VoltageSensors'];
+//All of the entries in the following object were errors and should only be allowed in the file they are currently present in
+const PluralEntitiesBadAllow = {
+  'AttributeRegistry_v1.xml': ['Dependencies', 'Menus', 'SupportedSystems'],
+  'ComputerSystem_v1.xml': ['TrustedModules'],
+  'Drive_v1.xml': ['Operations'],
+  'MemoryChunks_v1.xml': ['MemoryChunks'],
+  'NetworkAdapter_v1.xml': ['Controllers'],
+  'NetworkDeviceFunction_v1.xml': ['BootTargets'],
+  'StorageController_v1.xml': ['ANACharacteristics'],
+  'Triggers_v1.xml': ['Triggers']
+};
 /************************************************************/
+
+if(config.has('Redfish.ExtraPluralAllowed')) {
+  PluralEntitiesAllowList = PluralEntitiesAllowList.concat(config.get('Redfish.ExtraPluralAllowed'));
+}
 
 describe('CSDL Tests', () => {
   const files = glob.sync(config.get('Redfish.CSDLFilePath'));
@@ -154,9 +173,11 @@ describe('CSDL Tests', () => {
       it('Descriptions have trailing periods', () => {if (!isYang) descriptionPeriodCheck(csdl);});
       if(!config.has('Redfish.SwordfishTest')) {
         it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
+        it('Long Descriptions do not contain must', () => {if (!isYang) descriptionMustCheck(csdl);});
       }
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
       it('No plural Schemas', () => {noPluralSchemas(csdl);});
+      it('No plural Entities', () => {noPluralEntities(csdl, fileName);});
       it('BaseTypes are valid', () => {checkBaseTypes(csdl);});
       it('All Annotation Terms are valid', () => {checkAnnotationTerms(csdl);});
       if (!file.includes('RedfishYangExtensions')) {
@@ -551,6 +572,18 @@ function descriptionMayCheck(csdl) {
   }
 }
 
+function descriptionMustCheck(csdl) {
+  let long_descriptions = CSDL.search(csdl, 'Annotation', 'OData.LongDescription');
+  if(long_descriptions.length !== 0) {
+    for(let i = 0; i < long_descriptions.length; i++) {
+      let str = long_descriptions[i].String;
+      if(str.includes(" must ") || str.includes("Must ")) {
+        throw new Error('"' + str + '" includes the ISO unallowed word "must"!');
+      }
+    }
+  }
+}
+
 function descriptionSpaceCheck(csdl) {
   let descriptions = CSDL.search(csdl, 'Annotation', 'OData.Description');
   if(descriptions.length !== 0) {
@@ -623,6 +656,35 @@ function noPluralSchemas(csdl) {
     if(schemas[i]._Name.includes('sCollection') || schemas[i]._Name.includes('s_v1')) {
       throw new Error('Schema '+schemas[i]._Name+' is plural!');
     }
+  }
+}
+
+function noPluralEntities(csdl, fileName) {
+  let entityTypes =  CSDL.search(csdl, 'EntityType');
+  for(let i = 0; i < entityTypes.length; i++) {
+    entityPluralCheck(entityTypes[i], 'Entity', fileName);
+  }
+  let complexTypes =  CSDL.search(csdl, 'ComplexType');
+  for(let i = 0; i < complexTypes.length; i++) {
+    entityPluralCheck(complexTypes[i], 'Complex', fileName);
+  }
+}
+
+function entityPluralCheck(entity, type, fileName) {
+  if(PluralEntitiesAllowList.includes(entity.Name)) {
+    return;
+  }
+  if(PluralEntitiesBadAllow[fileName] !== undefined && PluralEntitiesBadAllow[fileName].includes(entity.Name)) {
+    return;
+  }
+  if(entity.Name.endsWith('Metrics') || entity.Name.endsWith('Settings') || entity.Name.endsWith('Capabilities') || 
+     entity.Name.endsWith('Actions') || entity.Name.endsWith('Properties') || entity.Name.endsWith('Address') ||
+     entity.Name.endsWith('Links')) {
+    //Allow these endings regardless of the front part...
+    return;
+  }
+  if(entity.Name.endsWith('s')) {
+    throw new Error(type+' Type Name '+entity.Name+' is plural!');
   }
 }
 

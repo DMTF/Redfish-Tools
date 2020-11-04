@@ -118,7 +118,8 @@ class PropertyIndexGenerator(DocFormatter):
             }
 
 
-    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False):
+    def format_property_row(self, schema_ref, prop_name, prop_info, prop_path=[], in_array=False, as_action_parameters=False,
+                                in_schema_ref=None):
         """ Instead of formatting this data, add info to self.properties_by_name. """
 
         if not prop_name:
