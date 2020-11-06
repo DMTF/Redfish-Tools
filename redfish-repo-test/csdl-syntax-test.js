@@ -93,6 +93,7 @@ const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'R
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
 const PluralSchemaWhiteList = ['ChassisCollection', 'MemoryChunksCollection', 'TriggersCollection'];
@@ -1178,7 +1179,7 @@ function validCSDLTypeInMockup(json, file) {
       if(namespace === '') {
         throw new Error('Cannot get namespace of "' + typeLookup + '"');
       }
-      if(namespace === 'Resource' || namespace === 'IPAddresses' || namespace === 'VLanNetworkInterface' || namespace === 'Schedule' || namespace === 'PCIeDevice' || namespace === 'Message') {
+      if(NamespacesWithGlobalTypes.indexOf(namespace) !== -1) {
         let typeNameIndex = typeLookup.lastIndexOf('.');
         if(typeNameIndex === -1) {
           throw new Error('Cannot get type of "' + typeLookup + '"');
@@ -1241,7 +1242,7 @@ function validCSDLTypeInMockup(json, file) {
       if(namespace === '') {
         throw new Error('Cannot get namespace of "' + typeLookup + '"');
       }
-      if(namespace === 'Resource' || namespace === 'IPAddresses' || namespace === 'VLanNetworkInterface' || namespace === 'Schedule' || namespace === 'PCIeDevice') {
+      if(NamespacesWithGlobalTypes.indexOf(namespace) !== -1) {
         let typeNameIndex = typeLookup.lastIndexOf('.');
         if(typeNameIndex === -1) {
           throw new Error('Cannot get type of "' + typeLookup + '"');
@@ -1607,7 +1608,7 @@ function checkProperty(propName, CSDLType, propValue, parentType, parentPropName
     if(namespace === '') {
       throw new Error('Cannot get namespace of "' + typeLookup + '"');
     }
-    if(namespace === 'Resource' || namespace === 'IPAddresses' || namespace === 'VLanNetworkInterface' || namespace === 'Schedule' || namespace === 'PCIeDevice') {
+    if(NamespacesWithGlobalTypes.indexOf(namespace) !== -1) {
       let typeNameIndex = typeLookup.lastIndexOf('.');
       if(typeNameIndex === -1) {
         throw new Error('Cannot get type of "' + typeLookup + '"');
