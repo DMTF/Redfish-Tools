@@ -46,7 +46,7 @@ const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310'
                                     'DDR_SGRAM', 'DDR_SDRAM', 'SO_DIMM', 'Mini_RDIMM', 'Mini_UDIMM', 'SO_RDIMM_72b',
                                     'SO_UDIMM_72b', 'SO_DIMM_16b', 'SO_DIMM_32b', 'TPM1_2', 'TPM2_0', 'TCM1_0', 'iWARP',
                                     'RSA_2048Bit', 'RSA_3072Bit', 'RSA_4096Bit', 'EC_P256', 'EC_P384', 'EC_P521',
-                                    'EC_X25519', 'EC_X448', 'EC_Ed25519', 'EC_Ed448', 'NEMA_5_15P', 'NEMA_L5_15P', 
+                                    'EC_X25519', 'EC_X448', 'EC_Ed25519', 'EC_Ed448', 'NEMA_5_15P', 'NEMA_L5_15P',
                                     'NEMA_5_20P', 'NEMA_L5_20P', 'NEMA_L5_30P', 'NEMA_6_15P', 'NEMA_L6_15P',
                                     'NEMA_6_20P', 'NEMA_L6_20P', 'NEMA_L6_30P', 'NEMA_L14_20P', 'NEMA_L14_30P',
                                     'NEMA_L15_20P', 'NEMA_L15_30P', 'NEMA_L21_20P', 'NEMA_L21_30P', 'NEMA_L22_20P',
@@ -69,27 +69,33 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser', 'MaxAllowableOperatingValue', 'MaxBytesPerSecond',
                                           'MaxFrameSize', 'MaxIOOperationsPerSecondPerTerabyte', 'MaxReadingRange', 'MaxReadingRangeTemp', 'MaxSamplePeriod', 'MaxSupportedBytesPerSecond', 'MinAllowableOperatingValue',
                                           'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests', 'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS',
-                                          'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical', 
+                                          'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical',
                                           'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated', 'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized',
-                                          'WriteHitIORequests', 'WriteIORequests'];
+                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
                               '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
-const SwordfishSchemaFileList = [ 'Capacity_v1.xml', 'ClassOfService_v1.xml', 'ClassOfServiceCollection_v1.xml', 'ConsistencyGroup_v1.xml', 'ConsistencyGroupCollection_v1.xml', 
-                                  'DataProtectionLineOfService_v1.xml', 'DataProtectionLoSCapabilities_v1.xml', 'DataSecurityLineOfService_v1.xml', 
-                                  'DataSecurityLoSCapabilities_v1.xml', 'DataStorageLineOfService_v1.xml', 'DataStorageLoSCapabilities_v1.xml', 
+const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
+                                  'CapacitySourceCollection_v1.xml',
+                                  'ClassOfService_v1.xml',
+                                  'ClassOfServiceCollection_v1.xml', 'ConsistencyGroup_v1.xml', 'ConsistencyGroupCollection_v1.xml',
+                                  'DataProtectionLineOfService_v1.xml', 'DataProtectionLoSCapabilities_v1.xml', 'DataSecurityLineOfService_v1.xml',
+                                  'DataSecurityLoSCapabilities_v1.xml', 'DataStorageLineOfService_v1.xml', 'DataStorageLoSCapabilities_v1.xml',
                                   'FeaturesRegistry_v1.xml', 'FeaturesRegistryCollection_v1.xml',
-                                  'FeaturesRegistryService_v1.xml', 'FileShare_v1.xml', 'FileShareCollection_v1.xml', 'FileSystem_v1.xml', 'FileSystemCollection_v1.xml', 
+                                  'FeaturesRegistryService_v1.xml', 'FileShare_v1.xml', 'FileShareCollection_v1.xml', 'FileSystem_v1.xml', 'FileSystemCollection_v1.xml',
                                   'HostedStorageServices_v1.xml',
-                                  'IOConnectivityLineOfService_v1.xml', 'IOConnectivityLoSCapabilities_v1.xml', 'IOPerformanceLineOfService_v1.xml', 
+                                  'IOConnectivityLineOfService_v1.xml', 'IOConnectivityLoSCapabilities_v1.xml', 'IOPerformanceLineOfService_v1.xml',
                                   'IOPerformanceLoSCapabilities_v1.xml', 'IOStatistics_v1.xml', 'LineOfService_v1.xml', 'LineOfServiceCollection_v1.xml',
-                                  'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml', 
+                                  'NVMeDomain_v1.xml',
+                                  'NVMeDomainCollection_v1.xml',
+                                  'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml',
                                   'StorageReplicaInfo_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
                                   'VolumeCollection_v1.xml' ];
 const ContosoSchemaFileList = [ 'ContosoExtensions_v1.xml', 'TurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'TurboencabulatorService', 'LineOfService' ];
+const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X/StorageGroups/10", "https://10.23.11.12/redfish/v1/Systems/FileServer/StorageServices/X/StorageGroups/10", "https://10.1.1.13/redfish/v1/StorageServices/A/Volume/ABC", "https://10.1.22.18/redfish/v1/StorageServices/X/Volume/A1x2", "https://10.1.22.18/redfish/v1/StorageServices/X/Volumes/A1x2", "http://hf.contoso.org/redfish/v1/Systems/FileServer/StorageServices/2/StorageGroups/2","https://10.12.1.12/redfish/v1/StorageServices/2/Volumes/5"];
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
@@ -165,8 +171,10 @@ describe('CSDL Tests', () => {
         it('Complex Types Should Not Have Permissions', () => {complexTypesPermissions(csdl);});
       }
       it('Descriptions have trailing periods', () => {if (!isYang) descriptionPeriodCheck(csdl);});
-      it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
-      it('Long Descriptions do not contain must', () => {if (!isYang) descriptionMustCheck(csdl);});
+      if(!config.has('Redfish.SwordfishTest')) {
+        it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
+        it('Long Descriptions do not contain must', () => {if (!isYang) descriptionMustCheck(csdl);});
+      }
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
       it('No plural Schemas', () => {noPluralSchemas(csdl);});
       it('No plural Entities', () => {noPluralEntities(csdl, fileName);});
@@ -197,7 +205,7 @@ describe('CSDL Tests', () => {
         it('Resources specify capabilities', () => {resourcesSpecifyCapabilities(csdl);});
       }
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
-      it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);}); 
+      it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);});
       it('Insert restrictions only on collections', () => {insertCollections(csdl);});
       //Pendantic tests...
       if(process.env.PEDANTIC == 1) {
@@ -326,6 +334,11 @@ describe('Mockup Syntax Tests', () => {
               filepath = linkToFile[link.pathname.substr(0, link.pathname.length - 1)];
             }
             let refd = jsonCache[filepath];
+            if(config.has('Redfish.SwordfishTest')) {
+              if(WhiteListMockupLinks.includes(this.node) ) {
+                return;
+              }
+            }
             if(refd === undefined) {
               let split = path.normalize(file).split(path.sep).slice(0, 2);
               let mockupPath = split.join('/');
