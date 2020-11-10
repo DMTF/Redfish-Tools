@@ -438,13 +438,9 @@ class DocFormatter:
                     req += ', must be ' + comparison + ' ' + ', '.join(['"' + val + '"' for val in values])
             rows.append(self.formatter.make_row([req_desc, req, purpose]))
 
-        table_id = self.get_next_table_id();
-        preamble = "JMS format_conditional_details" # self.add_table_reference(table_id, "The properties of CLASS are summarized in")
-        caption = self.add_table_caption("CLASS properties")
-
         formatted.append(self.formatter.make_table(rows))
 
-        return "\n" + preable + "\n".join(formatted) + "\n" + caption
+        return "\n".join(formatted) 
 
 
     def append_unique_values(self, value_list, target_list):
@@ -787,11 +783,7 @@ class DocFormatter:
             rows.append(self.formatter.make_row([collection_name, item_text]))
         doc = self.formatter.make_table(rows, [header], 'uris')
 
-        table_id = self.get_next_table_id();
-        preamble = "JMS generate_collections_doc" # self.add_table_reference(table_id, "The collections are summarized in")
-        caption = self.add_table_caption(table_id, "CLASS collections")
-
-        return preamble + "\n" + doc + "\n" + caption
+        return doc 
 
 
     def get_collections_uris(self):
