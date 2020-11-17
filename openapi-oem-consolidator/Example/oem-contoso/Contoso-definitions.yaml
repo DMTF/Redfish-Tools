@@ -1,0 +1,12 @@
+
+# This file contains base definitions for Contoso.
+
+components:
+  schema:
+    blah:
+      type: string
+    blah-blah:
+      type: number
+    blah-blah-blah:
+      type: string
+

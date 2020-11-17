@@ -1,0 +1,12 @@
+
+components:
+  schemas:
+    ManagerAccount_v1_6_1_ManagerAccount:
+      properties:
+        Oem:
+          additionalProperties: true
+          description: Contoso's OEM extension.
+          properties: 
+            MyMAccount : 
+              type : string
+

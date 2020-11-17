@@ -1,0 +1,10 @@
+
+components:
+  schemas:
+    Resource_Oem:
+      additionalProperties: true
+      description: Contoso's OEM Base Resource extension.
+      properties: 
+        A : 
+          type : string
+ 
