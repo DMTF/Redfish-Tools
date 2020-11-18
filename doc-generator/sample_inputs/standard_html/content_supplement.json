@@ -1,0 +1,27 @@
+{
+    "description": "Redfish Documentation Generator Example: content supplement config file for output of standard-mode documentation in HTML format.",
+    "keywords": {
+        "html_title": "Title from the supplemental doc"
+    },
+    "units_translation": {
+        "s": "seconds",
+        "Mb/s": "Mbits/second",
+        "By": "bytes",
+        "Cel": "Celsius",
+        "MiBy": "mebibytes",
+        "W": "Watts",
+        "V": "Volts",
+        "mW": "milliWatts",
+        "m": "meters"
+    },
+    "property_description_overrides": {
+        "Oem": "See the OEM object definition in the [Using this guide](#using-this-guide) section."
+    },
+    "schema_supplement": {
+        "ComputerSystem": {
+            "property_details": {
+                "UUID": "\nThe UUID property contains a value that represents the universal unique identifier number (UUID) of a system.\n\nThe UUID property is a string data type. The format of the string is the 35-character string format specified in RFC4122: \"xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\". Each x represents a hexadecimal digit (0-f).\n\nRegarding the case of the hex values, RFC4122 specifies that the hex values should be lowercase characters. Most modern scripting languages typically also represent hex values in lowercase characters following the RFC. However, dmidecode, WMI and some Redfish implementations currently use uppercase characters for UUID on output."
+            }
+        }
+    }
+}

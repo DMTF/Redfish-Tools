@@ -1,0 +1,13 @@
+{
+    "units_translation": {
+        "s": "seconds",
+        "Mb/s": "Mbits/second",
+        "By": "bytes",
+        "Cel": "Celsius",
+        "MiBy": "mebibytes",
+        "W": "Watts",
+        "V": "Volts",
+        "mW": "milliWatts",
+        "m": "meters"
+    }
+}

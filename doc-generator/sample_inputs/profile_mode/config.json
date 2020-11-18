@@ -1,14 +1,14 @@
 {
     "version": "The version string is optional. It may have (future?) meaning in property index mode.",
-    "description": "Redfish Documentation Generator Example: config file for output of profile documentation in HTML format.",
+    "description": "Redfish Documentation Generator Example: config file for output of profile documentation in markdown format.",
     "format": "markdown",
     "import_from": [ "./json-schema" ],
     "outfile": "profile-terse.md",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
     "registry_uri_to_local": {"example.org/registries": "example_org_registries"},
+    "profile_uri_to_local": {"redfish.dmtf.org/profiles": "../Redfish-Tools/doc-generator/sample_inputs"},
     "profile_doc": "../Redfish-Tools/doc-generator/sample_inputs/OCPBasicServer.v1_0_0.json",
     "profile_terse": true,
-    "supfile": "../Redfish-Tools/doc-generator/sample_inputs/SampleProfileInput.md",
     "excluded_annotations": [
         "*@odata.count",
         "*@odata.navigationLink"
@@ -20,5 +20,7 @@
     ],
     "excluded_schemas": [
         "*Collection"
-    ]
+    ],
+    "boilerplate_intro": "./intro.md",
+    "content_supplement": "./content_supplement.json"
 }

@@ -25,7 +25,7 @@ base_config = {
     'excluded_schemas': [],
     'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
     'excluded_pattern_props': [r'^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$'],
-    'uri_replacements': {},
+    'schema_link_replacements': {},
     'wants_common_objects': False,
     'profile': {},
     'escape_chars': [],

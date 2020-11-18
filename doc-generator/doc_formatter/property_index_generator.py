@@ -32,13 +32,6 @@ class PropertyIndexGenerator(DocFormatter):
         traverser: SchemaTraverser object
         config: configuration dict
         """
-        # parse the property index config data
-        config_data = config['property_index_config']
-
-        excluded_props =  config_data.get('ExcludedProperties', [])
-        config['excluded_properties'].extend([x for x in excluded_props if not x.startswith('*')])
-        config['excluded_by_match'].extend([x[1:] for x in excluded_props if x.startswith('*')])
-
         super(PropertyIndexGenerator, self).__init__(property_data, traverser, config, level)
         self.collapse_list_of_simple_type = False
 
@@ -54,7 +47,7 @@ class PropertyIndexGenerator(DocFormatter):
         self.properties_by_name = {}
         self.coalesced_properties = {}
         # Shorthand for the overrides.
-        self.overrides = config_data.get('DescriptionOverrides', {})
+        self.overrides = config.get('description_overrides', {})
 
         # Force some config here:
         self.config['omit_version_in_headers'] = True # This puts just the schema name in the section head.
@@ -75,10 +68,8 @@ class PropertyIndexGenerator(DocFormatter):
         self.coalesce_properties()
         output_format = self.config.get('output_format', 'slate')
         output = ''
-        frontmatter = backmatter = ''
-        if 'property_index_boilerplate' in self.config:
-            boilerplate = self.config['property_index_boilerplate']
-            frontmatter, backmatter = boilerplate.split('[insert property index]')
+        frontmatter = self.config.get('intro_content', '')
+        backmatter = self.config.get('postscript_content', '')
         if output_format == 'html':
             if frontmatter:
                 output = self.formatter.markdown_to_html(frontmatter)
@@ -297,11 +288,11 @@ class PropertyIndexGenerator(DocFormatter):
         """ Update property_index_config data.
 
         Flag any properties that were found to have more than one type, or more than one
-        description. If the property already appears in self.config['property_index_config']
+        description. If the property already appears in self.config
         and it has a globalDescription, flag only entries with a different *type*. """
 
-        updated = copy.deepcopy(self.config['property_index_config'])
-        overrides = updated['DescriptionOverrides'] # NB: this should already be in place.
+        updated = copy.deepcopy(self.config)
+        overrides = updated['description_overrides'] # NB: this should already be in place.
 
         # Sorting isn't necessary in this method, but it's nice to have for troubleshooting.
         property_names = sorted(self.coalesced_properties.keys(), key=str.lower)

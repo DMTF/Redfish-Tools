@@ -28,7 +28,7 @@ base_config = {
     'excluded_annotations_by_match': ['@odata.count', '@odata.navigationLink'],
     'excluded_schemas': [],
     'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
-    'uri_replacements': {},
+    'schema_link_replacements': {},
 
     'profile': {},
     'escape_chars': [],

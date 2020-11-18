@@ -805,18 +805,18 @@ pre.code{
     def output_document(self):
         """Return full contents of document"""
 
-        supplemental = self.config.get('supplemental', {})
         body = ''
 
-        intro = supplemental.get('Introduction')
+        intro = self.config.get('intro_content')
         if intro:
             intro = self.process_intro(intro)
             body += intro
 
         body += self.emit()
 
-        if 'Postscript' in supplemental:
-            body += self.formatter.markdown_to_html(supplemental['Postscript'])
+        postscript = self.config.get('postscript_content')
+        if postscript:
+            body += self.formatter.markdown_to_html(postscript)
 
         common_properties = self.generate_common_properties_doc()
         marker = False
@@ -828,7 +828,7 @@ pre.code{
             body = body.replace(marker, common_properties, 1)
         else:
             if common_properties:
-                warnings.warn('Supplemental file lacks "[insert_common_objects]" marker. Common object properties were found but will be omitted.')
+                warnings.warn('Boilerplate lacks "[insert_common_objects]" marker. Common object properties were found but will be omitted.')
 
 
         marker = False
@@ -850,9 +850,7 @@ pre.code{
         # Replace pagebreak markers with pagebreak markup
         body = body.replace('~pagebreak~', '<p style="page-break-before: always"></p>')
 
-        doc_title = self.config.get('html_title', supplemental.get('Title'))
-        if not doc_title:
-            doc_title = ''
+        doc_title = self.config.get('html_title', '')
 
         headlines = ['<head>', '<meta charset="utf-8"/>', '<title>' + doc_title + '</title>']
         styles = self.css_content
@@ -903,7 +901,6 @@ pre.code{
             'normative': self.config.get('normative'),
             'cwd': self.config.get('cwd'),
             'schema_supplement': {},
-            'supplemental': {},
             'excluded_annotations': [],
             'excluded_annotations_by_match': [],
             'excluded_properties': [],
@@ -911,7 +908,7 @@ pre.code{
             'excluded_schemas': [],
             'excluded_schemas_by_match': [],
             'escape_chars': [],
-            'uri_replacements': {},
+            'schema_link_replacements': {},
             'units_translation': self.config.get('units_translation'),
             'profile': self.config.get('profile'),
             'profile_mode': self.config.get('profile_mode'),
