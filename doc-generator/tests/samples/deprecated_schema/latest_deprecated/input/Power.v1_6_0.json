@@ -3,8 +3,6 @@
     "$ref": "#/definitions/Power",
     "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
     "copyright": "Copyright 2014-2019 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
-    "deprecated": "This schema has been deprecated because absolute power corrupts absolutely.",
-    "versionDeprecated": "v1_6_0",
     "definitions": {
         "Actions": {
             "additionalProperties": false,
@@ -220,7 +218,9 @@
         },
         "Power": {
             "additionalProperties": false,
+            "deprecated": "This schema has been deprecated because absolute power corrupts absolutely.",
             "description": "The Power schema describes power metrics and represents the properties for power consumption and power limiting.",
+            "versionDeprecated": "v1_6_0",
             "longDescription": "This Resource contains a Power Metrics Resource for a Redfish implementation.",
             "patternProperties": {
                 "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
