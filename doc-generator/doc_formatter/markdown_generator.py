@@ -677,7 +677,7 @@ class MarkdownGenerator(DocFormatter):
                             if self.markdown_mode == 'slate':
                                 contents.append(self.formatter.para(self.formatter.bold("In " + path + ":")))
                             else:
-                                contents.append(self.formatter.head_five("In " + path + ":"))
+                                contents.append(self.formatter.head_five("In " + path + ":", self.level))
                             contents.append(info['formatted_descr'])
 
             if section.get('json_payload') and (self.markdown_mode != 'slate'): # Otherwise, this was inserted above.
@@ -722,14 +722,15 @@ search: true
 ---
 """
 
-        intro = supplemental.get('Introduction')
+        intro = self.config.get('intro_content')
         if intro:
             intro = self.process_intro(intro)
             prelude += '\n' + intro + '\n'
 
         contents = [prelude, body]
-        if 'Postscript' in supplemental:
-            contents.append('\n' + supplemental['Postscript'])
+        postscript = self.config.get('postscript_content')
+        if postscript:
+            contents.append('\n' + postscript)
 
         output = '\n'.join(contents)
         if '[insert_common_objects]' in output:
@@ -764,7 +765,7 @@ search: true
             'excluded_schemas': [],
             'excluded_schemas_by_match': [],
             'escape_chars': [],
-            'uri_replacements': {},
+            'schema_link_replacements': {},
             'units_translation': self.config.get('units_translation'),
             'profile': self.config.get('profile'),
             'profile_mode': self.config.get('profile_mode'),

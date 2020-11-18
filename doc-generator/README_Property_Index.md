@@ -29,16 +29,8 @@ optional arguments:
   --out OUTFILE         Output file (default depends on output format:
                         output.md for Markdown, index.html for HTML,
                         output.csv for CSV
-  --sup SUPFILE         Path to the supplemental material document. For
-                        Property Index mode, this document should simply be
-                        a markdown file containing any content
-                        you want to include before/after the property index, and
-                        a marker "[insert property index]" where the property index
-                        output should go, and, for HTML output only,  "[add_toc]" where
-                        you want a table of contents. No configuration will be read from the
-                        supplemental material document.
   --config CONFIG_FILE  Path to a config file, containing configuration in
-                        JSON format. Used in property_index mode only.
+                        JSON format.
 
 Example:
    doc_generator.py --property_index --format=html --config=pi_config.json
@@ -46,11 +38,14 @@ Example:
 
 ## Config File
 
-The config file for this mode is a json document. It should include the following elements:
+The config file for this mode is a json document. It should include the following elements (only `uri_mapping` is required):
 
+* boilerplate_intro: location of a markdown file providing content to place at the beginning of the document (prior to the generated schema documentation). If a relative path, should be relative to the location of the config file.
+* boilerplate_postscript: location of a markdown file providing content to place at the end of the document (after to the generated schema documentation). If a relative path, should be relative to the location of the config file.
+* description_overrides: an object keyed by property name, which can specify descriptions to "override" those found in the source schemas. (There's more about this below.)
+* excluded_properties: A list of property names to exclude from the output.
+* format: Output format. One of `markdown`, `slate`, `html`, `csv`
 * uri_mapping: Maps partial URIs (without protocol prefix) to local directories or files.
-* ExcludedProperties: A list of property names to exclude from the output.
-* DescriptionOverrides: an object keyed by property name, which can specify descriptions to "override" those found in the source schemas. (There's more about this below!)
 
 Other properties may be included for the user's reference, and will be ignored by the Doc Generator.
 
@@ -61,7 +56,7 @@ A simple example config:
    "description": "Redfish Property Index generation file",
    "version": "2018.2",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
-   "ExcludedProperties": [
+   "excluded_properties": [
       "description",
       "Id",
       "@odata.context",
@@ -70,7 +65,7 @@ A simple example config:
       "@odata.etag",
       "*@odata.count"
    ],
-   "DescriptionOverrides": {
+   "description_overrides": {
       "EventType": [
          {
             "overrideDescription": "This indicates the type of an event recorded in this log.",
@@ -122,10 +117,10 @@ This object maps partial URIs, as found in the schemas, to local directories. Th
 
 ### Excluded Properties
 
-To exclude properties from the output, simply include them in the ExcludedProperties list. An asterisk as the first character in a property acts as a wild card; in this example, any property name that ends with "@odata.count" will be omitted.
+To exclude properties from the output, simply include them in the excluded_properties list. An asterisk as the first character in a property acts as a wild card; in this example, any property name that ends with "@odata.count" will be omitted.
 
 ```
-   "ExcludedProperties": [
+   "excluded_properties": [
       "description",
       "Id",
       "@odata.context",
@@ -138,7 +133,7 @@ To exclude properties from the output, simply include them in the ExcludedProper
 
 ### Description Overrides
 
-Descriptions for individual properties can be overridden. The DescriptionOverrides object is keyed by property name. Values are lists, allowing you to specify different overrides for the same property in different schemas. Each object in the list can have the following entries:
+Descriptions for individual properties can be overridden. The description_overrides object is keyed by property name. Values are lists, allowing you to specify different overrides for the same property in different schemas. Each object in the list can have the following entries:
 
 * type: the property type
 * schemas: a list of schemas this element applies to
@@ -148,6 +143,8 @@ Descriptions for individual properties can be overridden. The DescriptionOverrid
 * knownException: indicates that a variant description is expected
 
 The *description* and *knownException* entries are primarily for user reference; when generating configuration output the `doc_generator` will include the description and set knownException to false; the user can edit the resulting output to distinguish expected exceptions from those that need attention. Neither field affects the property index document itself.
+
+(Note that although this has a similar function to property_description_overrides in other modes, description_overrides has a different structure.)
 
 Some examples:
 

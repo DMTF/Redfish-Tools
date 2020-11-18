@@ -15,18 +15,7 @@
         "@odata.etag",
         "*@odata.count"
     ],
-    "units_translation": {
-        "s": "seconds",
-        "Mb/s": "Mbits/second",
-        "By": "bytes",
-        "Cel": "Celsius",
-        "MiBy": "mebibytes",
-        "W": "Watts",
-        "V": "Volts",
-        "mW": "milliWatts",
-        "m": "meters"
-    },
-    "DescriptionOverrides": {
+    "description_overrides": {
         "EventType": [
             {
                 "overrideDescription": "This indicates the type of an event recorded in this log.",

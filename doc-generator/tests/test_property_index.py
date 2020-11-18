@@ -17,20 +17,6 @@ from doc_generator import DocGenerator
 
 testcase_path = os.path.join('tests', 'samples', 'property_index')
 
-property_index_config = {
-    'ExcludedProperties': [
-    "description",
-    "Id",
-    "@odata.context",
-    "@odata.type",
-    "@odata.id",
-    "@odata.etag",
-    "*@odata.count",
-    ],
-    'DescriptionOverrides': {
-    },
-    }
-
 base_config = {
     'output_content': 'property_index',
     'output_format': 'slate',
@@ -39,10 +25,17 @@ base_config = {
     'units_translation': {},
     'excluded_annotations_by_match': ['@odata.count', '@odata.navigationLink'],
     'excluded_schemas': [],
-    'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
-    'uri_replacements': {},
-    'property_index_config': property_index_config,
-    'supplemental': {},
+    'excluded_properties': [
+        "description",
+        "Id",
+        "@odata.context",
+        "@odata.type",
+        "@odata.id",
+        "@odata.etag",
+        "*@odata.count",
+        ],
+    'schema_link_replacements': {},
+    'description_overrides': {},
 
     'profile': {},
     'escape_chars': [],
@@ -54,7 +47,7 @@ def test_property_index_config_out(mockRequest):
     config = copy.deepcopy(base_config)
     config['output_format'] = 'html'
 
-    # A selection of what we expect to find in the DescriptionOverrides *output* by the tool:
+    # A selection of what we expect to find in the description_overrides *output* by the tool:
     expected = {
         "FanName": [
             {
@@ -128,7 +121,7 @@ def test_property_index_config_out(mockRequest):
     updated_config = docGen.generator.generate_updated_config()
 
     # Checking specific cases here.
-    out = updated_config['DescriptionOverrides']
+    out = updated_config['description_overrides']
     assert out.get('LowerThresholdFatal') == expected['LowerThresholdFatal'], "Type mismatch not detected for LowerThresholdFatal"
     assert out.get('RelatedItem') == expected['RelatedItem'], "Description mismatch not detected for RelatedItem"
     assert out.get('FanName') == expected['FanName'], "Description mismatch not detected for FanName"
@@ -143,7 +136,7 @@ def test_property_index_config_overrides(mockRequest):
 
     override_desc = "This is an override description for NetDevFuncCapbilities, a string."
 
-    config['property_index_config']['DescriptionOverrides'] = {
+    config['description_overrides'] = {
         "NetDevFuncCapabilities": [
         {
         "overrideDescription": override_desc,

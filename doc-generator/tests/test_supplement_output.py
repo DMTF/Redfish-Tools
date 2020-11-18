@@ -20,19 +20,15 @@ schema_supplement = {
     # Status is an example of a Referenced Object.
     'Status': {
     'description': "SUPPLEMENT-SUPPLIED DESCRIPTION for Status",
-    'schema-intro': "SUPPLEMENT-SUPPLIED INTRO for Status",
+    'intro': "SUPPLEMENT-SUPPLIED INTRO for Status",
     'jsonpayload': "SUPPLEMENT-SUPPLIED JSON for Status",
     },
     # Endpoint is a documented schema
     'Endpoint': {
     'description': "SUPPLEMENT-SUPPLIED DESCRIPTION for Endpoint",
-    'schema-intro': "SUPPLEMENT-SUPPLIED INTRO for Endpoint",
+    'intro': "SUPPLEMENT-SUPPLIED INTRO for Endpoint",
     'jsonpayload': "SUPPLEMENT-SUPPLIED JSON for Endpoint",
     },
-    }
-
-supplemental = {
-    'Introduction': "# Common Objects\n\n[insert_common_objects]\n\ntext1\n~pagebreak~\ntext2\n"
     }
 
 property_description_overrides = {
@@ -50,13 +46,13 @@ base_config = {
     'excluded_annotations_by_match': ['@odata.count', '@odata.navigationLink'],
     'excluded_schemas': [],
     'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
-    'uri_replacements': {},
+    'schema_link_replacements': {},
     'wants_common_objects': True,
     'profile': {},
     'escape_chars': [],
     'schema_supplement': schema_supplement,
     'property_description_overrides': property_description_overrides,
-    'supplemental': supplemental,
+    'intro_content': "# Common Objects\n\n[insert_common_objects]\n\ntext1\n~pagebreak~\ntext2\n",
     }
 
 
@@ -76,21 +72,21 @@ def test_supplement_output_html (mockRequest):
 
     # Chop up the HTML into rough sections.
     output_parts = output.split('<h2')
-    [status_section] = [x for x in output_parts if 'id="common-properties-Status"' in x]
-    [endpoint_section] = [x for x in output_parts if 'id="Endpoint"' in x]
+    status_section = [x for x in output_parts if 'id="common-properties-Status"' in x]
+    endpoint_section = [x for x in output_parts if 'id="Endpoint"' in x]
 
     # Chop into rows. We just want to find the Oem rows.
     output_rows = output.split('<tr')
     oem_rows = [x for x in output_rows if "<b>Oem</b>" in x]
 
     # These assertions target strings the supplement provided:
-    assert 'SUPPLEMENT-SUPPLIED DESCRIPTION for Status' in status_section, "Referenced Object (Status) output is missing supplement-supplied description"
-    assert 'SUPPLEMENT-SUPPLIED INTRO for Status' in status_section, "Referenced Object (Status) output is missing supplement-supplied intro"
-    assert 'SUPPLEMENT-SUPPLIED JSON for Status' in status_section, "Referenced Object (Status) output is missing supplement-supplied json payload"
+    assert len(status_section) == 1 and 'SUPPLEMENT-SUPPLIED DESCRIPTION for Status' in status_section[0], "Referenced Object (Status) output is missing supplement-supplied description"
+    assert len(status_section) == 1 and 'SUPPLEMENT-SUPPLIED INTRO for Status' in status_section[0], "Referenced Object (Status) output is missing supplement-supplied intro"
+    assert len(status_section) == 1 and 'SUPPLEMENT-SUPPLIED JSON for Status' in status_section[0], "Referenced Object (Status) output is missing supplement-supplied json payload"
 
-    assert 'SUPPLEMENT-SUPPLIED DESCRIPTION for Endpoint' in endpoint_section, "Schema Object (Endpoint) output is missing supplement-supplied description"
-    assert 'SUPPLEMENT-SUPPLIED INTRO for Endpoint' in endpoint_section, "Schema Object (Endpoint) output is missing supplement-supplied intro"
-    assert 'SUPPLEMENT-SUPPLIED JSON for Endpoint' in endpoint_section, "Schema Object (Endpoint) output is missing supplement-supplied json payload"
+    assert len(endpoint_section) == 1 and 'SUPPLEMENT-SUPPLIED DESCRIPTION for Endpoint' in endpoint_section[0], "Schema Object (Endpoint) output is missing supplement-supplied description"
+    assert len(endpoint_section) == 1 and 'SUPPLEMENT-SUPPLIED INTRO for Endpoint' in endpoint_section[0], "Schema Object (Endpoint) output is missing supplement-supplied intro"
+    assert len(endpoint_section) == 1 and 'SUPPLEMENT-SUPPLIED JSON for Endpoint' in endpoint_section[0], "Schema Object (Endpoint) output is missing supplement-supplied json payload"
 
 
     oem_failed_overrides = [x for x in oem_rows if "This is a description override for the Oem object." not in x]
@@ -99,8 +95,6 @@ def test_supplement_output_html (mockRequest):
     # Check for ~pagebreak~ converted to <p style="page-break-before: always">
     pbrk_location = output[output.find('text1') : output.find('text2')]
     assert '<p style="page-break-before: always"></p>' in pbrk_location, "HTML output lacked expected page break markup"
-
-
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.

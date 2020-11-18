@@ -2,6 +2,8 @@
 
 Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
 
+Version 3 introduces breaking changes to how you configure this tool. See [Changes in Doc Generator V3](CHANGES_v2_to_v3.md) for guidance on how to restructure your existing configuration files. The README files have also been updated. A snapshot of the "version 2" code is available as the "Doc Generator v2" release.
+
 ## About
 
 The `doc_generator.py` is a Python tool that parses a set of JSON schema files (typically the entire set for a version) and generates a formatted documentation.
@@ -26,6 +28,20 @@ The default output is GitHub-flavored Markdown targeted for the [Slate API docs 
     % pip install -r requirements.txt
     ```
 
+1. If you are making changes to this code, please also install pytest and run the tests. Installation via `pip`:
+
+    ```
+    % cd doc-generator
+    % pip install -r dev_requirements.txt
+    ```
+
+    To run the tests, simply:
+
+    ```
+    % cd doc-generator
+    % pytest
+    ```
+
 ## Usage
 
 By default, `doc_generator.py` looks for a `json-schema` directory and
@@ -33,13 +49,9 @@ supplement file in the directory from where you run it. Alternatively,
 you can specify the locations of the `json-schema` directory and
 supplement file when you run `doc_generator.py`.
 
-You must also specify a mapping from schema URIs to local directories.
-The `doc_generator.py` tool uses this information to determine whether to get
-referenced data from local files or over the Internet. See [The Supplemental Material Document](#the-supplemental-material-document).
-
 The --config option specifies a file in which you can specify many of the command-line
-options described here, as well as some parameters, such as URI mappings, that
-would otherwise be included in the Supplemental Material Document. See
+options described here, as well as some required parameters, such as URI mappings, that
+cannot be supplied on the command line, and many optional parameters. See
 [Config Files](README_config_files.md).
 
 ```
@@ -68,9 +80,6 @@ optional arguments:
   --out OUTFILE         Output file (default depends on output format:
                         output.md for Markdown, index.html for HTML,
                         output.csv for CSV
-  --sup SUPFILE         Path to the supplemental material document. Default is
-                        usersupplement.md for user-focused documentation, and
-                        devsupplement.md for normative documentation.
   --payload_dir payload_dir
                         Directory location for JSON payload and Action
                         examples. Optional.Within this directory, use the
@@ -103,14 +112,8 @@ Example:
    doc_generator.py --format=html --out=/path/to/output/index.html /path/to/spmf/json-files
 ```
 
-Refer to README_Property_Index.md for documentation on Property Index mode.
+Refer to [Property Index Mode](README_Property_Index.md) for documentation on Property Index mode.
 
 Normative output prefers long descriptions to descriptions.
 
 For Slate, place the `index.html.md` output in your Slate repository's source directory.
-
-## The Supplemental Material Document
-
-The `doc-generator/sample_inputs/usersupplement.md` file is an example of a supplemental material document. It describes each information type that you can include in the supplement.
-
-The most important section of this document is *Schema URI Mapping*, which describes how to map schema URIs to local files. You define and map partial URIs to local directories. The `doc_generator.py` uses the specified local files, if any. Otherwise, the `doc_generator.py` follows the full URI, including data from remote files, if possible.

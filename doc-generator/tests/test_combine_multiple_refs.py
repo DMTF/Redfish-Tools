@@ -29,7 +29,7 @@ base_config = {
     'excluded_schemas': [],
     'excluded_properties': ['@odata.id', '@odata.context', '@odata.type'],
     'excluded_pattern_props': [r'^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_.]+$'],
-    'uri_replacements': {},
+    'schema_link_replacements': {},
     'wants_common_objects': True,
     'profile': {},
     'escape_chars': [],
@@ -83,7 +83,7 @@ def test_combine_at_3_html(mockRequest):
     config = copy.deepcopy(base_config)
     config['combine_multiple_refs'] = 3
     config['output_format'] = 'html'
-    config['supplemental'] = {'Introduction': "# Common Objects\n\n[insert_common_objects]\n"}
+    config['intro_content'] = "# Common Objects\n\n[insert_common_objects]\n"
 
     input_dir = os.path.abspath(os.path.join(testcase_path, 'sensor'))
 

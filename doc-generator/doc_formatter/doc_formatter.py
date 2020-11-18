@@ -81,8 +81,8 @@ class DocFormatter:
                 self.documented_schemas.append(schema_ref)
 
         self.uri_match_keys = None
-        if self.config.get('uri_replacements'):
-            map_keys = list(self.config['uri_replacements'].keys())
+        if self.config.get('schema_link_replacements'):
+            map_keys = list(self.config['schema_link_replacements'].keys())
             map_keys.sort(key=len, reverse=True)
             self.uri_match_keys = map_keys
 
@@ -302,7 +302,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings=None):
         """Generate a formatted Actions section from parameters data"""
         raise NotImplementedError
 
@@ -492,12 +492,8 @@ class DocFormatter:
             profile = config.get('profile_resources', {}).get(schema_ref, {})
             self.ref_deduplicator[schema_ref] = {}
 
-            # Look up supplemental details for this schema/version
-            version = details.get('latest_version', '1')
-            major_version = version.split('.')[0]
-            schema_key = schema_name + '_' + major_version
-            supplemental = schema_supplement.get(schema_key,
-                                                 schema_supplement.get(schema_name, {}))
+            version = property_data.get('latest_version', '1')
+            supplemental = self.get_supplemental_details(schema_ref)
 
             json_payload = None
             if self.config.get('payloads'):
@@ -537,16 +533,16 @@ class DocFormatter:
             required_on_create = definitions[schema_name].get('requiredOnCreate', [])
 
             # Override with supplemental schema description, if provided
-            # If there is a supplemental Description or Schema-Intro, it replaces
-            # the description in the schema. If both are present, the Description
-            # should be output, followed by the Schema-Intro.
-            if supplemental.get('description') and supplemental.get('schema-intro'):
+            # If there is a supplemental "description" or "intro", it replaces
+            # the description in the schema. If both are present, the "description"
+            # should be output, followed by the "intro".
+            if supplemental.get('description') and supplemental.get('intro'):
                 description = (supplemental.get('description') + '\n\n' +
-                               supplemental.get('schema-intro'))
+                               supplemental.get('intro'))
             elif supplemental.get('description'):
                 description = supplemental.get('description')
             else:
-                description = supplemental.get('schema-intro', description)
+                description = supplemental.get('intro', description)
 
             # Profile purpose overrides all:
             if profile and profile_mode != 'subset':
@@ -756,18 +752,18 @@ class DocFormatter:
                 cp_gen.add_json_payload(supplemental.get('jsonpayload'))
 
                 # Override with supplemental schema description, if provided
-                # If there is a supplemental Description or Schema-Intro, it replaces
-                # the description in the schema. If both are present, the Description
-                # should be output, followed by the Schema-Intro.
+                # If there is a supplemental "description" or "intro", it replaces
+                # the description in the schema. If both are present, the "description"
+                # should be output, followed by the "intro".
                 description = self.get_property_description(prop_info)
 
-                if supplemental.get('description') and supplemental.get('schema-intro'):
+                if supplemental.get('description') and supplemental.get('intro'):
                     description = (supplemental.get('description') + '\n\n' +
-                                   supplemental.get('schema-intro'))
+                                   supplemental.get('intro'))
                 elif supplemental.get('description'):
                     description = supplemental.get('description')
                 else:
-                    description = supplemental.get('schema-intro', description)
+                    description = supplemental.get('intro', description)
 
                 if description:
                     cp_gen.add_description(description)
@@ -1558,10 +1554,9 @@ class DocFormatter:
         prop_enum = prop_info.get('enum')
         supplemental_details = None
 
-        if 'supplemental' in self.config and 'property details' in self.config['supplemental']:
-            detconfig = self.config['supplemental']['property details']
-            if schema_name in detconfig and prop_name in detconfig[schema_name]:
-                supplemental_details = detconfig[schema_name][prop_name]
+        supplemental = self.get_supplemental_details(schema_ref)
+        if supplemental:
+            supplemental_details = supplemental.get('property_details', {}).get(prop_name)
 
         if prop_enum or supplemental_details:
             has_prop_details = True
@@ -1588,24 +1583,6 @@ class DocFormatter:
                 'paths': [details_path],
                 'formatted_descr': formatted_details
                 }
-
-        # Action details may be supplied as markdown in the supplemental doc.
-        # Possibly we should be phasing this out.
-        supplemental_actions = None
-        if 'supplemental' in self.config and 'action details' in self.config['supplemental']:
-            action_config = self.config['supplemental']['action details']
-            action_name = prop_name
-            if '.' in action_name:
-                _discard, _discard, action_name = action_name.rpartition('.')
-            if action_config.get(schema_name) and action_name in action_config[schema_name].keys():
-                supplemental_actions = action_config[schema_name][action_name]
-                supplemental_actions['action_name'] = action_name
-
-        if supplemental_actions:
-            has_prop_actions = True
-            formatted_actions = self.format_action_details(prop_name, supplemental_actions)
-            action_details = supplemental_actions
-            self.add_action_details(formatted_actions)
 
         # embedded object:
         if prop_is_object:
@@ -1967,7 +1944,7 @@ class DocFormatter:
         return text
 
     def get_documentation_uri(self, ref_uri):
-        """ If ref_uri is matched in self.config['uri_replacements'], provide a reference to that """
+        """ If ref_uri is matched in self.config['schema_link_replacements'], provide a reference to that """
 
         if not self.uri_match_keys:
             return None
@@ -1975,14 +1952,13 @@ class DocFormatter:
         replacement = None
         for key in self.uri_match_keys:
             if key in ref_uri:
-                match_list = self.config['uri_replacements'][key]
-                for match_spec in match_list:
-                    if match_spec.get('full_match') and match_spec['full_match'] == ref_uri:
-                        replacement = match_spec.get('replace_with')
-                    elif match_spec.get('wild_match'):
-                        pattern = '.*' + ''.join(match_spec['wild_match']) + '.*'
-                        if re.search(pattern, ref_uri):
-                            replacement = match_spec.get('replace_with')
+                match_spec = self.config['schema_link_replacements'][key]
+                if match_spec.get('full_match') and match_spec['full_match'] == ref_uri:
+                    preplacement = match_spec.get('replace_with')
+                    return replacement
+                elif not match_spec.get('full_match'):
+                    replacement = match_spec.get('replace_with')
+                    return replacement
 
         return replacement
 
@@ -2109,8 +2085,8 @@ class DocFormatter:
         if not prop_name:
             prop_name = prop_info.get('_prop_name')
 
-        local_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('description overrides', {})
-        local_full_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('fulldescription overrides', {})
+        local_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('property_description_overrides', {})
+        local_full_overrides = self.config.get('schema_supplement', {}).get(schema_name, {}).get('property_fulldescription_overrides', {})
         prop_info['fulldescription_override'] = False
 
         if (prop_name in local_overrides) or (prop_name in local_full_overrides):
@@ -2175,6 +2151,21 @@ class DocFormatter:
         return  self.property_data.get(schema_ref, {}).get('latest_version')
 
 
+    def get_supplemental_details(self, schema_ref):
+        """ Look up supplemental details for this schema/version """
+        supplemental = {}
+        property_data = self.property_data.get(schema_ref)
+        schema_supplement = self.config.get('schema_supplement')
+        if property_data and schema_supplement:
+            schema_name = property_data.get('schema_name')
+            version = property_data.get('latest_version', 1)
+            major_version = version.split('.')[0]
+            schema_key = schema_name + '_' + major_version
+            supplemental = schema_supplement.get(schema_key,
+                                                     schema_supplement.get(schema_name, {}))
+        return supplemental
+
+
     def add_object_close(self, rows, indentation_string, brace_string, num_cols):
         """ Modify rows with whatever we use to close an object in this format """
         row_content = [''] * num_cols
@@ -2185,8 +2176,8 @@ class DocFormatter:
 
 
     def escape_text(self, text, chars=None):
-        """Escape text in whatever way is appropriate to this output format. """
-        raise NotImplementedError
+        """Escape text in whatever way is appropriate to this output format. Default is not to escape. """
+        return text
 
 
     @staticmethod

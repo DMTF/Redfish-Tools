@@ -195,7 +195,7 @@ class CsvGenerator(DocFormatter):
         return ''
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings=None):
         """Generate a formatted Actions section from parameters data"""
         # Action details are not included in CSV output.
         return ''
@@ -274,6 +274,11 @@ class CsvGenerator(DocFormatter):
             formatted.append(req_string)
 
         return "\n".join(formatted)
+
+
+    def format_action_response(self, schema_ref, action_param_name, action_response):
+        """ CSV omits action response """
+        return ''
 
 
     def add_section(self, text, link_id=False, schema_ref=False):

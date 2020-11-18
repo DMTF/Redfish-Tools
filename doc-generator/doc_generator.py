@@ -22,7 +22,6 @@ import warnings
 import gettext
 from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
-import parse_supplement
 
 
 class InfoWarning(UserWarning):
@@ -269,6 +268,7 @@ class DocGenerator:
                     req_profile_repo = local_path[0:-len(req_profile_name)]
                 else:
                     req_profile_repo = local_path
+                req_profile_repo = os.path.abspath(req_profile_repo)
                 is_local_file = True
                 break
 
@@ -1072,10 +1072,6 @@ class DocGenerator:
         parser.add_argument('--out', dest='outfile',
                             help=('Output file (default depends on output format: '
                                   'output.md for Markdown, index.html for HTML, output.csv for CSV'))
-        parser.add_argument('--sup', dest='supfile',
-                            help=('Path to the supplemental material document. '
-                                  'Default is usersupplement.md for user-focused documentation, '
-                                  'and devsupplement.md for normative documentation.'))
         parser.add_argument('--payload_dir', metavar='payload_dir',
                             help=('Directory location for JSON payload and Action examples. Optional.'
                                   'Within this directory, use the following naming scheme for example files: '
@@ -1137,47 +1133,11 @@ class DocGenerator:
 
 
     @staticmethod
-    def parse_supplemental_data(supfn, supfile_specified=False):
-        """ Open and parse supfn. Returns a dictionary.
-        If supfile_specified is False, don't warn if file is not found.
-        """
-
-        supfile_data = {}
-        try:
-            supfile = open(supfn, 'r', encoding="utf8")
-            supfile_data = parse_supplement.parse_file(supfile)
-            supfile.close()
-        except (OSError) as ex:
-            if supfile_specified:
-                warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename': supfn, 'message': str(ex)})
-            else:
-                warnings.warn('No supplemental file specified and %(filename)s not found. Proceeding.' % {'filename': supfn})
-        return supfile_data
-
-
-    @staticmethod
-    def parse_supfile_for_property_index(supfn):
-        """ Not really a parser: Open supfn and check that it contains the expected marker.
-        If it does, return the contents of the file. If it doesn't, warn and return None.
-        """
-        try:
-            with open(supfn, 'r', encoding="utf8") as supfile:
-                boilerplate = supfile.read()
-                if '[insert property index]' in boilerplate:
-                    return boilerplate
-                else:
-                    warnings.warn("Supplemental input file lacks the '%(marker)s' marker; ignoring." % {'marker': '[insert property index]'})
-        except (OSError) as ex:
-            warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename': supfn,  'message': str(ex)})
-
-        return None
-
-    @staticmethod
-    def combine_configs(command_line_args=None, config_data=None, supplemental_data=None):
+    def combine_configs(command_line_args=None, config_data=None, supp_config_data=None):
         """ Generate configuration based on various inputs (which should be dictionaries):
         command_line_args: command-line arguments
         config_data: read in from a config file
-        supplemental_data: read and parsed from a supplemental markdown document
+        supp_config_data: read in from content supplement config file
 
         If a parameter is specified in more than one place, config_data supersedes supplemental_data,
         and command_line_args supersedes all.
@@ -1187,8 +1147,8 @@ class DocGenerator:
             command_line_args = {}
         if not config_data:
             config_data = {}
-        if not supplemental_data:
-            supplemental_data = {}
+        if not supp_config_data:
+            supp_config_data = {}
 
         uri_mapping_from_config = config_data.get('uri_to_local')
         registry_uri_mapping_from_config = config_data.get('registry_uri_to_local')
@@ -1196,7 +1156,6 @@ class DocGenerator:
 
         # config will become the combined config dictionary.
         config = {
-            'supplemental': supplemental_data,
             'excluded_annotations': [],
             'excluded_annotations_by_match': [],
             'excluded_properties': [],
@@ -1204,12 +1163,16 @@ class DocGenerator:
             'excluded_schemas': [],
             'excluded_schemas_by_match': [],
             'excluded_pattern_props': [],
+            'description_overrides': {},
+            'property_description_overrides': {},
+            'property_fulldescription_overrides': {},
+            'wants_common_objects': False,
             'omit_version_in_headers': False,
-            'schema_supplement': None,
+            'schema_supplement': {},
             'normative': False,
             'escape_chars': [],
             'cwd': cwd,
-            'uri_replacements': {},
+            'schema_link_replacements': {},
             'local_to_uri': {},
             'uri_to_local': {},
             'registry_uri_to_local': {},
@@ -1217,6 +1180,9 @@ class DocGenerator:
             'profile_doc': None,
             'profile_resources': {},
             'profile': {},
+            'profile_uri_to_local': {},
+            'registry_uri_to_local': {},
+            'units_translation': {},
             'combine_multiple_refs': 0,
             }
 
@@ -1227,13 +1193,23 @@ class DocGenerator:
 
         if config_data:
 
-            # The --config argument does double duty; originally it was strictly for property_index_config.
-            if config_data.get('property_index') or command_line_args.get('property_index'):
-                config['property_index_config'] = config_data
+            # boilerplate content always comes from config_data:
+            for bp in ['intro_content', 'postscript_content']:
+                bp_content = config_data.get(bp)
+                if bp_content:
+                    config[bp] = bp_content
+                    if '[insert_common_objects]' in bp_content:
+                        config['wants_common_objects'] = True
+                    if '[add_toc]' in bp_content:
+                        # We always want to set 'add_toc' if there's a placeholder for it in the boilerplate
+                        config['add_toc'] = True
+
+            if not config.get('add_toc'):
+                config['add_toc'] = config_data.get('add_toc', False)
 
             # command-line arguments override the config file.
             config_args = [
-                'supfile', 'format', 'outfile', 'payload_dir', 'normative',
+                'format', 'outfile', 'payload_dir', 'normative',
                 'profile_doc', 'subset_doc',
                 'property_index', 'property_index_config_out', 'escape_chars',
                 'locale'
@@ -1252,13 +1228,12 @@ class DocGenerator:
                 combined_args['import_from'] = config_data['import_from']
 
             # config_flags don't have command-line overrides; they should be added to config directly.
-            # We want to capture the fact that a flag was set, even if false, as this should override
-            # the corresponding keyword in the supplemental markdown document.
             config_flags = [
-                'add_toc', 'units_translation', 'suppress_version_history',
+                'units_translation', 'suppress_version_history',
                 'actions_in_property_table', 'html_title',
                 'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
-                'combine_multiple_refs'
+                'combine_multiple_refs', 'omit_version_in_headers',
+                'description_overrides' # this is for property_index mode only
                 ]
             for x in config_flags:
                 if x in config_data:
@@ -1333,16 +1308,6 @@ class DocGenerator:
                 warnings.warn('Unable to read payload_dir "%(dirname)s": %(message)s' % {'dirname': combined_args['payload_dir'], 'message': str(ex)})
                 sys.exit();
 
-        if config.get('output_content') == 'property_index':
-             if 'property_index_config' not in config:
-                 # Minimal config is required; we'll be adding to this.
-                 config['property_index_config'] = {'DescriptionOverrides': {},
-                                                    'ExcludedProperties': []}
-             else:
-                 if 'ExcludedProperties' not in config['property_index_config']:
-                     config['property_index_config']['ExcludedProperties'] = config.get('excluded_properties', [])
-
-
         # Check profile document, if specified
         if combined_args.get('profile_doc'):
             if combined_args['profile_terse']:
@@ -1374,39 +1339,27 @@ class DocGenerator:
                               InfoWarning)
             sys.exit()
 
-        if 'keywords' in supplemental_data:
-            # Promote the keywords to top-level keys.
-            for key, val in supplemental_data['keywords'].items():
-                if key not in config:
-                    config[key] = val
-
-        if 'Schema Documentation' in supplemental_data:
-            config['uri_replacements'] = supplemental_data['Schema Documentation']
-
+        for kw in ['units_translation', 'schema_link_replacements']:
+            if kw in supp_config_data:
+                config[kw] = supp_config_data[kw]
 
         excluded_annotations = {}
         if 'excluded_annotations' in config_data:
             excluded_annotations['exact'] = [x for x in config_data['excluded_annotations'] if not x.startswith('*')]
             excluded_annotations['wildcard'] = [x[1:] for x in config_data['excluded_annotations'] if x.startswith('*')]
-        elif 'Excluded Annotations' in supplemental_data:
-            excluded_annotations['exact'] = supplemental_data['Excluded Annotations'].get('exact_match')
-            excluded_annotations['wildcard'] = supplemental_data['Excluded Annotations'].get('wildcard_match')
         if excluded_annotations.get('exact'):
             excl = excluded_annotations.get('exact')
             config['excluded_properties'].extend(excl)
             config['excluded_annotations'].extend(excl)
         if excluded_annotations.get('wildcard'):
             excl = excluded_annotations.get('wildcard')
-            config['excluded_by_match'].extend(excl)
+            config['excluded_by_match'].extend(excl) # intentional?
             config['excluded_annotations_by_match'].extend(excl)
 
         excluded_properties = {}
         if 'excluded_properties' in config_data:
             excluded_properties['exact'] = [x for x in config_data['excluded_properties'] if not x.startswith('*')]
             excluded_properties['wildcard'] = [x[1:] for x in config_data['excluded_properties'] if x.startswith('*')]
-        elif 'Excluded Properties' in supplemental_data:
-            excluded_properties['exact'] = supplemental_data['Excluded Properties'].get('exact_match', [])
-            excluded_properties['wildcard'] = supplemental_data['Excluded Properties'].get('wildcard_match', [])
         if excluded_properties.get('exact'):
             config['excluded_properties'].extend(excluded_properties['exact'])
         if excluded_properties.get('wildcard'):
@@ -1416,9 +1369,6 @@ class DocGenerator:
         if 'excluded_schemas' in config_data:
             excluded_schemas['exact'] = [x for x in config_data['excluded_schemas'] if not x.startswith('*')]
             excluded_schemas['wildcard'] = [x[1:] for x in config_data['excluded_schemas'] if x.startswith('*')]
-        elif 'Excluded Schemas' in supplemental_data:
-            excluded_schemas['exact'] = supplemental_data['Excluded Schemas'].get('exact_match')
-            excluded_schemas['wildcard'] = supplemental_data['Excluded Schemas'].get('wildcard_match')
         if excluded_schemas.get('exact'):
             config['excluded_schemas'] = excluded_schemas['exact']
         if excluded_schemas.get('wildcard'):
@@ -1430,51 +1380,21 @@ class DocGenerator:
         excluded_patterns = {}
         if 'excluded_pattern_properties' in config_data:
             config['excluded_pattern_props'].extend([x for x in config_data['excluded_pattern_properties']])
-        elif 'Excluded patternProperties' in supplemental_data:
-            config['excluded_pattern_props'].extend(supplemental_data['Excluded patternProperties'].get('exact_match'))
-            config['excluded_pattern_props'].extend(supplemental_data['Excluded patternProperties'].get('wildcard_match'))
 
-        if 'Description Overrides' in supplemental_data:
-            config['property_description_overrides'] = supplemental_data['Description Overrides']
+        if 'property_description_overrides' in supp_config_data:
+            config['property_description_overrides'] = supp_config_data['property_description_overrides']
 
-        if 'FullDescription Overrides' in supplemental_data:
-            config['property_fulldescription_overrides'] = supplemental_data['FullDescription Overrides']
-
-        # URI mappings may be provided either in the config file or the supplemental document.
-        # If they are in both, the version in the config file is what we use.
-        # If neither is populated, issue a warning.
-        if 'local_to_uri' in supplemental_data and not config['local_to_uri']:
-            config['local_to_uri'] = supplemental_data['local_to_uri']
+        if 'property_fulldescription_overrides' in supp_config_data:
+            config['property_fulldescription_overrides'] = supp_config_data['property_fulldescription_overrides']
 
         if not config['local_to_uri']:
-            warnings.warn(' '.join(['Schema URI Mapping was not found or empty.',
-                                        'URI mapping may be provided via config file or supplemental markdown.',
+            warnings.warn(' '.join(['Schema URI Mapping (uri_mapping) was not found or empty.',
+                                        'URI mapping must be provided via config file.',
                                         'Output is likely to be incomplete.',
                                         "\n\n"]))
 
-        if not uri_mapping_from_config:
-            if 'uri_to_local' in supplemental_data:
-                config['uri_to_local'] = supplemental_data['uri_to_local']
-                config['local_to_uri'] = supplemental_data['local_to_uri']
-
-            if 'profile_uri_to_local' in supplemental_data:
-                config['profile_uri_to_local'] = supplemental_data['profile_uri_to_local']
-
-        if 'profile_uri_to_local' not in config:
-            config['profile_uri_to_local'] = supplemental_data.get('profile_uri_to_local', {})
-
-        if not registry_uri_mapping_from_config:
-            config['registry_uri_to_local'] = supplemental_data.get('registry_uri_to_local', {})
-
-        if 'enum_deprecations' in supplemental_data:
-            config['enum_deprecations'] = supplemental_data['enum_deprecations']
-
-        if 'units_translation' not in config:
-            config['units_translation'] = supplemental_data.get('units_translation', {})
-
-        config['schema_supplement'] = supplemental_data.get('Schema Supplement', {})
-
-        config['wants_common_objects'] = supplemental_data.get('wants_common_objects', False)
+        if 'schema_supplement' in supp_config_data:
+            config['schema_supplement'] = parse_schema_supplement(supp_config_data.get('schema_supplement'))
 
         config['normative'] = combined_args.get('normative', False)
 
@@ -1497,48 +1417,92 @@ class DocGenerator:
         return config
 
 
+def parse_schema_supplement(supp_data):
+    """ Vet and extend supp_data. Any "mockup" entries in supp_data should be file paths or URIs to be expanded. """
+    for schema_name, data in supp_data.items():
+        if 'mockup' in data:
+            mockup_location = data.get('mockup')
+            mockup = None
+            ml_lower = mockup_location.lower()
+            if ml_lower.startswith('http://') or ml_lower.startswith('https://'):
+                # retrieve it via http[s]
+                try:
+                    response = urllib.request.urlopen(mockup_location)
+                    if 200 <= response.status < 300:
+                        mockup = response.read().decode('utf-8') # JSON is UTF-8 by spec.
+                    else:
+                        warnings.warn('Unable to retrieve Mockup from URL "%(uri)s": Server returned %(status_code)s status' %
+                                          {'uri': mockup_location, 'status_code': response.status})
+                except Exception as ex:
+                    warnings.warn('Unable to retrieve Mockup from URL "%(uri)s": %(ex)s' % {'uri': mockup_location, 'ex': str(ex)})
+                else:
+                    # treat it as a local file
+                    try:
+                        mockup_file = open(mockup_location, 'r', encoding="utf8")
+                        mockup = mockup_file.read()
+                    except Exception as ex:
+                        warnings.warn('Unable to open Mockup file "%(uri)s" to read: %(ex)s'
+                                              % {'uri': mockup_location, 'ex': str(ex)})
+
+            if mockup:
+                if data.get('jsonpayload'):
+                    warnings.warn('Warning: Mockup and JSONPayload both specified; using Mockup %(uri)s'
+                                      % {'uri': mockup_location})
+                data['jsonpayload'] = mockup
+
+    return supp_data
+
+
 def main():
     """Parse and validate arguments, then process data and produce markdown output."""
 
     cwd = os.getcwd()
 
     command_line_args = DocGenerator.parse_command_line()
-
-    if command_line_args.get('config_file'):
-        config_data = DocGenerator.parse_config_file(command_line_args['config_file'])
+    config_fn = command_line_args.get('config_file')
+    if config_fn:
+        config_data = DocGenerator.parse_config_file(config_fn)
     else:
         config_data = {}
 
-    # Is there a supplemental file?
-    supfn = None
-    supfile_specified = False
-    if command_line_args.get('supfile'):
-        supfn = command_line_args['supfile']
-        supfile_specified = True
-    elif config_data.get('supfile'):
-        supfn = config_data['supfile']
-        supfile_specified = True
-    elif command_line_args.get('normative') or config_data.get('normative'):
-        supfn = os.path.join(cwd, 'devsupplement.md')
-    else:
-        supfn = os.path.join(cwd, 'usersupplement.md')
+    # path of some files will be relative to path of config file:
+    config_dir = os.path.dirname(config_fn)
 
-    # In property_index mode, the supfile is very simple. Otherwise, it needs to be parsed.
-    sup_data = {}
-    property_index_boilerplate=None
-    if command_line_args.get('property_index') or config_data.get('property_index'):
-        if supfn and supfile_specified:
-            property_index_boilerplate = DocGenerator.parse_supfile_for_property_index(supfn)
+    # Is there a content supplement file?
+    if config_data.get('content_supplement'):
+        config_supp_fn = config_data['content_supplement']
+        config_supp_fn = os.path.normpath(os.path.join(config_dir, config_supp_fn))
+        try:
+            with open(config_supp_fn, 'r', encoding="utf8") as config_supp_file:
+                supp_config_data = json.load(config_supp_file)
+        except (OSError) as ex:
+            warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename':  config_supp_fn, 'message': str(ex)})
+            sys.exit()
+        except (json.decoder.JSONDecodeError) as ex:
+            warnings.warn('%(filename)s appears to be invalid JSON. JSON decoder reports: %(message)s' %
+                              {'filename': config_supp_fn, 'message': str(ex)})
+            sys.exit()
     else:
-        if supfn:
-            sup_data = DocGenerator.parse_supplemental_data(supfn, supfile_specified=supfile_specified)
+        supp_config_data = {}
+
+    # If boilerplate is specified, read it in now.
+    boilerplate_fns = {'boilerplate_intro': 'intro_content', 'boilerplate_postscript': 'postscript_content'}
+    for fn, content_key in boilerplate_fns.items():
+        if config_data.get(fn):
+            boilerplate_fn = os.path.normpath(os.path.join(config_dir, config_data[fn]))
+            try:
+                with open(boilerplate_fn, 'r', encoding="utf8") as boilerplate_file:
+                    boilerplate_lines = []
+                    for line in boilerplate_file:
+                        line = line.strip('\r\n') # Keep other whitespace
+                        boilerplate_lines.append(line)
+                    config_data[content_key] = '\n'.join(boilerplate_lines)
+            except (OSError) as ex:
+                warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename':  config_supp_fn, 'message': str(ex)})
+                sys.exit()
 
     config = DocGenerator.combine_configs(command_line_args=command_line_args, config_data=config_data,
-                                 supplemental_data=sup_data)
-
-    if property_index_boilerplate:
-        config['property_index_boilerplate'] = property_index_boilerplate
-
+                                              supp_config_data=supp_config_data)
 
     try:
         outfile = open(config['outfile_name'], 'w', encoding="utf8")

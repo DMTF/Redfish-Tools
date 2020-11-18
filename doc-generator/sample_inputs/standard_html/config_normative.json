@@ -1,13 +1,15 @@
 {
     "version": "The version string is optional. It may have (future?) meaning in property index mode.",
     "description": "Redfish Documentation Generator Example: config file for output of normative standard-mode documentation in HTML format.",
+    "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
     "format": "html",
-    "payload_dir": "./mockups/DSP2046-examples",
     "import_from": [ "./json-schema" ],
     "outfile": "normative.html",
     "normative": true,
-    "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
-    "supfile": "../Redfish-Tools/doc-generator/sample_inputs/supplement_for_standard_output.md",
+    "payload_dir": "./mockups/DSP2046-examples",
+    "add_toc": true,
+    "html_title": "Sample Standard Output",
+    "combine_multiple_refs": 3,
     "excluded_properties": [
         "@odata.context",
         "@odata.type",
@@ -33,15 +35,15 @@
     "excluded_pattern_properties": [
         "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$"
     ],
-    "units_translation": {
-        "s": "seconds",
-        "Mb/s": "Mbits/second",
-        "By": "bytes",
-        "Cel": "Celsius",
-        "MiBy": "mebibytes",
-        "W": "Watts",
-        "V": "Volts",
-        "mW": "milliWatts",
-        "m": "meters"
-    }
+    "object_reference_disposition": {
+        "common_object": [
+            "Redundancy"
+        ],
+        "include": [
+            "http://redfish.dmtf.org/schemas/v1/PCIeDevice.json#/definitions/PCIeInterface"
+        ]
+    },
+    "boilerplate_intro": "./intro.md",
+    "boilerplate_postscript": "./postscript.md",
+    "content_supplement": "./content_supplement.json"
 }
