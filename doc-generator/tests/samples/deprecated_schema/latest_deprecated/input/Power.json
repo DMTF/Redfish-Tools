@@ -32,13 +32,15 @@
                 }
             ],
             "deletable": false,
+            "deprecated": "This schema has been deprecated because absolute power corrupts absolutely.",
             "description": "The Power schema describes power metrics and represents the properties for power consumption and power limiting.",
             "insertable": false,
             "longDescription": "This resource shall contain the power metrics for a Redfish implementation.",
             "updatable": true,
             "uris": [
                 "/redfish/v1/Chassis/{ChassisId}/Power"
-            ]
+            ],
+            "versionDeprecated": "v1_6_0"
         }
     },
     "owningEntity": "DMTF",

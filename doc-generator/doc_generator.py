@@ -644,17 +644,11 @@ class DocGenerator:
         property_data['name_and_version'] = schema_name
         property_data['normalized_uri'] = normalized_uri
         property_data['latest_version'] = version
+        release_text = data.get('release')
+
         if 'deprecated' in data:
             property_data['deprecated'] = data['deprecated']
             property_data['versionDeprecated'] = data.get('versionDeprecated')
-
-        if data.get('release'):
-            release_history = property_data.get('release_history')
-            if not release_history:
-                property_data['release_history'] = []
-                release_history = property_data.get('release_history')
-            release_text = data.get('release', '')
-            release_history.append({'version': version, 'release': release_text, 'deprecated': ('deprecated' in property_data)})
 
         min_version = False
         if profile_mode:
@@ -678,9 +672,6 @@ class DocGenerator:
                 return {}
         elif version:
             property_data['name_and_version'] += ' ' + version
-
-        if 'deprecated' in property_data:
-            property_data['name_and_version'] += ' ' + _('(deprecated)')
 
         if 'properties' not in property_data:
             property_data['properties'] = {}
@@ -708,9 +699,22 @@ class DocGenerator:
             properties = data['properties']
             property_data['properties'] = properties
 
+            if 'deprecated' in data:
+                property_data['name_and_version'] += ' ' + _('(deprecated)')
+                property_data['deprecated'] = data['deprecated']
+                property_data['versionDeprecated'] = data.get('versionDeprecated')
+
         except KeyError:
             warnings.warn('Unable to find properties in path %(ref)s from %(filename)s' % { 'ref': ref['ref'], 'filename': filename})
             return {}
+
+        if release_text:
+            release_history = property_data.get('release_history')
+            if not release_history:
+                property_data['release_history'] = []
+                release_history = property_data.get('release_history')
+            release_history.append({'version': version, 'release': release_text, 'deprecated': ('deprecated' in property_data)})
+
 
         return property_data
 
