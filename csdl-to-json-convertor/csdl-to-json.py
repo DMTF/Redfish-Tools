@@ -210,6 +210,7 @@ class CSDLToJSON:
                         else:
                             self.generate_object( child, namespace, self.json_out[self.namespace_under_process]["definitions"] )
                         self.generate_capabilities( child, self.json_out[self.namespace_under_process]["definitions"] )
+                        self.add_version_details( child, self.json_out[self.namespace_under_process]["definitions"][self.get_attrib( child, "Name" )] )
 
                     # Process EnumType definitions
                     if child.tag == ODATA_TAG_ENUM:
@@ -578,6 +579,9 @@ class CSDLToJSON:
 
         # Add items from the BaseType
         self.generate_object_base( object, name, json_def )
+
+        # Add version info
+        self.add_version_details( object, json_def[name] )
 
     def generate_object_base( self, object, name, json_def ):
         """

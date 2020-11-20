@@ -195,6 +195,9 @@ class JSONToYAML:
                 if "delete" in yaml_data["paths"][uri]:
                     self.uri_cache[uri]["deletable"] = True
                 self.uri_cache[uri]["type"] = self.uri_cache[uri]["reference"].rsplit( "/" )[-1]
+                self.uri_cache[uri]["deprecated"] = yaml_data["paths"][uri]["get"].get( "deprecated", False )
+                self.uri_cache[uri]["reasonDeprecated"] = yaml_data["paths"][uri]["get"].get( "x-deprecatedReason", None )
+                self.uri_cache[uri]["versionDeprecated"] = yaml_data["paths"][uri]["get"].get( "x-versionDeprecated", None )
 
                 # Apply any extensions if needed
                 if self.uri_cache[uri]["type"] in extensions:
@@ -231,6 +234,9 @@ class JSONToYAML:
                     insertable = False
                     updatable = False
                     deletable = False
+                    deprecated = False
+                    deprecated_reason = None
+                    deprecated_version = None
                     reference = "UNKNOWN"
                     request_body = "UNKNOWN"
 
@@ -249,6 +255,14 @@ class JSONToYAML:
                         deletable = definition["deletable"]
                     else:
                         print( "ERROR: No deletable term found in {} for {}".format( filename, def_name ) )
+
+                    # Get the deprecated info
+                    if "deprecated" in definition:
+                        deprecated = True
+                        deprecated_reason = definition["deprecated"]
+                    if "versionDeprecated" in definition:
+                        deprecated = True
+                        deprecated_version = definition["versionDeprecated"]
 
                     # Get the external reference
                     if "anyOf" in definition:
@@ -300,6 +314,9 @@ class JSONToYAML:
                         self.uri_cache[uri]["type"] = def_name
                         self.uri_cache[uri]["reference"] = reference
                         self.uri_cache[uri]["requestBody"] = request_body
+                        self.uri_cache[uri]["deprecated"] = deprecated
+                        self.uri_cache[uri]["reasonDeprecated"] = deprecated_reason
+                        self.uri_cache[uri]["versionDeprecated"] = deprecated_version
 
     def check_for_actions( self, json_data, filename ):
         """
@@ -384,6 +401,9 @@ class JSONToYAML:
                         action_uri_cache[action_uri]["updatable"] = False
                         action_uri_cache[action_uri]["deletable"] = False
                         action_uri_cache[action_uri]["action"] = True
+                        action_uri_cache[action_uri]["deprecated"] = self.uri_cache[uri]["deprecated"]
+                        action_uri_cache[action_uri]["reasonDeprecated"] = self.uri_cache[uri]["reasonDeprecated"]
+                        action_uri_cache[action_uri]["versionDeprecated"] = self.uri_cache[uri]["versionDeprecated"]
 
         self.uri_cache.update( action_uri_cache )
 
@@ -597,6 +617,14 @@ class JSONToYAML:
         for response in responses:
             operation["responses"][str( response )] = self.generate_response( uri, response )
         operation["responses"]["default"] = self.generate_response( uri, 500 )
+
+        # Add deprecation info
+        if self.uri_cache[uri]["deprecated"]:
+            operation["deprecated"] = True
+        if self.uri_cache[uri]["reasonDeprecated"] is not None:
+            operation["x-deprecatedReason"] = self.uri_cache[uri]["reasonDeprecated"]
+        if self.uri_cache[uri]["versionDeprecated"] is not None:
+            operation["x-versionDeprecated"] = self.uri_cache[uri]["versionDeprecated"]
 
         return operation
 
