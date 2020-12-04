@@ -450,6 +450,10 @@ class JSONToYAML:
             if isinstance( json_data["type"], list ):
                 json_data["type"] = json_data["type"][0]
                 json_data["nullable"] = True
+        # If the type is an integer, specify it to be 64-bit
+        if "type" in json_data:
+            if json_data["type"] == "integer":
+                json_data["format"] = "int64"
 
         # Update anyOf to remove null types; OpenAPI defines a "nullable" term
         if "anyOf" in json_data:
