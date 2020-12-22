@@ -476,7 +476,7 @@ class MarkdownGenerator(DocFormatter):
                 else:
                     contents.append('| ' + enum_name + ' | ')
 
-        caption = self.formatter.add_table_caption(_("%(prop_name)s property values" % {'prop_name': prop_name}))
+        caption = self.formatter.add_table_caption(_("%(prop_name)s property values") % {'prop_name': prop_name})
         preamble = self.formatter.add_table_reference(_("The defined property values are listed in "))
 
         return preamble + '\n'.join(contents) + '\n' + caption
