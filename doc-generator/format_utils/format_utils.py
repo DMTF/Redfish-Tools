@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -11,6 +11,8 @@ Initial author: Second Rise LLC.
 """
 
 class FormatUtils():
+
+    last_caption = ""
 
     def head_one(self, text, level, anchor_id=None):
         """Add a top-level heading, relative to the generator's level"""
@@ -92,3 +94,10 @@ class FormatUtils():
         header_rows.append(self._make_separator_row(numcells))
 
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
+
+    def add_table_caption(self, caption):
+        self.last_caption = caption
+        return _('Table') + ': ' + _('Table') + ' TBL_nn: <a name=table_TBL_nn>' + caption + '</a>'
+
+    def add_table_reference(self, lead_in):
+        return lead_in + '[' + _('Table') + ' TBL_nn++](#table_TBL_nn \"' + self.last_caption + '\").'
