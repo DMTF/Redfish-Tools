@@ -191,13 +191,17 @@ class DocFormatter:
 
     def add_release_history(self, release_history, versionDeprecated=False):
         """ Add the release history. """
+
         summarized = self.summarize_release_history(release_history, versionDeprecated)
-        versions = []
-        releases = []
+        versions = [self.formatter.bold(_('Version'))]
+        releases = [self.formatter.bold(_('Release'))]
         for elt in summarized:
             versions.append(self.formatter.italic(elt['version']))
             releases.append(elt['release'])
-        formatted = self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)])
+        heading = self.formatter.head_three(_("Revision history"), self.level);
+        caption = self.formatter.add_table_caption(_("Revision history"));
+        reference = self.formatter.add_table_reference(_("The revision history is summarized in "));
+        formatted = reference + "\n\n" + self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)]) + "\n\n" +caption
         self.this_section['release_history'] = formatted
 
 
@@ -796,6 +800,7 @@ class DocFormatter:
             item_text = self.format_uris_for_table(uris)
             rows.append(self.formatter.make_row([collection_name, item_text]))
         doc = self.formatter.make_table(rows, [header], 'uris')
+
         return doc
 
 

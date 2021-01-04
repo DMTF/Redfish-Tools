@@ -476,7 +476,11 @@ class MarkdownGenerator(DocFormatter):
                 else:
                     contents.append('| ' + enum_name + ' | ')
 
-        return '\n'.join(contents) + '\n'
+        caption = self.formatter.add_table_caption(_("%(prop_name)s property values") % {'prop_name': prop_name})
+        preamble = self.formatter.add_table_reference(_("The defined property values are listed in "))
+
+        return preamble + '\n'.join(contents) + '\n' + caption
+
 
 
     def format_action_details(self, prop_name, action_details):
@@ -522,6 +526,7 @@ class MarkdownGenerator(DocFormatter):
 
         if deprecated_descr:
             formatted.append(self.formatter.para(italic(deprecated_descr)))
+        formatted.append(self.formatter.head_four(_("Description"), self.level))
         formatted.append(self.formatter.para(prop_descr))
 
         # Add the URIs for this action.
@@ -532,11 +537,8 @@ class MarkdownGenerator(DocFormatter):
         if action_parameters:
             rows = []
             # Table start:
-            rows.append("|     |     |     |")
+            rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Notes') + "     |")
             rows.append("| --- | --- | --- |")
-
-            # Add a "start object" row for this parameter:
-            rows.append('| ' + ' | '.join(['{', ' ',' ',' ']) + ' |')
 
             param_names = [x for x in action_parameters.keys()]
 
@@ -547,20 +549,19 @@ class MarkdownGenerator(DocFormatter):
 
             param_names.sort(key=str.lower)
 
+        heading = self.formatter.head_four(_("Action parameters"), self.level)
         if len(param_names):
             for param_name in param_names:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
                 rows.append(formatted_parameters.get('row'))
 
-            # Add a closing } row:
-            rows.append('| ' + ' | '.join(['}', ' ',' ',' ']) + ' |')
-
-            formatted.append(self.formatter.para(_('The following table shows the parameters for the action which are included in the POST body to the URI shown in the "target" property of the Action.')))
-
-            formatted.append('\n'.join(rows))
+            caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name})
+            preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in "))
+            formatted.append(preamble + "\n\n" + '\n'.join(rows) + "\n\n" + caption)
 
         else:
-            formatted.append(self.formatter.para(_('(This action takes no parameters.)')))
+            formatted.append(self.formatter.para(heading))
+            formatted.append(self.formatter.para(_("This action takes no parameters.")))
 
         return "\n".join(formatted)
 
@@ -640,9 +641,18 @@ class MarkdownGenerator(DocFormatter):
 
             # something is awry if there are no properties, but ...
             if section.get('properties'):
-                contents.append('|     |     |     |')
+                caption = self.formatter.add_table_caption(section["head"] + " properties")
+                preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ")
+
+                # properites are a peer of URIs, if they exist
+                # TODO: this should use make_table()
+                contents.append('\n' + self.formatter.head_two('Properties', self.level))
+                contents.append(preamble + "\n")
+                contents.append('|Property     |Type     |Notes     |')
+
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
+                contents.append(caption + '\n')
 
             if section.get('profile_conditional_details'):
                 # sort them now; these can be sub-properties so may not be in alpha order.
@@ -809,7 +819,7 @@ search: true
 
     def add_description(self, text):
         """ Add the schema description """
-        self.this_section['description'] = text + '\n'
+        self.this_section['description'] = "## " + _('Description') + "\n\n" + text + '\n'
 
 
     def add_deprecation_text(self, deprecation_text):
@@ -820,7 +830,7 @@ search: true
 
     def add_uris(self, uris):
         """ Add the URIs (which should be a list) """
-        uri_block = "**URIs**:\n"
+        uri_block = "## " + _('URIs') + "\n"
         for uri in sorted(uris, key=str.lower):
             uri_block += "\n" + self.format_uri(uri)
         self.this_section['uris'] = uri_block + "\n"
@@ -833,7 +843,7 @@ search: true
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_block = "**" + _('URIs') + "**:\n"
+        uri_block = self.formatter.head_four(_("Action URIs"), self.level)
         for uri in sorted(uris, key=str.lower):
             uri = uri + "/Actions/" + action
             uri_block += "\n" + self.format_uri(uri)
