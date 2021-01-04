@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2020-12-22 11:38-0800\n"
+"POT-Creation-Date: 2021-01-04 15:02-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -106,11 +106,11 @@ msgstr ""
 msgid "Resource instance is subordinate to %(phrase)s"
 msgstr ""
 
-#: doc_formatter/csv_generator.py:253 doc_formatter/doc_formatter.py:430
+#: doc_formatter/csv_generator.py:253 doc_formatter/doc_formatter.py:429
 msgid "from"
 msgstr ""
 
-#: doc_formatter/csv_generator.py:258 doc_formatter/doc_formatter.py:439
+#: doc_formatter/csv_generator.py:258 doc_formatter/doc_formatter.py:438
 msgid "to"
 msgstr ""
 
@@ -137,137 +137,137 @@ msgstr ""
 msgid "(deprecated v%(deprecated_version)s)"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:201
-msgid "Release"
-msgstr ""
-
-#: doc_formatter/doc_formatter.py:201
+#: doc_formatter/doc_formatter.py:196
 msgid "Version"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:202 doc_formatter/doc_formatter.py:203
+#: doc_formatter/doc_formatter.py:197
+msgid "Release"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:201 doc_formatter/doc_formatter.py:202
 msgid "Revision history"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:204
+#: doc_formatter/doc_formatter.py:203
 msgid "The revision history is summarized in "
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:383
+#: doc_formatter/doc_formatter.py:382
 msgid "%(access_condition)s (Read-only)"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:385 doc_formatter/doc_formatter.py:392
+#: doc_formatter/doc_formatter.py:384 doc_formatter/doc_formatter.py:391
 msgid "%(access_condition)s (Read/Write)"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:387 doc_formatter/doc_formatter.py:390
+#: doc_formatter/doc_formatter.py:386 doc_formatter/doc_formatter.py:389
 msgid "%(access_condition)s (Read)"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:398
+#: doc_formatter/doc_formatter.py:397
 msgid "Minimum %(count)s"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:430
+#: doc_formatter/doc_formatter.py:429
 msgid "Resource instance is subordinate to %(resource_list)s"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:434
+#: doc_formatter/doc_formatter.py:433
 msgid "Applies if Protocol version is 1.6+"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:446
+#: doc_formatter/doc_formatter.py:445
 msgid "and"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:447
+#: doc_formatter/doc_formatter.py:446
 msgid "is"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:454
+#: doc_formatter/doc_formatter.py:453
 msgid ", must be %(comparison_word)s %(list)s"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:798
+#: doc_formatter/doc_formatter.py:797
 msgid "Collection Type"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:798 doc_formatter/markdown_generator.py:833
+#: doc_formatter/doc_formatter.py:797 doc_formatter/markdown_generator.py:833
 msgid "URIs"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:916
+#: doc_formatter/doc_formatter.py:915
 msgid "This object is an excerpt of the %(link)s resource located at the URI shown in DataSourceUri."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:921
+#: doc_formatter/doc_formatter.py:920
 msgid "For more information about this property, see %(link)s in Property Details."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:940
+#: doc_formatter/doc_formatter.py:939
 msgid "Contains a link to a resource."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:946
+#: doc_formatter/doc_formatter.py:945
 msgid "Link to Collection of %(schema_links)s. See the %(schema_name)s schema for details."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:953
+#: doc_formatter/doc_formatter.py:952
 msgid "Link to another %(name)s resource."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:956
+#: doc_formatter/doc_formatter.py:955
 msgid "Link to a %(name)s resource. See the Links section and the %(schema_link)s schema for details."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:961
+#: doc_formatter/doc_formatter.py:960
 msgid "See the %(schema_link)s schema for details on this property."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:983
+#: doc_formatter/doc_formatter.py:982
 msgid "For property details, see %(schema_link)s v%(version_number)s)."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:987
+#: doc_formatter/doc_formatter.py:986
 msgid "For property details, see %(schema_link)s."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1755
+#: doc_formatter/doc_formatter.py:1754
 msgid "The unique identifier for a resource."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1756
+#: doc_formatter/doc_formatter.py:1755
 msgid "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1782
+#: doc_formatter/doc_formatter.py:1781
 msgid "%(descr)s Pattern: %(pattern)s"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1879
+#: doc_formatter/doc_formatter.py:1878
 msgid "Property names follow regular expression pattern \"%(pattern)s\""
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2224
+#: doc_formatter/doc_formatter.py:2223
 msgid "If Implemented"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2225 doc_formatter/html_generator.py:383
+#: doc_formatter/doc_formatter.py:2224 doc_formatter/html_generator.py:383
 #: doc_formatter/html_generator.py:385 doc_formatter/html_generator.py:738
 #: doc_formatter/markdown_generator.py:841
 msgid "Conditional Requirements"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2226
+#: doc_formatter/doc_formatter.py:2225
 msgid "Mandatory"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2227
+#: doc_formatter/doc_formatter.py:2226
 msgid "Recommended"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2266
+#: doc_formatter/doc_formatter.py:2265
 msgid "Deprecated"
 msgstr ""
 
