@@ -9,10 +9,10 @@ search: true
 
 The revision history is summarized in [Table TBL_nn++](#table_TBL_nn "Revision history").
 
-| Version | Release |
-| --- |
-| *v1.3* |
-| 2018.2 |
+|     |     |
+| --- | --- |
+| **Version** | *v1.3* |
+| **Release** | 2018.2 |
 
 Table: Table TBL_nn: <a name=table_TBL_nn>Revision history</a>
 ## Description

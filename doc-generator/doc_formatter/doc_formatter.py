@@ -193,16 +193,15 @@ class DocFormatter:
         """ Add the release history. """
 
         summarized = self.summarize_release_history(release_history, versionDeprecated)
-        versions = []
-        releases = []
+        versions = [self.formatter.bold(_('Version'))]
+        releases = [self.formatter.bold(_('Release'))]
         for elt in summarized:
             versions.append(self.formatter.italic(elt['version']))
             releases.append(elt['release'])
-        header = self.formatter.make_header_row([_('Version'), _('Release')])
         heading = self.formatter.head_three(_("Revision history"), self.level);
         caption = self.formatter.add_table_caption(_("Revision history"));
         reference = self.formatter.add_table_reference(_("The revision history is summarized in "));
-        formatted = reference + "\n\n" + self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)], [header]) + "\n\n" +caption
+        formatted = reference + "\n\n" + self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)]) + "\n\n" +caption
         self.this_section['release_history'] = formatted
 
 
