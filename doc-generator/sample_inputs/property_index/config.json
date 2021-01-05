@@ -1,6 +1,6 @@
 {
-    "version": "The version string is optional. It may have (future?) meaning in property index mode.",
-    "description": "Redfish Documentation Generator Example: config file for output of property index documentation in HTML format.",
+    "version": "The version string is optional. It may have (future?) meaning in property-index mode.",
+    "description": "Redfish doc generator example: Configuration file for property-index mode in HTML format.",
     "property_index": true,
     "format": "html",
     "import_from": [ "./json-schema" ],

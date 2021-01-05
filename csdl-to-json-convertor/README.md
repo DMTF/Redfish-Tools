@@ -1,34 +1,67 @@
-# CSDL to JSON Converter
+[![Build Status](https://travis-ci.com/DMTF/Redfish-Tools.svg?branch=master)](https://travis-ci.com/github/DMTF/Redfish-Tools)
+<p align="center">
+  <img src="https://redfish.dmtf.org/sites/all/themes/dmtf2015/images/dmtf-redfish-logo.png" alt="DMTF Redfish" width=180></p>
 
-Copyright 2017-2018 Distributed Management Task Force, Inc. All rights reserved.
+Copyright © 2017-2021 DMTF. All rights reserved.
 
-## About
+[[Redfish-Tools README]](../README.md#redfish-tools "../README.md#redfish-tools")
 
-The CSDL to JSON Converter is a python3 tool which processes Redfish CSDL files and converts them to the Redfish JSON Schema format.
+# CSDL-to-JSON converter
+
+The CSDL-to-JSON converter, [csdl-to-json.py](csdl-to-json.py#L1 "csdl-to-json.py#L1"), is a Python tool that converts Redfish [Common Schema Definition Language (CSDL)](http://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part3-csdl.html "http://docs.oasis-open.org/odata/odata/v4.0/odata-v4.0-part3-csdl.html") files to [JSON Schema](https://json-schema.org/ "https://json-schema.org/") files.
+
+## Table of contents
+
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
+* [Example](#example)
+* [Processing](#processing)
+
+## Installation
+
+1. Clone the `Redfish-Tools` repository:
+   ```bash
+   $  git clone git@github.com:DMTF/Redfish-Tools.git
+   $  git remote add upstream git@github.com:DMTF/Redfish-Tools.git
+   ```
+1. [Download and install Python](https://www.python.org/downloads/ "https://www.python.org/downloads/").
+
+## Configuration
+
+To configure the generated JSON Schema files, define configuration keys in a JSON configuration file. To specify the path to the configuration file, use the [--config](#usage "#usage") command‑line argument.
+
+If you do not specify a configuration file or omit any configuration keys from the specified configuration file, the converter uses the key values in the default [dmtf&#8209;config.json](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file. The configration file defines these [configuration keys](#table-1--configuration-keys "#table-1--configuration-keys"):
+
+<b id="table-1--configuration-keys">Table 1 &mdash; Configuration keys</b>
+
+| Configuration key  | Description                                                     |
+| :----------------- | :-------------------------------------------------------------- |
+| [`Copyright`](dmtf-config.json#L2 "dmtf-config.json#L2") | Copyright string to include in the generated JSON Schema files. |
+| [`RedfishSchema`](dmtf-config.json#L3 "dmtf-config.json#L3") | String. Location of Redfish Schema files. |
+| [`ODataSchema`](dmtf-config.json#L4 "dmtf-config.json#L4") | String. Location of OData Schema files. |
+| [`Location`](dmtf-config.json#L5 "dmtf-config.json#L5") | String. Directory for the generated JSON Schema files. |
+| [`ResourceLocation`](dmtf-config.json#L6 "dmtf-config.json#L6") | String. Location of Redfish resources. |
+| [`DoNotWrite`](dmtf-config.json#L7 "dmtf-config.json#L7") | Array of strings. Each string is the file name of the file to exclude from the generated JSON Schema files. |
 
 ## Usage
 
-Ensure that the machine running the tool has a python 3 install.
+The required arguments are <code translate="no">--input <var>INPUT</var></code> and <code translate="no">--output <var>OUTPUT</var></code>.
 
-Example: `python3 csdl-to-json.py --input <CSDL-Dir> --output <JSON-Dir> --config <Config-File>`
+The optional arguments are <code translate="no">--config <var>CONFIG</var></code>, which defaults to <code translate="no">dmtf&#8209;config.json</code>, and `--overwrite`, which defaults to `true`.
 
-The tool will process all files found in the folder specified by the *input* argument.  It will convert the contents of the files to create JSON Schema files and save them to the folder specified by the *output* argument; the [Operation section](#operation) describes this process in more detail.  There are some control parameters that are read in from the JSON file specified by the *config* argument; the [Config File section](#config-file) describes the contents of the file.
-
-### Options
-
-```
+```text
 usage: csdl-to-json.py [-h] --input INPUT --output OUTPUT [--config CONFIG]
                        [--overwrite OVERWRITE]
 
 A tool used to convert Redfish CSDL files to Redfish JSON Schema files
 
-required arguments:
-  --input INPUT, -I INPUT
-                        The folder containing the CSDL files to convert
-  --output OUTPUT, -O OUTPUT
-                        The folder to write the converted JSON files
 optional arguments:
   -h, --help            show this help message and exit
+  --input INPUT, -I INPUT
+                        The directory containing the CSDL files to convert
+  --output OUTPUT, -O OUTPUT
+                        The directory to write the converted JSON files
   --config CONFIG, -C CONFIG
                         The configuration file containing definitions for
                         various links and user strings
@@ -37,41 +70,102 @@ optional arguments:
                         if they already exist (default is True)
 ```
 
-### Config File
+## Example
 
-The config file can contain up to five parameters; parameters not defined will have a default value in the tool:
-* Copyright: The copyright string to include in the JSON Schema files
-* Location: A pointer to the web folder where the resulting JSON Schema files will be published
-* DoNotWrite: A list of the output files to filter out when writing the JSON files
+To run the converter, navigate to the `Redfish-Tools/csdl-to-json-convertor` directory and use Python to run `csdl-to-json.py`:
 
-Sample File and Default Values:
-```
-{
-    "Copyright": "Copyright 2014-2017 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
-    "Location": "http://redfish.dmtf.org/schemas/v1/",
-    "DoNotWrite": []
-}
+```bash
+$ python3 csdl-to-json.py --input ../../Redfish/metadata --output ../../Redfish/json-schema/ --config dmtf-config.json
 ```
 
-## Operation
+This example converts the CSDL metadata files in the `Redfish/metadata` input directory to JSON Schema files in the <code translate="no">Redfish/json&#8209;schema</code> output directory. To configure the generated JSON Schema files, the converter reads the configuration keys in the <code translate="no">dmtf&#8209;config.json</code> configuration file.
 
-The tool makes several assumptions about the format of the Redfish CSDL files:
-* Each file that defines a resource follows the Redfish model for inheritance by copy; other than the base *Resource* definition, each resource definition is contained in one file
-* Any referenced external namespaces have proper *Include* statements found at the top of the CSL file
-* All annotations have their expected facets filled; for example, the OData.Description annotation must use the *String=* facet
-* All namespaces follow the Redfish defined format where a namespace is either unversioned, or is in the form *name.vX_Y_Z*
-* If a reference is made to another CSDL file, its JSON Schema file will be in the same folder
+## Processing
 
-Before any translation is done, the tool will attempt to locate the Resource_v1.xml schema.  This is to cache properties for base definitions that all resources use.  The tool will first check to see if the file exists in the input directory; if it doesn't exist there, it will access the remote location for the file.
+* [Assumptions](#assumptions)
+* [Details](#details)
 
-Once the Resource_v1.xml definitions are cached, the tool loops on all files ending in ".xml" in the input directory.  For every namespace found in the file, it will generate a corresponding ".json" file in the following manner:
-* For EntityType and ComplexType definitions...
-    * ... that are in an unversioned namespace and are marked as abstract have a definition that contains an "anyOf" statement in the unversioned JSON Schema that points to all versioned definitions
-    * ... that are in an unversioned namespace and are not marked as abstract have their definition translated only to the unversioned JSON Schema file
-    * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files
-* Action definitions...
-    * ... that are in an unversioned namespace are translated to all versioned JSON Schema files
-    * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files
-* EnumType and TypeDefinition definitions...
-    * ... that are in an unversioned namespace are translated to the unversioned JSON Schema file
-    * ... that are in a versioned namespace have their definitions translated to that version of the JSON Schema file, and newer JSON Schema files
+### Assumptions
+
+The converter makes these assumptions about the format of the Redfish CSDL files:
+
+* Each file that defines a resource follows the Redfish model for inheritance by copy.
+    Other than the base `Resource` definition, each resource definition is contained in one file.
+* Any referenced external namespaces have proper `Include` statements at the top of each CSDL file.
+* All annotations have their expected facets filled.
+    For example, the `OData.Description` annotation must use the `String=` facet.
+* All namespaces follow the Redfish-defined format where a namespace is either unversioned or in the form <code translate="no"><var>NAME</var>.v<var>MAJOR&#8209;VERSION</var>&lowbar;<var>MINOR&#8209;VERSION</var>&lowbar;<var>ERRATA&#8209;VERSION</var></code>.
+
+    > **Note:** References to another CSDL file assume that its JSON Schema file is in the same directory.
+
+### Details
+
+To process CSDL files, the converter:
+
+1. Locates the `Resource_v1.xml` schema to cache base definition properties that all resources use.
+    If the file is not in the input directory, the tool accesses it in the remote location.
+1. Loops on all XML files in the input directory. For the definitions in every versioned and unversioned namespace in each XML file, the converter generates corresponding definitions in JSON Schema file or files.
+    
+    [Table 2](#table-2--mapping-of-csdl-definitions-to-json-definitions "#table-2--mapping-of-csdl-definitions-to-json-definitions") shows the mapping of CSDL file definitions to JSON file definitions.
+
+    <table id="table-2--mapping-of-csdl-to-json-data" width="100%" id="table-mapping-of-csdl-definitions-to-json-definitions">
+      <caption><b>Table 2 &mdash; Mapping of CSDL definitions to JSON definitions</b></caption>
+      <col width="4%">
+      <col width="48%">
+      <col width="48%">
+      <thead>
+        <tr>
+          <th align="left" valign="top" colspan="2">CSDL file</th>
+          <th align="left" valign="top">JSON file</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th align="left" valign="top" colspan="2"><code>EntityType</code>&nbsp;and&nbsp;<code>ComplexType</code> definitions that are in</th>
+          <th align="left" valign="top">Tool generates these files with corresponding definitions</th>
+        </tr>
+        <tr>
+          <td/>
+          <td align="left" valign="top">Unversioned namespace and marked as abstract</td>
+          <td align="left" valign="top">Unversioned JSON Schema file, which uses <code>anyOf</code> statement to point to all versioned definitions</td>
+        </tr>
+        <tr>
+          <td/>
+          <td align="left" valign="top">Unversioned&nbsp;namespace&nbsp;and&nbsp;not&nbsp;marked&nbsp;as&nbsp;abstract</td>
+          <td align="left" valign="top">Unversioned JSON Schema file</td>
+        </tr>
+        <tr>
+          <td/>
+          <td align="left" valign="top">Versioned namespace</td>
+          <td align="left" valign="top">That JSON Schema file version and newer JSON Schema file versions</td>
+        </tr>
+        <tr>
+          <th align="left" valign="top" colspan="2"><code>Action</code> definitions that are in</th>
+          <th align="left" valign="top">Tool generates these files with corresponding definitions</th>
+        </tr>
+        <tr>
+          <td/>
+          <td align="left" valign="top">Unversioned namespace</td>
+          <td align="left" valign="top">All JSON Schema file versions</td>
+        </tr>
+        <tr>
+          <td/>
+          <td align="left" valign="top">Versioned namespace</td>
+          <td align="left" valign="top">That JSON Schema file version and newer JSON Schema file versions</td>
+        </tr>
+        <tr>
+          <th align="left" valign="top" colspan="2"><code>EnumType</code> and <code>TypeDefinition</code> definitions that are in</th>
+          <th align="left" valign="top">Tool generates these files with corresponding definitions</th>
+        </tr>
+        <tr>
+          <td/>
+          <td align="left" valign="top">Unversioned namespace</td>
+          <td align="left" valign="top">Unversioned JSON Schema file</td>
+        </tr>
+        <tr>
+          <td/>
+          <td align="left" valign="top">Versioned namespace</td>
+          <td align="left" valign="top">That JSON Schema file version and newer JSON Schema file versions</td>
+        </tr>
+      </tbody>
+    </table>

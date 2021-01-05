@@ -1,6 +1,8 @@
 # Table Numbering README
 > last modified: 10 November 2020
 
+[[Redfish doc generator README]](README.md#redfish-doc-generator "README.md#redfish-doc-generator")
+
 ## Problem
 
 1. ISO submissions require that all tables and figures be both uniquely identified, and referenced in the body of the document. For example:
@@ -12,7 +14,7 @@
     |-----|-------|
     |foo | bar |
 
-2. The existing doc generator doesn't produce content in a linear stream, so on-the-fly numbering was not an option
+1. The existing doc generator does not produce content in a linear stream so on-the-fly numbering was not an option.
 
 ## Solution
 
@@ -23,4 +25,4 @@ Routines were added to create:
   - TBL_NN: The current table number
   - TBL_NN++: The next table number (i.e., pre-increment)
 
-An awk routine (table_number.awk) was added to the Swordfish documentation scripts to replace the tokens with actual table numbers, once a full set of md source files had been generated. It also handles some document variable substitutions, and a numbering sequence for figures, though those are not directly related to the ISO issue.
+An awk routine (table_number.awk) was added to the Swordfish documentation tools to replace the tokens with actual table numbers, once a full set of md source files had been generated. It also handles some document variable substitutions, and a numbering sequence for figures, though those are not directly related to the ISO issue.

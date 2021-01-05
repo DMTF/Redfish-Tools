@@ -1,5 +1,5 @@
 <p align="right">
-  <img src="http://redfish.dmtf.org/sites/all/themes/dmtf2015/images/dmtf-redfish-logo.png" alt="DMTF Redfish" width=180>
+  <img src="https://redfish.dmtf.org/sites/all/themes/dmtf2015/images/dmtf-redfish-logo.png" alt="DMTF Redfish" width=180>
 </p>
 <p align="right">Document Identifier: <span class="dsp">DSP2046</span></p>
 <p align="right">Date: 2018-8-10</p>
