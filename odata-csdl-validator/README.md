@@ -1,23 +1,102 @@
-# OData CSDL Validator
+[![Build Status](https://travis-ci.com/DMTF/Redfish-Tools.svg?branch=master)](https://travis-ci.com/github/DMTF/Redfish-Tools)
+<p align="center">
+  <img src="http://redfish.dmtf.org/sites/all/themes/dmtf2015/images/dmtf-redfish-logo.png" alt="DMTF Redfish" width=180></p>
 
-Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+Copyright © 2016-2021 DMTF. All rights reserved.
+
+[[Redfish-Tools README]](../README.md#redfish-tools "../README.md#redfish-tools")
+
+# OData CSDL validator
+
+## Contents
+
+* [About](#about)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Examples](#examples)
+* [Processing](#processing)
 
 ## About
-The OData Validator is a python3 tool which crawls through OData formatted metadata, parses it and validates that it conforms to OData V4.0.
+
+The OData CSDL validator, [`odata_validator.py`](odata_validator.py#L1 "odata_validator.py#L1"), is a Python tool that parses OData CSDL XML files and all referenced files to validate that the metadata conforms to [OData v4.0](http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html "http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html").
+
+> **Note:** OData CSDL XML is a full representation of the OData Common Schema Definition Language (CSDL) in the [Extensible Markup Language (XML) 1.1 (Second Edition)](https://www.w3.org/TR/2006/REC-xml11-20060816/ "https://www.w3.org/TR/2006/REC-xml11-20060816/").
+
+## Installation
+
+1. Clone the `Redfish-Tools` repository:
+
+   ```zsh
+   % git clone git@github.com:DMTF/Redfish-Tools.git
+   % git remote add upstream git@github.com:DMTF/Redfish-Tools.git
+   ```
+1. [Download and install Python](https://www.python.org/downloads/ "https://www.python.org/downloads/") on the machine from which you will run this tool.
 
 ## Usage
-Ensure that the machine running the tool has a python 3 install.
 
-This tool requires one parameter which is used to navigate to the metadata file(s) to be validated.
-The parameter can be in one of 3 formats.
+```
+usage: odata_validator.py [-h] MetaData
 
-1. The local path to a single XML metadata file. Example - odata\_validator.py test\_metadata/ServiceRoot.xml
-2. The local path to a directory of XML metadata files. Example - odata\_validator.py test\_metadata
-3. The URL of an XML metadata file. Example - odata\_validator.py http://redfish.dmtf.org/schemas/v1/ServiceRoot.xml
+OData Validation Tool
 
-The validator will parse and validate the file(s) pointed to along with all referenced files.
+positional arguments:
+  MetaData    Path to the metadata to be parsed, could be a url (start with
+              http), file or folder
 
-If the tool finds an error, it will print to the screen a path starting from the metadata file the error is found in all the way to the error itsef along with a simple explanation of what the error is.
+optional arguments:
+  -h, --help  show this help message and exit
+```
 
-Example:
+## Examples
+
+To run the validator, navigate to the `Redfish-Tools/odata-csdl-validator` directory and use Python to run `odata_validator.py`:
+
+```zsh
+% cd Redfish-Tools/odata-csdl-validator
+% python3 odata_validator.py METADATA
+```
+
+The validator accepts the `METADATA` command-line argument in one of these formats:
+
+* [Local path to an OData CSDL XML file](#local-path-to-an-odata-csdl-xml-file)
+* [Local path to directory of OData CSDL XML files](#local-path-to-directory-of-odata-csdl-xml-files)
+* [URL of an OData CSDL XML file](#url-of-an-odata-csdl-xml-file)
+
+### Local path to an OData CSDL XML file
+
+This example command runs the validator against the `test_metadata/ServiceRoot.xml` file to validate that the metadata conforms to OData v4.0:
+
+```zsh
+% cd Redfish-Tools/odata-csdl-validator
+% python3 odata_validator.py ../../Redfish/test_metadata/ServiceRoot.xml
+```
+
+### Local path to directory of OData CSDL XML files
+
+This example command runs the validator against the files in the `test_metadata` directory to validate that the metadata conforms to OData v4.0:
+         
+```zsh
+% cd Redfish-Tools/odata-csdl-validator
+% python3 odata_validator.py ../../Redfish/test_metadata
+```
+
+### URL of an OData CSDL XML file
+
+This example command runs the validator against the `http://redfish.dmtf.org/schemas/v1/ServiceRoot.xml` file to validate that the metadata conforms to OData v4.0:
+         
+```zsh
+$ cd Redfish-Tools/odata-csdl-validator
+% python3 odata_validator.py http://redfish.dmtf.org/schemas/v1/ServiceRoot.xml
+```
+
+## Processing
+
+The validator parses the specified OData CSDL XML file or files and all referenced OData CSDL XML files to validate that the metadata conforms to [OData v4.0](http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html "http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html"). 
+
+If the validator finds an error, it prints the path to the metadata file that contains the error with a simple explanation of the error.
+
+Example error message:
+
+```text
 MetaData:http://redfish.dmtf.org/schemas/v1/ServiceRoot.xml->DataServices->Schema:ServiceRoot->EntityType:ServiceRoot->Resource.1.0.0.Resource is not a valid QualifiedName
+```

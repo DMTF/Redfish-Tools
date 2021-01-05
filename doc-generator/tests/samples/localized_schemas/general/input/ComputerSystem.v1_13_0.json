@@ -1037,7 +1037,7 @@
                     "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/count"
                 },
                 "CooledBy": {
-                    "description": "An array of links to resources or objects that that cool this computer system.  Normally, the link is for either a chassis or a specific set of fans.",
+                    "description": "An array of links to resources or objects that cool this computer system.  Normally, the link is for either a chassis or a specific set of fans.",
                     "items": {
                         "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/idRef"
                     },

@@ -1,72 +1,170 @@
-# Changes in Doc Generator Version 3
+[![Build Status](https://travis-ci.com/DMTF/Redfish-Tools.svg?branch=master)](https://travis-ci.com/github/DMTF/Redfish-Tools)
+<p align="center">
+  <img src="http://redfish.dmtf.org/sites/all/themes/dmtf2015/images/dmtf-redfish-logo.png" alt="DMTF Redfish" width=180></p>
 
-Version 3 of the doc generator introduces changes to the inputs the tool accepts. These changes are not backward compatible, so if you need to re-run the tool against an existing set of configuration files and don't need any other v3 or later changes, use the latest "doc_gen_v2" release.
+Copyright © 2016-2021 DMTF. All rights reserved.
 
-This document describes the changes, and how to update your configuration files.
+[[Redfish doc generator README]](README.md#redfish-doc-generator "README.md#redfish-doc-generator")
 
-## Version 3 Configuration Files
+# Redfish doc generator v3 changes
 
-The current version of the Doc Generator takes configuration input on the command line and from a configuration file, an optional boilerplate document, and an optional schema supplement file. In profile and subset modes, there is an additional mode-specific configuration file.
+## Contents
 
-| File             | Format     | Purpose                                                       |
-|------------------|------------|---------------------------------------------------------------|
-| config           | JSON       | Top-level configuration, including all command-line options. This file also specifies the locations of other configuration  files. |
-| boilerplate intro | markdown or html | Content to be inserted in the output verbatim, prior to the generated documentation. May include an `[add_toc]` placeholder to specify where to include a table of contents. |
-| boilerplate postscript | markdown or html | Content to be inserted in the output verbatim, after the generated documentation. May include an `[add_toc]` placeholder to specify where to include a table of contents. |
-| content supplement | JSON     | Text replacements and additions. Includes: text overrides for property descriptions, units translation (replacements for unit abbreviations), schema-specific intros, postscripts, and property description substitutions. |
-| subset doc       | JSON       | Subset profile, unchanged for v3. _Link to spec for this?_         |
+* [About](#about)
+* [Configuration files](#configuration-files)
+* [Supplemental files](#supplemental-files)
 
+## About
 
-## Replacing Supplemental Material
+The Redfish doc generator v3 accepts different inputs than those that the Redfish doc generator v2 accepted.
 
-Features that previously were specified within the "Supplemental Material" markdown document are all available elsewhere:
+> **Note:** These changes are not backward compatible so use the Redfish [Doc Generator v2](https://github.com/DMTF/Redfish-Tools/releases/tag/doc_gen_v2.0.0 "https://github.com/DMTF/Redfish-Tools/releases/tag/doc_gen_v2.0.0") to run the tool against an existing set of configuration files and supplemental files.
 
- - "Introduction": replace with separate boilerplate intro file, file location specified in config.json as `boilerplate_intro`. Format is unchanged.
- - "Postscript": replace with separate boilerplate intro file, file location specified in config.json as `boilerplate_postscript`. Format is unchanged.
- - "Keyword Configuration": specify individual fields in config.json: `omit_version_in_headers`, `add_toc`, `actions_in_property_table`, `suppress_version_history`
- - "Description Overrides": `property_description_overrides` in content supplement (in JSON syntax)
- - "FullDescription Overrides": `property_fulldescription_overrides` in content supplement (in JSON syntax)
- - "Schema Supplement": `schema_supplement` in content supplement (in JSON syntax). No longer supports JSON payloads (use a `payload_dir` instead)
- - "Schema Documentation": `schema_link_replacements` in content supplement (in JSON syntax)
+## Configuration files
 
-(Here, "config.json" means your base config file, specified with the `--config` command-line flag.)
+* [Changes to the base configuration file](#changes-to-the-base-configuration-file)
+* [Unchanged schema subset configuration file](#unchanged-schema-subset-configuration-file)
+* [New content supplement configuration file](#new-content-supplement-configuration-file)
 
-The following have had analogs in the base config.json for some time, and now can only be specified in that file:
+### Changes to the base configuration file
 
- - "Excluded Properties": `excluded_properties`
- - "Excluded Annotations": `excluded_annotations`
- - "Excluded Schemas": `excluded_schemas`
- - "Excluded patternProperties": `excluded_pattern_properties`
- - "Schema URI Mapping": `uri_mapping`
- - "Profile URI Mapping": `profile_uri_to_local`
- - "Registry URI Mapping": `registry_uri_to_local`
+> **Note:** For complete information about the base configuration file, see [Base configuration file](README_config_files.md#base-configuration-file "README_config_files.md#base-configuration-file") and [Configuration keys](README-base-configuration-file.md#configuration-keys "README-base-configuration-file.md#configuration-keys").
 
-The "Units Translation" table is replaced by the `units_translation` field, which has been moved from config.json to the content supplement JSON file.
+The base configuration file is `config.json`. Use the `--config` command-line argument to specify the base configuration file.
 
- - "Units Translation": `units_translation` in content supplement
+* These configuration keys have been moved from the base configuration file into the [new content supplement configuration file](#new-content-supplement-configuration-file):
 
-## Fields That Move Out of Base Config
+    * <a href="README_config_files.md#property_description_overrides" title="README_config_files.md#property_description_overrides"><code>property_description_overrides</code></a>
+    * <a href="README_config_files.md#property_fulldescription_overrides" title="README_config_files.md#property_fulldescription_overrides"><code>property_fulldescription_overrides</code></a>
+    * <a href="README_config_files.md#units_translation" title="README_config_files.md#units_translation"><code>units_translation</code></a>
 
-Move these fields out of the base config.json and into the content supplement:
+* These property index mode keys, which you define in the base configuration file, have been renamed:
 
- - `property_description_overrides`
- - `property_fulldescription_overrides`
- - `units_translation`
+	| Previous name          | Current name            | Notes                                         |
+	| :--------------------- | :---------------------- | :-------------------------------------------- |
+	| `ExcludedProperties`   | [`excluded_properties`](README-base-configuration-file.md#excluded_properties "README-base-configuration-file.md#excluded_properties")   | As in other modes.                            |
+	| `DescriptionOverrides` | [`description_overrides`](README-base-configuration-file.md#description_overrides "README-base-configuration-file.md#description_overrides") | Distinct from the `property_description_overrides` in the content supplement for other modes, and is provided in the base configuration file rather than the content supplement. |
 
-## Renamed Fields in Base Config
+**Example base configuration file:** <a href="sample_inputs/standard_html/config.json#L1" title="sample_inputs/standard_html/config.json#L1"><code>sample_inputs/standard_html/config.json</code></a>
 
-Two field names, recognized only in "Property Index" mode and specified in config.json, have been renamed:
+### Unchanged schema subset configuration file
 
- - `ExcludedProperties` is now `excluded_properties` (as in other modes)
- - `DescriptionOverrides` is now `description_overrides`. Note that this is distinct from the `property_description_overrides` used in the content supplement for other modes, and is provided in the base config rather than the content supplement.
+The schema subset configuration file, which is a version of the base configuration file, is a JSON file that defines the schema subset profile. This file is unchanged for v3.
 
+For a description of and an example schema subset configuration file, see <a href="README-base-configuration-file.md#schema-subset-mode-in-html-format" title="README-base-configuration-file.md#schema-subset-mode-in-html-format">Schema subset mode in HTML format</a>.
 
-## The Content Supplement JSON File
+### New content supplement configuration file
 
-The content supplement contains text replacements and insertions:
+> **Note:** For complete information about the content supplement configuration file, see [Content supplement configuration file](README_config_files.md#content-supplement-configuration-file "README_config_files.md#content-supplement-configuration-file").
 
- - `units_translation`: replacements for the units abbreviations used in the schema files.
- - `schema_supplement`: schema-specific intros, postscripts, and property description overrides
- - `schema_link_replacements`: mapping of URIs found in schemas to URIs to substitute. Used to replace links to external refs in documentation.
- - `property_description_overrides`: replacements for individual property descriptions, by property name
- - `property_fulldescription_overrides`: replacements for individual property descriptions, by property name. These overrides also eliminate any auto-generated explanations, like references to the definition of a property in another schema.
+The content supplement configuration file is a JSON file that defines text overrides for property descriptions, replacements for unit abbreviations, and schema-specific content to apply to the generated schema documentation. The base configuration file contains a pointer to this file.
+
+| Configuration key | Change    |
+| :---------------- | :-------- |
+| <a href="README_config_files.md#property_fulldescription_overrides" title="README_config_files.md#property_fulldescription_overrides"><code>property_description_overrides</code></a> | Moved from [base configuration file](#changes-to-the-base-configuration-file). |
+| <a href="README_config_files.md#property_fulldescription_overrides" title="README_config_files.md#property_fulldescription_overrides"><code>property_fulldescription_overrides</code></a> | Moved from [base configuration file](#changes-to-the-base-configuration-file). |
+| `schema_link_replacements` | New [`schema_link_replacements` key](README_config_files.md/#schema_link_replacements "README_config_files.md/#schema_link_replacements"). |
+| <a href="README_config_files.md#units_translation" title="README_config_files.md#units_translation"><code>units_translation</code></a> | Moved from [base configuration file](#changes-to-the-base-configuration-file). |
+
+For an example of the content supplement configuration file, see <a href="sample_inputs/standard_html/content_supplement.json#L1" title="sample_inputs/standard_html/content_supplement.json#L1"><code>sample_inputs/standard_html/content_supplement.json</code></a>.
+
+## Supplemental files
+
+* [Changes to the supplemental material file](#changes-to-the-supplemental-material-file)
+* [New boilerplate intro file](#new-boilerplate-intro-file)
+* [New boilerplate postscript file](#new-boilerplate-postscript-file)
+
+### Changes to the supplemental material file
+
+The *supplemental material* Markdown file, `devsupplement.md`, features are now available elsewhere:
+
+<table>
+   <thead>
+      <tr>
+         <th align="left" valign="top">Feature</th>
+         <th align="left" valign="top">Available in</th>
+         <th align="left" valign="top">Details</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td align="left" valign="top">Introduction</td>
+         <td align="left" valign="top"><a href="README_config_files.md#boilerplate-intro-file" title="README_config_files.md#boilerplate-intro-file">Boilerplate intro file</a></td>
+         <td align="left" valign="top">
+            <p>Use the <a href="README-base-configuration-file.md#boilerplate_intro" title="README-base-configuration-file.md#boilerplate_intro"><code>boilerplate_intro</code></a> key in the base configuration file to specify the location of the boilerplate intro file. Format of the file is unchanged.</p>
+         </td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">Postscript</td>
+         <td align="left" valign="top"><a href="README_config_files.md#boilerplate-postscript-file" title="README_config_files.md#boilerplate-postscript-file">Boilerplate postscript file</a></td>
+         <td align="left" valign="top">
+            <p>Use the <a href="README-base-configuration-file.md#boilerplate_postscript" title="README-base-configuration-file.md#boilerplate_postscript"><code>boilerplate_postscript</code></a> key in the base configuration file to specify the location of the boilerplate postscript file. Format of the file is unchanged.</p>
+         </td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">Keyword configuration</td>
+         <td align="left" valign="top"><a href="README_config_files.md#base-configuration-file">Base&nbsp;configuration file</a></td>
+         <td align="left" valign="top">
+            <p>Use these keys:</p>
+            <ul>
+               <li><a href="README-base-configuration-file.md#actions_in_property_table" title="README-base-configuration-file.md#actions_in_property_table"><code>actions_in_property_table</code></a></li>
+               <li><a href="README-base-configuration-file.md#add_toc" title="README-base-configuration-file.md#add_toc"><code>add_toc</code></a></li>
+               <li><a href="README-base-configuration-file.md#omit_version_in_headers" title="README-base-configuration-file.md#omit_version_in_headers"><code>omit_version_in_headers</code></a></li>
+               <li><a href="README-base-configuration-file.md#suppress_version_history" title="README-base-configuration-file.md#suppress_version_history"><code>suppress_version_history</code></a></li>
+            </ul>
+         </td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">Description overrides</td>
+         <td align="left" valign="top" rowspan="4"><a href="README_config_files.md#content-supplement-configuration-file">Content&nbsp;supplement&nbsp;configuration&nbsp;file</a></td>
+         <td align="left" valign="top">
+            <p>Use the <a href="README_config_files.md#property_description_overrides" title="README-configuration--and-supplemental-files.md#property_description_overrides"><code>property_description_overrides</code></a> key.</p>
+         </td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">FullDescription&nbsp;overrides</td>
+         <td align="left" valign="top">
+            <p>Use the <a href="README_config_files.md#property_fulldescription_overrides" title="README-configuration--and-supplemental-files.md#property_fulldescription_overrides"><code>property_fulldescription_overrides</code></a> key.</p>
+         </td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">Schema supplement</td>
+         <td align="left" valign="top">
+            <p>Use the <a href="README_config_files.md#schema_supplement" title="README-configuration--and-supplemental-files.md#schema_supplement"><code>schema_supplement</code></a> key.</p>
+            <p>The schema supplement no longer supports JSON payloads. To define the directory location for JSON payload and action examples, use the <a href="README-base-configuration-file.md#payload_dir" title="README-base-configuration-file.md#payload_dir"><code>payload_dir</code></a> key instead.</p>
+         </td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">Schema documentation</td>
+         <td align="left" valign="top">
+            <p>Use the <a href="README_config_files.md#schema_link_replacements" title="README-configuration--and-supplemental-files.md#schema_link_replacements"><code>schema_link_replacements</code></a> key.</p>
+         </td>
+      </tr>
+   </tbody>
+</table>
+
+The following supplemental material features have had analogs in the base configuration file for some time:
+
+| Feature                    | Base configuration file key    |
+| :------------------------- | :----------------------------- |
+| Excluded annotations       | [`excluded_annotations`](README-base-configuration-file.md#excluded_annotations "README-base-configuration-file.md#excluded_annotations") |
+| Excluded patternProperties | [`excluded_pattern_properties`](README-base-configuration-file.md#excluded_pattern_properties "README-base-configuration-file.md#excluded_pattern_properties") |
+| Excluded properties        | [`excluded_properties`](README-base-configuration-file.md#excluded_properties "README-base-configuration-file.md#excluded_properties") |
+| Excluded schemas           | [`excluded_schemas`](README-base-configuration-file.md#excluded_schemas "README-base-configuration-file.md#excluded_schemas") |
+| Profile URI mapping        | [`profile_uri_to_local`](README-base-configuration-file.md#profile_uri_to_local "README-base-configuration-file.md#profile_uri_to_local") |
+| Registry URI mapping       | [`registry_uri_to_local`](README-base-configuration-file.md#registry_uri_to_local "README-base-configuration-file.md#registry_uri_to_local") |
+| Schema URI mapping         | [`uri_mapping`](README-base-configuration-file.md#uri_mapping "README-base-configuration-file.md#uri_mapping") |
+
+The `units_translation` key replaces the **Units Translation** table, which has been moved from the base configuration file to the content supplement configuration file.
+
+| Feature            | Content supplement configuration file key |
+| :----------------- | :--------------------------------------- |
+| Units translation  | [`units_translation`](README_config_files.md#units_translation "README_config_files.md#units_translation") |
+
+### New boilerplate intro file
+
+See [Boilerplate intro file](README_config_files.md#boilerplate-intro-file "README_config_files.md#boilerplate-intro-file").
+
+### New boilerplate postscript file
+
+See [Boilerplate postscript file](README_config_files.md#boilerplate-postscript-file "README_config_files.md#boilerplate-postscript-file").

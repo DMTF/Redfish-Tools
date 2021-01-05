@@ -1,6 +1,8 @@
 # Table Numbering README
 > last modified: 10 November 2020
 
+[[Redfish doc generator README]](README.md#redfish-doc-generator "README.md#redfish-doc-generator")
+
 ## Problem
 
 1. ISO submissions require that all tables and figures be both uniquely identified, and referenced in the body of the document. For example:

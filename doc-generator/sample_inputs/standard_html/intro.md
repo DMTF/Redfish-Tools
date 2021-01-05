@@ -14,7 +14,7 @@
 <p>Document Language: en-US</p></b>
 <br>
    <p>Copyright Notice</p>
-    <p>Copyright &copy; 2016-2018 DMTF. All rights reserved.
+    <p>Copyright &copy; 2016-2021 DMTF. All rights reserved.
 <br><br>
   <p>DMTF is a not-for-profit association of industry members dedicated to promoting enterprise and systems management and interoperability. Members and non-members may reproduce DMTF specifications and documents, provided that correct attribution is given. As DMTF specifications may be revised from time to time, the particular version and release date should always be noted.</p>
   <p>Implementation of certain elements of this standard or proposed standard may be subject to third party patent rights, including provisional patent rights (herein "patent rights"). DMTF makes no representations to users of the standard as to the existence of such rights, and is not responsible to recognize, disclose, or identify any or all such third party patent right, owners or claimants, nor for any incomplete or inaccurate identification or disclosure of such rights, owners or claimants. DMTF shall have no liability to any party, in any manner or circumstance, under any legal theory whatsoever, for failure to recognize, disclose, or identify any such third party patent rights, or for such party's reliance on the standard or incorporation thereof in its product, protocols or testing procedures. DMTF shall have no liability to any party implementing such standard, whether such implementation is foreseeable or not, nor to any patent owner or claimant, and shall have no liability or responsibility for costs or losses incurred if a standard is withdrawn or modified after publication, and shall be indemnified and held harmless by any party implementing the standard from any and all claims of infringement by a patent owner for such implementations.</p>
@@ -42,15 +42,15 @@ This document is useful to people who want to understand how to use the Redfish 
 
 The following web sites provide more information about the Redfish standard:
 
-* **Redfish Developer Hub:**  <a href="http://redfish.dmtf.org">http://redfish.dmtf.org</a> Resources for developers building applications using Redfish.  Contains an interactive schema explorer, hosted schema and other links.
-* **Redfish User Forum:**  <a href="http://www.redfishforum.com">http://www.redfishforum.com</a> User forum monitored by DMTF Redfish personnel to answer questions about any Redfish-related topics:
-* **DMTF Github Repositories:**  <a href="http://www.github.com/DMTF">http://www.github.com/DMTF</a> Open source tools and libraries for working with the Redfish API.
-* **Redfish Standards:**  <a href="http://www.dmtf.org/standards/redfish">http://www.dmtf.org/standards/redfish</a>  Schemas, specs, mockups, white papers, FAQ, educational material and more.
-* **DMTF Redfish Forum** (Working group that maintains the Redfish standard):  <a href="http://www.dmtf.org/standards/spmf">http://www.dmtf.org/standards/spmf</a> Companies involved, upcoming schedules and future work, charter, and information about joining.
+* **Redfish Developer Hub:**  <a href="http://redfish.dmtf.org" title="http://redfish.dmtf.org">http://redfish.dmtf.org</a> Resources for developers building applications using Redfish. Contains an interactive schema explorer, hosted schema and other links.
+* **Redfish User Forum:**  <a href="http://www.redfishforum.com" title="http://www.redfishforum.com">http://www.redfishforum.com</a> User forum monitored by DMTF Redfish personnel to answer questions about any Redfish-related topics:
+* **DMTF Github Repositories:**  <a href="http://www.github.com/DMTF" title="http://www.github.com/DMTF">http://www.github.com/DMTF</a> Open source tools and libraries for working with the Redfish API.
+* **Redfish Standards:**  <a href="http://www.dmtf.org/standards/redfish" title="http://www.dmtf.org/standards/redfish">http://www.dmtf.org/standards/redfish</a>  Schemas, specs, mockups, white papers, FAQ, educational material and more.
+* **DMTF Redfish Forum** (Working group that maintains the Redfish standard):  <a href="http://www.dmtf.org/standards/spmf" title="http://www.dmtf.org/standards/spmf">http://www.dmtf.org/standards/spmf</a> Companies involved, upcoming schedules and future work, charter, and information about joining.
 
 # Using this guide
 
-Every Redfish API response consists of a JSON payload containing properties that are strictly defined by a schema for that resource.  The schema defining a particular resource can be determined from the value of the "@odata.type" property returned in every Redfish response.  This guide details the definitions for every Redfish standard schema.
+Every Redfish API response consists of a JSON payload containing properties that are strictly defined by a schema for that resource. The schema defining a particular resource can be determined from the value of the "@odata.type" property returned in every Redfish response. This guide details the definitions for every Redfish standard schema.
 
 Each schema section contains:
 
@@ -65,64 +65,74 @@ The property-level details include:
 
 | Column | Purpose |
 |--------|---------|
-| Property Name | The name of the JSON property as it will appear (case sensitive) in the JSON payload.  For properties added to the schema after the initial release (v1.0.0), the version that the property was added will be shown in parenthesis.  Properties that have been deprecated will also be indicated (along with the version where the deprecation occurred). |
-| Type | The JSON data type(s) for the property.  This can include boolean, number, string or object. String types that use defined enumerations will state "(enum)".  Number types will state their units where used. |
-| Attributes | Designates whether the property is read-only or read-write (if supported by the implementation), and whether a 'null' value may be returned by the Service if the value of the property is temporarily unavailable. |
-| Description | The description of the property, as copied directly from the schema 'Description' definition. |
+| Property name | Case-sensitive name of the JSON property as it appears in the JSON payload. For properties added to the schema after the initial v1.0.0 release, the version that the property was added appears in parenthesis. Deprecated properties are indicated along with the version where the deprecation occurred. |
+| Type | JSON data types for the property. The type is boolean, number, string, or object. String types that use defined enumerations state `"(enum)"`. Number types state their units, where used. |
+| Attributes | Indicates whether the property is read-only or read-write, if supported by the implementation, and whether the service might return a `null` value if the value of the property is temporarily unavailable. |
+| Description | Description of the property, as copied directly from the schema `Description` definition. |
 
 ## URI listings
 
-The Redfish Specification v1.6.0 added mandatory support for the OpenAPI Specification v3.0.  As part of this support, the URIs for every Redfish Resource are defined to appear at known, fixed locations. Resource Collections also appear at fixed locations, with the Members of each collection appearing at URIs constructed using a fixed path structure, with appropriate path segments equal to the value of "Id" properties of Members along the path.
+The *Redfish Specification* v1.6.0 added mandatory support for the *OpenAPI Specification* v3.0. As part of this support, the URIs for every Redfish resource are defined to appear at known, fixed locations. Resource collections also appear at fixed locations, with the members of each collection appearing at URIs constructed by using a fixed path structure, with appropriate path segments equal to the value of `Id` properties of members along the path.
 
-Support for v1.6.0 and OpenAPI can be determined by comparing the value of the "RedfishVersion" property in the Service Root (\redfish\v1\).  Services reporting a value of "1.6.0" or higher (such as "1.6.1" or "1.7.0") adhere to the URI definitions shown.
+Support for v1.6.0 and OpenAPI can be determined by comparing the value of the "RedfishVersion" property in the Service Root (`\redfish\v1\`).  Services reporting a value of `1.6.0` or higher, such as `1.6.1` or `1.7.0`, adhere to the URI definitions shown.
 
-The URI listings do not apply to Redfish Services reporting support of Specification versions prior to v1.6.0.  For those Services, clients must utilize the hypermedia features of the API to discover links from the Service Root to each resource.  While Services will typically match the URIs listed in this documents for many of their resources, this is not guaranteed and will result in errors.
-
+The URI listings do not apply to Redfish services reporting support of *Specification* versions earlier than v1.6.0.  For those services, clients must use the hypermedia features of the API to discover links from the service root to each resource.  While services typically match the URIs listed in this document for many of their resources, this practice is not guaranteed and result in errors.
 
 # Common properties
 
 ## Properties defined for all Redfish schemas
 
-The following properties are defined for inclusion in every Redfish schema, and therefore may be encountered in any Response payload.  They are documented here to avoid repetition in the Reference Guide property tables.  Note that several of these properties are payload annotations, but are listed here as they are required for all Redfish resources.
+The following properties are defined for inclusion in every Redfish schema, and therefore may be encountered in any response payload. They are documented here to avoid repetition in the *Reference Guide* property tables. Note that several of these properties are payload annotations, but are listed here as they are required for all Redfish resources.
 
 #include_fragment ./docs/DSP2046/CommonPropertySchema.json#/definitions/CommonProperties/properties
 
-## Frequently used properites
+## Frequently used properties
 
-In addition, the following properties are frequently defined in Redfish schemas.  Their definition and usage is the same throughout the Redfish data model.
+In addition, the following properties are frequently defined in Redfish schemas. Their definition and usage is the same throughout the Redfish data model.
 
 #include_fragment ./docs/DSP2046/CommonPropertySchema.json#/definitions/FrequentProperties/properties
 
 ## Payload annotations
 
-Payload annotations are a mechanism in which a service provides additional information about a given property or object.  Redfish limits usage of these annotations to OData core terms, Redfish Extensions or Redfish Messages.
+A service uses payload annotations to provide additional information about a property or object. Redfish limits usage of these annotations to OData core terms, Redfish extensions, or Redfish messages.
 
 ### Property-level annotations
 
-A payload annotation for a single property takes the form of an additional property named `Property@Schema.Term`, where `Property` is the JSON property being annotated, `Schema` is the schema file where the definition for the annotation is found, and `Term` is the name of the Annotation.
+A payload annotation for a single property takes the form of an additional property named `Property@Schema.Term`.
+
+where
+
+* `Property` is the JSON property being annotated.
+* `Schema` is the schema file where the definition for the annotation is located.
+* `Term` is the name of the annotation.
 
 | Term                       | Usage |
 | ----                       | ----- |
-| `@Redfish.AllowableValues` | Indicates to the client the different string values the service accepts for a given action parameter |
-| `@Message.ExtendedInfo`    | Allows the service to provide a set of Message structures for a given property to indicate additional information; this can be useful when a property is `null` due to an error condition, and the service wants to convey why the property is `null` |
-| `@odata.count`             | Can be used on properties that are arrays in order to indicate their size so that a client does not need to count the array members |
+| `@Redfish.AllowableValues` | Indicates to the client the different string values the service accepts for a given action parameter. |
+| `@Message.ExtendedInfo`    | Allows the service to provide a set of Message structures for a given property to indicate additional information; this can be useful when a property is `null` due to an error condition, and the service wants to convey why the property is `null`. |
+| `@odata.count`             | Can be used on properties that are arrays in order to indicate their size so that a client does not need to count the array members. |
 
-In the example below, the property `ResetType` is being annotated with the `AllowableValues` term, which is defined in the `Redfish` schema (an alias for RedfishExtensions).  This is used to indicate to the client that the service supports the values `On` and `ForceOff` for `ResetType`.
+In the following example, the `ResetType` property is annotated with the `AllowableValues` term, which is defined in the `Redfish` schema, which is an alias for `RedfishExtensions`. 
+
+This annotation indicates to the client that the service supports the `On` and `ForceOff` values for `ResetType`.
 
 ```json
 {
-    "ResetType@Redfish.AllowableValues": [
-        "On",
-        "ForceOff"
-    ],
-    ...
+   "ResetType@Redfish.AllowableValues": ["On", "ForceOff"],
+   ...
 }
 ```
 
-
 ### Resource or object-level annotations
 
-A payload annotation for an entire resource or a JSON object takes the form of `@Schema.Term`, where `Namespace` is the schema file where the definition is found and `Term` is the name of the Annotation.  These payload annotations are used to provide further information about the object itself.
+A payload annotation for an entire resource or a JSON object takes the form of `@Schema.Term`.
+
+where
+
+* `Namespace` is the schema file where the definition is located.
+* `Term` is the name of the Annotation.
+
+These payload annotations provide further information about the object itself.
 
 | Term                    | Usage |
 | ----                    | ----- |
@@ -137,63 +147,59 @@ In the example below, the object is being annotated with the `ActionInfo` term, 
 
 ```json
 {
-    "#ComputerSystem.Reset": {
-        "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
-        "@Redfish.ActionInfo": "/redfish/v1/Systems/1/ResetActionInfo"
-    },
-    ...
+   "#ComputerSystem.Reset": {
+      "target": "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
+      "@Redfish.ActionInfo": "/redfish/v1/Systems/1/ResetActionInfo"
+   },
+   ...
 }
 ```
 
 # Common objects
 
-The following JSON objects are frequently defined in Redfish schemas.  Like the individual common propoerties listed above, these objects share a common definition which is shown here to avoid repetition in teh Reference Guide property tables.
+The following JSON objects are frequently defined in Redfish schemas.  Like the individual common properties listed above, these objects share a common definition which is shown here to avoid repetition in the Reference Guide property tables.
 
 [insert_common_objects]
 
-
 # Resource collections
 
-A core concept in Redfish is a Collection of resources.  A Collection is a group of like resources where the number of instances in the group can shrink or grow depending on the scope of the Redfish Service or the configuration of the devices being managed. Every Resource Collection resource has the same set of supported properties, and all contain "Collection" in the name of their schema.  Every resource linked in the "Members" array within a Resource Collection will have the same resource type (same schema with the same major version, but can vary in minor or errata schema versions, which are all compatible).
+A core concept in Redfish is a collection of resources. A collection is a group of like resources where the number of instances in the group can shrink or grow depending on the scope of the Redfish Service or the configuration of the devices being managed. Every resource that is a resource collection has the same set of supported properties, and all contain `Collection` in the name of their schema.  Every resource linked in the `Members` array within a resource collection has the same resource type (same schema with the same major version, but can vary in minor or errata schema versions, which are all compatible).
 
-The properties of a Resource Collection are as follows:
+The properties of a resource collection are as follows:
 
 #include_fragment ./docs/DSP2046/CommonPropertySchema.json#/definitions/Collection/properties
 
-As shown in the example below, a Redfish Service may provide management functionality for several Computer Systems, and therefore a ComputerSystemCollection resource is provided.  This example shows a Service with four ComputerSystem instances ("Members").
+As shown in the following example, a Redfish service may provide management functionality for several computer systems, and therefore a `ComputerSystemCollection` resource is provided. 
+
+This example shows a service with four `ComputerSystem` instances, or members.
 
 ~~~json
 {
-    "@odata.type": "#ComputerSystemCollection.ComputerSystemCollection",
-    "Name": "Computer System Collection",
-    "Members@odata.count": 4,
-    "Members": [
-        {
-            "@odata.id": "/redfish/v1/Systems/529QB9450R6"
-        },
-        {
-            "@odata.id": "/redfish/v1/Systems/529QB9451R6"
-        },
-        {
-            "@odata.id": "/redfish/v1/Systems/529QB9452R6"
-        },
-        {
-            "@odata.id": "/redfish/v1/Systems/529QB9453R6"
-        }
-    ],
-    "@odata.context": "/redfish/v1/$metadata#ComputerSystemCollection.ComputerSystemCollection",
-    "@odata.id": "/redfish/v1/Systems"
+   "@odata.type": "#ComputerSystemCollection.ComputerSystemCollection",
+   "Name": "Computer System Collection",
+   "Members@odata.count": 4,
+   "Members": [{
+      "@odata.id": "/redfish/v1/Systems/529QB9450R6"
+   }, {
+      "@odata.id": "/redfish/v1/Systems/529QB9451R6"
+   }, {
+      "@odata.id": "/redfish/v1/Systems/529QB9452R6"
+   }, {
+      "@odata.id": "/redfish/v1/Systems/529QB9453R6"
+   }],
+   "@odata.context": "/redfish/v1/$metadata#ComputerSystemCollection.ComputerSystemCollection",
+   "@odata.id": "/redfish/v1/Systems"
 }
-
 ~~~
 
-## Resource Collection URIs (Redfish v1.6+)
+## Resource collection URIs (Redfish v1.6+)
 
-The following table lists all of the Redfish-defined Resource Collections and the URIs where they can appear.  NOTE: The URIs listed are valid for Redfish Services conforming to the Redfish Specification v1.6.0 or higher.  Services built on earlier versions of the Specification may use different URIs which must be discovered by following the links from the Service Root (/redfish/v1/).
+The following table lists the Redfish-defined resource collections and the URIs where they can appear.
+
+> **Note:** The URIs listed are valid for Redfish services conforming to the *Redfish Specification* v1.6.0 or later.  Services built on earlier versions of the *Specification* may use different URIs that must be discovered by following the links from the service root (`/redfish/v1/`).
 
 [insert_collections]
 
-
 # Reference Guide
 
-This guide was produced using the contents of the schema files from DMTF Redfish Schema bundle DSP8010 version 2018.2 and merged with supplemental text using the DMTF's [Redfish Documentation Generator](#redfish-documentation-generator).
+DMTF's [Redfish doc generator](#redfish-documentation-generator) generated this guide by merging supplemental text with the contents the DMTF Redfish Schema bundle DSP8010 version 2018.2.

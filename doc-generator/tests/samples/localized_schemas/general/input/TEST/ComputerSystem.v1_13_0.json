@@ -996,7 +996,7 @@
                     "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/count"
                 },
                 "CooledBy": {
-                    "description": "AN ARRAY OF LINKS TO RESOURCES OR OBJECTS THAT THAT COOL THIS COMPUTER SYSTEM.  NORMALLY, THE LINK IS FOR EITHER A CHASSIS OR A SPECIFIC SET OF FANS.",
+                    "description": "AN ARRAY OF LINKS TO RESOURCES OR OBJECTS THAT COOL THIS COMPUTER SYSTEM.  NORMALLY, THE LINK IS FOR EITHER A CHASSIS OR A SPECIFIC SET OF FANS.",
                     "items": {
                         "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.json#/definitions/idRef"
                     },

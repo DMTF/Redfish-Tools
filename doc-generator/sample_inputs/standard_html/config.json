@@ -1,6 +1,6 @@
 {
-    "version": "The version string is optional. It may have (future?) meaning in property index mode.",
-    "description": "Redfish Documentation Generator Example: config file for output of standard-mode documentation in HTML format.",
+    "version": "The version string is optional. It may have (future?) meaning in standard mode in HTML format.",
+    "description": "Redfish doc generator example: Configuration file for standard mode in HTML format.",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
     "format": "html",
     "import_from": [ "./json-schema" ],
