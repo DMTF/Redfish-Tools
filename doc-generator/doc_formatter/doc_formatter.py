@@ -854,7 +854,8 @@ class DocFormatter:
 
         if prop_ref:
             if prop_ref.startswith('#'):
-                prop_ref = schema_ref + prop_ref
+                prop_ref = 'http://' + schema_ref + prop_ref
+                # prop_ref = schema_ref + prop_ref
             else:
                 idref_info = self.process_for_idRef(prop_ref)
                 if idref_info:
@@ -934,7 +935,7 @@ class DocFormatter:
                         append_ref = ''
 
                         # Links to other Redfish resources are a special case.
-                        if is_other_schema or is_ref_to_same_schema:
+                        if is_other_schema or is_ref_to_same_schema or reference_disposition == 'common_object':
                             if is_collection_of:
                                 append_ref = _('Contains a link to a resource.')
                                 ref_schema_name = self.traverser.get_schema_name(is_collection_of)
@@ -951,17 +952,18 @@ class DocFormatter:
                                     # e.g., a Chassis is contained by another Chassis
                                     link_detail = _('Link to another %(name)s resource.') % {'name': prop_name}
 
-                                elif is_documented_schema:
+                                elif is_documented_schema and reference_disposition != 'common_object':
                                     link_detail = (_('Link to a %(name)s resource. See the Links section and the %(schema_link)s schema for details.') %
                                                     {'name': prop_name,
                                                      'schema_link': self.link_to_own_schema(from_schema_ref, from_schema_uri)})
                                 if not is_ref_to_same_schema and reference_disposition != 'include':
-                                    if is_documented_schema or not wants_common_objects:
+                                    if (reference_disposition != 'common_object') and (is_documented_schema or not wants_common_objects):
                                         append_ref = (_('See the %(schema_link)s schema for details on this property.')
                                                           % {'schema_link': self.link_to_own_schema(from_schema_ref, from_schema_uri)})
                                     else:
                                         # This looks like a Common Object! We should have an unversioned ref for this.
                                         ref_key = DocGenUtilities.make_unversioned_ref(ref_info['_ref_uri'])
+
                                         if ref_key:
                                             parent_info = traverser.find_ref_data(ref_key)
                                             if parent_info:
@@ -1980,7 +1982,7 @@ class DocFormatter:
             return None
 
         # Normalize ref_uri:
-        ref_uri = '#'.join(self.traverser.get_schema_ref_and_path(ref_uri))
+        ref_uri = 'http://' + '#'.join(self.traverser.get_schema_ref_and_path(ref_uri))
 
         if schema_ref not in self.ref_deduplicator:
             self.ref_deduplicator[schema_ref] = {}
