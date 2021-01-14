@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2021 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -490,6 +490,21 @@ class DocFormatter:
         schema_keys = self.documented_schemas
         schema_keys.sort(key=str.lower)
 
+        # Do a pass over the explicitly-called-out common properties:
+        common_refs = []
+        if config.get('reference_disposition'):
+            for k, disp in config['reference_disposition'].items():
+                if disp == 'common_object' and '#' in k:
+                    cref = DocGenUtilities.make_unversioned_ref(k)
+                    common_refs.append(k)
+
+        for common_ref in common_refs:
+            ref_info = traverser.find_ref_data(common_ref)
+            if ref_info:
+                self.common_properties[common_ref] = ref_info
+            else:
+                warnings.warn("Common property '%(reference)s' was not found." % {'reference': common_ref})
+
         for schema_ref in schema_keys:
             details = property_data[schema_ref]
             schema_name = details['schema_name']
@@ -733,7 +748,7 @@ class DocFormatter:
             if not version:
                 version = DocGenUtilities.get_ref_version(prop_info.get('_ref_uri', ''))
 
-            prop_infos = cp_gen.extend_property_info(schema_ref, prop_info) # TODO: Do we really need to expand this?
+            prop_infos = cp_gen.extend_property_info(schema_ref, prop_info)
 
             # Get the supplemental details for this property/version.
             # (Probably the version information is not desired?)
