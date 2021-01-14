@@ -450,7 +450,7 @@ class DocGenerator:
             normalized_uri = self.construct_uri_for_filename(filename)
             self.schema_ref_to_filename[normalized_uri] = filename
 
-            # 'common_object_schemas' in config will be a list of schemas that should not get first-class sections.
+            # Schemas listed in 'common_object_schemas' in config should not get first-class sections.
             schema_name_parts = schema_name.split('.')
             unversioned_schema_name = schema_name_parts[0]
             has_common_object_override = False
