@@ -180,6 +180,7 @@ describe('CSDL Tests', () => {
       it('No plural Schemas', () => {noPluralSchemas(csdl);});
       it('No plural Entities', () => {noPluralEntities(csdl, fileName);});
       it('BaseTypes are valid', () => {checkBaseTypes(csdl);});
+      it('Types are not repeated', () => {repeatedTypeNameCheck(csdl);});
       it('All Annotation Terms are valid', () => {checkAnnotationTerms(csdl);});
       if (!file.includes('RedfishYangExtensions')) {
         it('Enum Members are valid names', () => {if (!isYang) checkEnumMembers(csdl);});
@@ -718,6 +719,56 @@ function verifyBaseType(entityType, csdl) {
   if(baseType === null) {
     throw new Error('Unable to locate type "'+entityType.BaseType+'"');
   }
+}
+
+function repeatedTypeNameCheck(csdl) {
+  let obj = {};
+  let schemas =  CSDL.search(csdl, 'Schema');
+  for(let i = 0; i < schemas.length; i++) {
+    schemaRepeatedTypeCheck(schemas[i], obj, csdl);
+  }
+}
+
+function schemaRepeatedTypeCheck(schema, list, csdl) {
+  let baseName = schema._Name.split('.')[0];
+  if(baseName === 'Resource') {
+    //Skip base types
+    return;
+  }
+  if(list[baseName] === undefined) {
+    list[baseName] = {};
+  }
+  for(const prop in schema) {
+    if(prop === 'Annotations' || prop === '_Name') {
+      continue;
+    }
+    //Exclude ServiceContainers...
+    if(schema[prop].Name !== undefined && schema[prop].Name === 'ServiceContainer') {
+      continue;
+    }
+    if(list[baseName][prop] === undefined) {
+      list[baseName][prop] = getMostBasicType(schema[prop], csdl);
+    } else {
+      let baseType = getMostBasicType(schema[prop], csdl);
+      if(list[baseName][prop] !== baseType) {
+        throw new Error('Schema '+baseName+' contains two conflicting types named '+prop);
+      }
+    }
+  }
+}
+
+function getMostBasicType(type, csdl) {
+  if(type.BaseType === undefined) {
+    return type;
+  }
+  if(type.BaseType.startsWith('Resource.')) {
+    return type;
+  }
+  let baseType = CSDL.findByType(csdl, type.BaseType);
+  if(baseType === null) {
+    return type;
+  }
+  return getMostBasicType(baseType, csdl);
 }
 
 function checkAnnotationTerms(csdl) {
