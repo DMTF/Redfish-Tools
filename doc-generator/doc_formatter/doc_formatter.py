@@ -1662,8 +1662,6 @@ class DocFormatter:
                         descr = descr + ' ' + combined_prop_item['longDescription']
                         combined_prop_item['longDescription'] = descr
                     else:
-                        if prop_items[0].get('description'):
-                            descr = descr + ' ' + combined_prop_item['description']
                         combined_prop_item['description'] = descr
                     if fulldescription_override:
                         combined_prop_item['fulldescription_override'] = fulldescription_override
