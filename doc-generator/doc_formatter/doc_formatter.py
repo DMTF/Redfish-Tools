@@ -932,7 +932,7 @@ class DocFormatter:
                                                              % {'link': excerpt_link})
 
                     elif self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']:
-                        anchor = schema_ref + '|details_combined_ref|' + prop_name
+                        anchor = schema_ref + '|details|' + prop_name
                         ref_info['add_link_text'] = (_('For more information about this property, see %(link)s in Property Details.')
                                                          % {'link': self.link_to_anchor(prop_name, anchor)})
                         ref_info['_ref_description'] = ref_info['description']
