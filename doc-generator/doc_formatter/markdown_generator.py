@@ -644,9 +644,9 @@ class MarkdownGenerator(DocFormatter):
                 caption = self.formatter.add_table_caption(section["head"] + " properties")
                 preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ")
 
-                # properites are a peer of URIs, if they exist
+                # properties are a peer of URIs, if they exist
                 # TODO: this should use make_table()
-                contents.append('\n' + self.formatter.head_two('Properties', self.level))
+                contents.append('\n' + self.format_head_three('Properties', self.level))
                 contents.append(preamble + "\n")
                 contents.append('|Property     |Type     |Notes     |')
 
@@ -819,7 +819,7 @@ search: true
 
     def add_description(self, text):
         """ Add the schema description """
-        self.this_section['description'] = "## " + _('Description') + "\n\n" + text + '\n'
+        self.this_section['description'] = self.format_head_three(_('Description'), self.level) + self.formatter.para(text)
 
 
     def add_deprecation_text(self, deprecation_text):
@@ -830,7 +830,7 @@ search: true
 
     def add_uris(self, uris):
         """ Add the URIs (which should be a list) """
-        uri_block = "## " + _('URIs') + "\n"
+        uri_block = self.format_head_three(_('URIs'), self.level)
         for uri in sorted(uris, key=str.lower):
             uri_block += "\n" + self.format_uri(uri)
         self.this_section['uris'] = uri_block + "\n"

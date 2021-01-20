@@ -7,12 +7,12 @@ search: true
 
 ## RequiredTest 1.0.0
 
-## Description
+### Description
 
 This schema contains required and requiredOnCreate properties.
 
 
-## Properties
+### Properties
 
 The properties defined for the RequiredTest 1.0.0 schema are summarized in [Table TBL_nn++](#table_TBL_nn "RequiredTest 1.0.0 properties").
 
