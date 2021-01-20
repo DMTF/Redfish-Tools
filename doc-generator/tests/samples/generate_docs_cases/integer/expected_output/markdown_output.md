@@ -7,12 +7,12 @@ search: true
 
 ## IntegerTest 1.0.0
 
-## Description
+### Description
 
 This schema contains one or more properties of type integer.
 
 
-## Properties
+### Properties
 
 The properties defined for the IntegerTest 1.0.0 schema are summarized in [Table TBL_nn++](#table_TBL_nn "IntegerTest 1.0.0 properties").
 

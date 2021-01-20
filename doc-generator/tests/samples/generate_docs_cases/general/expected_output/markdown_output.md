@@ -15,12 +15,12 @@ The revision history is summarized in [Table TBL_nn++](#table_TBL_nn "Revision h
 | **Release** | 2018.2 |
 
 Table: Table TBL_nn: <a name=table_TBL_nn>Revision history</a>
-## Description
+### Description
 
 A Network Device Function represents a logical interface exposed by the network adapter.
 
 
-## Properties
+### Properties
 
 The properties defined for the NetworkDeviceFunction 1.3.2 schema are summarized in [Table TBL_nn++](#table_TBL_nn "NetworkDeviceFunction 1.3.2 properties").
 
@@ -179,7 +179,7 @@ Table: Table TBL_nn: <a name=table_TBL_nn>WWNSource property values</a>
 ## NetworkDeviceFunctionCollection
 
 
-## Properties
+### Properties
 
 The properties defined for the NetworkDeviceFunctionCollection schema are summarized in [Table TBL_nn++](#table_TBL_nn "NetworkDeviceFunctionCollection properties").
 
@@ -197,12 +197,12 @@ Table: Table TBL_nn: <a name=table_TBL_nn>NetworkDeviceFunctionCollection proper
 
 ## NetworkPort 1.1.0
 
-## Description
+### Description
 
 A Network Port represents a discrete physical port capable of connecting to a network.
 
 
-## Properties
+### Properties
 
 The properties defined for the NetworkPort 1.1.0 schema are summarized in [Table TBL_nn++](#table_TBL_nn "NetworkPort 1.1.0 properties").
 
