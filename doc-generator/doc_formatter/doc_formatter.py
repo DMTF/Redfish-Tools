@@ -919,9 +919,10 @@ class DocFormatter:
                 ref_info = self.apply_overrides(ref_info)
 
                 if ref_info.get('type') == 'object':
+                    combine_multiple_count_met = self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']
                     # If this is an excerpt, it will also be an object, and we want to expand-in-place.
                     # The same applies (or should) if config explicitly says to include:
-                    if excerpt_copy_name or (reference_disposition == 'include') or include_per_profile:
+                    if (excerpt_copy_name and not combine_multiple_count_met) or (reference_disposition == 'include') or include_per_profile:
                         if is_documented_schema:
                             excerpt_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
                         else: # This is not expected.
@@ -931,7 +932,14 @@ class DocFormatter:
                             ref_info['add_link_text'] = (_('This object is an excerpt of the %(link)s resource located at the URI shown in DataSourceUri.')
                                                              % {'link': excerpt_link})
 
-                    elif self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']:
+                    elif combine_multiple_count_met:
+                        if excerpt_copy_name:
+                            if is_documented_schema:
+                                excerpt_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
+                            else: # This is not expected.
+                                excerpt_link = self.link_to_outside_schema(from_schema_uri)
+                            ref_info['_excerpt_link_text'] = (_('This object is an excerpt of the %(link)s resource located at the URI shown in DataSourceUri.')
+                                                             % {'link': excerpt_link})
                         anchor = schema_ref + '|details|' + prop_name
                         ref_info['add_link_text'] = (_('For more information about this property, see %(link)s in Property Details.')
                                                          % {'link': self.link_to_anchor(prop_name, anchor)})
@@ -1619,7 +1627,10 @@ class DocFormatter:
                 # Format it as if it were a top-level object, and remove the rows here.
                 object_formatted = self.format_object_descr(schema_ref, prop_info, [], is_action)
                 obj_prop_name = prop_info.get('_prop_name')
-                object_as_details = self.format_as_prop_details(obj_prop_name, prop_info.get('_ref_description'),
+                ref_description = prop_info.get('_ref_description')
+                if prop_info.get('_excerpt_link_text'):
+                    ref_description = ref_description + ' ' + prop_info['_excerpt_link_text']
+                object_as_details = self.format_as_prop_details(obj_prop_name, ref_description,
                                                                     object_formatted['rows'])
                 new_details = {obj_prop_name: {
                     prop_info.get('_ref_uri', '_inline'): {
