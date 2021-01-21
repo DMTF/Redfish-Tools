@@ -646,7 +646,7 @@ class MarkdownGenerator(DocFormatter):
 
                 # properties are a peer of URIs, if they exist
                 # TODO: this should use make_table()
-                contents.append('\n' + self.format_head_three('Properties', self.level))
+                contents.append('\n' + self.format_head_three(_('Properties'), self.level))
                 contents.append(preamble + "\n")
                 contents.append('|Property     |Type     |Notes     |')
 
@@ -657,14 +657,14 @@ class MarkdownGenerator(DocFormatter):
             if section.get('profile_conditional_details'):
                 # sort them now; these can be sub-properties so may not be in alpha order.
                 conditional_details = '\n'.join(sorted(section['profile_conditional_details'], key=str.lower))
-                contents.append('\n' + self.format_head_three('Conditional Requirements', self.level))
+                contents.append('\n' + self.format_head_three(_('Conditional Requirements'), self.level))
                 contents.append(conditional_details)
 
             if len(section.get('action_details', [])):
                 contents.append('\n' + self.format_head_three('Actions', self.level))
                 contents.append('\n\n'.join(section.get('action_details')))
             if section.get('property_details'):
-                contents.append('\n' + self.format_head_three('Property details', self.level))
+                contents.append('\n' + self.format_head_three(_('Property details'), self.level))
                 detail_names = [x for x in section['property_details'].keys()]
                 detail_names.sort(key=str.lower)
                 for detail_name in detail_names:
@@ -684,10 +684,11 @@ class MarkdownGenerator(DocFormatter):
                         paths_sorted.sort(key=str.lower)
                         for path in paths_sorted:
                             info = det_info[path_to_ref[path]]
+                            path_text = _("In %(path)s:") % {'path': path}
                             if self.markdown_mode == 'slate':
-                                contents.append(self.formatter.para(self.formatter.bold("In " + path + ":")))
+                                contents.append(self.formatter.para(self.formatter.bold(path_text)))
                             else:
-                                contents.append(self.formatter.head_five("In " + path + ":", self.level))
+                                contents.append(self.formatter.head_five(path_text))
                             contents.append(info['formatted_descr'])
 
             if section.get('json_payload') and (self.markdown_mode != 'slate'): # Otherwise, this was inserted above.
