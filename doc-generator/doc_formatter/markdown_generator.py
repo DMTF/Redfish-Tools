@@ -787,7 +787,7 @@ search: true
         for line in intro_blob.splitlines():
             if line.startswith('#include_fragment'):
                 if len(part_text):
-                    parts.append({'type': 'slate', 'content': '\n'.join(part_text)})
+                    parts.append({'type': 'markdown', 'content': '\n'.join(part_text)})
                     part_text = []
                     fragment_id = line[17:].strip()
                     fragment_content = self.generate_fragment_doc(fragment_id, fragment_config)
