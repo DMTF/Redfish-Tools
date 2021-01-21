@@ -809,12 +809,19 @@ search: true
 
     def add_section(self, text, link_id=False, schema_ref=False):
         """ Add a top-level heading """
-        self.this_section = {'head': text,
-                             'heading': '\n' + self.format_head_two(text, self.level),
-                             'properties': [],
-                             'property_details': {},
-                             'schema_ref': '',
-                            }
+
+        self.this_section = {
+            'properties': [],
+            'property_details': {},
+            'head': '',
+            'heading': '',
+            'schema_ref': '',
+            }
+
+        if text:
+            self.this_section['head'] = text
+            self.this_section['heading'] = '\n' + self.format_head_two(text, self.level)
+
         self.sections.append(self.this_section)
 
 
