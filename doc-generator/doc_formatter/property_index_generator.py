@@ -83,7 +83,7 @@ class PropertyIndexGenerator(DocFormatter):
 
             output = self.add_html_boilerplate(output)
 
-        if output_format == 'slate':
+        if output_format in ['slate', 'markdown']:
             if frontmatter:
                 output = frontmatter
             else:
