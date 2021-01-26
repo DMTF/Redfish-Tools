@@ -192,7 +192,7 @@ class CSDLToJSON:
                     if child.tag == ODATA_TAG_ENTITY:
                         base_type = self.get_attrib( child, "BaseType", False )
                         name = self.get_attrib( child, "Name" )
-                        if ( base_type == "Resource.v1_0_0.Resource" ) or ( base_type == "Resource.v1_0_0.ResourceCollection" ):
+                        if ( base_type == "Resource.v1_0_0.Resource" ) or ( base_type == "Resource.v1_0_0.ResourceCollection" ) or ( base_type == "LineOfService.v1_0_0.LineOfService" ):
                             self.json_out[self.namespace_under_process]["title"] = "#" + self.namespace_under_process + "." + name
                             self.json_out[self.namespace_under_process]["$ref"] = "#/definitions/" + name
 
@@ -251,7 +251,7 @@ class CSDLToJSON:
                     if child.tag == ODATA_TAG_ENTITY:
                         base_type = self.get_attrib( child, "BaseType", False )
                         name = self.get_attrib( child, "Name" )
-                        if ( base_type == "Resource.v1_0_0.Resource" ) or ( base_type == "Resource.v1_0_0.ResourceCollection" ):
+                        if ( base_type == "Resource.v1_0_0.Resource" ) or ( base_type == "Resource.v1_0_0.ResourceCollection" ) or ( base_type == "LineOfService.v1_0_0.LineOfService" ):
                             self.json_out[self.namespace_under_process]["title"] = "#" + self.namespace_under_process + "." + name
                             self.json_out[self.namespace_under_process]["$ref"] = "#/definitions/" + name
 
@@ -600,6 +600,10 @@ class CSDLToJSON:
 
         # Check if definitions from Resource need to be mapped
         if base_type == "Resource.v1_0_0.Resource":
+            for prop in self.resource_props:
+                self.generate_property( prop, json_def[name] )
+            return
+        elif base_type == "LineOfService.v1_0_0.LineOfService":
             for prop in self.resource_props:
                 self.generate_property( prop, json_def[name] )
             return
@@ -997,6 +1001,7 @@ class CSDLToJSON:
 
         # If the object is the Resource or ResourceCollection object, or is derived from them, then we add the OData properties
         if ( name == "Resource" or name == "ResourceCollection" or
+             name == "LineOfService" or base_type == "LineOfService.v1_0_0.LineOfService" or
              base_type == "Resource.v1_0_0.Resource" or base_type == "Resource.v1_0_0.ResourceCollection" ):
             json_obj_def["properties"]["@odata.type"] = { "$ref": self.odata_schema + "#/definitions/type" }
             if not id_skip:
