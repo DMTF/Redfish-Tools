@@ -173,7 +173,7 @@ describe('CSDL Tests', () => {
       }
       it('Descriptions have trailing periods', () => {if (!isYang) descriptionPeriodCheck(csdl);});
       if(!config.has('Redfish.SwordfishTest')) {
-        it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
+        //it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
         it('Long Descriptions do not contain must', () => {if (!isYang) descriptionMustCheck(csdl);});
       }
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
