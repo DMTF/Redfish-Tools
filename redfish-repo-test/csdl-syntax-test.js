@@ -99,7 +99,7 @@ const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
-const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy' ]
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
 const PluralSchemaWhiteList = ['ChassisCollection', 'MemoryChunksCollection', 'TriggersCollection'];
@@ -362,8 +362,9 @@ describe('Mockup Syntax Tests', () => {
       }
       //Only do Metadata <=> Mockup tests on master branch or local dev test
       if(process.env.TRAVIS === undefined || process.env.TRAVIS_BRANCH === 'master') {
-        //Ignore the paging file and the external error example
-        if(file.includes('$ref') === false && file.includes('/ExtErrorResp') === false && file.includes('/ConstrainedCompositionCapabilities') === false) {
+        //Ignore the paging file, the external error example, contrained composition request, and action requests/responses
+        if(file.includes('$ref') === false && file.includes('/ExtErrorResp') === false && file.includes('/ConstrainedCompositionCapabilities') === false &&
+           file.includes('Request.json') === false && file.includes('Response.json') === false) {
           it('Is Valid Type', function() {
             validCSDLTypeInMockup(json, file);
           });
