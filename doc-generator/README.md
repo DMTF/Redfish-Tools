@@ -63,7 +63,7 @@ To [configure the generated documentation](#configuration), you specify either o
 
 ## Configuration
 
-To configure the generated documentation, specify configuration options through either or both:
+To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#command-line-arguments):
 
 <table>
    <caption><p align="left"><b>Table 1 &mdash; Configuration options</b></p></caption>
@@ -74,7 +74,7 @@ To configure the generated documentation, specify configuration options through 
       </tr>
    </thead>
    <tbody>
-      <tr>
+      <tr id="configuration-keys">
          <td align="left" valign="top">Configuration&nbsp;keys</td>
          <td align="left" valign="top">
             <p>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.</p>
@@ -95,7 +95,7 @@ To configure the generated documentation, specify configuration options through 
             <p>For details, see <a href="README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files" title="README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files">Redfish doc generator configuration and supplemental files</a>.</p>
          </td>
       </tr>
-      <tr>
+      <tr id="command-line-arguments">
          <td align="left" valign="top">Command&#8209;line&nbsp;arguments</td>
          <td align="left" valign="top">
             <p>Command&#8209;line arguments take precedence over configuration keys.</p>
