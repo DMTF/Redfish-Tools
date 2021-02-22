@@ -58,16 +58,11 @@ To [configure the generated documentation](#configuration), specify configuratio
 
 ## Configuration
 
-* [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys)
-* [Output modes and formats](#output-modes-and-formats)
-    * [Output mode and format-related command-line arguments](#output-mode-and-format-related-command-line-arguments)
-    * [Output mode and format-related configuration keys](#output-mode-and-format-related-configuration-keys)
-
 To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#usage). Command&#8209;line arguments take precedence over configuration keys.
 
 You can specify some configuration information through configuration keys only and some configuration information through command&#8209;line arguments only. For information, see [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys).
 
-<a id="configuration-keys"></a>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.
+<a id="configuration-keys"></a>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file. Depending on the [output mode and format](#output-modes-and-formats "#output-modes-and-formats"), the configuration keys in the base configuration file change.
 
 * Use the [`--config`](#usage "#usage") command-line argument to specify the base configuration file.
 * The `uri_mapping` configuration key is required but all other configuration keys are optional. Because this key is required, the `--config` command-line argument is also required to specify the base configuration file, which contains the required `uri_mapping` configuration key.
