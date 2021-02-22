@@ -8,19 +8,16 @@ Copyright © 2016-2021 DMTF. All rights reserved.
 
 # OData CSDL validator
 
+The OData CSDL validator, [`odata_validator.py`](odata_validator.py#L1 "odata_validator.py#L1"), is a Python tool that parses OData CSDL XML files and all referenced files to validate that the metadata conforms to [OData v4.0](http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html "http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html").
+
+> **Note:** OData CSDL XML is a full representation of the OData Common Schema Definition Language (CSDL) in the [Extensible Markup Language (XML) 1.1 (Second Edition)](https://www.w3.org/TR/2006/REC-xml11-20060816/ "https://www.w3.org/TR/2006/REC-xml11-20060816/").
+
 ## Contents
 
-* [About](#about)
 * [Installation](#installation)
 * [Usage](#usage)
 * [Examples](#examples)
 * [Processing](#processing)
-
-## About
-
-The OData CSDL validator, [`odata_validator.py`](odata_validator.py#L1 "odata_validator.py#L1"), is a Python tool that parses OData CSDL XML files and all referenced files to validate that the metadata conforms to [OData v4.0](http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html "http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html").
-
-> **Note:** OData CSDL XML is a full representation of the OData Common Schema Definition Language (CSDL) in the [Extensible Markup Language (XML) 1.1 (Second Edition)](https://www.w3.org/TR/2006/REC-xml11-20060816/ "https://www.w3.org/TR/2006/REC-xml11-20060816/").
 
 ## Installation
 
