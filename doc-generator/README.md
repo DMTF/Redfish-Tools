@@ -67,20 +67,17 @@ If you specify a configuration option in more than one way, command&#8209;line a
 
 <a id="configuration-keys"></a>You define configuration keys in the [base configuration file](README_config_files.md#base-configuration-file "README_config_files.md#base-configuration-file") and, optionally, in the [content supplement configuration file](README_config_files.md#content-supplement-configuration-file "README_config_files.md#content-supplement-configuration-file").
 
-* Use the `--config` command-line argument to specify the base configuration file.
+* Use the [`--config` command-line argument](#usage "#usage") to specify the base configuration file.
 * The `uri_mapping` configuration key is required but all other configuration keys are optional. Because this key is required, the `--config` command-line argument is also required to specify the base configuration file, which contains the required `uri_mapping` configuration key.
 * You can specify some configuration information through configuration keys only and some through command&#8209;line arguments only.
-* Depending on the output mode and format, the configuration keys in the base configuration file change. Consequently, several flavors of the base configuration file are available.
+* Depending on the [output mode and format](#output-modes-and-formats "#output-modes-and-formats"), the configuration keys in the base configuration file change. Consequently, [several flavors of the base configuration file](#examples "#examples") are available.
 * The base configuration file can include pointers to the optional content supplement configuration file and supplemental files.
-* The names of some configuration keys differ from their command&#8209;line argument equivalents. Unless otherwise noted, the configuration key has the same meaning as its command&#8209;line argument equivalent.
+* The names of some configuration keys differ from their command&#8209;line argument equivalents. Unless otherwise noted, the configuration key has the same meaning as its command&#8209;line argument equivalent. See [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys).
 
-> **See also:**
-> 
-> * [`--config` command-line argument](#usage "#usage")
-> * [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys)
-> * [Output modes and formats](#output-modes-and-formats "#output-modes-and-formats")
-> * [Examples](#examples "#examples")
-> * [Redfish doc generator configuration and supplemental files](README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files "README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files")
+> **See also:** [Redfish doc generator configuration and supplemental files](README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files "README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files").
+
+* [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys)
+* [Output modes and formats](#output-modes-and-formats)
 
 ### Mapping of command-line arguments to configuration keys
 
@@ -364,6 +361,8 @@ Example:
    doc_generator.py --format=html
    doc_generator.py --format=html --out=/path/to/output/index.html /path/to/spmf/json-files
 ```
+
+See also [Output mode and format-related command-line arguments](#output-mode-and-format-related-command-line-arguments).
 
 ### Output mode and format-related command-line arguments
 
