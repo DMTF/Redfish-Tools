@@ -63,10 +63,12 @@ To [configure the generated documentation](#configuration), you specify either o
 
 ## Configuration
 
-To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#command-line-arguments):
+To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#command-line-arguments). Command&#8209;line arguments take precedence over configuration keys.
 
 <table>
-   <caption><p align="left"><b>Table 1 &mdash; Configuration options</b></p></caption>
+   <caption>
+      <p align="left"><b>Table 1 &mdash; Configuration options</b></p>
+   </caption>
    <thead>
       <tr>
          <th align="left" valign="top">Configuration&nbsp;option</th>
@@ -83,7 +85,8 @@ To configure the generated documentation, specify configuration options through 
                   <p>Use the <a href="#usage"><code>--config</code></a> command-line argument to specify the base configuration file.</p>
                </li>
                <li>
-                  <p>You can specify some configuration information through configuration keys only and not through command-line arguments.</p><p>Conversely, you can specify some configuration information through command-line arguments only and not through configuration keys.</p>
+                  <p>You can specify some configuration information through configuration keys only and not through command-line arguments.</p>
+                  <p>Conversely, you can specify some configuration information through command-line arguments only and not through configuration keys.</p>
                </li>
                <li>
                   <p>Several flavors of the base configuration file are available.</p>
@@ -98,8 +101,8 @@ To configure the generated documentation, specify configuration options through 
       <tr id="command-line-arguments">
          <td align="left" valign="top">Command&#8209;line&nbsp;arguments</td>
          <td align="left" valign="top">
-            <p>Command&#8209;line arguments take precedence over configuration keys.</p>
-            <p>You can specify some configuration information through configuration keys only and not through command-line arguments.</p><p>Conversely, you can specify some configuration information through command-line arguments only and not through configuration keys.</p>
+            <p>You can specify some configuration information through configuration keys only and not through command-line arguments.</p>
+            <p>Conversely, you can specify some configuration information through command-line arguments only and not through configuration keys.</p>
          </td>
       </tr>
    </tbody>
