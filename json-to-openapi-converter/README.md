@@ -8,12 +8,7 @@ Copyright © 2018-2021 DMTF. All rights reserved.
 
 # JSON Schema-to-OpenAPI converter
 
-The JSON Schema-to-OpenAPI converter, [`json-to-yaml.py`](json-to-yaml.py#L1 "json-to-yaml.py#L1"), is a Python tool that converts Redfish JSON S
-      </tr>chema files to Redfish OpenAPI files.
-
-To configure the generated OpenAPI files, you define configuration keys in a [configuration file](#configuration). Use the `--config` command-line argument to specify the configuration file.
-
-For information about OpenAPI, see the *OpenAPI Specification* at [https://swagger.io/specification/](https://swagger.io/specification/ "https://swagger.io/specification/").
+The JSON Schema-to-OpenAPI converter, [`json-to-yaml.py`](json-to-yaml.py#L1 "json-to-yaml.py#L1"), is a Python tool that converts Redfish [JSON Schema](https://json-schema.org/ "https://json-schema.org/") files to Redfish [OpenAPI](https://swagger.io/specification/ "https://swagger.io/specification/") files.
 
 ## Contents
 
@@ -40,6 +35,8 @@ For information about OpenAPI, see the *OpenAPI Specification* at [https://swagg
 
 ## Configuration
 
+To configure the generated OpenAPI files, you define configuration keys in a configuration file. To specify the configuration file, use the [`--config` command-line argument](#usage "#usage").
+
 Sample configuration file: [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1")
 
 The configuration file is a JSON file that contains the following keys at the root of the object:
@@ -52,8 +49,6 @@ The configuration file is a JSON file that contains the following keys at the ro
 | `MessageRef` | Optional | Pointer to the JSON Schema definition of `Message`.              |               |
 | `DoNotWrite` | Optional | List of the output files to exclude when writing the YAML files. | None          |
 | `Extensions` | Optional | Structure of additional URIs to apply to a resource type if provided in the base OpenAPI service document. |               |
-
-Use the `--config` command-line argument to specify the configuration file.
 
 ## Usage
 
