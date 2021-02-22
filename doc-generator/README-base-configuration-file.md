@@ -86,7 +86,7 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
             <ul>
                <li>
                   <p><code>true</code>. (Default) Generate a TOC and place it either at the beginning of the generated HTML file or in the <code>[add_toc]</code> location if that directive appears in the boilerplate intro or boilerplate postscript file.</p>
-                  <p>By default, the table of contents (TOC) appears at the top of the HTML output. If the <code>[add_toc]</code> directive appears anywhere in the boilerplate intro or boilerplate postscript file, <code>add_toc</code> key is <code>true</code> by default.</p>
+                  <p>By default, the table of contents (TOC) appears at the top of the HTML file. If the <code>[add_toc]</code> directive appears anywhere in the boilerplate intro or boilerplate postscript file, <code>add_toc</code> key is <code>true</code> by default.</p>
                </li>
                <li>
                   <p><code>false</code>. Do not generate a TOC.</p>
@@ -298,12 +298,12 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <dt>Output modes</dt>
          <dd><a href="README.md#csv-format" title="README.md#csv-format">CSV format</a>, <a href="README.md#profile-mode" title="README.md#profile-mode">profile</a>, <a href="README.md#property-index-mode" title="README.md#property-index-mode">property index</a>, <a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
-         <dd>String. Defines the output format:</dd>
+         <dd>String. Defines the format of the generated documentation:</dd>
          <dd>
             <table>
                <thead>
                   <tr>
-                     <th>Output&nbsp;format</th>
+                     <th>Format</th>
                      <th>Description</th>
                   </tr>
                </thead>
@@ -314,7 +314,7 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
                   </tr>
                   <tr>
                      <td><code>slate</code></td>
-                     <td>(default) GitHub-flavored Markdown file targeted for the <a href="https://github.com/slatedocs/slate" title="https://github.com/slatedocs/slate">Slate API doc generator</a>. For Slate, place the <code>index.html.md</code> output file in your Slate repository's source directory.</td>
+                     <td>(default) GitHub-flavored Markdown file targeted for the <a href="https://github.com/slatedocs/slate" title="https://github.com/slatedocs/slate">Slate API doc generator</a>. For Slate, place the <code>index.html.md</code> file in your Slate repository's source directory.</td>
                   </tr>
                   <tr>
                      <td><code>html</code></td>
@@ -337,7 +337,7 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <dt>Output modes</dt>
          <dd><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
-         <dd>String. Defines the HTML <code>title</code> element in HTML output.</dd>
+         <dd>String. Defines the HTML <code>title</code> element in the generated HTML file.</dd>
          <dd>No default. No command-line equivalent.</dd>
       </dl>
    </dd>
@@ -402,7 +402,7 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <dt>Output modes</dt>
          <dd><a href="README.md#csv-format" title="README.md#csv-format">CSV format</a>, <a href="README.md#profile-mode" title="README.md#profile-mode">profile</a>, <a href="README.md#property-index-mode" title="README.md#property-index-mode">property index</a>, <a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
-         <dd>String. Defines the output file. The output format determines the default output file:</dd>
+         <dd>String. Defines the generated file. The output format determines the default generated file:</dd>
          <dd>
             <ul>
                <li>The <code>markdown</code> format generates <code>output.md</code>.</li>
@@ -438,7 +438,7 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <dt>Output modes</dt>
          <dd><a href="README.md#profile-mode" title="README.md#profile-mode">Profile</a></dd>
          <dt>Description</dt>
-         <dd>String. Defines the path to a JSON profile document for profile output.</dd>
+         <dd>String. Defines the path to a JSON profile document for profile documentation.</dd>
          <dd>No default. Command-line equivalent is <a href="README.md#usage" title="README.md#usage"><code>--profile</code></a>.</dd>
       </dl>
    </dd>
@@ -449,7 +449,7 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <dt>Output modes</dt>
          <dd><a href="README.md#profile-mode" title="README.md#profile-mode">Profile</a></dd>
          <dt>Description</dt>
-         <dd>String. Indicates whether to generate <i>terse</i> profile output for service developers. Includes only the subset of properties with profile requirements. Meaningful only in profile mode when a profile document is also specified.</dd>
+         <dd>String. Indicates whether to generate <i>terse</i> profile documentation for service developers. Includes only the subset of properties with profile requirements. Meaningful only in profile mode when a profile document is also specified.</dd>
          <dd>
             <p>Value is:</p>
             <ul>
@@ -716,7 +716,7 @@ These examples show the sample base configuration files and their corresponding 
 % python3 ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/property_index/config.json</pre>
          </dd>
          <dd>
-            <blockquote><b>Note:</b> The base configuration file for property index output includes the <code>description_overrides</code> key, which is specific to that mode.</blockquote>
+            <blockquote><b>Note:</b> The base configuration file for property index documentation includes the <code>description_overrides</code> key, which is specific to that mode.</blockquote>
          </dd>
       </dl>
    </dd>

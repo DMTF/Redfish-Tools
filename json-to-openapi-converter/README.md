@@ -21,7 +21,7 @@ Copyright © 2018-2021 DMTF. All rights reserved.
 
 The JSON Schema-to-OpenAPI converter, [`json-to-yaml.py`](json-to-yaml.py#L1 "json-to-yaml.py#L1"), is a Python tool that converts specified Redfish JSON Schema files to Redfish OpenAPI files.
 
-To configure the output, you define configuration keys in a [configuration file](#configuration). Use the `--config` command-line argument to specify the configuration file.
+To configure the generated OpenAPI files, you define configuration keys in a [configuration file](#configuration). Use the `--config` command-line argument to specify the configuration file.
 
 For information about OpenAPI, see the *OpenAPI Specification* at [https://swagger.io/specification/](https://swagger.io/specification/ "https://swagger.io/specification/").
 

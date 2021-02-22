@@ -38,7 +38,7 @@ To [configure the generated JSON Schema files](#configuration), you define confi
 
 ## Configuration
 
-To configure the output, you define configuration keys in a configuration file.
+To configure the generated JSON Schema files, you define configuration keys in a configuration file.
 
 Use the `--config` command-line argument to specify the configuration file.
 
@@ -46,14 +46,14 @@ If you either omit any keys in the specified configuration file or omit the `--c
 
 The configuration keys are:
 
-| Key              | Description                                                                         | 
-| :--------------- | :---------------------------------------------------------------------------------- |
-| `Copyright`      | Copyright string to include in the generated JSON Schema files.                     |
-| `RedfishSchema`  | Location of Redfish Schema files.                                                   |
-| `ODataSchema`    | Location of OData Schema files.                                                     |
-| `Location`       | Output folder for the generated JSON Schema files.                                  |
-| `ResourceLocation` | Location of Redfish resources.                                                    |
-| `DoNotWrite`     | Array of one or more output files to exclude from the generated JSON Schema files.  |
+| Key              | Description                                                                 | 
+| :--------------- | :-------------------------------------------------------------------------- |
+| `Copyright`      | Copyright string to include in the generated JSON Schema files.             |
+| `RedfishSchema`  | Location of Redfish Schema files.                                           |
+| `ODataSchema`    | Location of OData Schema files.                                             |
+| `Location`       | Folder for the generated JSON Schema files.                                 |
+| `ResourceLocation` | Location of Redfish resources.                                            |
+| `DoNotWrite`     | Array of one or more files to exclude from the generated JSON Schema files. |
 
 ## Usage
 
@@ -83,17 +83,10 @@ To run the converter, navigate to the `Redfish-Tools/csdl-to-json-convertor` dir
 
 ```zsh
 % cd Redfish-Tools/csdl-to-json-convertor
-% python3 csdl-to-json.py --input INPUT --output OUTPUT --config CONFIG
-```
-
-This example command converts the CSDL metadata files in the `Redfish/metadata` input directory to JSON Schema files in the `/Redfish/json-schema` output directory.
-
-The converter reads the configuration keys in the [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file to configure the generated JSON Schema files:
-
-```zsh
-% cd Redfish-Tools/csdl-to-json-convertor
 % python3 csdl-to-json.py --input ../../Redfish/metadata --output ../../Redfish/json-schema/ --config dmtf-config.json
 ```
+
+This example command converts the CSDL metadata files in the `Redfish/metadata` input directory to JSON Schema files in the `/Redfish/json-schema` output directory. The converter reads the configuration keys in the [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file to configure the generated JSON Schema files.
 
 ## Processing
 
