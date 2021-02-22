@@ -79,7 +79,7 @@ To configure the generated documentation, specify configuration options through 
 
 ### Mapping of command-line arguments to configuration keys
 
-You can specify some configuration information through configuration keys only and some configuration information through command&#8209;line arguments only.
+You can specify some configuration information through configuration keys only and some through command&#8209;line arguments only.
 
 This table maps command-line arguments to configuration keys:
 
@@ -229,7 +229,9 @@ This table maps command-line arguments to configuration keys:
 
 To generate documentation for a specific audience, such as a developer, in a specific format, such as Markdown, specify an output mode and output format through either or both command-line arguments and configuration keys. Command-line arguments take precedence over configuration keys. For example, you can produce a [standard normative](#standard-normative-mode) [HTML](#html-format) document for developers.
 
-The *output mode* defines the type of and audience for the generated document:
+When you run the doc generator in a specific output mode, only certain command-line arguments and configuration keys apply.
+
+The *output mode* defines the audience for and type of generated documentation:
 
 <table>
    <caption><p align="left"><b>Table 2 &mdash; Output modes</b></p></caption>
@@ -251,7 +253,6 @@ The *output mode* defines the type of and audience for the generated document:
             <p>For each property, this output includes the property name, list of schemas in which the property is defined, the property type, and property description.</p>
             <p>End users and other consumers of Redfish data can also use a property index to look up property definitions without regard to their location in the schema.</p>
             <p>An example of a property index document is DSP2053, <i>Redfish Property Guide</i> at <a href="https://www.dmtf.org/sites/default/files/standards/documents/DSP2053_2020.4.pdf" title="https://www.dmtf.org/sites/default/files/standards/documents/DSP2053_2020.4.pdf">https://www.dmtf.org/sites/default/files/standards/documents/DSP2053_2020.4.pdf</a>.</p>
-            <p>When you run the doc generator in <a href="README-base-configuration-file.md#property-index-mode-in-html-format" title="README-base-configuration-file.md#property-index-mode-in-html-format">property-index mode</a>, only a few command-line arguments or configuration keys apply.</p>
          </td>
       </tr>
       <tr id="schema-subset-mode">
@@ -286,7 +287,7 @@ The *output format* defines the format of the generated document:
       </tr>
       <tr id="slate-markdown-format">
          <td align="left" valign="top"><code>slate</code></td>
-         <td align="left" valign="top">(default) GitHub-flavored Markdown file targeted for the <a href="https://github.com/slatedocs/slate" title="https://github.com/slatedocs/slate">Slate API doc generator</a>. For Slate, place the <code>index.html.md</code>output in your Slate repository's source directory.</td>
+         <td align="left" valign="top">(Default) GitHub-flavored Markdown file targeted for the <a href="https://github.com/slatedocs/slate" title="https://github.com/slatedocs/slate">Slate API doc generator</a>. For Slate, place the <code>index.html.md</code>output in your Slate repository's source directory.</td>
       </tr>
       <tr id="html-format">
          <td align="left" valign="top"><code>html</code></td>
@@ -327,13 +328,7 @@ Use the following command-line arguments to define the output mode and format:
             <a href="#usage"><code>--format</code></a>
          </td>
          <td align="left" valign="top">
-            <p>Defines the <a href="#output-formats">output format</a>. Value is:</p>
-            <ul>
-               <li><code>markdown</code>&mdash; Markdown file targeted for the DMTF document publication process.</li>
-               <li><code>slate</code>(default) &mdash; GitHub-flavored Markdown file targeted for the <a href="https://github.com/slatedocs/slate" title="https://github.com/slatedocs/slate">Slate API doc generator</a>.</li>
-               <li><code>html</code>&mdash; HyperText Markup Language (HTML) file.</li>
-               <li><code>csv</code>&mdash; Comma-separated values (CSV) file.</li>
-            </ul>
+            <p>Defines the <a href="#output-formats">output format</a>. For the output formats, see <a href="#output-formats" title="#output-formats">output formats</a>.</p>
          </td>
       </tr>
       <tr>
