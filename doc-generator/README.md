@@ -62,12 +62,20 @@ To configure the generated documentation, specify configuration options through 
 
 <a id="configuration-keys"></a>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.
 
-* Use the [`--config`](#usage "#usage") command-line argument to specify the base configuration file.
+* Use the `--config` command-line argument to specify the base configuration file.
 * The `uri_mapping` configuration key is required but all other configuration keys are optional. Because this key is required, the `--config` command-line argument is also required to specify the base configuration file, which contains the required `uri_mapping` configuration key.
-* You can specify some configuration information through configuration keys only and some through command&#8209;line arguments only. For information, see [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys).
-* Depending on the [output mode and format](#output-modes-and-formats "#output-modes-and-formats"), the configuration keys in the base configuration file change. Consequently, [several flavors of the base configuration file](#examples "#examples") are available.
-* The base configuration file can include pointers to the optional content supplement configuration file and supplemental files. For details about these files, see [Redfish doc generator configuration and supplemental files](README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files "README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files").
+* You can specify some configuration information through configuration keys only and some through command&#8209;line arguments only.
+* Depending on the output mode and format, the configuration keys in the base configuration file change. Consequently, several flavors of the base configuration file are available.
+* The base configuration file can include pointers to the optional content supplement configuration file and supplemental files.
 * The names of some configuration keys differ from their command&#8209;line argument equivalents. Unless otherwise noted, the configuration key has the same meaning as its command&#8209;line argument equivalent.
+
+> **See also:**
+> 
+> * [`--config` command-line argument](#usage "#usage")
+> * [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys)
+> * [Output modes and formats](#output-modes-and-formats "#output-modes-and-formats")
+> * [Examples](#examples "#examples")
+> * [Redfish doc generator configuration and supplemental files](README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files "README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files")
 
 ### Mapping of command-line arguments to configuration keys
 
