@@ -86,7 +86,7 @@ If you specify a configuration option in more than one way, command&#8209;line a
 
 You can specify some configuration information through configuration keys only and some through command&#8209;line arguments only.
 
-This table maps configuration keys :
+This table maps configuration keys to command-line arguments:
 
 <table>
    <col width="50%">
