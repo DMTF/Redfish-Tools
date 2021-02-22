@@ -50,7 +50,6 @@ The Redfish doc generator, [`doc_generator.py`](doc_generator.py#L1 "doc_generat
     ```zsh
     % pip install -r dev_requirements.txt
     ```
-1. To [configure the generated documentation](#configuration), specify configuration options through either or both configuration keys and command-line arguments.
 
 ## Configuration
 
