@@ -63,7 +63,7 @@ To configure the generated documentation, specify configuration options through 
 * [Configuration keys](#configuration-keys)
 * [Command-line arguments](#usage)
 
-If you specify an option in more than one way, command&#8209;line arguments take precedence over configuration keys.
+If you specify a configuration option in more than one way, command&#8209;line arguments take precedence over configuration keys. For information about command&#8209;line arguments, see [Usage](#usage "#usage").
 
 <a id="configuration-keys"></a>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.
 
