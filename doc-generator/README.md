@@ -86,146 +86,145 @@ If you specify a configuration option in more than one way, command&#8209;line a
 
 You can specify some configuration information through configuration keys only and some through command&#8209;line arguments only.
 
-This table maps command-line arguments to configuration keys:
+This table maps configuration keys :
 
 <table>
    <col width="50%">
    <col width="50%">
    <thead>
       <tr>
-         <th align="left" valign="top">Command-line argument</th>
          <th align="left" valign="top">Configuration key</th>
+         <th align="left" valign="top">Command-line argument</th>
       </tr>
    </thead>
    <tbody>
       <tr>
-         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#actions_in_property_table"><code>actions_in_property_table</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#add_toc"><code>add_toc</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#boilerplate_intro"><code>boilerplate_intro</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#boilerplate_postscript"><code>boilerplate_postscript</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#combine_multiple_refs"><code>combine_multiple_refs</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--config</code></a></td>
-         <td align="left" valign="top"></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--sup</code></a></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#content_supplement"><code>content_supplement</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#description"><code>description</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#description_overrides"><code>description_overrides</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--escape</code></a></td>
-         <td align="left" valign="top"></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#excluded_annotations"><code>excluded_annotations</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#excluded_pattern_properties"><code>excluded_pattern_properties</code></a></td>
-      </tr>
-      <tr>
-         <td align="left" valign="top"></td>
-         <td align="left" valign="top"><a href="README-base-configuration-file.md#excluded_properties"><code>excluded_properties</code></a></td>
-      </tr>
-      <tr>
          <td align="left" valign="top">
-         </td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#add_toc"><code>add_toc</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#boilerplate_intro"><code>boilerplate_intro</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#boilerplate_postscript"><code>boilerplate_postscript</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#combine_multiple_refs"><code>combine_multiple_refs</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
+         <td align="left" valign="top"></td>
+         <td align="left" valign="top"><a href="#usage"><code>--config</code></a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#content_supplement"><code>content_supplement</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--sup</code></a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#description"><code>description</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#description_overrides"><code>description_overrides</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
+         <td align="left" valign="top"></td>
+         <td align="left" valign="top"><a href="#usage"><code>--escape</code></a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#excluded_annotations"><code>excluded_annotations</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#excluded_pattern_properties"><code>excluded_pattern_properties</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README-base-configuration-file.md#excluded_properties"><code>excluded_properties</code></a></td>
+         <td align="left" valign="top">
+      </tr>
+      <tr>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#excluded_schemas"><code>excluded_schemas</code></a></td>
+         <td align="left" valign="top">
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--format</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#format"><code>format</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--format</code></a></td>
       </tr>
       <tr>
+         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="#usage"><code>--help</code></a></td>
-         <td align="left" valign="top"></td>
       </tr>
       <tr>
-         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#html_title"><code>html_title</code></a></td>
+         <td align="left" valign="top">
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>import_from</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#import_from"><code>import_from</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>import_from</code></a></td>
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--normative</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#normative"><code>normative</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--normative</code></a></td>
       </tr>
       <tr>
-         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#object_reference_disposition"><code>object_reference_disposition</code></a></td>
+         <td align="left" valign="top">
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--out</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#outfile"><code>outfile</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--out</code></a></td>
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--payload_dir</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#payload_dir"><code>payload_dir</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--payload_dir</code></a></td>
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--profile</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#profile_doc"><code>profile_doc</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--profile</code></a></td>
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--property_index</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#property_index"><code>property_index</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--property_index</code></a></td>
       </tr>
       <tr>
+         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="#usage"><code>--property_index_config_out</code></a></td>
-         <td align="left" valign="top"></td>
       </tr>
       <tr>
-         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#profile_uri_to_local"><code>profile_uri_to_local</code></a></td>
+         <td align="left" valign="top">
       </tr>
       <tr>
-         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#registry_uri_to_local"><code>registry_uri_to_local</code></a></td>
+         <td align="left" valign="top">
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--subset</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#subset_doc"><code>subset_doc</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--subset</code></a></td>
       </tr>
       <tr>
-         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#suppress_version_history"><code>suppress_version_history</code></a></td>
+         <td align="left" valign="top">
       </tr>
       <tr>
-         <td align="left" valign="top"><a href="#usage"><code>--terse</code></a></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#profile_terse"><code>profile_terse</code></a></td>
+         <td align="left" valign="top"><a href="#usage"><code>--terse</code></a></td>
       </tr>
       <tr>
-         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#uri_mapping"><code>uri_mapping</code></a></td>
+         <td align="left" valign="top">
       </tr>
       <tr>
-         <td align="left" valign="top"></td>
          <td align="left" valign="top"><a href="README-base-configuration-file.md#version"><code>version</code></a></td>
+         <td align="left" valign="top">
       </tr>
    </tbody>
 </table>
