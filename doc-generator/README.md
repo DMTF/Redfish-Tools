@@ -70,23 +70,22 @@ To [configure the generated documentation](#configuration), specify configuratio
 
 To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#usage). Command&#8209;line arguments take precedence over configuration keys.
 
-You can specify some configuration information through configuration keys only and some configuration information through command-line arguments only. For information, see [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys).
+You can specify some configuration information through configuration keys only and some configuration information through command&#8209;line arguments only. For information, see [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys).
 
 <a id="configuration-keys"></a>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.
 
 * Use the [`--config`](#usage "#usage") command-line argument to specify the base configuration file.
-* Several flavors of the base configuration file are available.
+
+    The `uri_mapping` configuration key is required but all other configuration keys are optional. Because this key is required, the `--config` command-line argument is also required to specify the base configuration file, which contains the required `uri_mapping` configuration key.
+* [Several flavors of the base configuration file](#examples "#examples") are available.
 * The base configuration file can include pointers to the optional content supplement configuration file and supplemental files.
-    
-For details, see [Redfish doc generator configuration and supplemental files](README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files "README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files").
+* The names of some configuration keys differ from their command&#8209;line argument equivalents. Unless otherwise noted, the configuration key has the same meaning as its command&#8209;line argument equivalent.
+
+For details about the base and content supplement configuration files and the supplemental files, see [Redfish doc generator configuration and supplemental files](README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files "README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files").
 
 ### Mapping of command-line arguments to configuration keys
 
-You can specify some configuration information through configuration keys only and some configuration information through command-line arguments only.
-
-The names of some configuration keys differ from their command&#8209;line argument equivalents. Unless otherwise noted, the configuration key has the same meaning as its command&#8209;line argument equivalent.
-
-The `uri_mapping` configuration key is required but all other configuration keys are optional. Additionally, you must use the `--config` command-line argument to specify the base configuration file, which contains the required `uri_mapping` configuration key.
+You can specify some configuration information through configuration keys only and some configuration information through command&#8209;line arguments only.
 
 This table maps command-line arguments to configuration keys:
 
