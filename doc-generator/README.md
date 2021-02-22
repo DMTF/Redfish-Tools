@@ -366,9 +366,7 @@ Use the following command-line arguments to define the output mode and format:
 
 #### Output mode and format-related configuration keys
 
-Depending on the output mode and format, the configuration keys in the base configuration file can change. Some output modes, such as the property index mode, support additional configuration keys.
-
-The doc generator supports several output modes and formats through various [configuration keys](README-base-configuration-file.md/#configuration-keys "README-base-configuration-file.md/#configuration-keys").
+Depending on the output mode and format, the configuration keys in the base configuration file can change. The doc generator supports several output modes and formats through various [configuration keys](README-base-configuration-file.md/#configuration-keys "README-base-configuration-file.md/#configuration-keys").
 
 ## Usage
 
