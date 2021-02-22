@@ -42,7 +42,7 @@ To configure the generated JSON Schema files, you define configuration keys in a
 
 Use the `--config` command-line argument to specify the configuration file.
 
-If you either omit any keys in the specified configuration file or omit the `--config` command-line argument, the converter uses the keys in the default [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file.
+If you omit either any keys in the specified configuration file or the `--config` command-line argument, the converter uses the keys in the default [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file.
 
 The configuration keys are:
 
