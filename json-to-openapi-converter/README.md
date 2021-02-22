@@ -35,11 +35,13 @@ The JSON Schema-to-OpenAPI converter, [`json-to-yaml.py`](json-to-yaml.py#L1 "js
 
 ## Configuration
 
-To configure the generated OpenAPI files, you define configuration keys in a configuration file. To specify the configuration file, use the [`--config` command-line argument](#usage "#usage").
-
-Sample configuration file: [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1")
-
-The configuration file is a JSON file that contains the following keys at the root of the object:
+<dl>
+  <dt>Description</dt>
+  <dd>To configure the generated OpenAPI files, you define configuration keys in a configuration file. To specify the configuration file, use the <a href="#usage" title="#usage"><code>--config</code> command-line argument</a>.</dd>
+  <dt>Sample configuration file</dt>
+  <dd><a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></dd>
+  <dt>Configuration keys</dt>
+  <dd>The configuration file is a JSON file that contains the following keys at the root of the object:
 
 | Key          | Required | Description                                                      | Default value |
 | :----------- | :------- | :--------------------------------------------------------------- | :------------ |
@@ -48,7 +50,8 @@ The configuration file is a JSON file that contains the following keys at the ro
 | `TaskRef`    | Optional | Pointer to the JSON Schema definition of `Task`.                 |               |
 | `MessageRef` | Optional | Pointer to the JSON Schema definition of `Message`.              |               |
 | `DoNotWrite` | Optional | List of the output files to exclude when writing the YAML files. | None          |
-| `Extensions` | Optional | Structure of additional URIs to apply to a resource type if provided in the base OpenAPI service document. |               |
+| `Extensions` | Optional | Structure of additional URIs to apply to a resource type if provided in the base OpenAPI service document. |               |</dd>
+</dl>
 
 ## Usage
 
