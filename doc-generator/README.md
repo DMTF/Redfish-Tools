@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.com/DMTF/Redfish-Tools.svg?branch=master)](https://travis-ci.com/github/DMTF/Redfish-Tools)
-<p align="center">
+<p align="left">
   <img src="http://redfish.dmtf.org/sites/all/themes/dmtf2015/images/dmtf-redfish-logo.png" alt="DMTF Redfish" width=180></p>
 
 Copyright © 2016-2021 DMTF. All rights reserved.
@@ -26,8 +26,7 @@ Copyright © 2016-2021 DMTF. All rights reserved.
       <tr>
          <td align="left" valign="top">
             <p><b>IMPORTANT NOTICE ABOUT THE REDFISH DOC GENERATOR v3:</b></p>
-            <p>The Redfish doc generator v3 contains <i><b>breaking configuration changes</b></i> and updates to the <code>README</code> files. For information about these changes, see <a href="CHANGES_v2_to_v3.md#redfish-doc-generator-v3-changes" title="CHANGES_v2_to_v3.md#redfish-doc-generator-v3-changes">Redfish doc generator v3 changes</a>.</p>
-            <p>To use the previous version of the doc generator, see <a href="https://github.com/DMTF/Redfish-Tools/releases/tag/doc_gen_v2.0.0" title="https://github.com/DMTF/Redfish-Tools/releases/tag/doc_gen_v2.0.0">Doc Generator v2</a>.</p>
+            <p>The Redfish doc generator v3 contains <i><b>breaking configuration changes</b></i> and updates to the <code>README</code> files. For information about these changes, see <a href="CHANGES_v2_to_v3.md#redfish-doc-generator-v3-changes" title="CHANGES_v2_to_v3.md#redfish-doc-generator-v3-changes">Redfish doc generator v3 changes</a>. To use the previous version of the doc generator, see <a href="https://github.com/DMTF/Redfish-Tools/releases/tag/doc_gen_v2.0.0" title="https://github.com/DMTF/Redfish-Tools/releases/tag/doc_gen_v2.0.0">Doc Generator v2</a>.</p>
          </td>
       </tr>
    </tbody>
@@ -67,7 +66,7 @@ To [configure the generated documentation](#configuration), you specify either o
 To configure the generated documentation, specify configuration options through either or both:
 
 <table>
-   <caption><p align="center"><b>Table 1 &mdash; Configuration options</b></p></caption>
+   <caption><p align="left"><b>Table 1 &mdash; Configuration options</b></p></caption>
    <thead>
       <tr>
          <th align="left" valign="top">Configuration&nbsp;option</th>
@@ -113,7 +112,7 @@ To generate documentation for a specific audience, such as a developer, in a spe
 The *output mode* defines the type of and audience for the generated document:
 
 <table>
-   <caption><p align="center"><b>Table 2 &mdash; Output modes</b></p></caption>
+   <caption><p align="left"><b>Table 2 &mdash; Output modes</b></p></caption>
    <thead>
       <tr>
          <th align="left" valign="top">Output&nbsp;mode</th>
@@ -153,7 +152,7 @@ The *output mode* defines the type of and audience for the generated document:
 The *output format* defines the format of the generated document:
 
 <table id="output-formats">
-   <caption><p align="center"><b>Table 3 &mdash; Output formats</b></p></caption>
+   <caption><p align="left"><b>Table 3 &mdash; Output formats</b></p></caption>
    <thead>
       <tr>
          <th align="left" valign="top">Output&nbsp;format</th>
