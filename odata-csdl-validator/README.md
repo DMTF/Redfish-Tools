@@ -61,7 +61,7 @@ The validator accepts the `METADATA` command-line argument in one of these forma
 
 ### Local path to an OData CSDL XML file
 
-This example command runs the validator against the `test_metadata/ServiceRoot.xml` file to validate that the metadata conforms to OData v4.0:
+This example command validates that the metadata in the `test_metadata/ServiceRoot.xml` file conforms to OData v4.0:
 
 ```zsh
 % cd Redfish-Tools/odata-csdl-validator
@@ -70,7 +70,7 @@ This example command runs the validator against the `test_metadata/ServiceRoot.x
 
 ### Local path to directory of OData CSDL XML files
 
-This example command runs the validator against the files in the `test_metadata` directory to validate that the metadata conforms to OData v4.0:
+This example command validates that the metadata in the files in the `test_metadata` directory conforms to OData v4.0:
          
 ```zsh
 % cd Redfish-Tools/odata-csdl-validator
@@ -79,7 +79,7 @@ This example command runs the validator against the files in the `test_metadata`
 
 ### URL of an OData CSDL XML file
 
-This example command runs the validator against the `http://redfish.dmtf.org/schemas/v1/ServiceRoot.xml` file to validate that the metadata conforms to OData v4.0:
+This example command validates that the metadata in the `http://redfish.dmtf.org/schemas/v1/ServiceRoot.xml` file conforms to OData v4.0:
          
 ```zsh
 $ cd Redfish-Tools/odata-csdl-validator
@@ -88,7 +88,7 @@ $ cd Redfish-Tools/odata-csdl-validator
 
 ## Processing
 
-The validator parses the specified OData CSDL XML file or files and all referenced OData CSDL XML files to validate that the metadata conforms to [OData v4.0](http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html "http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html"). 
+The validator validates that the metadata in the specified OData CSDL XML file or files and all referenced OData CSDL XML files conforms to [OData v4.0](http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html "http://docs.oasis-open.org/odata/odata-csdl-xml/v4.01/odata-csdl-xml-v4.01.html"). 
 
 If the validator finds an error, it prints the path to the metadata file that contains the error with a simple explanation of the error.
 
