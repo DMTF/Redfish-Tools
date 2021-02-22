@@ -36,21 +36,28 @@ The JSON Schema-to-OpenAPI converter, [`json-to-yaml.py`](json-to-yaml.py#L1 "js
 ## Configuration
 
 <dl>
-  <dt>Description</dt>
-  <dd>To configure the generated OpenAPI files, you define configuration keys in a configuration file. To specify the configuration file, use the <a href="#usage" title="#usage"><code>--config</code> command-line argument</a>.</dd>
-  <dt>Sample configuration file</dt>
-  <dd><a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></dd>
-  <dt>Configuration keys</dt>
-  <dd>The configuration file is a JSON file that contains the following keys at the root of the object:
-
-| Key          | Required | Description                                                      | Default value |
-| :----------- | :------- | :--------------------------------------------------------------- | :------------ |
-| `info`       | Required | Object for the OpenAPI service document.                         | None          |
-| `OutputFile` | Optional | Output file for the constructed OpenAPI service document.        | `openapi.yaml` in the directory from where you run the tool |
-| `TaskRef`    | Optional | Pointer to the JSON Schema definition of `Task`.                 |               |
-| `MessageRef` | Optional | Pointer to the JSON Schema definition of `Message`.              |               |
-| `DoNotWrite` | Optional | List of the output files to exclude when writing the YAML files. | None          |
-| `Extensions` | Optional | Structure of additional URIs to apply to a resource type if provided in the base OpenAPI service document. |               |</dd>
+   <dt>Description</dt>
+   <dd>To configure the generated OpenAPI files, you define configuration keys in a configuration file. To specify the configuration file, use the <a href="#usage" title="#usage"><code>--config</code> command-line argument</a>.</dd>
+   <dt>Sample configuration file</dt>
+   <dd><a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a></dd>
+   <dt>Configuration keys</dt>
+   <dd>The configuration file is a JSON file that contains the following keys at the root of the object:</dd>
+   <dd>
+      <dl>
+         <dt><code>info</code></dt>
+         <dd>Required. Object for the OpenAPI service document. No default.</dd>
+         <dt><code>OutputFile</code></dt>
+         <dd>Optional. Output file for the constructed OpenAPI service document. Default is <code>openapi.yaml</code> in the directory from where you run the tool.</dd>
+         <dt><code>TaskRef</code></dt>
+         <dd>Optional. Pointer to the JSON Schema definition of <code>Task</code>. No default.</dd>
+         <dt><code>MessageRef</code></dt>
+         <dd>Optional. Pointer to the JSON Schema definition of <code>Message</code>. No default.</dd>
+         <dt><code>DoNotWrite</code></dt>
+         <dd>Optional. List of the output files to exclude when writing the YAML files. No default.</dd>
+         <dt><code>Extensions</code></dt>
+         <dd>Optional. Structure of additional URIs to apply to a resource type if provided in the base OpenAPI service document. No default.</dd>
+      </dl>
+   </dd>
 </dl>
 
 ## Usage
