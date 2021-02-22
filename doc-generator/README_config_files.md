@@ -32,7 +32,7 @@ You can specify some configuration information through configuration keys only a
          <dd>Several flavors of the base configuration file are available.</dd>
          <dd>The doc generator reads configuration keys from the base configuration file. If the base configuration file includes a pointer to the <a href="#content-supplement-configuration-file">content supplement configuration file</a>, the doc generator also reads configuration keys from it.</dd>
          <dd>Additionally, if the base configuration file includes pointers to the <a href="#boilerplate-intro-file" title="#boilerplate-intro-file">boilerplate intro</a> and <a href="#boilerplate-postscript-file" title="#boilerplate-postscript-file">boilerplate postscript</a> supplemental files, the doc generator includes content from these files in the generated documentation.</dd>
-         <dd>Depending on the <a href="README.md#output-modes" title="README.md#output-modes">output mode</a>, the configuration keys in the base configuration file can change. Some output modes, such as the property index mode, support additional configuration keys.</dd>
+         <dd>Depending on the <a href="README.md#output-modes" title="README.md#output-modes">output mode</a>, the configuration keys in the base configuration file can change.</dd>
          <dd>
             <p>To include supplemental files and the content supplement configuration file:</p>
             <ol>

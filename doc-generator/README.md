@@ -237,7 +237,7 @@ When you run the doc generator in a specific output mode, only certain command-l
 
 The *output mode* defines the audience for and type of generated documentation:
 
-<table>
+<table id="output-modes">
    <caption><p align="left"><b>Table 2 &mdash; Output modes</b></p></caption>
    <thead>
       <tr>
