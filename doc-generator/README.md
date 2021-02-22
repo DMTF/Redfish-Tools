@@ -58,7 +58,12 @@ To [configure the generated documentation](#configuration), specify configuratio
 
 ## Configuration
 
-To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#usage). Command&#8209;line arguments take precedence over configuration keys.
+To configure the generated documentation, specify configuration options through either or both:
+
+* [Configuration keys](#configuration-keys)
+* [Command-line arguments](#usage)
+
+If you specify an option in more than one way, command&#8209;line arguments take precedence over configuration keys.
 
 <a id="configuration-keys"></a>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.
 
@@ -300,73 +305,7 @@ The *output format* defines the format of the generated document:
    </tbody>
 </table>
 
-**Next:**
-
-* [Output mode and format-related command-line arguments](#output-mode-and-format-related-command-line-arguments)
-* [Output mode and format-related configuration keys](#output-mode-and-format-related-configuration-keys)
-
-#### Output mode and format-related command-line arguments
-
-Use the following command-line arguments to define the output mode and format:
-
-<table>
-   <thead>
-      <tr>
-         <th align="left" valign="top">Command&#8209;line&nbsp;argument</th>
-         <th align="left" valign="top">Description</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr>
-         <td align="left" valign="top">
-            <a href="#usage"><code>--normative</code></a>
-         </td>
-         <td align="left" valign="top">Generates <a href="#standard-normative-mode">standard normative mode</a>, or developer-focused, documentation.</td>
-      </tr>
-      <tr>
-         <td align="left" valign="top">
-            <a href="#usage"><code>--format</code></a>
-         </td>
-         <td align="left" valign="top">
-            <p>Defines the <a href="#output-formats">output format</a>. For the output formats, see <a href="#output-formats" title="#output-formats">output formats</a>.</p>
-         </td>
-      </tr>
-      <tr>
-         <td align="left" valign="top">
-            <a href="#usage"><code>--profile</code></a>
-         </td>
-         <td align="left" valign="top">Defines path to a JSON profile document, for <a href="#profile-mode">profile mode</a> output.</td>
-      </tr>
-      <tr>
-         <td align="left" valign="top">
-            <a href="#usage"><code>--property_index_config_out</code></a>
-         </td>
-         <td align="left" valign="top">Specifies an output file for updated configuration information. The doc generator extends the input configuration by adding entries for any properties where the property name appears with more than one type or description.</td>
-      </tr>
-      <tr>
-         <td align="left" valign="top">
-            <a href="#usage"><code>--terse</code></a>
-         </td>
-         <td align="left" valign="top">Generates <a href="#profile-mode">terse profile mode</a> documentation, which includes a subset of properties with profile requirements. Meaningful only with <a href="#usage"><code>--profile</code>.</td>
-      </tr>
-      <tr>
-         <td align="left" valign="top">
-            <a href="#usage"><code>--subset</code></a>
-         </td>
-         <td align="left" valign="top">Defines path to a JSON profile document (<code>SUBSET_DOC</code>), which defines the subset. Generates <a href="#schema-subset-mode">schema subset mode</a> documentation.</td>
-      </tr>
-      <tr>
-         <td align="left" valign="top">
-            <a href="#usage"><code>--property_index</code></a>
-         </td>
-         <td align="left" valign="top">Generates <a href="#property-index-mode">property index mode</a> documentation.</td>
-      </tr>
-   </tbody>
-</table>
-
-#### Output mode and format-related configuration keys
-
-Depending on the output mode and format, the configuration keys in the base configuration file can change. The doc generator supports several output modes and formats through various [configuration keys](README-base-configuration-file.md/#configuration-keys "README-base-configuration-file.md/#configuration-keys").
+For the command-line arguments that produce specific output modes and formats, see [output modes and formats](#output-mode-and-format-related-command-line-arguments)
 
 ## Usage
 
@@ -426,6 +365,65 @@ Example:
    doc_generator.py --format=html
    doc_generator.py --format=html --out=/path/to/output/index.html /path/to/spmf/json-files
 ```
+
+### Output mode and format-related command-line arguments
+
+Use the following command-line arguments to define the output mode and format:
+
+<table>
+   <thead>
+      <tr>
+         <th align="left" valign="top">Command&#8209;line&nbsp;argument</th>
+         <th align="left" valign="top">Description</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td align="left" valign="top">
+            <a href="#usage"><code>--normative</code></a>
+         </td>
+         <td align="left" valign="top">Generates <a href="#standard-normative-mode">standard normative mode</a>, or developer-focused, documentation.</td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">
+            <a href="#usage"><code>--format</code></a>
+         </td>
+         <td align="left" valign="top">
+            <p>Defines the <a href="#output-formats">output format</a>. For the output formats, see <a href="#output-formats" title="#output-formats">output formats</a>.</p>
+         </td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">
+            <a href="#usage"><code>--profile</code></a>
+         </td>
+         <td align="left" valign="top">Defines path to a JSON profile document, for <a href="#profile-mode">profile mode</a> output.</td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">
+            <a href="#usage"><code>--property_index_config_out</code></a>
+         </td>
+         <td align="left" valign="top">Specifies an output file for updated configuration information. The doc generator extends the input configuration by adding entries for any properties where the property name appears with more than one type or description.</td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">
+            <a href="#usage"><code>--terse</code></a>
+         </td>
+         <td align="left" valign="top">Generates <a href="#profile-mode">terse profile mode</a> documentation, which includes a subset of properties with profile requirements. Meaningful only with <a href="#usage"><code>--profile</code>.</td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">
+            <a href="#usage"><code>--subset</code></a>
+         </td>
+         <td align="left" valign="top">Defines path to a JSON profile document (<code>SUBSET_DOC</code>), which defines the subset. Generates <a href="#schema-subset-mode">schema subset mode</a> documentation.</td>
+      </tr>
+      <tr>
+         <td align="left" valign="top">
+            <a href="#usage"><code>--property_index</code></a>
+         </td>
+         <td align="left" valign="top">Generates <a href="#property-index-mode">property index mode</a> documentation.</td>
+      </tr>
+   </tbody>
+</table>
 
 ## Examples
 
