@@ -8,17 +8,6 @@ Copyright © 2016-2021 DMTF. All rights reserved.
 
 # Redfish doc generator
 
-## Contents
-
-* [About](#about)
-* [Installation](#installation)
-* [Configuration](#configuration)
-* [Usage](#usage)
-* [Examples](#examples)
-* [Processing](#processing)
-
-## About
-
 <table bgcolor="black" border="2px">
    <tbody>
       <tr>
@@ -31,6 +20,14 @@ Copyright © 2016-2021 DMTF. All rights reserved.
 </table>
 
 The **Redfish doc generator**, [`doc_generator.py`](doc_generator.py#L1 "doc_generator.py#L1"), is a Python tool that generates documentation from JSON Schema files and supplemental files in a specified or default [output mode and format](#output-modes-and-formats).
+
+## Contents
+
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
+* [Examples](#examples)
+* [Processing](#processing)
 
 ## Installation
 
