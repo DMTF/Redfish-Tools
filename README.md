@@ -16,5 +16,5 @@ For installation instructions, see the `README.md` file for each tool.
 
 * [CSDL-to-JSON converter](csdl-to-json-convertor/README.md#csdl-to-json-converter "csdl-to-json-convertor/README.md#csdl-to-json-converter")
 * [Redfish doc generator](doc-generator/README.md#redfish-doc-generator "doc-generator/README.md#redfish-doc-generator")
-* [JSON Schema-to-OpenAPI converter](json-to-openapi-convertor/README.md#json-schema-to-openapi-convertor "json-to-openapi-convertor/README.md#json-schema-to-openapi-convertor")
+* [JSON Schema-to-OpenAPI converter](json-to-openapi-converter/README.md#json-schema-to-openapi-converter "json-to-openapi-converter/README.md#json-schema-to-openapi-converter")
 * [OData CSDL validator](odata-csdl-validator/README.md#odata-csdl-validator "odata-csdl-validator/README.md#odata-csdl-validator")
