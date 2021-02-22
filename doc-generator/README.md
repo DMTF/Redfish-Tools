@@ -13,18 +13,8 @@ Copyright © 2016-2021 DMTF. All rights reserved.
 * [About](#about)
 * [Installation](#installation)
 * [Configuration](#configuration)
-   * [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys)
-   * [Output modes and formats](#output-modes-and-formats)
-      * [Output mode and format-related command-line arguments](#output-mode-and-format-related-command-line-arguments)
-      * [Output mode and format-related configuration keys](#output-mode-and-format-related-configuration-keys)
 * [Usage](#usage)
 * [Examples](#examples)
-   * [CSV format](#csv-format)
-   * [Terse profile mode in Markdown format](#terse-profile-mode-in-markdown-format)
-   * [Property index mode in HTML format](#property-index-mode-in-html-format)
-   * [Schema subset mode in HTML format](#schema-subset-mode-in-html-format)
-   * [Standard mode in HTML format](#standard-mode-in-html-format)
-   * [Standard normative mode in HTML format](#standard-normative-mode-in-html-format)
 * [Processing](#processing)
 
 ## About
@@ -67,6 +57,11 @@ To [configure the generated documentation](#configuration), specify configuratio
     ```
 
 ## Configuration
+
+* [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys)
+* [Output modes and formats](#output-modes-and-formats)
+    * [Output mode and format-related command-line arguments](#output-mode-and-format-related-command-line-arguments)
+    * [Output mode and format-related configuration keys](#output-mode-and-format-related-configuration-keys)
 
 To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#usage). Command&#8209;line arguments take precedence over configuration keys.
 
@@ -452,10 +447,10 @@ The `--config` argument specifies the base configuration file. Depending on the 
 
 These examples show the sample base configuration files and their corresponding command&#8209;line invocations:
 
-* [CSV&nbsp;format](#csv-format-example)
+* [CSV format](#csv-format)
 * [Terse profile mode in Markdown format](#terse-profile-mode-in-markdown-format)
 * [Property index mode in HTML format](#property-index-mode-in-html-format)
-* [Schema&nbsp;subset mode in HTML format](#schema-subset-mode-in-html-format)
+* [Schema subset mode in HTML format](#schema-subset-mode-in-html-format)
 * [Standard mode in HTML format](#standard-mode-in-html-format)
 * [Standard normative mode in HTML format](#standard-normative-mode-in-html-format)
 
