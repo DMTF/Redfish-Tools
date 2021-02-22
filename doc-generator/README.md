@@ -63,50 +63,15 @@ To [configure the generated documentation](#configuration), you specify either o
 
 ## Configuration
 
-To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#command-line-arguments). Command&#8209;line arguments take precedence over configuration keys.
+To configure the generated documentation, specify configuration options through either or both [configuration keys](#configuration-keys) and [command-line arguments](#usage). Command&#8209;line arguments take precedence over configuration keys. You can specify some configuration information through configuration keys only and not through command-line arguments. Conversely, you can specify some configuration information through command-line arguments only and not through configuration keys. For a list of which options you can specify through configuration keys or command-line arguments, see [Mapping of command-line arguments to configuration keys](#mapping-of-command-line-arguments-to-configuration-keys).
 
-<table>
-   <caption>
-      <p align="left"><b>Table 1 &mdash; Configuration options</b></p>
-   </caption>
-   <thead>
-      <tr>
-         <th align="left" valign="top">Configuration&nbsp;option</th>
-         <th align="left" valign="top">Description</th>
-      </tr>
-   </thead>
-   <tbody>
-      <tr id="configuration-keys">
-         <td align="left" valign="top">Configuration&nbsp;keys</td>
-         <td align="left" valign="top">
-            <p>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.</p>
-            <ul>
-               <li>
-                  <p>Use the <a href="#usage"><code>--config</code></a> command-line argument to specify the base configuration file.</p>
-               </li>
-               <li>
-                  <p>You can specify some configuration information through configuration keys only and not through command-line arguments.</p>
-                  <p>Conversely, you can specify some configuration information through command-line arguments only and not through configuration keys.</p>
-               </li>
-               <li>
-                  <p>Several flavors of the base configuration file are available.</p>
-               </li>
-               <li>
-                  <p>The base configuration file can include pointers to the optional content supplement configuration file and supplemental files.</p>
-               </li>
-            </ul>
-            <p>For details, see <a href="README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files" title="README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files">Redfish doc generator configuration and supplemental files</a>.</p>
-         </td>
-      </tr>
-      <tr id="command-line-arguments">
-         <td align="left" valign="top">Command&#8209;line&nbsp;arguments</td>
-         <td align="left" valign="top">
-            <p>You can specify some configuration information through configuration keys only and not through command-line arguments.</p>
-            <p>Conversely, you can specify some configuration information through command-line arguments only and not through configuration keys.</p>
-         </td>
-      </tr>
-   </tbody>
-</table>
+<a id="configuration-keys"></a>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.
+
+* Use the [`--config`](#usage "#usage") command-line argument to specify the base configuration file.
+* Several flavors of the base configuration file are available.
+* The base configuration file can include pointers to the optional content supplement configuration file and supplemental files.
+    
+For details, see [Redfish doc generator configuration and supplemental files](README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files "README_config_files.md#redfish-doc-generator-configuration-and-supplemental-files").
 
 ## Output modes and formats
 
