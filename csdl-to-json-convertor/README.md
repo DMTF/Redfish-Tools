@@ -86,12 +86,7 @@ To run the converter, navigate to the `Redfish-Tools/csdl-to-json-convertor` dir
 % python3 csdl-to-json.py --input ../../Redfish/metadata --output ../../Redfish/json-schema/ --config dmtf-config.json
 ```
 
-This example command converts the CSDL metadata files in the `Redfish/metadata` input directory to JSON Schema files in the `/Redfish/json-schema` output directory. The converter reads the configuration keys in the [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file to configure the generated JSON Schema files. The configuration keys define:
-
-* The copyright string to include in the generated JSON Schema files
-* The location of Redfish Schema files, OData Schema files, and Redfish resources
-* The files to exclude from the generated JSON Schema files
-* The folder for the generated JSON Schema files
+This example command converts the CSDL metadata files in the `Redfish/metadata` input directory to JSON Schema files in the `/Redfish/json-schema` output directory. The converter reads the configuration keys in the [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file to configure the generated JSON Schema files.
 
 ## Processing
 

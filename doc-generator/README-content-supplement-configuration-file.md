@@ -219,7 +219,7 @@ The configuration keys in the content supplement configuration file do not have 
 
 Several files in the `sample_inputs` directory provide example content supplement configuration files that you can use when you generate different types of documentation.
 
-The following sample content supplement configuration files are associated with these output modes:
+The following sample content supplement configuration files are associated with these [output modes](README.md#output-modes-and-formats):
 
 | Sample content supplement configuration file | Configuration keys | Output mode |
 | :------------------------------------------- | :----------------- | :---------- | 
