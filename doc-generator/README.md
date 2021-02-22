@@ -65,7 +65,7 @@ To configure the generated documentation, specify configuration options through 
 
 If you specify a configuration option in more than one way, command&#8209;line arguments take precedence over configuration keys. For information about command&#8209;line arguments, see [Usage](#usage "#usage").
 
-<a id="configuration-keys"></a>You define configuration keys in the base configuration file and, optionally, in the content supplement configuration file.
+<a id="configuration-keys"></a>You define configuration keys in the [base configuration file](README_config_files.md#base-configuration-file "README_config_files.md#base-configuration-file") and, optionally, in the [content supplement configuration file](README_config_files.md#content-supplement-configuration-file "README_config_files.md#content-supplement-configuration-file").
 
 * Use the `--config` command-line argument to specify the base configuration file.
 * The `uri_mapping` configuration key is required but all other configuration keys are optional. Because this key is required, the `--config` command-line argument is also required to specify the base configuration file, which contains the required `uri_mapping` configuration key.
