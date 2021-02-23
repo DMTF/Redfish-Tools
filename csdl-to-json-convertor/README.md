@@ -17,8 +17,6 @@ The CSDL-to-JSON converter, [`csdl-to-json.py`](csdl-to-json.py#L1 "csdl-to-json
 * [Usage](#usage)
 * [Example](#example)
 * [Processing](#processing)
-   * [Assumptions](#assumptions)
-   * [Details](#details)
 
 ## Installation
 
