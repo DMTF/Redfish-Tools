@@ -39,13 +39,13 @@ To configure the generated OpenAPI files, define configuration keys in a JSON co
 
 The default configuration file, [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1"), contains these configuration keys:
 
-| Configuration&nbsp;key | Type             | Required? | Description                                     | Default |
-| :--------------------- | :--------------- | :-------- | :---------------------------------------------- | :------ |
-| `info`                 | Object           | Required  | Information for the OpenAPI service document.   | None.   |
-| `OutputFile`           | String           | Optional  | Output file for the generated OpenAPI service document. | `openapi.yaml` in the directory from where you run the tool. |
-| `TaskRef`              | String           | Optional  | Location of the JSON Schema definition of `Task`. | None. | 
-| `MessageRef`           | String           | Optional  | Location of the JSON Schema definition of `Message`. | None. | 
-| `DoNotWrite`           | Array&nbsp;of&nbsp;strings | Optional  | File or files to exclude from the generated YAML files. | None. |
+| Key          | Required | Type      | Description                                     | Default |
+| :----------- | :------- | :-------- | :---------------------------------------------- | :------ |
+| `info`       | Yes      | Object    | Information for the OpenAPI service document.   | None |
+| `OutputFile` |          | String    | Output file for the generated OpenAPI service document. | `openapi.yaml` in the directory from where you run the tool. |
+| `TaskRef`    |          | String    | Location of the JSON Schema definition of `Task`. | None | 
+| `MessageRef` |          | String    | Location of the JSON Schema definition of `Message`. | None | 
+| `DoNotWrite` |          | Array&nbsp;of&nbsp;strings | File or files to exclude from the generated YAML files. | None |
 
 ## Usage
 
