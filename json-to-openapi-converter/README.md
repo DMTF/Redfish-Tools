@@ -35,9 +35,7 @@ The JSON Schema-to-OpenAPI converter, [`json-to-yaml.py`](json-to-yaml.py#L1 "js
 
 ## Configuration
 
-To configure the generated OpenAPI files, you define configuration keys in a JSON configuration file.
-
-To specify the configuration file, use the <a href="#usage" title="#usage"><code>--config</code> command-line argument</a>.
+To configure the generated OpenAPI files, define configuration keys in a JSON configuration file and use the <a href="#usage" title="#usage"><code>--config</code> command-line argument</a> to specify the configuration file.
 
 <dl>
    <dt>Sample configuration file</dt>

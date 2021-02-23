@@ -30,7 +30,7 @@ The CSDL-to-JSON converter, [`csdl-to-json.py`](csdl-to-json.py#L1 "csdl-to-json
 
 ## Configuration
 
-To configure the generated JSON Schema files, you define configuration keys in a configuration file. Use the `--config` command-line argument to specify the configuration file.
+To configure the generated JSON Schema files, define configuration keys in a JSON configuration file and use the [`--config` command-line argument](#usage "#usage") to specify the configuration file.
 
 If you omit either any keys in the specified configuration file or the `--config` command-line argument, the converter uses the keys in the default [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file.
 
