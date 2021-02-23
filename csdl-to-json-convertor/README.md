@@ -34,35 +34,18 @@ To configure the generated JSON Schema files, define configuration keys in a JSO
 
 The <a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a> configuration file contains the default configuration key values.
 
-### Sample configuration file
+**Sample configuration file:** <a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a>
 
-<a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a>
+The configuration keys are:
 
-### Configuration keys
-
-#### Copyright
-
-String. Copyright string to include in the generated JSON Schema files.
-
-#### RedfishSchema
-
-String. Location of Redfish Schema files.
-
-#### ODataSchema
-
-String. Location of OData Schema files.
-
-#### Location
-
-String. Folder for the generated JSON Schema files.
-
-#### ResourceLocation
-
-String. Location of Redfish resources.
-
-#### DoNotWrite
-
-Array of strings. One or more files to exclude from the generated JSON Schema files.
+| Configuration key  | Type             | Description                                                     |
+| :----------------- | :--------------- | :-------------------------------------------------------------- |
+| `Copyright`        | String           | Copyright string to include in the generated JSON Schema files. |
+| `RedfishSchema`    | String           | Location of Redfish Schema files.                               |
+| `ODataSchema`      | String           | Location of OData Schema files.                                 |
+| `Location`         | String           | Folder for the generated JSON Schema files.                     |
+| `ResourceLocation` | String           | Location of Redfish resources.                                  |
+| `DoNotWrite`       | Array of strings | File or files to exclude from the generated JSON Schema files.  |
 
 ## Usage
 
