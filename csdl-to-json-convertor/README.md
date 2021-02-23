@@ -17,6 +17,8 @@ The CSDL-to-JSON converter, [`csdl-to-json.py`](csdl-to-json.py#L1 "csdl-to-json
 * [Usage](#usage)
 * [Example](#example)
 * [Processing](#processing)
+   * [Assumptions](#assumptions)
+   * [Details](#details)
 
 ## Installation
 
@@ -30,27 +32,54 @@ The CSDL-to-JSON converter, [`csdl-to-json.py`](csdl-to-json.py#L1 "csdl-to-json
 
 ## Configuration
 
+* [Sample configuration file](#sample-configuration-file)
+* [Configuration keys](#configuration-keys)
+
 To configure the generated JSON Schema files, define configuration keys in a JSON configuration file and use the [`--config` command-line argument](#usage "#usage") to specify the configuration file.
 
 If you omit either any keys in the specified configuration file or the `--config` command-line argument, the converter uses the keys in the default [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file.
 
 <dl>
-   <dt><h3>Sample configuration file</h3></dt>
+   <dt>
+      <h3>Sample configuration file</h3>
+   </dt>
    <dd><a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a></dd>
-   <dt><h3>Configuration keys</h3></dt>
+   <dt>
+      <h3>Configuration keys</h3>
+   </dt>
    <dd>
+      <ul>
+         <li><a href="#copyright">Copyright</a></li>
+         <li><a href="#redfishschema">RedfishSchema</a></li>
+         <li><a href="#odataschema">ODataSchema</a></li>
+         <li><a href="#location">Location</a></li>
+         <li><a href="#resourcelocation">ResourceLocation</a></li>
+         <li><a href="#donotwrite">DoNotWrite</a></li>
+      </ul>
       <dl>
-         <dt><h4><code>Copyright</code></h4></dt>
+         <dt>
+            <h4><code>Copyright</code></h4>
+         </dt>
          <dd>String. Copyright string to include in the generated JSON Schema files.</dd>
-         <dt><h4><code>RedfishSchema</code></h4></dt>
+         <dt>
+            <h4><code>RedfishSchema</code></h4>
+         </dt>
          <dd>String. Location of Redfish Schema files.</dd>
-         <dt><h4><code>ODataSchema</code></h4></dt>
+         <dt>
+            <h4><code>ODataSchema</code></h4>
+         </dt>
          <dd>String. Location of OData Schema files.</dd>
-         <dt><h4><code>Location</code></h4></dt>
+         <dt>
+            <h4><code>Location</code></h4>
+         </dt>
          <dd>String. Folder for the generated JSON Schema files.</dd>
-         <dt><h4><code>ResourceLocation</code></h4></dt>
+         <dt>
+            <h4><code>ResourceLocation</code></h4>
+         </dt>
          <dd>String. Location of Redfish resources.</dd>
-         <dt><h4><code>DoNotWrite</code></h4></dt>
+         <dt>
+            <h4><code>DoNotWrite</code></h4>
+         </dt>
          <dd>Array of strings. One or more files to exclude from the generated JSON Schema files.</dd>
       </dl>
    </dd>
