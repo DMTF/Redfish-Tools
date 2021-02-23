@@ -42,7 +42,7 @@ The default configuration file, [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-c
 | Key          | Type      | Description                                                                |
 | :----------- | :-------- | :------------------------------------------------------------------------- |
 | `info`       | Object    | Required. Information for the OpenAPI service document. |
-| `OutputFile` | String    | Optional. Output file for the generated OpenAPI service document.<br/><br/>Default is `openapi.yaml` in the directory from where you run the tool. |
+| `OutputFile` | String    | Optional. Output file for the generated OpenAPI service document. Default is `openapi.yaml` in the directory from where you run the tool. |
 | `TaskRef`    | String    | Optional. Location of the JSON Schema definition of `Task`. | 
 | `MessageRef` | String    | Optional. Location of the JSON Schema definition of `Message`. | 
 | `DoNotWrite` | Array&nbsp;of&nbsp;strings | Optional. File or files to exclude from the generated YAML files. |
