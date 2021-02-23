@@ -35,23 +35,23 @@ To configure the generated JSON Schema files, define configuration keys in a JSO
 If you omit either any keys in the specified configuration file or the `--config` command-line argument, the converter uses the keys in the default [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file.
 
 <dl>
-   <dt>Sample configuration file</dt>
+   <dt><h3>Sample configuration file</h3></dt>
    <dd><a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a></dd>
-   <dt>Configuration keys</dt>
+   <dt><h3>Configuration keys</h3></dt>
    <dd>
       <dl>
-         <dt><code>Copyright</code></dt>
+         <dt><h4><code>Copyright</code></h4></dt>
          <dd>String. Copyright string to include in the generated JSON Schema files.</dd>
-         <dt><code>RedfishSchema</code></dt>
-         <dd>Location of Redfish Schema files.</dd>
-         <dt><code>ODataSchema</code></dt>
-         <dd>Location of OData Schema files.</dd>
-         <dt><code>Location</code></dt>
-         <dd>Folder for the generated JSON Schema files.</dd>
-         <dt><code>ResourceLocation</code></dt>
-         <dd>Location of Redfish resources.</dd>
-         <dt><code>DoNotWrite</code></dt>
-         <dd>Array of one or more files to exclude from the generated JSON Schema files.</dd>
+         <dt><h4><code>RedfishSchema</code></h4></dt>
+         <dd>String. Location of Redfish Schema files.</dd>
+         <dt><h4><code>ODataSchema</code></h4></dt>
+         <dd>String. Location of OData Schema files.</dd>
+         <dt><h4><code>Location</code></h4></dt>
+         <dd>String. Folder for the generated JSON Schema files.</dd>
+         <dt><h4><code>ResourceLocation</code></h4></dt>
+         <dd>String. Location of Redfish resources.</dd>
+         <dt><h4><code>DoNotWrite</code></h4></dt>
+         <dd>Array of strings. One or more files to exclude from the generated JSON Schema files.</dd>
       </dl>
    </dd>
 </dl>
