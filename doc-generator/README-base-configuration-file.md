@@ -79,11 +79,11 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
             </tr>
             <tr>
                <td align="left" valign="top"><b>Output mode</b></td>
-               <td align="left" valign="top"><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>.</td>
+               <td align="left" valign="top"><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a></td>
             </tr>
             <tr>
                <td align="left" valign="top"><b>Command-line equivalent</b></td>
-               <td align="left" valign="top">None.</td>
+               <td align="left" valign="top">None</td>
             </tr>
          </tbody>
       </table>
@@ -93,25 +93,37 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       <h3> add_toc</h3>
    </dt>
    <dd>
-      <dl>
-         <dt>Output modes</dt>
-         <dd><a href="README.md#standard-mode" title="README.md#standard-mode">Standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>.</dd>
-         <dt>Description</dt>
-         <dd>String. Indicates whether to generate a table of contents (TOC):</dd>
-         <dd>
-            <ul>
-               <li>
-                  <p><code>true</code>. (Default) Generate a TOC and place it either at the beginning of the generated HTML file or in the <code>[add_toc]</code> location if that directive appears in the boilerplate intro or boilerplate postscript file.</p>
-                  <p>By default, the table of contents (TOC) appears at the top of the HTML file. If the <code>[add_toc]</code> directive appears anywhere in the boilerplate intro or boilerplate postscript file, <code>add_toc</code> key is <code>true</code> by default.</p>
-               </li>
-               <li>
-                  <p><code>false</code>. Do not generate a TOC.</p>
-               </li>
-            </ul>
-         </dd>
-         <dt>Command-line equivalent</dt>
-         <dd>None.</dd>
-      </dl>
+      <table>
+         <tbody>
+            <tr>
+               <td align="left" valign="top"><b>Type</b></td>
+               <td align="left" valign="top">String</td>
+            </tr>
+            <tr>
+               <td align="left" valign="top"><b>Description</b></td>
+               <td align="left" valign="top">
+                  <p>Indicates whether to generate a table of contents (TOC):</p>
+                  <ul>
+                     <li>
+                        <p><code>true</code>. (Default) Generate a TOC and place it either at the beginning of the generated HTML file or in the <code>[add_toc]</code> location if that directive appears in the boilerplate intro or boilerplate postscript file.</p>
+                        <p>By default, the table of contents (TOC) appears at the top of the HTML file. If the <code>[add_toc]</code> directive appears anywhere in the boilerplate intro or boilerplate postscript file, <code>add_toc</code> key is <code>true</code> by default.</p>
+                     </li>
+                     <li>
+                        <p><code>false</code>. Do not generate a TOC.</p>
+                     </li>
+                  </ul>
+               </td>
+            </tr>
+            <tr>
+               <td align="left" valign="top"><b>Output modes</b></td>
+               <td align="left" valign="top"><a href="README.md#standard-mode" title="README.md#standard-mode">Standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a></td>
+            </tr>
+            <tr>
+               <td align="left" valign="top"><b>Command-line equivalent</b></td>
+               <td align="left" valign="top">None</td>
+            </tr>
+         </tbody>
+      </table>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
    <dt id="boilerplate_intro">
