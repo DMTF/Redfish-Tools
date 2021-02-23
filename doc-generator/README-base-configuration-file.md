@@ -57,7 +57,9 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
 * [version](#version)
 
 <dl>
-   <dt id="actions_in_property_table"><h3> actions_in_property_table</h3> </dt>
+   <dt id="actions_in_property_table">
+      <h3> actions_in_property_table</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output mode</dt>
@@ -70,11 +72,14 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
                <li><code>false</code>. Exclude <b>Actions</b> from property tables.</li>
             </ul>
          </dd>
-         <dd>No command-line equivalent.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="add_toc"><h3> add_toc</h3> </dt>
+   <dt id="add_toc">
+      <h3> add_toc</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -92,33 +97,46 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
                </li>
             </ul>
          </dd>
-         <dd>No command-line equivalent.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="boilerplate_intro"><h3> boilerplate_intro</h3> </dt>
+   <dt id="boilerplate_intro">
+      <h3> boilerplate_intro</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>String. Defines the location of the HTML or Markdown file that contains the content to appear at the beginning of the document before the generated schema documentation. If a relative path, is relative to the location of the configuration file.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="boilerplate_postscript"><h3> boilerplate_postscript</h3> </dt>
+   <dt id="boilerplate_postscript">
+      <h3> boilerplate_postscript</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#standard-mode" title="README.md#standard-mode">Standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>String. Defines the location of the HTML or Markdown file that contains the content to appear at the end of the document after the generated schema documentation. If a relative path, is relative to the location of the configuration file.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="combine_multiple_refs"><h3> combine_multiple_refs</h3> </dt>
+   <dt id="combine_multiple_refs">
+      <h3> combine_multiple_refs</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -137,11 +155,16 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <dd>
             <pre lang="json">"combine_multiple_refs": 3</pre>
          </dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="content_supplement"><h3> content_supplement</h3> </dt>
+   <dt id="content_supplement">
+      <h3> content_supplement</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -152,18 +175,25 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="description"><h3> description</h3> </dt>
+   <dt id="description">
+      <h3> description</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>String. Provides description for the <code>config.json</code> file.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="description_overrides"><h3> description_overrides</h3> </dt>
+   <dt id="description_overrides">
+      <h3> description_overrides</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -231,42 +261,60 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
                </li>
             </ul>
          </dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="excluded_annotations"><h3> excluded_annotations</h3> </dt>
+   <dt id="excluded_annotations">
+      <h3> excluded_annotations</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>Array of strings. Defines one or more annotation names to exclude from the generated documentation. For example, The <code>*</code> character at the beginning of a string is the wildcard character.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="excluded_pattern_properties"><h3> excluded_pattern_properties</h3> </dt>
+   <dt id="excluded_pattern_properties">
+      <h3> excluded_pattern_properties</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>Array of strings. Defines a list of pattern properties to exclude from the generated documentation. In JSON, you must escape back slashes.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
          <dt>Example</dt>
          <dd><code>"\"</code> becomes <code>"\\"</code>.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="excluded_properties"><h3> excluded_properties</h3> </dt>
+   <dt id="excluded_properties">
+      <h3> excluded_properties</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#csv-format" title="README.md#csv-format">CSV format</a>, <a href="README.md#profile-mode" title="README.md#profile-mode">profile</a>, <a href="README.md#property-index-mode" title="README.md#property-index-mode">property index</a>, <a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>Array of strings. Defines property names to exclude from the generated documentation. The <code>*</code> character at the beginning of a string is the wildcard character.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
          <dt>Example</dt>
          <dd><code>"*odata.count"</code> matches <code>"Members\@odata.count"</code> and others.</dd>
          <dd>The following example omits any property name that ends with <code>"@odata.count"</code>:</dd>
@@ -280,18 +328,25 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="excluded_schemas"><h3> excluded_schemas</h3> </dt>
+   <dt id="excluded_schemas">
+      <h3> excluded_schemas</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>Array of strings. Defines schema to exclude from the generated documentation.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="format"><h3> format</h3> </dt>
+   <dt id="format">
+      <h3> format</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -330,18 +385,25 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="html_title"><h3> html_title</h3> </dt>
+   <dt id="html_title">
+      <h3> html_title</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>String. Defines the HTML <code>title</code> element in the generated HTML file.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="import_from"><h3> import_from</h3> </dt>
+   <dt id="import_from">
+      <h3> import_from</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -352,7 +414,9 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="normative"><h3> normative</h3> </dt>
+   <dt id="normative">
+      <h3> normative</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -369,7 +433,9 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="object_reference_disposition"><h3> object_reference_disposition</h3> </dt>
+   <dt id="object_reference_disposition">
+      <h3> object_reference_disposition</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -383,7 +449,10 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
                <li><code>include</code>. List of properties by their full path.</li>
             </ul>
          </dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
          <dd><b>Example:</b>
             <pre lang="json">"object_reference_disposition": {
    "common_object": ["Redundancy"],
@@ -395,7 +464,9 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="outfile"><h3> outfile</h3> </dt>
+   <dt id="outfile">
+      <h3> outfile</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -413,7 +484,9 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="payload_dir"><h3> payload_dir</h3> </dt>
+   <dt id="payload_dir">
+      <h3> payload_dir</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -431,7 +504,9 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="profile_doc"><h3> profile_doc</h3> </dt>
+   <dt id="profile_doc">
+      <h3> profile_doc</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -442,7 +517,9 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="profile_terse"><h3> profile_terse</h3> </dt>
+   <dt id="profile_terse">
+      <h3> profile_terse</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -460,18 +537,25 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="profile_uri_to_local"><h3> profile_uri_to_local</h3> </dt>
+   <dt id="profile_uri_to_local">
+      <h3> profile_uri_to_local</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#profile-mode" title="README.md#profile-mode">Profile</a>, <a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">schema subset</a>. </dd>
          <dt>Description</dt>
          <dd>Array of strings. For profile mode only, defines an object like <code>uri_mapping</code> for locations of profiles.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="property_index"><h3> property_index</h3> </dt>
+   <dt id="property_index">
+      <h3> property_index</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -483,18 +567,25 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="registry_uri_to_local"><h3> registry_uri_to_local</h3> </dt>
+   <dt id="registry_uri_to_local">
+      <h3> registry_uri_to_local</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output mode</dt>
          <dd><a href="README.md#profile-mode" title="README.md#profile-mode">Profile</a>.</dd>
          <dt>Description</dt>
          <dd>String. For profile mode only, defines an object like <code>uri_mapping</code> for locations of registries.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="subset_doc"><h3> subset_doc</h3> </dt>
+   <dt id="subset_doc">
+      <h3> subset_doc</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -505,7 +596,9 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="suppress_version_history"><h3> suppress_version_history</h3> </dt>
+   <dt id="suppress_version_history">
+      <h3> suppress_version_history</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -519,11 +612,14 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
                <li><code>false</code>. Does not suppress the version history.</li>
             </ul>
          </dd>
-         <dd>No command-line equivalent.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="uri_mapping"><h3> uri_mapping</h3> </dt>
+   <dt id="uri_mapping">
+      <h3> uri_mapping</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
@@ -531,7 +627,10 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <dt>Description</dt>
          <dd>Object. Defines partial URL of schema repositories as attributes, and local directory paths as values.</dd>
          <dd>This object maps partial URIs, as found in the schemas, to local directories.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
          <dt>Example</dt>
          <dd>The partial URI should include the domain part of the URI but can omit the protocol (<code>http://</code> or <code>https://</code>).</dd>
          <dd>
@@ -542,14 +641,19 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
-   <dt id="version"><h3> version</h3> </dt>
+   <dt id="version">
+      <h3> version</h3>
+   </dt>
    <dd>
       <dl>
          <dt>Output modes</dt>
          <dd><a href="README.md#csv-format" title="README.md#csv-format">CSV format</a>, <a href="README.md#profile-mode" title="README.md#profile-mode">profile</a>, <a href="README.md#property-index-mode" title="README.md#property-index-mode">property index</a>, <a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>String. Defines an optional version string, which might be meaningful in the future.</dd>
-         <dd>No default. No command-line equivalent.</dd>
+         <dt>Default</dt>
+         <dd>None.</dd>
+         <dt>Command-line equivalent</dt>
+         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
