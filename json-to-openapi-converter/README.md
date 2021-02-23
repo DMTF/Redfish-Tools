@@ -39,14 +39,13 @@ To configure the generated OpenAPI files, define configuration keys in a JSON co
 
 The default configuration file, [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1"), contains these configuration keys:
 
-| Configuration key  | Type             | Required | Description                                               |
-| :----------------- | :--------------- | :------- | :-------------------------------------------------------- |
-| `info`             | Object           | Required | Information for the OpenAPI service document. No default. |
-| `OutputFile`       | String           | Optional | Output file for the constructed OpenAPI service document. Default is `openapi.yaml` in the directory from where you run the tool. |
-| `TaskRef`          | Optional         | Pointer to the JSON Schema definition of `Task`. No default. |
-| `MessageRef`       | Optional         | Pointer to the JSON Schema definition of `Message`. No default. |
-| `DoNotWrite`       | Optional         | List of the output files to exclude when writing the YAML files. No default. |
-| `Extensions`       | Optional          | Structure of additional URIs to apply to a resource type if provided in the base OpenAPI service document. No default. |
+| Configuration&nbsp;key | Type             | Required? | Description                                               |
+| :--------------------- | :--------------- | :-------- | :-------------------------------------------------------- |
+| `info`                 | Object           | Required  | Information for the OpenAPI service document. No default. |
+| `OutputFile`           | String           | Optional  | Output file for the generated OpenAPI service document. Default is `openapi.yaml` in the directory from where you run the tool. |
+| `TaskRef`              | String           | Optional  | Location of the JSON Schema definition of `Task`. No default. |
+| `MessageRef`           | String           | Optional  | Location of the JSON Schema definition of `Message`. No default. |
+| `DoNotWrite`           | Array of strings | Optional  | File or files to exclude from the generated YAML files. No default. |
 
 ## Usage
 
