@@ -61,20 +61,28 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       <h3> actions_in_property_table</h3>
    </dt>
    <dd>
-      <dl>
-         <dt>Output mode</dt>
-         <dd><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>.</dd>
-         <dt>Description</dt>
-         <dd>String. Indicates whether to include <b>Actions</b> in property tables:</dd>
-         <dd>
-            <ul>
-               <li><code>true</code>. (Default) Include <b>Actions</b> in property tables.</li>
-               <li><code>false</code>. Exclude <b>Actions</b> from property tables.</li>
-            </ul>
-         </dd>
-         <dt>Command-line equivalent</dt>
-         <dd>None.</dd>
-      </dl>
+      <table>
+         <tbody>
+            <tr>
+               <td align="left" valign="top"><b>Output mode</b></td>
+               <td align="left" valign="top"><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>.</td>
+            </tr>
+            <tr>
+               <td align="left" valign="top"><b>Description</b></td>
+               <td align="left" valign="top">
+                  <p>String. Indicates whether to include <b>Actions</b> in property tables:</p>
+                  <ul>
+                     <li><code>true</code>. (Default) Include <b>Actions</b> in property tables.</li>
+                     <li><code>false</code>. Exclude <b>Actions</b> from property tables.</li>
+                  </ul>
+               </td>
+            </tr>
+            <tr>
+               <td align="left" valign="top"><b>Command-line equivalent</b></td>
+               <td align="left" valign="top">None.</td>
+            </tr>
+         </tbody>
+      </table>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
    <dt id="add_toc">
