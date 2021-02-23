@@ -35,29 +35,18 @@ The JSON Schema-to-OpenAPI converter, [`json-to-yaml.py`](json-to-yaml.py#L1 "js
 
 ## Configuration
 
-To configure the generated OpenAPI files, define configuration keys in a JSON configuration file and use the <a href="#usage" title="#usage"><code>--config</code> command-line argument</a> to specify the configuration file.
+To configure the generated OpenAPI files, define configuration keys in a JSON configuration file and use the [`--config` command‑line argument](#usage "#usage") to specify the configuration file.
 
-<dl>
-   <dt>Sample configuration file</dt>
-   <dd><a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a></dd>
-   <dt>Configuration keys</dt>
-   <dd>
-      <dl>
-         <dt><code>info</code></dt>
-         <dd>Required. Object for the OpenAPI service document. No default.</dd>
-         <dt><code>OutputFile</code></dt>
-         <dd>Optional. Output file for the constructed OpenAPI service document. Default is <code>openapi.yaml</code> in the directory from where you run the tool.</dd>
-         <dt><code>TaskRef</code></dt>
-         <dd>Optional. Pointer to the JSON Schema definition of <code>Task</code>. No default.</dd>
-         <dt><code>MessageRef</code></dt>
-         <dd>Optional. Pointer to the JSON Schema definition of <code>Message</code>. No default.</dd>
-         <dt><code>DoNotWrite</code></dt>
-         <dd>Optional. List of the output files to exclude when writing the YAML files. No default.</dd>
-         <dt><code>Extensions</code></dt>
-         <dd>Optional. Structure of additional URIs to apply to a resource type if provided in the base OpenAPI service document. No default.</dd>
-      </dl>
-   </dd>
-</dl>
+The default configuration file, [`dmtf-config.json`](dmtf-config.json#L1 "dmtf-config.json#L1"), contains these configuration keys:
+
+| Configuration key  | Type             | Required | Description                                               |
+| :----------------- | :--------------- | :------- | :-------------------------------------------------------- |
+| `info`             | Object           | Required | Information for the OpenAPI service document. No default. |
+| `OutputFile`       | String           | Optional | Output file for the constructed OpenAPI service document. Default is `openapi.yaml` in the directory from where you run the tool. |
+| `TaskRef`          | Optional         | Pointer to the JSON Schema definition of `Task`. No default. |
+| `MessageRef`       | Optional         | Pointer to the JSON Schema definition of `Message`. No default. |
+| `DoNotWrite`       | Optional         | List of the output files to exclude when writing the YAML files. No default. |
+| `Extensions`       | Optional          | Structure of additional URIs to apply to a resource type if provided in the base OpenAPI service document. No default. |
 
 ## Usage
 
