@@ -12,11 +12,11 @@ The CSDL-to-JSON converter, [`csdl-to-json.py`](csdl-to-json.py#L1 "csdl-to-json
 
 ## Contents
 
-* [Installation](#installation)
-* [Configuration](#configuration)
-* [Usage](#usage)
-* [Example](#example)
-* [Processing](#processing)
+* [Installation](#installation "#installation")
+* [Configuration](#configuration "#configuration")
+* [Usage](#usage "#usage")
+* [Example](#example "#example")
+* [Processing](#processing "#processing")
 
 ## Installation
 
@@ -30,8 +30,8 @@ The CSDL-to-JSON converter, [`csdl-to-json.py`](csdl-to-json.py#L1 "csdl-to-json
 
 ## Configuration
 
-* [Sample configuration file](#sample-configuration-file)
-* [Configuration keys](#configuration-keys)
+* [Sample configuration file](#sample-configuration-file "#sample-configuration-file")
+* [Configuration keys](#configuration-keys "#configuration-keys")
 
 To configure the generated JSON Schema files, define configuration keys in a JSON configuration file and use the [`--config` command-line argument](#usage "#usage") to specify the configuration file.
 
@@ -47,12 +47,12 @@ If you omit either any keys in the specified configuration file or the `--config
    </dt>
    <dd>
       <ul>
-         <li><a href="#copyright">Copyright</a></li>
-         <li><a href="#redfishschema">RedfishSchema</a></li>
-         <li><a href="#odataschema">ODataSchema</a></li>
-         <li><a href="#location">Location</a></li>
-         <li><a href="#resourcelocation">ResourceLocation</a></li>
-         <li><a href="#donotwrite">DoNotWrite</a></li>
+         <li><a href="#copyright" title="#copyright">Copyright</a></li>
+         <li><a href="#redfishschema" title="#redfishschema">RedfishSchema</a></li>
+         <li><a href="#odataschema" title="#odataschema">ODataSchema</a></li>
+         <li><a href="#location" title="#location">Location</a></li>
+         <li><a href="#resourcelocation" title="#resourcelocation">ResourceLocation</a></li>
+         <li><a href="#donotwrite" title="#donotwrite">DoNotWrite</a></li>
       </ul>
       <dl>
          <dt>
@@ -118,8 +118,8 @@ This example command converts the CSDL metadata files in the `Redfish/metadata` 
 
 ## Processing
 
-* [Assumptions](#assumptions)
-* [Details](#details)
+* [Assumptions](#assumptions "#assumptions")
+* [Details](#details "#details")
 
 ### Assumptions
 
