@@ -32,8 +32,6 @@ The CSDL-to-JSON converter, [`csdl-to-json.py`](csdl-to-json.py#L1 "csdl-to-json
 
 To configure the generated JSON Schema files, define configuration keys in a JSON configuration file and use the <a href="#usage" title="#usage"><code>--config</code> command&#8209;line argument</a> to specify the configuration file.
 
-<!-- If you omit either any keys in the specified configuration file or the <code>--config</code> command-line argument, the converter uses the keys in the default <a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a> configuration file. -->
-
 The <a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.json</code></a> configuration file contains the default configuration key values.
 
 ### Sample configuration file
@@ -42,32 +40,29 @@ The <a href="dmtf-config.json#L1" title="dmtf-config.json#L1"><code>dmtf-config.
 
 ### Configuration keys
 
-<dl>
-   <dt>
-      <h4><code>Copyright</code></h4>
-   </dt>
-   <dd>String. Copyright string to include in the generated JSON Schema files.</dd>
-   <dt>
-      <h4><code>RedfishSchema</code></h4>
-   </dt>
-   <dd>String. Location of Redfish Schema files.</dd>
-   <dt>
-      <h4><code>ODataSchema</code></h4>
-   </dt>
-   <dd>String. Location of OData Schema files.</dd>
-   <dt>
-      <h4><code>Location</code></h4>
-   </dt>
-   <dd>String. Folder for the generated JSON Schema files.</dd>
-   <dt>
-      <h4><code>ResourceLocation</code></h4>
-   </dt>
-   <dd>String. Location of Redfish resources.</dd>
-   <dt>
-      <h4><code>DoNotWrite</code></h4>
-   </dt>
-   <dd>Array of strings. One or more files to exclude from the generated JSON Schema files.</dd>
-</dl>
+#### Copyright
+
+String. Copyright string to include in the generated JSON Schema files.
+
+#### RedfishSchema
+
+String. Location of Redfish Schema files.
+
+#### ODataSchema
+
+String. Location of OData Schema files.
+
+#### Location
+
+String. Folder for the generated JSON Schema files.
+
+#### ResourceLocation
+
+String. Location of Redfish resources.
+
+#### DoNotWrite
+
+Array of strings. One or more files to exclude from the generated JSON Schema files.
 
 ## Usage
 
