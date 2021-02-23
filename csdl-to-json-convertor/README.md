@@ -67,7 +67,9 @@ optional arguments:
 
 ## Example
 
-To run the converter, navigate to the `Redfish-Tools/csdl-to-json-convertor` directory and use Python to run `csdl-to-json.py`. This example command converts the CSDL metadata files in the `Redfish/metadata` input directory to JSON Schema files in the `/Redfish/json-schema` output directory and reads the configuration keys in the `dmtf-config.json` configuration file to configure the generated JSON Schema files:
+To run the converter, navigate to the `Redfish-Tools/csdl-to-json-convertor` directory and use Python to run `csdl-to-json.py`.
+
+The following example command converts the CSDL metadata files in the `Redfish/metadata` input directory to JSON Schema files in the `/Redfish/json-schema` output directory and reads the configuration keys in the `dmtf-config.json` configuration file to configure the generated JSON Schema files:
 
 ```zsh
 % cd Redfish-Tools/csdl-to-json-convertor
