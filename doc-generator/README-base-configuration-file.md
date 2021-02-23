@@ -58,19 +58,15 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
 
 <dl>
    <dt id="actions_in_property_table">
-      <h3><code>actions_in_property_table</code></h3>
+      <h3>actions_in_property_table</h3>
    </dt>
    <dd>
       <table>
          <tbody>
             <tr>
-               <td align="left" valign="top"><b>Type</b></td>
-               <td align="left" valign="top">String</td>
-            </tr>
-            <tr>
                <td align="left" valign="top"><b>Description</b></td>
                <td align="left" valign="top">
-                  <p>Indicates whether to include <b>Actions</b> in property tables:</p>
+                  <p>String. Indicates whether to include <b>Actions</b> in property tables:</p>
                   <ul>
                      <li><code>true</code>. (Default) Include <b>Actions</b> in property tables.</li>
                      <li><code>false</code>. Exclude <b>Actions</b> from property tables.</li>
@@ -81,28 +77,20 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
                <td align="left" valign="top"><b>Output mode</b></td>
                <td align="left" valign="top"><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a></td>
             </tr>
-            <tr>
-               <td align="left" valign="top"><b>Command-line equivalent</b></td>
-               <td align="left" valign="top">None</td>
-            </tr>
          </tbody>
       </table>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
    <dt id="add_toc">
-      <h3> add_toc</h3>
+      <h3>add_toc</h3>
    </dt>
    <dd>
       <table>
          <tbody>
             <tr>
-               <td align="left" valign="top"><b>Type</b></td>
-               <td align="left" valign="top">String</td>
-            </tr>
-            <tr>
                <td align="left" valign="top"><b>Description</b></td>
                <td align="left" valign="top">
-                  <p>Indicates whether to generate a table of contents (TOC):</p>
+                  <p>String. Indicates whether to generate a table of contents (TOC):</p>
                   <ul>
                      <li>
                         <p><code>true</code>. (Default) Generate a TOC and place it either at the beginning of the generated HTML file or in the <code>[add_toc]</code> location if that directive appears in the boilerplate intro or boilerplate postscript file.</p>
@@ -118,16 +106,12 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
                <td align="left" valign="top"><b>Output modes</b></td>
                <td align="left" valign="top"><a href="README.md#standard-mode" title="README.md#standard-mode">Standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a></td>
             </tr>
-            <tr>
-               <td align="left" valign="top"><b>Command-line equivalent</b></td>
-               <td align="left" valign="top">None</td>
-            </tr>
          </tbody>
       </table>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
    <dt id="boilerplate_intro">
-      <h3> boilerplate_intro</h3>
+      <h3>boilerplate_intro</h3>
    </dt>
    <dd>
       <dl>
@@ -674,10 +658,6 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <dd><a href="README.md#csv-format" title="README.md#csv-format">CSV format</a>, <a href="README.md#profile-mode" title="README.md#profile-mode">profile</a>, <a href="README.md#property-index-mode" title="README.md#property-index-mode">property index</a>, <a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">schema subset</a>, <a href="README.md#standard-mode" title="README.md#standard-mode">standard</a>, <a href="README.md#standard-normative-mode" title="README.md#standard-normative-mode">standard normative</a>. </dd>
          <dt>Description</dt>
          <dd>String. Defines an optional version string, which might be meaningful in the future.</dd>
-         <dt>Default</dt>
-         <dd>None.</dd>
-         <dt>Command-line equivalent</dt>
-         <dd>None.</dd>
       </dl>
    </dd>
    <dd><a href="#configuration-keys">[Configuration keys]</a></dd>
