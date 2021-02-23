@@ -61,15 +61,22 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
       <h3><code>actions_in_property_table</code></h3>
    </dt>
    <dd>
-      <p>String. Indicates whether to include <b>Actions</b> in property tables:</p>
-      <ul>
-         <li><code>true</code>. (Default) Include <b>Actions</b> in property tables.</li>
-         <li><code>false</code>. Exclude <b>Actions</b> from property tables.</li>
-      </ul>
-   </dd>
-   <dd>
       <table>
          <tbody>
+            <tr>
+               <td align="left" valign="top"><b>Type</b></td>
+               <td align="left" valign="top">String</td>
+            </tr>
+            <tr>
+               <td align="left" valign="top"><b>Description</b></td>
+               <td align="left" valign="top">
+                  <p>Indicates whether to include <b>Actions</b> in property tables:</p>
+                  <ul>
+                     <li><code>true</code>. (Default) Include <b>Actions</b> in property tables.</li>
+                     <li><code>false</code>. Exclude <b>Actions</b> from property tables.</li>
+                  </ul>
+               </td>
+            </tr>
             <tr>
                <td align="left" valign="top"><b>Output mode</b></td>
                <td align="left" valign="top"><a href="README.md#schema-subset-mode" title="README.md#schema-subset-mode">Schema subset</a>.</td>
