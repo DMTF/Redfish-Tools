@@ -58,7 +58,7 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
 
 <dl>
    <dt id="actions_in_property_table">
-      <h3> actions_in_property_table</h3>
+      <h3><code>actions_in_property_table</code></h3>
    </dt>
    <dd>
       <p>String. Indicates whether to include <b>Actions</b> in property tables:</p>
@@ -66,6 +66,7 @@ See also [Configuration](README.md#configuration) and [Mapping of command-line a
          <li><code>true</code>. (Default) Include <b>Actions</b> in property tables.</li>
          <li><code>false</code>. Exclude <b>Actions</b> from property tables.</li>
       </ul>
+   </dd>
    <dd>
       <table>
          <tbody>
