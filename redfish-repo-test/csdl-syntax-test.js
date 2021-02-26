@@ -40,7 +40,7 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
 //Units that don't exist in UCUM
 const unitsWhiteList = ['RPM', 'V.A', '{tot}', '1/s/TBy'];
 //Enumeration Member names that are non-Pascal Cased
-const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
+let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
                                     'LPDDR3_SDRAM', 'DDR2_SDRAM', 'DDR2_SDRAM_FB_DIMM', 'DDR2_SDRAM_FB_DIMM_PROBE',
                                     'DDR_SGRAM', 'DDR_SDRAM', 'SO_DIMM', 'Mini_RDIMM', 'Mini_UDIMM', 'SO_RDIMM_72b',
@@ -123,6 +123,10 @@ const PluralEntitiesBadAllow = {
 if(config.has('Redfish.ExtraPluralAllowed')) {
   PluralEntitiesAllowList = PluralEntitiesAllowList.concat(config.get('Redfish.ExtraPluralAllowed'));
 }
+if(config.has('Redfish.ExtraNonPascalEnumAllowed')) {
+  NonPascalCaseEnumAllowList = NonPascalCaseEnumAllowList.concat(config.get('Redfish.ExtraNonPascalEnumAllowed'));
+}
+
 
 describe('CSDL Tests', () => {
   const files = glob.sync(config.get('Redfish.CSDLFilePath'));
@@ -787,8 +791,8 @@ function checkEnumMembers(csdl) {
   for(let i = 0; i < enums.length; i++) {
     let keys = Object.keys(enums[i].Members);
     for(let j = 0; j < keys.length; j++) {
-      if(keys[j].match(PascalRegex) === null && NonPascalCaseEnumWhiteList.indexOf(keys[j]) === -1) {
-        throw new Error('Enum member "'+keys[j]+'" of EnumType '+enums[i].Name+' is invalid!');
+      if(keys[j].match(PascalRegex) === null && NonPascalCaseEnumAllowList.indexOf(keys[j]) === -1) {
+        throw new Error('Enum member "'+keys[j]+'" of EnumType '+enums[i].Name+' is not Pascal Cased!');
       }
     }
   }
