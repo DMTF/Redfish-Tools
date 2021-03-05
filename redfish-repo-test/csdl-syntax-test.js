@@ -317,7 +317,7 @@ describe('Mockup Syntax Tests', () => {
         assert.ok(txt.equals(Buffer.from(utf8, 'utf-8')), 'contains invalid utf-8 byte code');
       });
       it('Is Valid JSON', function() {
-        assert.notEqual(json, null);
+        assert.notEqual(json, null, 'JSON in file is not valid please run it through jsonlint to determine the actual fault');
       });
       //Don't worry about links in the non-resource-examples as they probably belong to other mockups
       //Also skip the DSP2046 examples as this isn't a full tree, but just individual examples
@@ -390,7 +390,13 @@ function fileToCachePromise(file) {
         resolve({name: file, txt: null, json: null});
         return;
       }
-      resolve({name: file, txt: data, json: JSON.parse(data.toString('utf-8'))});
+      let json = null;
+      try {
+        json = JSON.parse(data.toString('utf-8'));
+      } catch(err) {
+        //reject(file+": JSON Error: "+err.message);
+      }
+      resolve({name: file, txt: data, json: json});
     });
   });
 }
