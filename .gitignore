@@ -4,3 +4,5 @@
 /*/__pycache__
 .DS_Store
 *.pyc
+redfish-repo-test/node_modules/
+redfish-repo-test/package-lock.json
