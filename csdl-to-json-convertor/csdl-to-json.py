@@ -428,9 +428,9 @@ class CSDLToJSON:
 
         name = self.get_attrib( object, "Name" )
 
-        # The entities in the Resource namespace need to be processed in a special manner since it doesn't follow the Redfish model for object inheritance
-        if ( self.namespace_under_process == "Resource" ) and ( object.tag == ODATA_TAG_ENTITY ):
-            json_def[name] = { "anyOf": [] }
+        # Some entities in the Resource namespace need to be processed in a special manner since they don't follow the Redfish model for object inheritance
+        if ( self.namespace_under_process == "Resource" ) and ( object.tag == ODATA_TAG_ENTITY ) and ( name == "Item" or name == "ItemOrCollection" ):
+            json_def[name] = { "anyOf": [ { "$ref": self.odata_schema + "#/definitions/idRef" } ] }
 
             # Append matching objects in the file to the anyOf list
             for schema in self.root.iter( ODATA_TAG_SCHEMA ):
