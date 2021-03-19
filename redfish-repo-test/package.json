@@ -24,6 +24,7 @@
     "request": "^2.69",
     "swagger-parser": "^9.0.1",
     "traverse": "^0.6.6",
-    "yaml-lint": "^1.2.4"
+    "yaml-lint": "^1.2.4",
+    "match-all": "^1.2.6"
   }
 }
