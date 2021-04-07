@@ -81,6 +81,22 @@ mockup_files.forEach((file) => {
         newTxt.splice(i, 1);
         i--;
       }
+
+      // If this is the last line, check to see if a comma is needed
+      if(i === (newTxt.length - 1)) {
+        if((odata_id_str !== undefined) || (file.endsWith('v1-example.json') === false)) {
+          // Will be appending info; needs a comma
+          if(newTxt[i].endsWith(',') === false) {
+            newTxt[i] = newTxt[i] + ',';
+          }
+        }
+        else {
+          // Will be the end of the file; no comma
+          if(newTxt[i].endsWith(',') === true) {
+            newTxt[i].slice(0, -1);
+          }
+        }
+      }
     }
     if(odata_id_str !== undefined) {
       newTxt.push(odata_id_str);
