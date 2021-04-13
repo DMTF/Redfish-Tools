@@ -14,7 +14,7 @@ This schema contains one or more properties of type integer.
 
 ## Properties
 
-The properties defined for the IntegerTest 1.0.0 schema are summarized in [Table TBL_nn++](#table_TBL_nn "IntegerTest 1.0.0 properties").
+
 
 |Property     |Type     |Notes     |
 | --- | --- | --- |
@@ -27,4 +27,3 @@ The properties defined for the IntegerTest 1.0.0 schema are summarized in [Table
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Model** | string<br><br>*read-only<br>(null)* | The processor model for the primary or majority of processors in this system. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {} | object | This type describes the status and health of a resource and its children. See the *Resource* schema for details on this property. |
 | } |   |   |
-Table: Table TBL_nn: <a name=table_TBL_nn>IntegerTest 1.0.0 properties</a>
