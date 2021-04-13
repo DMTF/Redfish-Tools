@@ -1,6 +1,6 @@
 {
   "name": "redfishrepotest",
-  "version": "0.2.3",
+  "version": "0.2.9",
   "description": "A set of tests for Redfish Mockups, CSDL, OpenAPI, and JSON Schemas.",
   "main": "index.js",
   "scripts": {
@@ -10,20 +10,21 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "CSDLParser": "^0.2.2",
-    "config": "^3.0.1",
+    "config": "^3.3.6",
     "fuzzy": "^0.1.1",
     "glob": "^7.0.0",
-    "jquery": "^3.5.1",
-    "js-yaml": "^3.12.0",
-    "jsdom": "^16.2.2",
-    "json8-pointer": "^1.0.1",
+    "jquery": "^3.6.0",
+    "js-yaml": "^3.14.1",
+    "jsdom": "^16.5.0",
+    "json8-pointer": "^1.0.4",
     "jsonlint": "^1.6.2",
-    "jsonschema": "^1.1.1",
-    "marked": "^1.0.0",
-    "mocha": "^7.1.2",
+    "jsonschema": "^1.4.0",
+    "marked": "^1.2.9",
+    "mocha": "^7.2.0",
     "request": "^2.69",
     "swagger-parser": "^9.0.1",
     "traverse": "^0.6.6",
-    "yaml-lint": "^1.2.4"
+    "yaml-lint": "^1.2.4",
+    "match-all": "^1.2.6"
   }
 }

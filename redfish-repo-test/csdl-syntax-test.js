@@ -40,7 +40,7 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
 //Units that don't exist in UCUM
 const unitsWhiteList = ['RPM', 'V.A', '{tot}', '1/s/TBy'];
 //Enumeration Member names that are non-Pascal Cased
-const NonPascalCaseEnumWhiteList = ['iSCSI', 'iQN', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
+let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
                                     'LPDDR3_SDRAM', 'DDR2_SDRAM', 'DDR2_SDRAM_FB_DIMM', 'DDR2_SDRAM_FB_DIMM_PROBE',
                                     'DDR_SGRAM', 'DDR_SDRAM', 'SO_DIMM', 'Mini_RDIMM', 'Mini_UDIMM', 'SO_RDIMM_72b',
@@ -74,7 +74,7 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS'};
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
@@ -99,7 +99,7 @@ const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
-const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy' ]
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
 const PluralSchemaWhiteList = ['ChassisCollection', 'MemoryChunksCollection', 'TriggersCollection'];
@@ -123,6 +123,10 @@ const PluralEntitiesBadAllow = {
 if(config.has('Redfish.ExtraPluralAllowed')) {
   PluralEntitiesAllowList = PluralEntitiesAllowList.concat(config.get('Redfish.ExtraPluralAllowed'));
 }
+if(config.has('Redfish.ExtraNonPascalEnumAllowed')) {
+  NonPascalCaseEnumAllowList = NonPascalCaseEnumAllowList.concat(config.get('Redfish.ExtraNonPascalEnumAllowed'));
+}
+
 
 describe('CSDL Tests', () => {
   const files = glob.sync(config.get('Redfish.CSDLFilePath'));
@@ -173,7 +177,7 @@ describe('CSDL Tests', () => {
       }
       it('Descriptions have trailing periods', () => {if (!isYang) descriptionPeriodCheck(csdl);});
       if(!config.has('Redfish.SwordfishTest')) {
-        it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
+        //it('Long Descriptions do not contain may', () => {if (!isYang) descriptionMayCheck(csdl);});
         it('Long Descriptions do not contain must', () => {if (!isYang) descriptionMustCheck(csdl);});
       }
       it('No Empty Schema Tags', () => {checkForEmptySchemas(csdl);});
@@ -313,7 +317,7 @@ describe('Mockup Syntax Tests', () => {
         assert.ok(txt.equals(Buffer.from(utf8, 'utf-8')), 'contains invalid utf-8 byte code');
       });
       it('Is Valid JSON', function() {
-        assert.notEqual(json, null);
+        assert.notEqual(json, null, 'JSON in file is not valid please run it through jsonlint to determine the actual fault');
       });
       //Don't worry about links in the non-resource-examples as they probably belong to other mockups
       //Also skip the DSP2046 examples as this isn't a full tree, but just individual examples
@@ -362,8 +366,9 @@ describe('Mockup Syntax Tests', () => {
       }
       //Only do Metadata <=> Mockup tests on master branch or local dev test
       if(process.env.TRAVIS === undefined || process.env.TRAVIS_BRANCH === 'master') {
-        //Ignore the paging file and the external error example
-        if(file.includes('$ref') === false && file.includes('/ExtErrorResp') === false && file.includes('/ConstrainedCompositionCapabilities') === false) {
+        //Ignore the paging file, the external error example, contrained composition request, and action requests/responses
+        if(file.includes('$ref') === false && file.includes('/ExtErrorResp') === false && file.includes('/ConstrainedCompositionCapabilities') === false &&
+           file.includes('Request.json') === false && file.includes('Response.json') === false) {
           it('Is Valid Type', function() {
             validCSDLTypeInMockup(json, file);
           });
@@ -385,7 +390,13 @@ function fileToCachePromise(file) {
         resolve({name: file, txt: null, json: null});
         return;
       }
-      resolve({name: file, txt: data, json: JSON.parse(data.toString('utf-8'))});
+      let json = null;
+      try {
+        json = JSON.parse(data.toString('utf-8'));
+      } catch(err) {
+        //reject(file+": JSON Error: "+err.message);
+      }
+      resolve({name: file, txt: data, json: json});
     });
   });
 }
@@ -786,8 +797,8 @@ function checkEnumMembers(csdl) {
   for(let i = 0; i < enums.length; i++) {
     let keys = Object.keys(enums[i].Members);
     for(let j = 0; j < keys.length; j++) {
-      if(keys[j].match(PascalRegex) === null && NonPascalCaseEnumWhiteList.indexOf(keys[j]) === -1) {
-        throw new Error('Enum member "'+keys[j]+'" of EnumType '+enums[i].Name+' is invalid!');
+      if(keys[j].match(PascalRegex) === null && NonPascalCaseEnumAllowList.indexOf(keys[j]) === -1) {
+        throw new Error('Enum member "'+keys[j]+'" of EnumType '+enums[i].Name+' is not Pascal Cased!');
       }
     }
   }
