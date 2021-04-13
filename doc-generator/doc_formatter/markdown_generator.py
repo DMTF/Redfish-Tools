@@ -688,7 +688,7 @@ class MarkdownGenerator(DocFormatter):
                             if self.markdown_mode == 'slate':
                                 contents.append(self.formatter.para(self.formatter.bold(path_text)))
                             else:
-                                contents.append(self.formatter.head_five(path_text))
+                                contents.append(self.formatter.head_five(path_text, self.level))
                             contents.append(info['formatted_descr'])
 
             if section.get('json_payload') and (self.markdown_mode != 'slate'): # Otherwise, this was inserted above.
