@@ -327,7 +327,8 @@ class MarkdownGenerator(DocFormatter):
                     enum = [x for x in enum if x in profile_parameter_values]
 
         if prop_description:
-            contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
+            contents.append(self.escape_for_markdown(prop_description, self.config.get('escape_chars', [])))
+            contents.append('') # for a newline after. (self.formatter.para would also add one before, excessively)
 
         if isinstance(prop_type, list):
             prop_type = ', '.join(prop_type)
@@ -480,7 +481,7 @@ class MarkdownGenerator(DocFormatter):
         if self.config.get('with_table_numbering'):
             caption = self.formatter.add_table_caption(_("%(prop_name)s property values") % {'prop_name': prop_name})
             preamble = self.formatter.add_table_reference(_("The defined property values are listed in "))
-            formatted = preamble + formatted + caption
+            formatted = preamble + '\n' + formatted + caption
 
         return formatted
 
@@ -646,6 +647,7 @@ class MarkdownGenerator(DocFormatter):
 
             # something is awry if there are no properties, but ...
             if section.get('properties'):
+
                 if self.config.get('with_table_numbering'):
                     caption = self.formatter.add_table_caption(section["head"] + " properties")
                     preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ") + "\n"
@@ -655,12 +657,16 @@ class MarkdownGenerator(DocFormatter):
                 # properties are a peer of URIs, if they exist
                 # TODO: this should use make_table()
                 contents.append('\n' + self.format_head_three(_('Properties'), self.level))
-                contents.append(preamble)
+
+                if preamble:
+                    contents.append(preamble)
                 contents.append('|Property     |Type     |Notes     |')
 
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
-                contents.append(caption + '\n')
+
+                if caption:
+                    contents.append(caption + '\n')
 
             if section.get('profile_conditional_details'):
                 # sort them now; these can be sub-properties so may not be in alpha order.

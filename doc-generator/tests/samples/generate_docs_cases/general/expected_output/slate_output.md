@@ -18,8 +18,6 @@ A Network Device Function represents a logical interface exposed by the network 
 
 ## Properties
 
-
-
 |Property     |Type     |Notes     |
 | --- | --- | --- |
 | **@odata.etag** | string<br><br>*read-only* | The current ETag of the resource. |
@@ -97,12 +95,9 @@ A Network Device Function represents a logical interface exposed by the network 
 | **Status** {} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |
 | **VirtualFunctionsEnabled** | boolean<br><br>*read-only<br>(null)* | Whether Single Root I/O Virtualization (SR-IOV) Virual Functions (VFs) are enabled for this Network Device Function. |
 
-
-
 ## Property details
 
 ### AuthenticationMethod:
-
 
 The iSCSI boot authentication method for this network device function.
 
@@ -113,7 +108,6 @@ The iSCSI boot authentication method for this network device function.
 | None | No iSCSI authentication is used. |
 
 ### BootMode:
-
 
 The boot mode configured for this network device function.
 
@@ -127,7 +121,6 @@ The boot mode configured for this network device function.
 
 ### IPAddressType:
 
-
 The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP address fields.
 
 | string | Description |
@@ -136,7 +129,6 @@ The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP addres
 | IPv6 | IPv6 addressing is used for all IP-fields in this object. |
 
 ### NetDevFuncCapabilities:
-
 
 Capabilities of this network device function.
 
@@ -150,7 +142,6 @@ Capabilities of this network device function.
 
 ### NetDevFuncType:
 
-
 The configured capability of this network device function.
 
 | string | Description |
@@ -162,7 +153,6 @@ The configured capability of this network device function.
 | iSCSI | Appears to the operating system as an iSCSI device. |
 
 ### WWNSource:
-
 
 The configuration source of the WWNs for this connection (WWPN and WWNN).
 
@@ -177,8 +167,6 @@ The configuration source of the WWNs for this connection (WWPN and WWNN).
 
 ## Properties
 
-
-
 |Property     |Type     |Notes     |
 | --- | --- | --- |
 | **@odata.etag** | string<br><br>*read-only* | The current ETag of the resource. |
@@ -189,8 +177,6 @@ The configuration source of the WWNs for this connection (WWPN and WWNN).
 | **Name** | string<br><br>*read-only* | The name of the resource or array element. |
 | **Oem** {} | object | This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections. See the *Resource* schema for details on this property. |
 
-
-
 # NetworkPort 1.1.0
 
 ## Description
@@ -199,8 +185,6 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 
 
 ## Properties
-
-
 
 |Property     |Type     |Notes     |
 | --- | --- | --- |
@@ -238,12 +222,9 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 | } ] |   |   |
 | **WakeOnLANEnabled** | boolean<br><br>*read-write<br>(null)* | Whether Wake on LAN (WoL) is enabled for this network port. |
 
-
-
 ## Property details
 
 ### ActiveLinkTechnology:
-
 
 Network Port Active Link Technology.
 
@@ -254,7 +235,6 @@ Network Port Active Link Technology.
 | InfiniBand | The port is capable of connecting to an InfiniBand network. |
 
 ### FlowControlConfiguration:
-
 
 The locally configured 802.3x flow control setting for this network port.
 
@@ -267,7 +247,6 @@ The locally configured 802.3x flow control setting for this network port.
 
 ### FlowControlStatus:
 
-
 The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).
 
 | string | Description |
@@ -279,7 +258,6 @@ The 802.3x flow control behavior negotiated with the link partner for this netwo
 
 ### LinkNetworkTechnology:
 
-
 The self-described link network technology capabilities of this port.
 
 | string | Description |
@@ -290,7 +268,6 @@ The self-described link network technology capabilities of this port.
 
 ### LinkStatus:
 
-
 The status of the link between this port and its link partner.
 
 | string | Description |
@@ -299,7 +276,6 @@ The status of the link between this port and its link partner.
 | Up | The port is enabled and link is good (up). |
 
 ### SupportedEthernetCapabilities:
-
 
 The set of Ethernet capabilities that this port supports.
 

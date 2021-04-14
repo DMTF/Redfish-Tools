@@ -14,8 +14,6 @@ This schema contains required and requiredOnCreate properties.
 
 ## Properties
 
-
-
 |Property     |Type     |Notes     |
 | --- | --- | --- |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
@@ -28,12 +26,9 @@ This schema contains required and requiredOnCreate properties.
 | **Id** | string<br><br>*read-only required* | Uniquely identifies the resource within the collection of like resources. |
 | **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
 
-
-
 ## Property details
 
 ### EntryType:
-
 
 This is the type of log entry.
 

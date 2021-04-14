@@ -14,8 +14,6 @@ This schema contains one or more properties of type integer.
 
 ## Properties
 
-
-
 |Property     |Type     |Notes     |
 | --- | --- | --- |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |

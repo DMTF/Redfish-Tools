@@ -203,7 +203,7 @@ class DocFormatter:
         if self.config.get('with_table_numbering'):
             caption = self.formatter.add_table_caption(_("Revision history"));
             reference = self.formatter.add_table_reference(_("The revision history is summarized in "));
-            formatted = reference + "\n\n" + formatted + "\n\n" +caption
+            formatted = reference + "\n\n" + formatted + "\n\n" + caption
         self.this_section['release_history'] = formatted
 
 
