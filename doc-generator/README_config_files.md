@@ -43,6 +43,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - registry_uri_to_local: For profile mode only, an object like uri_mapping, for locations of registries.
 - subset (command_line: `subset`): Path to a JSON profile document. Generates "Schema subset" output, with the subset defined in the JSON profile document.
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
+- with_table_numbering: Boolean, default false. Applies to markdown output only! When true, table captions and references will be added to the output. You will need to run a post-processor on the output to complete the numbering. See TABLE_NUMBER_README.md[TABLE_NUMBER_README.md].
 
 
 ### In More Detail

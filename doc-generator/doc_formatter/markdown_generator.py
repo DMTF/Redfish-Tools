@@ -327,7 +327,8 @@ class MarkdownGenerator(DocFormatter):
                     enum = [x for x in enum if x in profile_parameter_values]
 
         if prop_description:
-            contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
+            contents.append(self.escape_for_markdown(prop_description, self.config.get('escape_chars', [])))
+            contents.append('') # for a newline after. (self.formatter.para would also add one before, excessively)
 
         if isinstance(prop_type, list):
             prop_type = ', '.join(prop_type)
@@ -476,11 +477,13 @@ class MarkdownGenerator(DocFormatter):
                 else:
                     contents.append('| ' + enum_name + ' | ')
 
-        caption = self.formatter.add_table_caption(_("%(prop_name)s property values") % {'prop_name': prop_name})
-        preamble = self.formatter.add_table_reference(_("The defined property values are listed in "))
+        formatted = '\n'.join(contents) + '\n'
+        if self.config.get('with_table_numbering'):
+            caption = self.formatter.add_table_caption(_("%(prop_name)s property values") % {'prop_name': prop_name})
+            preamble = self.formatter.add_table_reference(_("The defined property values are listed in "))
+            formatted = preamble + '\n' + formatted + caption
 
-        return preamble + '\n'.join(contents) + '\n' + caption
-
+        return formatted
 
 
     def format_action_details(self, prop_name, action_details):
@@ -555,9 +558,12 @@ class MarkdownGenerator(DocFormatter):
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
                 rows.append(formatted_parameters.get('row'))
 
-            caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name})
-            preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in "))
-            formatted.append(preamble + "\n\n" + '\n'.join(rows) + "\n\n" + caption)
+            formatted_rows = '\n'.join(rows) + "\n"
+            if self.config.get('with_table_numbering'):
+                caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name})
+                preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")) + "\n"
+                formatted_rows = preamble +  formatted_rows + caption
+            formatted.append(formatted_rows)
 
         else:
             formatted.append(self.formatter.para(heading))
@@ -641,18 +647,26 @@ class MarkdownGenerator(DocFormatter):
 
             # something is awry if there are no properties, but ...
             if section.get('properties'):
-                caption = self.formatter.add_table_caption(section["head"] + " properties")
-                preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ")
+
+                if self.config.get('with_table_numbering'):
+                    caption = self.formatter.add_table_caption(section["head"] + " properties")
+                    preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ") + "\n"
+                else:
+                    caption = preamble = ''
 
                 # properties are a peer of URIs, if they exist
                 # TODO: this should use make_table()
                 contents.append('\n' + self.format_head_three(_('Properties'), self.level))
-                contents.append(preamble + "\n")
+
+                if preamble:
+                    contents.append(preamble)
                 contents.append('|Property     |Type     |Notes     |')
 
                 contents.append('| --- | --- | --- |')
                 contents.append('\n'.join(section['properties']))
-                contents.append(caption + '\n')
+
+                if caption:
+                    contents.append(caption + '\n')
 
             if section.get('profile_conditional_details'):
                 # sort them now; these can be sub-properties so may not be in alpha order.
@@ -670,6 +684,7 @@ class MarkdownGenerator(DocFormatter):
                 for detail_name in detail_names:
                     contents.append(self.format_head_four(detail_name + ':', 0))
                     det_info = section['property_details'][detail_name]
+
                     if len(det_info) == 1:
                         for x in det_info.values():
                             contents.append(x['formatted_descr'])
