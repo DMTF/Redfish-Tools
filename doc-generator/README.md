@@ -85,8 +85,11 @@ optional arguments:
                         examples. Optional.Within this directory, use the
                         following naming scheme for example files:
                         <schema_name>-v<major_version>-example.json for JSON
-                        payloads, <schema_name-v<major_version>-action-<action
-                        _name>.json for action examples.
+                        payloads for a documented schema,
+                        <schema name>-v<major>-<action name>-request-example.json for
+                        an Action request example,
+                        <schema name>-v<major>-<action name>-request-example.json for
+                        an Action response example.
   --profile PROFILE_DOC
                         Path to a JSON profile document, for profile output.
   -t, --terse           Terse output (meaningful only with --profile). By
