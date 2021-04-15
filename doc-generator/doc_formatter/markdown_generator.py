@@ -31,7 +31,10 @@ class MarkdownGenerator(DocFormatter):
             'pattern': ', '
             }
         self.formatter = FormatUtils()
-        self.layout_payloads = 'top'
+        if self.markdown_mode == 'slate':
+            self.layout_payloads = 'top'
+        else:
+            self.layout_payloads = 'bottom'
 
         # Add some functions we'll use to selectively promote headings when the output mode is slate.
         self.format_head_two = self.formatter.head_two
