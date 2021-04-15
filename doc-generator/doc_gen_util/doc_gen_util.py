@@ -178,12 +178,15 @@ class DocGenUtilities:
 
 
     @staticmethod
-    def get_payload_name(schema_name, version, action_name=None):
+    def get_payload_name(schema_name, version, action_name=None, action_type=None):
 
         major_version = version.split('.')[0]
         payload_name = schema_name + '-v' + major_version + '-'
         if action_name:
-            payload_name += 'action-' + action_name + '.json'
+            if action_type:
+                payload_name += action_name + '-' + action_type + '.json'
+            else:
+                payload_name += 'action-' + action_name + '.json'
         else:
             payload_name += 'example.json'
 

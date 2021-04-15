@@ -318,7 +318,7 @@ class DocFormatter:
 
         formatted = []
 
-        formatted.append(self.formatter.para(self.formatter.bold("Response Payload")))
+        formatted.append(self.formatter.para(self.formatter.bold(_("Response Payload"))))
 
         rows = []
         # add a "start object" row:
@@ -1490,11 +1490,18 @@ class DocFormatter:
             action_details = self.format_action_parameters(schema_ref, prop_name, descr,
                                                                action_parameters, profile, version_strings)
 
+            # Provisional inserts. These need to go in a different place depending on layout.
+            action_response_formatted = ''
+            request_payload = ''
+            response_payload = ''
+            example_payload = ''
+
             if prop_info.get('actionResponse'):
                 action_response = prop_info['actionResponse']
                 action_response_extended = self.extend_property_info(schema_ref, action_response)
                 action_response_formatted = self.format_action_response(schema_ref, prop_name, action_response_extended[0])
                 action_details += action_response_formatted
+                action_details += "\n" # Solves a problem for markdown output.
 
             if self.config.get('payloads'):
                 version = self.get_latest_version(prop_info.get('_from_schema_ref'))
@@ -1504,14 +1511,39 @@ class DocFormatter:
                     prop_name_parts = prop_name.split('.')
                     short_name = prop_name_parts[-1]
 
+                # Insert action request payload, if present.
+                payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name, 'request-example')
+                payload = self.config['payloads'].get(payload_key)
+                if payload:
+                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    heading = self.formatter.para(self.formatter.bold(_("Request Example")))
+                    request_payload = heading + self.format_json_payload(json_payload)
+
+                # Insert action response payload, if present.
+                payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name, 'response-example')
+                payload = self.config['payloads'].get(payload_key)
+                if payload:
+                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    heading = self.formatter.para(self.formatter.bold(_("Response Example")))
+                    response_payload = heading + self.format_json_payload(json_payload)
+
+                # Old-style action payloads: this allowed for just one payload (response, presumably) per action
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name)
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
                     json_payload = '```json\n' + payload.strip() + '\n```\n'
-                    if self.layout_payloads == 'top':
-                        action_details = self.format_json_payload(json_payload) + action_details
-                    else:
-                        action_details += self.format_json_payload(json_payload)
+                    heading = self.formatter.para(self.formatter.bold(_("Example")))
+                    example_payload = heading + self.format_json_payload(json_payload) + action_details
+
+            if request_payload or response_payload or example_payload:
+                # to put layouts at the "top," we need to slice off the heading and slip these in.
+                if self.layout_payloads == 'top':
+                    action_heading, action_details_body = action_details.split("\n", 1)
+                    action_details = ''.join([action_heading, "\n", request_payload,
+                                             response_payload, example_payload, action_details_body])
+                else:
+                    action_details += ''.join([request_payload, response_payload, example_payload])
+
 
             formatted_action_rows = []
 
