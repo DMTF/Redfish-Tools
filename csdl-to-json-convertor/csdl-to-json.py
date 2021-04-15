@@ -428,9 +428,9 @@ class CSDLToJSON:
 
         name = self.get_attrib( object, "Name" )
 
-        # The entities in the Resource namespace need to be processed in a special manner since it doesn't follow the Redfish model for object inheritance
-        if ( self.namespace_under_process == "Resource" ) and ( object.tag == ODATA_TAG_ENTITY ):
-            json_def[name] = { "anyOf": [] }
+        # Some entities in the Resource namespace need to be processed in a special manner since they don't follow the Redfish model for object inheritance
+        if ( self.namespace_under_process == "Resource" ) and ( object.tag == ODATA_TAG_ENTITY ) and ( name == "Item" or name == "ItemOrCollection" ):
+            json_def[name] = { "anyOf": [ { "$ref": self.odata_schema + "#/definitions/idRef" } ] }
 
             # Append matching objects in the file to the anyOf list
             for schema in self.root.iter( ODATA_TAG_SCHEMA ):
@@ -438,7 +438,7 @@ class CSDLToJSON:
                 for child in schema:
                     if child.tag == object.tag:
                         if self.get_attrib( child, "BaseType", False ) == self.namespace_under_process + "." + name:
-                            json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + self.get_attrib( child, "Name" ) } )
+                            json_def[name]["anyOf"].append( { "$ref": "#/definitions/" + self.get_attrib( child, "Name" ) } )
         else:
             if object.tag == ODATA_TAG_ENTITY:
                 json_def[name] = { "anyOf": [ { "$ref": self.odata_schema + "#/definitions/idRef" } ] }
@@ -1236,7 +1236,10 @@ class CSDLToJSON:
                 # Make a reference that maps to a specific JSON file
                 namespace_ref = type.rsplit( ".", 1 )[0]
                 type_ref = type.split( "." )[-1]
-                if namespace_ref in self.external_references:
+                if namespace_ref == "Resource" and self.namespace_under_process == "Resource":
+                    # No crossing; local reference; needed since Resource is handled in a special manner for common definitions elsewhere
+                    ref = "#/definitions/" + type_ref
+                elif namespace_ref in self.external_references:
                     ref = self.external_references[namespace_ref] + "#/definitions/" + type_ref
                 elif namespace_ref in self.internal_references:
                     # Check if this is a cross reference between versioned and unversioned namespaces

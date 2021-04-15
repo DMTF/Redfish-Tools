@@ -14,8 +14,6 @@ This schema contains required and requiredOnCreate properties.
 
 ## Properties
 
-The properties defined for the RequiredTest 1.0.0 schema are summarized in [Table TBL_nn++](#table_TBL_nn "RequiredTest 1.0.0 properties").
-
 |Property     |Type     |Notes     |
 | --- | --- | --- |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
@@ -27,14 +25,11 @@ The properties defined for the RequiredTest 1.0.0 schema are summarized in [Tabl
 | } |   |   |
 | **Id** | string<br><br>*read-only required* | Uniquely identifies the resource within the collection of like resources. |
 | **Name** | string<br><br>*read-only required* | The name of the resource or array element. |
-Table: Table TBL_nn: <a name=table_TBL_nn>RequiredTest 1.0.0 properties</a>
-
 
 ## Property details
 
 ### EntryType:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "EntryType property values").
 This is the type of log entry.
 
 | string | Description |
@@ -42,4 +37,3 @@ This is the type of log entry.
 | Event | Contains a Redfish-defined message (event). |
 | Oem | Contains an entry in an OEM-defined format. |
 | SEL | Contains a legacy IPMI System Event Log (SEL) entry. |
-Table: Table TBL_nn: <a name=table_TBL_nn>EntryType property values</a>

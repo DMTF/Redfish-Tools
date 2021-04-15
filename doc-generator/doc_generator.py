@@ -1188,6 +1188,7 @@ class DocGenerator:
             'registry_uri_to_local': {},
             'units_translation': {},
             'combine_multiple_refs': 0,
+            'with_table_numbering': False,
             }
 
         # combined_args is an intermediate dictionary, combining command-line and config parameters.
@@ -1267,6 +1268,10 @@ class DocGenerator:
                 combined_args[param] = default
 
         config['output_format'] = combined_args['format']
+
+        # Allow "with_table_numbering" to be True only for markdown formats.
+        if config_data.get('with_table_numbering') and config['output_format'] in ['slate', 'markdown']:
+            config['with_table_numbering'] = True
 
         if combined_args.get('property_index'):
             config['output_content'] = 'property_index'
