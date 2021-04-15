@@ -8,10 +8,12 @@ Copyright © 2016-2021 DMTF. All rights reserved.
 
 # Redfish doc generator configuration and supplemental files
 
-You define configuration keys in the [base configuration file](#base-configuration-file). This file can include pointers to:
+You define configuration keys in the [base configuration file](#base-configuration-file).
 
-* The optional [content supplement configuration file](#content-supplement-configuration-file), which also contains configuration keys
-* The [boilerplate intro](#boilerplate-intro-file) and the [boilerplate postscript](#boilerplate-postscript-file) supplemental files, which contain supplemental content
+This file can include pointers to:
+
+* The optional [content supplement configuration file](#content-supplement-configuration-file), which also contains configuration keys.
+* The [boilerplate intro](#boilerplate-intro-file) and the [boilerplate postscript](#boilerplate-postscript-file) supplemental files, which contain supplemental content.
 
 ## Base configuration file
 
