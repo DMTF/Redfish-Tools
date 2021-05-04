@@ -86,21 +86,21 @@ def test_subset_mode_issue_271_expected_content_included_markdown(mockRequest):
     # Verify $ref are expanded-in-place where mentioned in profile.
     # Status is an example of an object property; it is used in two places with different requirements in this example:
     expected_status_snippet1 = '''
-| **Status** { | object | This property describes the status and health of the resource and its children. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Health** | string<br>(enum)<br><br>*read-only<br>(null)* | This represents the health state of this resource in the absence of its dependent resources. *For the possible property values, see Health in Property details.* |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**State** | string<br>(enum)<br><br>*read-only<br>(null)* | This indicates the known state of the resource, such as if it is enabled. *For the possible property values, see State in Property details.* |
+| **Status** { | object |  | This property describes the status and health of the resource and its children. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Health** | string<br>(enum) | *read-only<br>(null)* | This represents the health state of this resource in the absence of its dependent resources. *For the possible property values, see Health in Property details.* |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**State** | string<br>(enum) | *read-only<br>(null)* | This indicates the known state of the resource, such as if it is enabled. *For the possible property values, see State in Property details.* |
 '''
     expected_status_snippet2 = '''
-| **Status** { | object | The status and health of the resource and its subordinate or dependent resources. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**State** | string<br>(enum)<br><br>*read-only<br>(null)* | This indicates the known state of the resource, such as if it is enabled. *For the possible property values, see State in Property details.* |
+| **Status** { | object |  | The status and health of the resource and its subordinate or dependent resources. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**State** | string<br>(enum) | *read-only<br>(null)* | This indicates the known state of the resource, such as if it is enabled. *For the possible property values, see State in Property details.* |
 '''
     assert expected_status_snippet1 in output
     assert expected_status_snippet2 in output
 
     # IPv4Address is an "items" property. The code path for this is a bit different.
     expected_ipv4address_snippet = '''
-| **IPv4Addresses** [ { | array | The IPv4 addresses currently in use by this interface. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Address** | string<br><br>*read-write<br>(null)* | This is the IPv4 Address. |
+| **IPv4Addresses** [ { | array |  | The IPv4 addresses currently in use by this interface. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Address** | string | *read-write<br>(null)* | This is the IPv4 Address. |
 '''
     assert expected_ipv4address_snippet in output
 

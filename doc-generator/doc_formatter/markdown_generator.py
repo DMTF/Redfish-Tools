@@ -19,7 +19,7 @@ from format_utils import FormatUtils
 class MarkdownGenerator(DocFormatter):
     """Provides methods for generating markdown from Redfish schemas.
 
-    Markdown is targeted to the Slate documentation tool: https://github.com/lord/slate
+    "slate" mode markdown is targeted to the Slate documentation tool: https://github.com/lord/slate
     """
 
 
@@ -263,16 +263,29 @@ class MarkdownGenerator(DocFormatter):
         # If profile reqs are present, massage them:
         profile_access = self.format_base_profile_access(formatted_details)
 
-        if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
-            if profile_access:
-                prop_type += '<br><br>' + self.formatter.italic(profile_access)
-        elif prop_access:
-            prop_type += '<br><br>' + self.formatter.italic(prop_access)
+        if self.markdown_mode == 'slate':
+            if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+                if profile_access:
+                    prop_type += '<br><br>' + self.formatter.italic(profile_access)
+            elif prop_access:
+                prop_type += '<br><br>' + self.formatter.italic(prop_access)
 
 
         row = []
         row.append(indentation_string + name_and_version)
         row.append(prop_type)
+        if self.markdown_mode != 'slate':
+            if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+                if profile_access:
+                    row.append(self.formatter.italic(profile_access))
+                else:
+                    row.append('')
+            else:
+                if prop_access:
+                    row.append(self.formatter.italic(prop_access))
+                else:
+                    row.append('')
+
         row.append(formatted_details['descr'])
 
         formatted.append('| ' + ' | '.join(row) + ' |')
@@ -543,8 +556,13 @@ class MarkdownGenerator(DocFormatter):
         if action_parameters:
             rows = []
             # Table start:
-            rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Notes') + "     |")
-            rows.append("| --- | --- | --- |")
+
+            if self.markdown_mode == 'slate':
+                rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Notes') + "     |")
+                rows.append("| --- | --- | --- |")
+            else:
+                rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Attributes') + '   | ' + _('Notes') + "     |")
+                rows.append("| --- | --- | --- | --- |")
 
             param_names = [x for x in action_parameters.keys()]
 
@@ -663,9 +681,14 @@ class MarkdownGenerator(DocFormatter):
 
                 if preamble:
                     contents.append(preamble)
-                contents.append('|Property     |Type     |Notes     |')
 
-                contents.append('| --- | --- | --- |')
+                if self.markdown_mode == 'slate':
+                    contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Notes') + '     |')
+                    contents.append('| --- | --- | --- |')
+                else:
+                    contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Attributes') + '   |' + _('Notes') + '     |')
+                    contents.append('| --- | --- | --- | --- |')
+
                 contents.append('\n'.join(section['properties']))
 
                 if caption:
