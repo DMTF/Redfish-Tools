@@ -825,6 +825,7 @@ search: true
             'profile_resources': self.config.get('profile_resources', {}),
             'wants_common_objects': self.config.get('wants_common_objects'),
             'actions_in_property_table': self.config.get('actions_in_property_table', True),
+            'output_format': self.config.get('output_format')
             }
 
         for line in intro_blob.splitlines():
