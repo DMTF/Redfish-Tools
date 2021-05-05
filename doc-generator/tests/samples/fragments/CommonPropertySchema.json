@@ -1,0 +1,225 @@
+{
+   "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema.v1_2_0.json",
+   "title": "CommonProperties",
+   "$ref": "#/definitions/CommonProperties",
+   "definitions": {
+      "CommonProperties": {
+         "type": "object",
+         "additionalProperties": false,
+         "properties": {
+            "@odata.context": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_1.json#/definitions/context",
+               "description": "The URL to a metadata document with a fragment that describes the data, which is typically rooted at the top-level singleton or collection.  Technically, the metadata document has to only define, or reference, any of the types that it directly uses, and different payloads could reference different metadata documents. However, because this property provides a root URL for resolving a relative reference, such as `@odata.id`, the API returns the canonical metadata document."
+            },
+            "@odata.etag": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_2.json#/definitions/etag",
+               "type": "string",
+               "readonly": true,
+               "description": "The current ETag for the Resource."
+            },
+            "@odata.id": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_1.json#/definitions/id",
+               "description": "The unique ID for the Resource."
+            },
+            "@odata.type": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_1.json#/definitions/type"
+            },
+            "Description": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Description",
+               "readonly": true,
+               "description": "The human-readable description for the Resource."
+            },
+            "Id": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Id",
+               "readonly": true,
+               "description": "The ID that uniquely identifies the Resource within the collection that contains it.  This value is unique within a collection."
+            },
+            "Name": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Name",
+               "readonly": true,
+               "description": "The human-readable moniker for a Resource.  The type is string.  The value is NOT necessarily unique across Resource instances within a collection."
+            },
+            "Oem": {
+               "type": "object",
+               "description": "The manufacturer- or provider-specific extension moniker that divides the `Oem` object into sections."
+            }
+         },
+         "required": [
+            "@odata.id",
+            "@odata.type",
+            "Name"
+         ]
+      },
+      "FrequentProperties": {
+         "type": "object",
+         "additionalProperties": false,
+         "properties": {
+            "Actions": {
+               "type": "object",
+               "description": "The Redfish actions available for this Resource.",
+               "properties": {
+                  "target": {
+                     "type": "string",
+                     "description": "**** TBD ****"
+                  }
+               }
+            },
+            "Links": {
+               "type": "object",
+               "description": "The links associated with the Resource, as defined by that Resource's schema definition.  All associated reference properties defined for a Resource are nested under the Links property.  Find all directly referenced, or subordinate, Resource properties from the root of the Resource."
+            },
+            "RelatedItem": {
+               "items": {
+                  "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_2.json#/definitions/idRef"
+               },
+               "readonly": true,
+               "type": "array",
+               "description": "An array of links.  Each link points to a Resource or part of a Resource as defined by that Resource's schema.  This representation is not intended to be a strong linking methodology like other references.  Instead, it shows a relationship between elements or subelements in disparate parts of the service.  For example, fans might be in one area of the system and processors in another.  The relationship between the two might not be obvious.  This property can show that one is related to the other.  In this example, it might indicate that a specific fan cools a specific processor."
+            }
+         }
+      },
+      "ActionDetails": {
+         "type": "object",
+         "additionalProperties": false,
+         "description": "The Redfish actions available for this Resource.",
+         "properties": {
+            "#{action name}": {
+               "type": "object",
+               "readonly": true,
+               "description": "A single Redfish action.",
+               "properties": {
+                  "target": {
+                     "type": "string",
+                     "readonly": true,
+                     "description": "The target URI for the POST operation to invoke the action."
+                  },
+                  "@Redfish.ActionInfo": {
+                     "type": "string",
+                     "readonly": true,
+                     "description": "The URI for an ActionInfo Resource that describes this action."
+                  }
+               }
+            }
+         }
+      },
+      "Collection": {
+         "type": "object",
+         "properties": {
+            "@odata.context": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/context"
+            },
+            "@odata.id": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/id"
+            },
+            "@odata.type": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/type"
+            },
+            "Description": {
+               "anyOf": [{
+                     "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Description"
+                  },
+                  {
+                     "type": "null"
+                  }
+               ],
+               "readonly": true
+            },
+            "Name": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Resource.json#/definitions/Name",
+               "readonly": true
+            },
+            "Oem": {
+               "type": "object",
+               "description": "The manufacturer- or provider-specific extension moniker that divides the `Oem` object into sections.",
+               "longDescription": "This string property shall be in the `Oem` reserved word format."
+            },
+            "Members@odata.count": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/count"
+            },
+            "Members@odata.navigationLink": {
+               "type": "string",
+               "format": "uri"
+            },
+            "Members": {
+               "type": "array",
+               "items": {
+                  "type": "object",
+                  "properties": {
+                     "@odata.id": {
+                        "type": "string",
+                        "format": "uri",
+                        "readonly": true,
+                        "description": "The link to a Resource instance, which is a member of this collection."
+                     }
+                  }
+               },
+               "readonly": true,
+               "description": "The members of this collection."
+            }
+         },
+         "required": [
+            "@odata.id",
+            "@odata.type",
+            "Name",
+            "Members"
+         ]
+      },
+      "PropertyAnnotations": {
+         "type": "object",
+         "properties": {
+            "@Redfish.AllowableValues": {
+               "type": "array",
+               "readonly": true,
+               "description": "The string values that a service accepts for a property or action parameter.",
+               "items": {
+                  "type": "string"
+               }
+            },
+            "@Message.ExtendedInfo": {
+               "type": "object",
+               "readonly": true,
+               "description": "The additional information for a set of message structures for a property.  These messages can be useful when a property is `null` due to an error condition and the service wants to convey why the property is `null`."
+            },
+            "@odata.count": {
+               "$ref": "http://redfish.dmtf.org/schemas/v1/odata.v4_0_3.json#/definitions/count"
+            }
+         }
+      },
+      "ResourceAnnotations": {
+         "type": "object",
+         "properties": {
+            "@Redfish.ActionInfo": {
+               "description": "The URI to an ActionInfo Resource, which describes the parameters that this Action instance supports.",
+               "type": "string",
+               "format": "uri",
+               "readonly": true
+            },
+            "@Redfish.Settings": {
+               "description": "The reference to the Resource that represents the settings to apply to this object.",
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Settings.json#/definitions/Settings"
+            },
+            "@Redfish.SettingsApplyTime": {
+               "description": "The configuration settings that define when to apply the settings to a Resource.",
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Settings.json#/definitions/PreferredApplyTime"
+            },
+            "@Redfish.OperationApplyTime": {
+               "description": "The client's requested apply time to complete a create, delete, or action operation.",
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Settings.json#/definitions/OperationApplyTime"
+            },
+            "@Redfish.OperationApplyTimeSupport": {
+               "description": "An indication of whether a client can request a specific apply time for a create, delete, or action operation for a Resource through the OperationApplyTime term.",
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Settings.json#/definitions/OperationApplyTimeSupport"
+            },
+            "@Redfish.MaintenanceWindow": {
+               "description": "The maintenance window configuration that defines when to apply settings or operations to a Resource.",
+               "$ref": "http://redfish.dmtf.org/schemas/v1/Settings.json#/definitions/MaintenanceWindow"
+            },
+            "@Redfish.CollectionCapabilities": {
+               "description": "The reference to the Resource that represents the POST capabilities of a collection.",
+               "$ref": "http://redfish.dmtf.org/schemas/v1/CollectionCapabilities.json#/definitions/CollectionCapabilities"
+            }
+         }
+      },
+      "copyright": "Copyright 2014-2018 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright"
+   }
+}

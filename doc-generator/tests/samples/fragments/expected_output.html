@@ -1,0 +1,12 @@
+<h1 id="fragment-follows">FRAGMENT FOLLOWS</h1>
+
+<table class="properties">
+<tbody>
+<tr><td><nobr><b>@odata.context</b></nobr></td><td>string<br>(URI)</td><td><nobr>read-only</nobr></td><td>The URL to a metadata document with a fragment that describes the data, which is typically rooted at the top-level singleton or collection.  Technically, the metadata document has to only define, or reference, any of the types that it directly uses, and different payloads could reference different metadata documents. However, because this property provides a root URL for resolving a relative reference, such as <code>@odata.id</code>, the API returns the canonical metadata document.</td></tr>
+<tr><td><nobr><b>@odata.etag</b></nobr></td><td>string</td><td><nobr>read-only</nobr></td><td>The current ETag for the Resource.</td></tr>
+<tr><td><nobr><b>@odata.id</b></nobr></td><td>string<br>(URI)</td><td><nobr>read-only</nobr> <nobr>required</nobr></td><td>The unique ID for the Resource.</td></tr>
+<tr><td><nobr><b>@odata.type</b></nobr></td><td>string</td><td><nobr>read-only</nobr> <nobr>required</nobr></td><td>The type of a resource.</td></tr>
+<tr><td><nobr><b>Description</b></nobr></td><td>string</td><td><nobr>read-only</nobr></td><td>The human-readable description for the Resource.</td></tr>
+<tr><td><nobr><b>Id</b></nobr></td><td>string</td><td><nobr>read-only</nobr></td><td>The ID that uniquely identifies the Resource within the collection that contains it.  This value is unique within a collection.</td></tr>
+<tr><td><nobr><b>Name</b></nobr></td><td>string</td><td><nobr>read-only</nobr> <nobr>required</nobr></td><td>The human-readable moniker for a Resource.  The type is string.  The value is NOT necessarily unique across Resource instances within a collection.</td></tr>
+<tr><td><nobr><b>Oem</b> { }</nobr></td><td>object</td><td></td><td>The manufacturer- or provider-specific extension moniker that divides the <code>Oem</code> object into sections.</td></tr>
