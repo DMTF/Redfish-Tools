@@ -733,6 +733,7 @@ class MarkdownGenerator(DocFormatter):
                             contents.append(info['formatted_descr'])
 
             if section.get('json_payload') and (self.markdown_mode != 'slate'): # Otherwise, this was inserted above.
+                contents.append(self.formatter.head_three(_('Example response'), self.level))
                 contents.append(section['json_payload'])
 
         self.sections = []
