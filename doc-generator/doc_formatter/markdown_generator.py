@@ -584,10 +584,12 @@ class MarkdownGenerator(DocFormatter):
                 caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name})
                 preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")) + "\n"
                 formatted_rows = preamble +  formatted_rows + caption
+            else:
+                formatted.append(heading)
             formatted.append(formatted_rows)
 
         else:
-            formatted.append(self.formatter.para(heading))
+            formatted.append(heading)
             formatted.append(self.formatter.para(_("This action takes no parameters.")))
 
         return "\n".join(formatted)
@@ -899,6 +901,7 @@ search: true
             uri = uri + "/Actions/" + action
             uri_block += "\n" + self.format_uri(uri)
 
+        uri_block += "\n"
         return uri_block
 
 
