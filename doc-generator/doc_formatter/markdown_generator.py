@@ -894,17 +894,6 @@ search: true
         self.this_section['conditional_requirements'] = "\n**" + _('Conditional Requirements') + ":**\n\n" + text + "\n"
 
 
-    def format_uri_block_for_action(self, action, uris):
-        """ Create a URI block for this action & the resource's URIs """
-        uri_block = self.formatter.para(self.formatter.bold(_("Action URIs")))
-        for uri in sorted(uris, key=str.lower):
-            uri = uri + "/Actions/" + action
-            uri_block += "\n" + self.format_uri(uri) + "<br>"
-
-        uri_block += "\n"
-        return uri_block
-
-
     def format_json_payload(self, json_payload):
         """ Format a json payload for output. """
         return '\n' + json_payload + '\n'

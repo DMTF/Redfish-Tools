@@ -207,6 +207,12 @@ class DocFormatter:
         self.this_section['release_history'] = formatted
 
 
+    def format_uri_block_for_action(self, action, uris):
+        """ Create a URI block for this action & the resource's URIs """
+        uri_content = self.formatter.para(self.formatter.bold((_('Action URI: %(link)s') % {'link': '{' + _('Base URI of target resource') + '}/Actions/' + action})))
+        return uri_content
+
+
     def format_uri(self, uri):
         """ Format a URI for output. """
         # This is highlighting for markdown. Override for other output.

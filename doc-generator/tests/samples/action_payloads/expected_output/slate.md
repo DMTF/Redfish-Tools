@@ -25,4 +25,4 @@
 This action makes a certificate signing request.
 
 
-**Action URIs**
+**Action URI
