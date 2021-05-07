@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2021-04-14 18:49-0700\n"
+"POT-Creation-Date: 2021-05-07 12:14-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,7 +48,10 @@ msgid "Purpose"
 msgstr ""
 
 #: doc_formatter/csv_generator.py:44 doc_formatter/csv_generator.py:59
-#: doc_formatter/markdown_generator.py:546
+#: doc_formatter/markdown_generator.py:561
+#: doc_formatter/markdown_generator.py:564
+#: doc_formatter/markdown_generator.py:688
+#: doc_formatter/markdown_generator.py:691
 #: doc_formatter/property_index_generator.py:450
 #: doc_formatter/property_index_generator.py:515
 msgid "Type"
@@ -60,11 +63,11 @@ msgstr ""
 
 #: doc_formatter/csv_generator.py:46 doc_formatter/csv_generator.py:63
 #: doc_formatter/html_generator.py:477 doc_formatter/html_generator.py:797
-#: doc_formatter/markdown_generator.py:346
-#: doc_formatter/markdown_generator.py:349
-#: doc_formatter/markdown_generator.py:535
-#: doc_formatter/markdown_generator.py:728
-#: doc_formatter/markdown_generator.py:848
+#: doc_formatter/markdown_generator.py:359
+#: doc_formatter/markdown_generator.py:362
+#: doc_formatter/markdown_generator.py:548
+#: doc_formatter/markdown_generator.py:754
+#: doc_formatter/markdown_generator.py:875
 #: doc_formatter/property_index_generator.py:450
 #: doc_formatter/property_index_generator.py:515
 msgid "Description"
@@ -106,11 +109,11 @@ msgstr ""
 msgid "Resource instance is subordinate to %(phrase)s"
 msgstr ""
 
-#: doc_formatter/csv_generator.py:253 doc_formatter/doc_formatter.py:431
+#: doc_formatter/csv_generator.py:253 doc_formatter/doc_formatter.py:437
 msgid "from"
 msgstr ""
 
-#: doc_formatter/csv_generator.py:258 doc_formatter/doc_formatter.py:440
+#: doc_formatter/csv_generator.py:258 doc_formatter/doc_formatter.py:446
 msgid "to"
 msgstr ""
 
@@ -123,13 +126,13 @@ msgid "(v%(version_number)s, deprecated v%(deprecated_version)s"
 msgstr ""
 
 #: doc_formatter/doc_formatter.py:149 doc_formatter/doc_formatter.py:157
-#: doc_formatter/markdown_generator.py:462
+#: doc_formatter/markdown_generator.py:475
 msgid "Deprecated in v%(deprecated_version)s and later. %(explanation)s"
 msgstr ""
 
 #: doc_formatter/doc_formatter.py:152 doc_formatter/html_generator.py:520
-#: doc_formatter/html_generator.py:596 doc_formatter/markdown_generator.py:384
-#: doc_formatter/markdown_generator.py:457
+#: doc_formatter/html_generator.py:596 doc_formatter/markdown_generator.py:397
+#: doc_formatter/markdown_generator.py:470
 msgid "(v%(version_number)s)"
 msgstr ""
 
@@ -153,138 +156,146 @@ msgstr ""
 msgid "The revision history is summarized in "
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:321
+#: doc_formatter/doc_formatter.py:212
+msgid "Action URI: %(link)s"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:212
+msgid "Base URI of target resource"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:327
 msgid "Response Payload"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:384
+#: doc_formatter/doc_formatter.py:390
 msgid "%(access_condition)s (Read-only)"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:386 doc_formatter/doc_formatter.py:393
+#: doc_formatter/doc_formatter.py:392 doc_formatter/doc_formatter.py:399
 msgid "%(access_condition)s (Read/Write)"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:388 doc_formatter/doc_formatter.py:391
+#: doc_formatter/doc_formatter.py:394 doc_formatter/doc_formatter.py:397
 msgid "%(access_condition)s (Read)"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:399
+#: doc_formatter/doc_formatter.py:405
 msgid "Minimum %(count)s"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:431
+#: doc_formatter/doc_formatter.py:437
 msgid "Resource instance is subordinate to %(resource_list)s"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:435
+#: doc_formatter/doc_formatter.py:441
 msgid "Applies if Protocol version is 1.6+"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:447
+#: doc_formatter/doc_formatter.py:453
 msgid "and"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:448
+#: doc_formatter/doc_formatter.py:454
 msgid "is"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:455
+#: doc_formatter/doc_formatter.py:461
 msgid ", must be %(comparison_word)s %(list)s"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:814
+#: doc_formatter/doc_formatter.py:820
 msgid "Collection Type"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:814 doc_formatter/markdown_generator.py:859
+#: doc_formatter/doc_formatter.py:820 doc_formatter/markdown_generator.py:886
 msgid "URIs"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:934 doc_formatter/doc_formatter.py:943
+#: doc_formatter/doc_formatter.py:940 doc_formatter/doc_formatter.py:949
 msgid "This object is an excerpt of the %(link)s resource located at the URI shown in DataSourceUri."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:946
+#: doc_formatter/doc_formatter.py:952
 msgid "For more information about this property, see %(link)s in Property Details."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:965
+#: doc_formatter/doc_formatter.py:971
 msgid "Contains a link to a resource."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:971
+#: doc_formatter/doc_formatter.py:977
 msgid "Link to Collection of %(schema_links)s. See the %(schema_name)s schema for details."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:978
+#: doc_formatter/doc_formatter.py:984
 msgid "Link to another %(name)s resource."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:981
+#: doc_formatter/doc_formatter.py:987
 msgid "Link to a %(name)s resource. See the Links section and the %(schema_link)s schema for details."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:986
+#: doc_formatter/doc_formatter.py:992
 msgid "See the %(schema_link)s schema for details on this property."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1009
+#: doc_formatter/doc_formatter.py:1015
 msgid "For property details, see %(schema_link)s v%(version_number)s)."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1013
+#: doc_formatter/doc_formatter.py:1019
 msgid "For property details, see %(schema_link)s."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1519
+#: doc_formatter/doc_formatter.py:1525
 msgid "Request Example"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1527
+#: doc_formatter/doc_formatter.py:1533
 msgid "Response Example"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1535
+#: doc_formatter/doc_formatter.py:1541
 msgid "Example"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1813
+#: doc_formatter/doc_formatter.py:1819
 msgid "The unique identifier for a resource."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1814
+#: doc_formatter/doc_formatter.py:1820
 msgid "The value of this property shall be the unique identifier for the resource and it shall be of the form defined in the Redfish specification."
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1840
+#: doc_formatter/doc_formatter.py:1846
 msgid "%(descr)s Pattern: %(pattern)s"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:1937
+#: doc_formatter/doc_formatter.py:1943
 msgid "Property names follow regular expression pattern \"%(pattern)s\""
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2282
+#: doc_formatter/doc_formatter.py:2288
 msgid "If Implemented"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2283 doc_formatter/html_generator.py:383
+#: doc_formatter/doc_formatter.py:2289 doc_formatter/html_generator.py:383
 #: doc_formatter/html_generator.py:385 doc_formatter/html_generator.py:738
-#: doc_formatter/markdown_generator.py:677
-#: doc_formatter/markdown_generator.py:867
+#: doc_formatter/markdown_generator.py:702
+#: doc_formatter/markdown_generator.py:894
 msgid "Conditional Requirements"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2284
+#: doc_formatter/doc_formatter.py:2290
 msgid "Mandatory"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2285
+#: doc_formatter/doc_formatter.py:2291
 msgid "Recommended"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:2324
+#: doc_formatter/doc_formatter.py:2330
 msgid "Deprecated"
 msgstr ""
 
@@ -344,26 +355,26 @@ msgid "Must be %(comparison_word)s (%(values)s)"
 msgstr ""
 
 #: doc_formatter/html_generator.py:479 doc_formatter/html_generator.py:556
-#: doc_formatter/markdown_generator.py:346
-#: doc_formatter/markdown_generator.py:416
+#: doc_formatter/markdown_generator.py:359
+#: doc_formatter/markdown_generator.py:429
 msgid "Profile Specifies"
 msgstr ""
 
 #: doc_formatter/html_generator.py:512 doc_formatter/html_generator.py:587
-#: doc_formatter/markdown_generator.py:378
-#: doc_formatter/markdown_generator.py:453
+#: doc_formatter/markdown_generator.py:391
+#: doc_formatter/markdown_generator.py:466
 msgid "(v%(version_number)s, deprecated v%(deprecated_version)s)"
 msgstr ""
 
 #: doc_formatter/html_generator.py:516 doc_formatter/html_generator.py:526
 #: doc_formatter/html_generator.py:592 doc_formatter/html_generator.py:604
-#: doc_formatter/markdown_generator.py:381
-#: doc_formatter/markdown_generator.py:389
+#: doc_formatter/markdown_generator.py:394
+#: doc_formatter/markdown_generator.py:402
 msgid "Deprecated in v%(version_number)s and later. %(explanation)s"
 msgstr ""
 
 #: doc_formatter/html_generator.py:524 doc_formatter/html_generator.py:601
-#: doc_formatter/markdown_generator.py:387
+#: doc_formatter/markdown_generator.py:400
 msgid "(deprecated v%(version_number)s)"
 msgstr ""
 
@@ -371,7 +382,7 @@ msgstr ""
 msgid "enum"
 msgstr ""
 
-#: doc_formatter/html_generator.py:636 doc_formatter/markdown_generator.py:501
+#: doc_formatter/html_generator.py:636 doc_formatter/markdown_generator.py:514
 msgid "Example Action POST:"
 msgstr ""
 
@@ -383,23 +394,23 @@ msgstr ""
 msgid "Perform the action using a POST to the specific Action URI for this resource. This action takes no parameters."
 msgstr ""
 
-#: doc_formatter/html_generator.py:750 doc_formatter/markdown_generator.py:684
+#: doc_formatter/html_generator.py:750 doc_formatter/markdown_generator.py:709
 msgid "Property details"
 msgstr ""
 
-#: doc_formatter/html_generator.py:781
+#: doc_formatter/html_generator.py:781 doc_formatter/markdown_generator.py:738
 msgid "Example response"
 msgstr ""
 
-#: doc_formatter/html_generator.py:793 doc_formatter/markdown_generator.py:724
+#: doc_formatter/html_generator.py:793 doc_formatter/markdown_generator.py:750
 msgid "Messages"
 msgstr ""
 
-#: doc_formatter/html_generator.py:795 doc_formatter/markdown_generator.py:726
+#: doc_formatter/html_generator.py:795 doc_formatter/markdown_generator.py:752
 msgid "Requirement"
 msgstr ""
 
-#: doc_formatter/html_generator.py:973 doc_formatter/markdown_generator.py:853
+#: doc_formatter/html_generator.py:973 doc_formatter/markdown_generator.py:880
 msgid "This schema has been deprecated and use in new implementations is discouraged except to retain compatibility with existing products."
 msgstr ""
 
@@ -411,25 +422,21 @@ msgstr ""
 msgid "Conditional Requirements:"
 msgstr ""
 
-#: doc_formatter/html_generator.py:995
-msgid "Action URI: %(link)s"
-msgstr ""
-
-#: doc_formatter/html_generator.py:1052
+#: doc_formatter/html_generator.py:1046
 msgid "Registry v%(version_number)s+"
 msgstr ""
 
-#: doc_formatter/html_generator.py:1054
-#: doc_formatter/markdown_generator.py:908
+#: doc_formatter/html_generator.py:1048
+#: doc_formatter/markdown_generator.py:925
 msgid "(current release: v%(version_number)s)"
 msgstr ""
 
-#: doc_formatter/html_generator.py:1057
-#: doc_formatter/markdown_generator.py:911
+#: doc_formatter/html_generator.py:1051
+#: doc_formatter/markdown_generator.py:928
 msgid "Requirement: %(req)s"
 msgstr ""
 
-#: doc_formatter/html_generator.py:1132
+#: doc_formatter/html_generator.py:1126
 msgid "See %(link)s"
 msgstr ""
 
@@ -441,81 +448,91 @@ msgstr ""
 msgid "excerpt"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:449
+#: doc_formatter/markdown_generator.py:462
 msgid "(v%(version_number)s, deprecated v%(deprecated_version)s. %(explanation)s"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:465
+#: doc_formatter/markdown_generator.py:478
 msgid "(deprecated in v%(deprecated_version)s and later.)"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:485
+#: doc_formatter/markdown_generator.py:498
 msgid "%(prop_name)s property values"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:486
+#: doc_formatter/markdown_generator.py:499
 msgid "The defined property values are listed in "
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:546
-msgid "Notes"
-msgstr ""
-
-#: doc_formatter/markdown_generator.py:546
+#: doc_formatter/markdown_generator.py:561
+#: doc_formatter/markdown_generator.py:564
 msgid "Parameter Name"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:558
+#: doc_formatter/markdown_generator.py:561
+#: doc_formatter/markdown_generator.py:564
+#: doc_formatter/markdown_generator.py:688
+#: doc_formatter/markdown_generator.py:691
+msgid "Notes"
+msgstr ""
+
+#: doc_formatter/markdown_generator.py:564
+#: doc_formatter/markdown_generator.py:691
+msgid "Attributes"
+msgstr ""
+
+#: doc_formatter/markdown_generator.py:576
 msgid "Action parameters"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:566
+#: doc_formatter/markdown_generator.py:584
 msgid "%(prop_name)s action parameters"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:567
+#: doc_formatter/markdown_generator.py:585
 msgid "The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in "
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:573
+#: doc_formatter/markdown_generator.py:593
 msgid "This action takes no parameters."
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:589
+#: doc_formatter/markdown_generator.py:609
 msgid "(Read-only)"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:591
-#: doc_formatter/markdown_generator.py:597
+#: doc_formatter/markdown_generator.py:611
+#: doc_formatter/markdown_generator.py:617
 msgid "(Read/Write)"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:593
-#: doc_formatter/markdown_generator.py:596
+#: doc_formatter/markdown_generator.py:613
+#: doc_formatter/markdown_generator.py:616
 msgid "(Read)"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:602
+#: doc_formatter/markdown_generator.py:622
 msgid "Minimum %(min_count)s"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:662
+#: doc_formatter/markdown_generator.py:682
 msgid "Properties"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:705
+#: doc_formatter/markdown_generator.py:688
+#: doc_formatter/markdown_generator.py:691
+msgid "Property"
+msgstr ""
+
+#: doc_formatter/markdown_generator.py:730
 msgid "In %(path)s:"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:746
+#: doc_formatter/markdown_generator.py:772
 msgid "Schema Documentation"
 msgstr ""
 
-#: doc_formatter/markdown_generator.py:872
-msgid "Action URIs"
-msgstr ""
-
-#: doc_formatter/markdown_generator.py:906
+#: doc_formatter/markdown_generator.py:923
 msgid "%(Name)s Registry v%(version_number)s+"
 msgstr ""
 
