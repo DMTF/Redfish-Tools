@@ -541,11 +541,11 @@ class MarkdownGenerator(DocFormatter):
         if self.markdown_mode == 'slate':
             formatted.append(self.formatter.head_five(name_and_version, self.level))
         else:
-            formatted.append(self.formatter.head_three(name_and_version, self.level))
+            formatted.append(self.formatter.head_four(name_and_version, self.level))
 
         if deprecated_descr:
             formatted.append(self.formatter.para(italic(deprecated_descr)))
-        formatted.append(self.formatter.head_four(_("Description"), self.level))
+        formatted.append(self.formatter.para(self.formatter.bold(_("Description"))))
         formatted.append(self.formatter.para(prop_descr))
 
         # Add the URIs for this action.
@@ -573,7 +573,7 @@ class MarkdownGenerator(DocFormatter):
 
             param_names.sort(key=str.lower)
 
-        heading = self.formatter.head_four(_("Action parameters"), self.level)
+        heading = self.formatter.para(self.formatter.bold(_("Action parameters")))
         if len(param_names):
             for param_name in param_names:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
@@ -896,7 +896,7 @@ search: true
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_block = self.formatter.head_four(_("Action URIs"), self.level)
+        uri_block = self.formatter.para(self.formatter.bold(_("Action URIs")))
         for uri in sorted(uris, key=str.lower):
             uri = uri + "/Actions/" + action
             uri_block += "\n" + self.format_uri(uri) + "<br>"
