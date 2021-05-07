@@ -885,7 +885,7 @@ search: true
         """ Add the URIs (which should be a list) """
         uri_block = self.format_head_three(_('URIs'), self.level)
         for uri in sorted(uris, key=str.lower):
-            uri_block += "\n" + self.format_uri(uri)
+            uri_block += "\n" + self.format_uri(uri) + "<br>"
         self.this_section['uris'] = uri_block + "\n"
 
 
@@ -899,7 +899,7 @@ search: true
         uri_block = self.formatter.head_four(_("Action URIs"), self.level)
         for uri in sorted(uris, key=str.lower):
             uri = uri + "/Actions/" + action
-            uri_block += "\n" + self.format_uri(uri)
+            uri_block += "\n" + self.format_uri(uri) + "<br>"
 
         uri_block += "\n"
         return uri_block
