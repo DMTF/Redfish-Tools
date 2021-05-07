@@ -183,14 +183,10 @@ def test_action_uris (mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    # Links should appear with asterisks around {} path parts to highlight them.
+    # This used to be more interesting.
     expected_strings = [
-        "/redfish/v1/CompositionService/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ChangePassword",
-        "/redfish/v1/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ChangePassword",
-        "/redfish/v1/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ChangePassword",
-        "/redfish/v1/CompositionService/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ResetBios",
-        "/redfish/v1/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ResetBios",
-        "/redfish/v1/Systems/*{ComputerSystemId}*/Bios/Actions/Bios.ResetBios",
+        "{Base URI of target resource}/Actions/Bios.ChangePassword",
+        "{Base URI of target resource}/Actions/Bios.ResetBios",
         ]
 
     for x in expected_strings:

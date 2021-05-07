@@ -990,12 +990,6 @@ pre.code{
         self.this_section['conditional_requirements'] = '<h4>' + _('Conditional Requirements:') + '</h4>' + text
 
 
-    def format_uri_block_for_action(self, action, uris):
-        """ Create a URI block for this action & the resource's URIs """
-        uri_content = '<b>' + (_('Action URI: %(link)s') % {'link': '{Base URI of target resource}/Actions/' + action}) + '</b><br><br>'
-        return uri_content
-
-
     def format_uri(self, uri):
         """ Format a URI for output. Includes creating links to Id'd schemas """
 
