@@ -796,7 +796,7 @@ search: true
             output = output.replace('[insert_collections]', collections_doc, 1)
 
         if self.config.get('add_toc'):
-            output = self.generate_and_add_toc(output)
+            output = self.generate_toc_and_add_anchors(output)
 
         # Replace pagebreak markers with HTML pagebreak markup
         output = output.replace('~pagebreak~', '<p style="page-break-before: always"></p>')
@@ -804,11 +804,14 @@ search: true
         return output
 
 
-    def generate_and_add_toc(self, markdown_blob):
+    def generate_toc_and_add_anchors(self, markdown_blob):
         """ Generate a TOC for a blob of markdown, add anchors to markdown, and insert TOC """
+
+        import urllib
 
         toc = ''
         output_blob = ''
+        anchors_seen = []
         for line in markdown_blob.splitlines():
             heading = None
             if line.startswith('# '):
@@ -820,7 +823,15 @@ search: true
                 heading = line[3:]
                 indent = 1
             if heading:
-                anchor = heading.lower().replace(' ', '-')
+                anchor = urllib.parse.quote(heading.lower().replace(' ', '-'))
+                if anchor in anchors_seen:
+                    initial_anchor = anchor
+                    num = 0
+                    while anchor in anchors_seen:
+                        num = num + 1
+                        anchor = initial_anchor + '-' + str(num)
+                anchors_seen.append(anchor)
+
                 toc += self.formatter.para(('   ' * indent) + '- [' + heading + '](#' + anchor + ')')
                 line = prefix + '<a name="' + anchor + '"></a>' + heading
 
