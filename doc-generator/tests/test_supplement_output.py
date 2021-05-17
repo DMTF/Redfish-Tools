@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2021 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -167,3 +167,23 @@ def test_supplement_output_slate (mockRequest):
     # Check for ~pagebreak~ converted to <p style="page-break-before: always">
     pbrk_location = output[output.find('text1') : output.find('text2')]
     assert '<p style="page-break-before: always"></p>' in pbrk_location, "HTML output lacked expected page break markup"
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_supplement_output_from_files (mockRequest):
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'ipaddresses'))
+    supplement_md_dir = os.path.abspath(os.path.join(testcase_path, 'md_supplements'))
+
+    config['supplement_md_dir'] = supplement_md_dir
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    assert False

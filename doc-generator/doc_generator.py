@@ -23,7 +23,6 @@ import gettext
 from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
 
-
 class InfoWarning(UserWarning):
     """ A warning class for informational messages that don't need a stack trace. """
     pass
@@ -66,6 +65,23 @@ class DocGenerator:
                 data = f.read()
                 if data:
                     config['payloads'][name] = data
+
+        if config.get('supplement_md_dir'):
+            import parse_md_supplement
+            supplement_dir = config.get('supplement_md_dir')
+            config['md_supplements'] = {}
+            supplement_files = [x for x in os.scandir(supplement_dir) if (x.is_file() and x.name.endswith('.md')) ]
+            for direntry in supplement_files:
+                schema_name = direntry.name[:-3]
+                f = open(direntry.path, 'r')
+                try:
+                    parsed_data = parse_md_supplement.parse_markdown_supplement(f, direntry.name)
+                    config['md_supplements'][schema_name] = parsed_data
+                except Exception as ex:
+                    warnings.warn('Problem with supplemental file "%(filename)s": %(ex)s' %
+                                      {'filename': direntry.path, 'ex': str(ex)})
+
+
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
