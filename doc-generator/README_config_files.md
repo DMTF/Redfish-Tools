@@ -16,7 +16,7 @@ The [Content Supplement file](#content-supplement-config-file-supported-attribut
 Note that the names of some config keys differ from their command-line counterparts, as noted. Unless otherwise noted, the meaning of the parameter is the same as its command-line counterpart. The `uri_mapping` attribute is expected. All other attributes are optional in config files.
 
 - actions_in_property_table: Boolean. If true, omit "Actions" from the property tables.
-- add_toc: Boolean. If true, generate a table of contents and either substitute it for `[add_toc]` in the boilerplate (intro or postscript), or place it at the beginning of the output document. Makes sense only for HTML mode. If `[add_toc]` appears anywhere in the boilerplate, this flag is automatically set to true.
+- add_toc: Boolean. If true, generate a table of contents and either substitute it for `[add_toc]` in the boilerplate (intro or postscript), or place it at the beginning of the output document. If `[add_toc]` appears anywhere in the boilerplate, this flag is automatically set to true.
 - boilerplate_intro: location of a markdown file providing content to place at the beginning of the document (prior to the generated schema documentation). If a relative path, should be relative to the location of the config file.
 - boilerplate_postscript: location of a markdown file providing content to place at the end of the document (after to the generated schema documentation). If a relative path, should be relative to the location of the config file.
 - combine_multiple_refs: specifies a threshold at which multiple references to the same object within a schema will be moved into Property Details, instead of expanded in place. See below for more detail.
