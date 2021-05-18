@@ -30,7 +30,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - html_title: A string to use as the `title` element in HTML output.
 - import_from: Name of a file or directory containing JSON schemas to process. Wild cards are acceptable. Default: json-schema.
 - locale: specifies a locale code (case-sensitive) for localized output. Localization of strings supplied by the doc generator code uses gettext. Locale files go in the "locale" directory in the doc_generator root. Translated descriptions and annotations may be supplied in localized JSON schema files.
-- normative: Produce normative (developer-focused) output. U
+- normative: Produce normative (developer-focused) output.
 - object_reference_disposition: a data structure that specifies properties that should be moved to the "Common Objects" section and/or objects that should be included inline where they are referenced, to override default behavior. See below.
 - omit_version_in_headers: Boolean. If true, omit schema versions in section headers.
 - outfile (command line: `out`): Output file (default depends on output format: output.md for Markdown, index.html for HTML, output.csv for CSV
@@ -42,6 +42,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - property_index_config_out (command line: `property_index_config_out`): Generate an updated config file, with specified filename (property_index mode only).
 - registry_uri_to_local: For profile mode only, an object like uri_mapping, for locations of registries.
 - subset (command_line: `subset`): Path to a JSON profile document. Generates "Schema subset" output, with the subset defined in the JSON profile document.
+- supplement_md_dir: Directory location for markdown files with supplemental text. Optional. See below for more detail.
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
 - with_table_numbering: Boolean, default false. Applies to markdown output only! When true, table captions and references will be added to the output. You will need to run a post-processor on the output to complete the numbering. See TABLE_NUMBER_README.md[TABLE_NUMBER_README.md].
 
@@ -55,6 +56,23 @@ The combine_multiple_refs attribute specifies a threshold at which multiple refe
 ```
       "combine_multiple_refs": 3,
 ```
+
+#### supplement_md_dir
+
+The supplement_dir attribute specifies a directory location for supplemental markdown content, on a schema-by-schema basis. This directory should contain a separate file for each documented schema for which you intend to provide supplemental content. Each file should be named with the schema name and a .md suffix; for example "Chassis.md".
+
+Within these markdown files, headings with a distinct format are used to identify different chunks of text:
+
+| Field | Delimiter | Purpose |
+| ----- | --------- | ------- |
+| description | #-- description | Replaces the schema's description |
+| jsonpayload | #-- jsonpayload | Example payload for this schema (or descriptive text to take the place of such a payload) |
+| property_details | #-- property_details | Marks the beginning of a block of Property Details for specific properties |
+| (property name)  | #-- PropertyName | Marks a property details block for PropertyName. Can be used to add a Property Details section for a property that is not an enum. |
+
+Note that these properties may also be supplied in the schema_supplement attribute in the Content Supplement Config file. In the case of a conflict, the Content Supplement Config file takes precedence.
+
+A very simple example can be found in doc_generator/tests/samples/supplement_tests/md_supplements/
 
 #### object_reference_disposition
 
