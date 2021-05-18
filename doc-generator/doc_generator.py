@@ -75,12 +75,13 @@ class DocGenerator:
                 schema_name = direntry.name[:-3]
                 f = open(direntry.path, 'r')
                 try:
-                    parsed_data = parse_md_supplement.parse_markdown_supplement(f, direntry.name)
-                    config['md_supplements'][schema_name] = parsed_data
+                    md_data = f.read()
                 except Exception as ex:
                     warnings.warn('Problem with supplemental file "%(filename)s": %(ex)s' %
                                       {'filename': direntry.path, 'ex': str(ex)})
-
+                if md_data:
+                    parsed_data = parse_md_supplement.parse_markdown_supplement(md_data, direntry.name)
+                    config['md_supplements'][schema_name] = parsed_data
 
 
         if config.get('profile_mode'):

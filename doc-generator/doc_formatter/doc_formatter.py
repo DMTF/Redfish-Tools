@@ -660,6 +660,8 @@ class DocFormatter:
                     for cond_name in cond_names:
                         self.add_profile_conditional_details(conditional_details[cond_name])
 
+
+
         if self.config.get('profile_mode') and self.config['profile_mode'] != 'subset':
             # Add registry messages, if in profile.
             registry_reqs = config.get('profile').get('registries_annotated', {})
@@ -2226,13 +2228,23 @@ class DocFormatter:
         supplemental = {}
         property_data = self.property_data.get(schema_ref)
         schema_supplement = self.config.get('schema_supplement')
-        if property_data and schema_supplement:
+        schema_md_supplement = self.config.get('md_supplements', {})
+        if property_data:
             schema_name = property_data.get('schema_name')
-            version = property_data.get('latest_version', 1)
-            major_version = version.split('.')[0]
-            schema_key = schema_name + '_' + major_version
-            supplemental = schema_supplement.get(schema_key,
-                                                     schema_supplement.get(schema_name, {}))
+            md_supp = schema_md_supplement.get(schema_name)
+
+            if property_data and schema_supplement:
+                version = property_data.get('latest_version', 1)
+                major_version = version.split('.')[0]
+                schema_key = schema_name + '_' + major_version
+                supplemental = schema_supplement.get(schema_key,
+                                                        schema_supplement.get(schema_name, {}))
+
+            if md_supp:
+                for key in ['description', 'jsonpayload', 'property_details']:
+                    if md_supp.get(key) and key not in supplemental:
+                        supplemental[key] = md_supp[key]
+
         return supplemental
 
 

@@ -50,7 +50,6 @@ base_config = {
     'wants_common_objects': True,
     'profile': {},
     'escape_chars': [],
-    'schema_supplement': schema_supplement,
     'property_description_overrides': property_description_overrides,
     'intro_content': "# Common Objects\n\n[insert_common_objects]\n\ntext1\n~pagebreak~\ntext2\n",
     }
@@ -66,6 +65,8 @@ def test_supplement_output_html (mockRequest):
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    config['schema_supplement'] = schema_supplement
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
@@ -102,6 +103,7 @@ def test_supplement_description_vs_full_html (mockRequest):
 
     config = copy.deepcopy(base_config)
     config['output_format'] = 'html'
+    config['schema_supplement'] = schema_supplement
 
     config['property_description_overrides'] = {
         "IPv4Address": "This is a description override for the IPv4Address object.",
@@ -161,6 +163,8 @@ def test_supplement_output_slate (mockRequest):
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
+    config['schema_supplement'] = schema_supplement
+
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
@@ -170,7 +174,8 @@ def test_supplement_output_slate (mockRequest):
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
-def test_supplement_output_from_files (mockRequest):
+def test_supplement_file_parsing (mockRequest):
+    """ Parse supplementary blocks from a markdown file """
 
     config = copy.deepcopy(base_config)
     config['output_format'] = 'markdown'
@@ -186,4 +191,44 @@ def test_supplement_output_from_files (mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    assert False
+    assert docGen.config['md_supplements'] ==  {
+        "Endpoint": {
+            "description": "INTRO FOR Endpoint schema.\n\nThis one happens to be multiple lines.",
+            "jsonpayload": '''```json
+{ "payload": "A chunk of JSON from the md supplement" }
+```''',
+            "property_details": {
+                "HostReservationMemoryBytes": "PROPERTY DETAILS for HostReservationMemoryBytes"
+                }
+            }
+        }
+
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_supplement_output_from_files (mockRequest):
+    """ Test of supplementary blocks pulled in from markdown file(s) rather than schema_supplement """
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'ipaddresses'))
+    supplement_md_dir = os.path.abspath(os.path.join(testcase_path, 'md_supplements'))
+
+    config['supplement_md_dir'] = supplement_md_dir
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # This test verifies the text was picked up, but not that it was placed correctly.
+    expected_strings = [
+        "INTRO FOR Endpoint schema.\n\nThis one happens to be multiple lines.",
+        '```json\n{ "payload": "A chunk of JSON from the md supplement" }\n```',
+        "PROPERTY DETAILS for HostReservationMemoryBytes",
+        '#### HostReservationMemoryBytes:', # This is a Property Details heading
+        ]
+    for es in expected_strings:
+        assert es in output
