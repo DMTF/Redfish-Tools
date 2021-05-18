@@ -68,7 +68,7 @@ Within these markdown files, headings with a distinct format are used to identif
 | description | #-- description | Replaces the schema's description |
 | jsonpayload | #-- jsonpayload | Example payload for this schema (or descriptive text to take the place of such a payload) |
 | property_details | #-- property_details | Marks the beginning of a block of Property Details for specific properties |
-| (property name)  | #-- PropertyName | Marks a property details block for PropertyName. Can be used to add a Property Details section for a property that is not an enum. |
+| (property name)  | ##-- PropertyName | Marks a property details block for PropertyName. Can be used to add a Property Details section for a property that is not an enum. (Note double-#)|
 
 Note that these properties may also be supplied in the schema_supplement attribute in the Content Supplement Config file. In the case of a conflict, the Content Supplement Config file takes precedence.
 
@@ -161,6 +161,8 @@ Here, "SchemaName" may be a bare schema name, or it may be a schema name with an
 If `description` or `intro` are specified for a schema, that value will replace the description of the schema. If both are specified, the `description` will be output, followed by the `intro`.
 
 The `mockup` and `jsonpayload` attributes are mutually exclusive. If both are provided, the content found at `mockup` will take precedence. Using a payload directory (specified as `payload_dir` in the Base Configuration file) is preferred over using these attributes.
+
+Note that `description`, `jsonpayload`, and `property_details` may instead be supplied in markdown files, by specifying a directory of markdown files with "supplement_md_dir".
 
 ## Examples
 
