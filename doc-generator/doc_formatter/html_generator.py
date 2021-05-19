@@ -351,10 +351,10 @@ pre.code{
             else:
                 # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
                 # emit read-only.
-                if ((self.config.get('profile_mode') == 'subset')
+                if (self.config.get('subset_mode')
                         and formatted_details.get('profile_write_req')
                         and (formatted_details['profile_write_req'] == 'None')):
-                        prop_access = '<nobr>' + _('read-only') + '</nobr>'
+                    prop_access = '<nobr>' + _('read-only') + '</nobr>'
                 else:
                     prop_access = '<nobr>' + _('read-write') + '</nobr>'
 
@@ -372,7 +372,7 @@ pre.code{
         profile_access = self.format_base_profile_access(formatted_details)
 
         descr = formatted_details['descr']
-        if formatted_details['profile_purpose'] and (self.config.get('profile_mode') != 'subset'):
+        if formatted_details['profile_purpose'] and self.config.get('profile_mode'):
             descr += '<br>' + self.formatter.bold(_('Profile Purpose: %(purpose)s') % {'purpose': formatted_details['profile_purpose']})
 
         # Conditional Requirements
@@ -396,10 +396,10 @@ pre.code{
 
         row = []
         row.append(indentation_string + name_and_version)
-        if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+        if self.config.get('profile_mode'):
             row.append(profile_access)
         row.append(prop_type)
-        if not self.config.get('profile_mode') or self.config.get('profile_mode') == 'subset':
+        if not self.config.get('profile_mode'):
             row.append(prop_access)
         row.append(descr)
 
@@ -439,7 +439,8 @@ pre.code{
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
         # Property enums, look for MinSupportValues/RecommendedValues.
         profile_mode = self.config.get('profile_mode')
-        if profile_mode:
+        subset_mode = self.config.get('subset_mode')
+        if profile_mode or subset_mode: # TODO: split these up
             if profile is None:
                 profile = {}
             profile_values = profile.get('Values', [])
@@ -454,7 +455,7 @@ pre.code{
         # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
         # means all values are supported.
         # Otherwise, Values/ParameterValues specifies the set that should be listed.
-        if profile_mode == 'subset':
+        if subset_mode:
             if len(profile_values):
                 enum = [x for x in enum if x in profile_values]
             elif len(profile_parameter_values):
@@ -475,7 +476,7 @@ pre.code{
 
         if enum_details:
             headings = [prop_type, _('Description')]
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 headings.append(_('Profile Specifies'))
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -535,7 +536,7 @@ pre.code{
                         descr = self.formatter.italic(deprecated_descr)
                 cells = [enum_name, descr]
 
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     if enum_item in profile_values:
                         cells.append(self.text_map('Mandatory'))
                     elif enum_item in profile_min_support_values:
@@ -552,7 +553,7 @@ pre.code{
 
         elif enum:
             headings = [prop_type]
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 headings.append(_('Profile Specifies'))
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -607,7 +608,7 @@ pre.code{
 
 
                 cells = [enum_name]
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     if enum_name in profile_values:
                         cells.append(self.text_map('Mandatory'))
                     elif enum_name in profile_min_support_values:
@@ -677,7 +678,7 @@ pre.code{
 
             param_names = [x for x in action_parameters.keys()]
 
-            if self.config.get('profile_mode') == 'subset':
+            if self.config.get('subset_mode'):
                 if profile and profile.get('Parameters'):
                     param_names = [x for x in profile['Parameters'].keys() if x in param_names]
                 # If there is no profile for this action, all parameters should be output.

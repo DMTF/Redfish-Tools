@@ -41,7 +41,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - property_index (command line: `property_index`): Boolean: Produce Property Index output. See README_Property_Index(README_Property_Index.md) for more information about this mode.
 - property_index_config_out (command line: `property_index_config_out`): Generate an updated config file, with specified filename (property_index mode only).
 - registry_uri_to_local: For profile mode only, an object like uri_mapping, for locations of registries.
-- subset (command_line: `subset`): Path to a JSON profile document. Generates "Schema subset" output, with the subset defined in the JSON profile document.
+- subset (command_line: `subset`): Path to a JSON document. Generates "Schema subset" output, with the subset defined in that document.
 - supplement_md_dir: Directory location for markdown files with supplemental text. Optional. See below for more detail.
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
 - with_table_numbering: Boolean, default false. Applies to markdown output only! When true, table captions and references will be added to the output. You will need to run a post-processor on the output to complete the numbering. See TABLE_NUMBER_README.md[TABLE_NUMBER_README.md].

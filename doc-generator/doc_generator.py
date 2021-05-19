@@ -83,6 +83,30 @@ class DocGenerator:
                     parsed_data = parse_md_supplement.parse_markdown_supplement(md_data, direntry.name)
                     config['md_supplements'][schema_name] = parsed_data
 
+        if config.get('subset_mode'):
+            #  TODO: rework for new-style subset docs (we probably just ingest.)
+            profile_resources = DocGenUtilities.load_as_json(config.get('subset_doc')).get('Resources', {})
+
+            # Warn the user if a profile specifies items in selected schemas that "don't make sense":
+            for schema_name in ['IPAddresses', 'Redundancy', 'Resource', 'Settings']:
+                if schema_name in profile_resources:
+                    warnings.warn('Subsets should not specify requirements directly on the "%(name)s" schema.' %
+                                      {'name': schema_name})
+
+            if not profile_resources:
+                warnings.warn('No subset found; unable to produce subset mode documentation.')
+                sys.exit()
+
+            # Index profile_resources by Repository & schema name
+            profile_resources_indexed = {}
+            for schema_name in profile_resources.keys():
+                profile_data = profile_resources[schema_name]
+                repository = profile_data.get('Repository', 'redfish.dmtf.org/schemas/v1')
+                normalized_uri = repository + '/' + schema_name + '.json'
+                profile_data['Schema_Name'] = schema_name
+                profile_resources_indexed[normalized_uri] = profile_data
+
+            self.config['profile_resources'] = profile_resources_indexed
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
@@ -94,7 +118,7 @@ class DocGenerator:
                         profile_merged, req_profile_name,
                         config['profile']['RequiredProfiles'][req_profile_name])
 
-            if 'Registries' in config['profile'] and (config['profile_mode'] != 'subset'):
+            if 'Registries' in config['profile'] and config['profile_mode']:
                 config['profile']['registries_annotated'] = {}
                 for registry_name in config['profile']['Registries'].keys():
                     registry_summary = self.process_registry(registry_name,
@@ -104,16 +128,9 @@ class DocGenerator:
             profile_resources = self.merge_dicts(profile_merged.get('Resources', {}),
                                                      self.config.get('profile', {}).get('Resources', {}))
 
-            # Warn the user if a profile specifies items in selected schemas that "don't make sense":
-            for schema_name in ['IPAddresses', 'Redundancy', 'Resource', 'Settings']:
-                if schema_name in profile_resources:
-                    warnings.warn('Profiles should not specify requirements directly on the "%(name)s" schema.' %
-                                      {'name': schema_name})
-
-            if config['profile_mode'] != 'subset':
-                profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
-                                                     self.config.get('profile', {}).get('Protocol', {}))
-                self.config['profile_protocol'] = profile_protocol
+            profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
+                                                    self.config.get('profile', {}).get('Protocol', {}))
+            self.config['profile_protocol'] = profile_protocol
 
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
@@ -386,7 +403,7 @@ class DocGenerator:
             data = self.process_files(normalized_uri, grouped_files[normalized_uri])
             if not data:
                 # If we're in profile mode, this is probably normal.
-                if not self.config['profile_mode']:
+                if not self.config.get('profile_mode') or self.config.get('subset_mode'):
                     warnings.warn('Unable to process files for %(uri)s' % {'uri': normalized_uri})
                 continue
             data['uris'] = schema_data[normalized_uri].get('_uris', [])
@@ -643,6 +660,7 @@ class DocGenerator:
 
         profile_mode = self.config.get('profile_mode')
         profile = self.config.get('profile_resources', {})
+        subset_mode = self.config.get('subset_mode')
 
         data = DocGenUtilities.load_as_json(filename)
 
@@ -668,10 +686,10 @@ class DocGenerator:
             property_data['versionDeprecated'] = data.get('versionDeprecated')
 
         min_version = False
-        if profile_mode:
+        if profile_mode or subset_mode:
             schema_profile = profile.get(generalized_uri)
             if schema_profile:
-                if profile_mode == 'subset':
+                if subset_mode:
                     property_data['name_and_version'] += ' ' + version
                 else:
                     min_version = schema_profile.get('MinVersion')
@@ -1350,14 +1368,17 @@ class DocGenerator:
                 sys.exit()
 
         if combined_args.get('subset_doc'):
-            config['profile_mode'] = 'subset'
-            profile_doc = combined_args['subset_doc']
+            config['subset_mode'] = True
+            subset_doc = combined_args['subset_doc']
             try:
-                profile = open(profile_doc, 'r', encoding="utf8")
-                config['profile_doc'] = profile_doc
+                profile = open(subset_doc, 'r', encoding="utf8")
+                profile.close()
+                config['subset_doc'] = subset_doc
             except (OSError) as ex:
                 warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename': profile_doc, 'message': str(ex)})
                 sys.exit()
+        else:
+            config['subset_mode'] = False
 
         if combined_args.get('profile_terse') and not combined_args.get('profile_doc'):
             warnings.warn('Terse output (%(arg_t)s or %(arg_terse)s) requires a profile (--%(arg_profile)s).' %

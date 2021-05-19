@@ -78,19 +78,5 @@
 				}
 			}
 		}
-	},
-	"Registries": {
-		"Base": {
-			"Repository": "http://redfish.dmtf.org/registries"
-		},
-		"ResourceEvent": {
-			"Repository": "http://redfish.dmtf.org/registries",
-			"Messages": {
-				"ResourceChanged": {},
-				"ResourceStatusChangedOK": {},
-				"ResourceStatusChangedWarning": {},
-				"ResourceStatusChangedCritical": {}
-			}
-		}
 	}
 }

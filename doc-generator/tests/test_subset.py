@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2020-2021 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -73,8 +73,8 @@ def test_subset_mode_issue_271_expected_content_included_markdown(mockRequest):
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
     subset_config = os.path.abspath(os.path.join(testcase_path, 'subset_mode', 'subset_spec.json'))
-    config['profile_mode'] = 'subset'
-    config['profile_doc'] = subset_config
+    config['subset_mode'] = True
+    config['subset_doc'] = subset_config
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
@@ -119,8 +119,8 @@ def test_subset_mode_issue_271_expected_content_included_html(mockRequest):
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
     subset_config = os.path.abspath(os.path.join(testcase_path, 'subset_mode', 'subset_spec.json'))
-    config['profile_mode'] = 'subset'
-    config['profile_doc'] = subset_config
+    config['subset_mode'] = True
+    config['subset_doc'] = subset_config
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
@@ -166,8 +166,8 @@ def test_subset_mode_issue_271_warn_on_inappropriate_spec(mockRequest):
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
     subset_config = os.path.abspath(os.path.join(testcase_path, 'subset_mode', 'bad_spec.json'))
-    config['profile_mode'] = 'subset'
-    config['profile_doc'] = subset_config
+    config['subset_mode'] = True
+    config['subset_doc'] = subset_config
 
     with pytest.warns(UserWarning) as record:
         docGen = DocGenerator([ input_dir ], '/dev/null', config)
@@ -175,10 +175,10 @@ def test_subset_mode_issue_271_warn_on_inappropriate_spec(mockRequest):
 
     warning_msgs = [x.message.args[0] for x in record]
     expected_msgs = [
-        'Profiles should not specify requirements directly on the "Resource" schema.',
-        'Profiles should not specify requirements directly on the "IPAddresses" schema.',
-        'Profiles should not specify requirements directly on the "Redundancy" schema.',
-        'Profiles should not specify requirements directly on the "Settings" schema.',
+        'Subsets should not specify requirements directly on the "Resource" schema.',
+        'Subsets should not specify requirements directly on the "IPAddresses" schema.',
+        'Subsets should not specify requirements directly on the "Redundancy" schema.',
+        'Subsets should not specify requirements directly on the "Settings" schema.',
         ]
     for m in expected_msgs:
         assert m in warning_msgs

@@ -54,12 +54,11 @@ class DocFormatter:
 
         if self.config.get('profile_mode'):
             self.config['MinVersionLT1.6'] = False
-            if self.config['profile_mode'] != 'subset':
-                # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
-                minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
-                compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
-                if compare < 0:
-                    self.config['MinVersionLT1.6'] = True
+            # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
+            minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
+            compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
+            if compare < 0:
+                self.config['MinVersionLT1.6'] = True
 
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
@@ -73,11 +72,11 @@ class DocFormatter:
         schemas = [x for x in property_data.keys()]
         for schema_ref in schemas:
             details = self.property_data[schema_ref]
-            if self.skip_schema(details['schema_name']):
+            if details.get('schema_name') and self.skip_schema(details['schema_name']):
                 continue
             if 'common_object_schemas' in self.config and schema_ref in self.config['common_object_schemas']:
                 continue
-            if len(details['properties']):
+            if len(details.get('properties', {})):
                 self.documented_schemas.append(schema_ref)
 
         self.uri_match_keys = None
@@ -494,6 +493,7 @@ class DocFormatter:
         config = self.config
         schema_supplement = config.get('schema_supplement', {})
         profile_mode = config.get('profile_mode')
+        subset_mode = config.get('subset_mode')
 
         schema_keys = self.documented_schemas
         schema_keys.sort(key=str.lower)
@@ -572,7 +572,7 @@ class DocFormatter:
                 description = supplemental.get('intro', description)
 
             # Profile purpose overrides all:
-            if profile and profile_mode != 'subset':
+            if profile:
                 description = profile.get('Purpose')
 
             if description:
@@ -601,7 +601,7 @@ class DocFormatter:
 
                 properties = details['properties']
                 prop_names = [x for x in properties.keys()]
-                if self.config.get('profile_mode') and profile:
+                if (self.config.get('profile_mode') or self.config.get('subset_mode')) and profile:
                     prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
 
                 prop_names = self.organize_prop_names(prop_names)
@@ -662,7 +662,7 @@ class DocFormatter:
 
 
 
-        if self.config.get('profile_mode') and self.config['profile_mode'] != 'subset':
+        if self.config.get('profile_mode'):
             # Add registry messages, if in profile.
             registry_reqs = config.get('profile').get('registries_annotated', {})
             if registry_reqs:
@@ -1177,13 +1177,12 @@ class DocFormatter:
             # if a resource is specified with no PropertyRequirements, include them all...
             # but do omit "Actions" if there are no ActionRequirements (profile mode).
             # For subset mode, "Actions" should be included either way.
-            if (self.config.get('profile_mode') == 'subset') or (
-                    profile.get('ActionRequirements') and len(profile['ActionRequirements'])):
+            if self.config.get('subset_mode') or (profile.get('ActionRequirements') and len(profile['ActionRequirements'])):
                 return prop_names
             else:
                 return [x for x in prop_names if x != 'Actions']
 
-        if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
+        if self.config.get('profile_mode') == 'terse' or self.config.get('subset_mode'):
             if is_action:
                 profile_props = [x for x in profile.keys()]
             else:
@@ -1244,7 +1243,7 @@ class DocFormatter:
     def skip_schema(self, schema_name):
         """ True if this schema should be skipped in the output """
 
-        if self.config.get('profile_mode'):
+        if self.config.get('profile_mode') or self.config.get('subset_mode'):
             if schema_name in self.config.get('profile', {}).get('Resources', {}):
                 return False
 
@@ -1430,7 +1429,7 @@ class DocFormatter:
         profile = None
         if '_profile' in prop_info:
             profile = prop_info['_profile']
-        elif self.config.get('profile_mode') and prop_name: # TODO: unclear if this clause is still needed.
+        elif (self.config.get('profile_mode') or self.config.get('subset_mode')) and prop_name: # TODO: unclear if this clause is still needed.
             prop_brief_name = prop_name
             profile_section = 'PropertyRequirements'
             if within_action:
@@ -1880,7 +1879,7 @@ class DocFormatter:
 
             prop_names = [x for x in properties.keys()]
 
-            if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
+            if self.config.get('profile_mode') == 'terse' or self.config.get('subset_mode'):
 
                 if '_profile' in prop_info:
                     profile = prop_info['_profile']

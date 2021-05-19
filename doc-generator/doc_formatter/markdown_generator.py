@@ -179,7 +179,7 @@ class MarkdownGenerator(DocFormatter):
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
 
-        if formatted_details['profile_purpose'] and (self.config.get('profile_mode') != 'subset'):
+        if formatted_details['profile_purpose'] and self.config.get('profile_mode'):
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
             formatted_details['descr'] += self.formatter.bold(formatted_details['profile_purpose'])
@@ -238,10 +238,10 @@ class MarkdownGenerator(DocFormatter):
             else:
                 # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
                 # emit read-only.
-                if ((self.config.get('profile_mode') == 'subset')
-                        and formatted_details.get('profile_write_req')
-                        and (formatted_details['profile_write_req'] == 'None')):
-                        prop_access = _('read-only')
+                if (self.config.get('subset_mode')
+                            and formatted_details.get('profile_write_req')
+                            and (formatted_details['profile_write_req'] == 'None')):
+                    prop_access = _('read-only')
                 else:
                     prop_access = _('read-write')
 
@@ -264,7 +264,7 @@ class MarkdownGenerator(DocFormatter):
         profile_access = self.format_base_profile_access(formatted_details)
 
         if self.markdown_mode == 'slate':
-            if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+            if self.config.get('profile_mode'):
                 if profile_access:
                     prop_type += '<br><br>' + self.formatter.italic(profile_access)
             elif prop_access:
@@ -275,7 +275,7 @@ class MarkdownGenerator(DocFormatter):
         row.append(indentation_string + name_and_version)
         row.append(prop_type)
         if self.markdown_mode != 'slate':
-            if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+            if self.config.get('profile_mode'):
                 if profile_access:
                     row.append(self.formatter.italic(profile_access))
                 else:
@@ -320,7 +320,8 @@ class MarkdownGenerator(DocFormatter):
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
         # Property enums, look for MinSupportValues/RecommendedValues.
         profile_mode = self.config.get('profile_mode')
-        if profile_mode:
+        subset_mode = self.config.get('subset_mode')
+        if profile_mode or subset_mode: # TODO: split these up
             if profile is None:
                 profile = {}
 
@@ -336,7 +337,7 @@ class MarkdownGenerator(DocFormatter):
             # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
             # means all values are supported.
             # Otherwise, Values/ParameterValues specifies the set that should be listed.
-            if profile_mode == 'subset':
+            if subset_mode:
                 if len(profile_values):
                     enum = [x for x in enum if x in profile_values]
                 elif len(profile_parameter_values):
@@ -355,7 +356,7 @@ class MarkdownGenerator(DocFormatter):
         enum_translations = parent_prop_info.get('enumTranslations', {})
 
         if enum_details:
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' | ' + _('Profile Specifies') + ' |')
                 contents.append('| --- | --- | --- |')
             else:
@@ -409,7 +410,7 @@ class MarkdownGenerator(DocFormatter):
                     else:
                         descr = self.formatter.italic(deprecated_descr)
 
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     profile_spec = ''
                     # Note: don't wrap the following strings for trnaslation; self.text_map handles that.
                     if enum_item in profile_values:
@@ -425,7 +426,7 @@ class MarkdownGenerator(DocFormatter):
                     contents.append('| ' + enum_name + ' | ' + descr + ' |')
 
         elif enum:
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 contents.append('| ' + prop_type + ' | '+ _('Profile Specifies') + ' |')
                 contents.append('| --- | --- |')
             else:
@@ -477,7 +478,7 @@ class MarkdownGenerator(DocFormatter):
                         else:
                             enum_name += ' ' + self.formatter.italic(_('(deprecated in v%(deprecated_version)s and later.)') % {'deprecated_version': deprecated_display})
 
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     profile_spec = ''
                     # Note: don't wrap the following strings for trnaslation; self.text_map handles that.
                     if enum_name in profile_values:
@@ -566,7 +567,7 @@ class MarkdownGenerator(DocFormatter):
 
             param_names = [x for x in action_parameters.keys()]
 
-            if self.config.get('profile_mode') == 'subset':
+            if self.config.get('subset_mode'):
                 if profile.get('Parameters'):
                     param_names = [x for x in profile['Parameters'].keys() if x in param_names]
                 # If there is no profile for this action, all parameters should be output.
@@ -599,7 +600,7 @@ class MarkdownGenerator(DocFormatter):
         """Common formatting logic for profile_access column"""
 
         profile_access = ''
-        if not self.config['profile_mode']:
+        if not self.config.get('profile_mode'):
             return profile_access
 
         # Each requirement  may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
