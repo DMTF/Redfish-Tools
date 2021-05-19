@@ -101,6 +101,8 @@ optional arguments:
   --subset SUBSET_DOC   Path to a JSON profile document. Generates "Schema
                         subset" output, with the subset defined in the JSON
                         profile document.
+  --warn_missing_payloads
+                        Warn on missing JSON payloads
   --property_index      Produce Property Index output.
   --property_index_config_out CONFIG_FILE_OUT
                         Generate updated config file, with specified filename
