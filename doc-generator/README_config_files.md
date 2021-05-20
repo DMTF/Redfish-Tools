@@ -44,6 +44,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - subset (command_line: `subset`): Path to a JSON profile document. Generates "Schema subset" output, with the subset defined in the JSON profile document.
 - supplement_md_dir: Directory location for markdown files with supplemental text. Optional. See below for more detail.
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
+- warn_missing_payloads (command line: `warn_missing_payloads`): Boolean, default false. Use along with "payload_dir" to be warned of missing example payloads. When true, the doc generator will emit a warning for missing examples for all documented schemas, missing Action Response examples with the action has an "actionResponse" property, and missing Action Request examples when the action has parameters.
 - with_table_numbering: Boolean, default false. Applies to markdown output only! When true, table captions and references will be added to the output. You will need to run a post-processor on the output to complete the numbering. See TABLE_NUMBER_README.md[TABLE_NUMBER_README.md].
 
 
