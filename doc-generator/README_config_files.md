@@ -149,9 +149,10 @@ The schema_supplement attribute defines a dictionary of structured content, incl
             },
             "property_details": {
                 "EnumPropertyName": "A string, plain text or markdown. This will be inserted after the property description and prior to the table of enum details in the property information under Property Details.",
-                "property_details": {
-                   "UUID": "\nThe UUID property contains a value that represents the universal unique identifier number (UUID) of a system.\n\nThe UUID property is a string data type. The format of the string is the 35-character string format specified in RFC4122: \"xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\". Each x represents a hexadecimal digit (0-f).\n\nRegarding the case of the hex values, RFC4122 specifies that the hex values should be lowercase characters. Most modern scripting languages typically also represent hex values in lowercase characters following the RFC. However, dmidecode, WMI and some Redfish implementations currently use uppercase characters for UUID on output."
-                }
+                "UUID": "\nThe UUID property contains a value that represents the universal unique identifier number (UUID) of a system.\n\nThe UUID property is a string data type. The format of the string is the 35-character string format specified in RFC4122: \"xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\". Each x represents a hexadecimal digit (0-f).\n\nRegarding the case of the hex values, RFC4122 specifies that the hex values should be lowercase characters. Most modern scripting languages typically also represent hex values in lowercase characters following the RFC. However, dmidecode, WMI and some Redfish implementations currently use uppercase characters for UUID on output."
+            },
+            "action_details": {
+                "ResetBios": "A string, plain text or markdown. This will be inserted after the schema-supplied description of the action in the Actions details section."
             }
 	}
 ```
@@ -162,7 +163,7 @@ If `description` or `intro` are specified for a schema, that value will replace 
 
 The `mockup` and `jsonpayload` attributes are mutually exclusive. If both are provided, the content found at `mockup` will take precedence. Using a payload directory (specified as `payload_dir` in the Base Configuration file) is preferred over using these attributes.
 
-Note that `description`, `jsonpayload`, and `property_details` may instead be supplied in markdown files, by specifying a directory of markdown files with "supplement_md_dir".
+Note that `description`, `jsonpayload`, `property_details`, and `action_details` may instead be supplied in markdown files, by specifying a directory of markdown files with "supplement_md_dir".
 
 ## Examples
 

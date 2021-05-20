@@ -187,15 +187,8 @@ class CsvGenerator(DocFormatter):
         return ''
 
 
-    def format_action_details(self, prop_name, action_details):
-        """Generate a formatted Actions section.
-
-        Currently, Actions details are entirely derived from the supplemental documentation."""
-        # Action details are not included in CSV output.
-        return ''
-
-
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings=None):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings=None,
+                                     supplemental_details=None):
         """Generate a formatted Actions section from parameters data"""
         # Action details are not included in CSV output.
         return ''
