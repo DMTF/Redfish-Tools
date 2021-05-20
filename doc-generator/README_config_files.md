@@ -16,7 +16,7 @@ The [Content Supplement file](#content-supplement-config-file-supported-attribut
 Note that the names of some config keys differ from their command-line counterparts, as noted. Unless otherwise noted, the meaning of the parameter is the same as its command-line counterpart. The `uri_mapping` attribute is expected. All other attributes are optional in config files.
 
 - actions_in_property_table: Boolean. If true, omit "Actions" from the property tables.
-- add_toc: Boolean. If true, generate a table of contents and either substitute it for `[add_toc]` in the boilerplate (intro or postscript), or place it at the beginning of the output document. Makes sense only for HTML mode. If `[add_toc]` appears anywhere in the boilerplate, this flag is automatically set to true.
+- add_toc: Boolean. If true, generate a table of contents and either substitute it for `[add_toc]` in the boilerplate (intro or postscript), or place it at the beginning of the output document. If `[add_toc]` appears anywhere in the boilerplate, this flag is automatically set to true.
 - boilerplate_intro: location of a markdown file providing content to place at the beginning of the document (prior to the generated schema documentation). If a relative path, should be relative to the location of the config file.
 - boilerplate_postscript: location of a markdown file providing content to place at the end of the document (after to the generated schema documentation). If a relative path, should be relative to the location of the config file.
 - combine_multiple_refs: specifies a threshold at which multiple references to the same object within a schema will be moved into Property Details, instead of expanded in place. See below for more detail.
@@ -30,7 +30,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - html_title: A string to use as the `title` element in HTML output.
 - import_from: Name of a file or directory containing JSON schemas to process. Wild cards are acceptable. Default: json-schema.
 - locale: specifies a locale code (case-sensitive) for localized output. Localization of strings supplied by the doc generator code uses gettext. Locale files go in the "locale" directory in the doc_generator root. Translated descriptions and annotations may be supplied in localized JSON schema files.
-- normative: Produce normative (developer-focused) output. U
+- normative: Produce normative (developer-focused) output.
 - object_reference_disposition: a data structure that specifies properties that should be moved to the "Common Objects" section and/or objects that should be included inline where they are referenced, to override default behavior. See below.
 - omit_version_in_headers: Boolean. If true, omit schema versions in section headers.
 - outfile (command line: `out`): Output file (default depends on output format: output.md for Markdown, index.html for HTML, output.csv for CSV
@@ -42,7 +42,9 @@ Note that the names of some config keys differ from their command-line counterpa
 - property_index_config_out (command line: `property_index_config_out`): Generate an updated config file, with specified filename (property_index mode only).
 - registry_uri_to_local: For profile mode only, an object like uri_mapping, for locations of registries.
 - subset (command_line: `subset`): Path to a JSON profile document. Generates "Schema subset" output, with the subset defined in the JSON profile document.
+- supplement_md_dir: Directory location for markdown files with supplemental text. Optional. See below for more detail.
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
+- warn_missing_payloads (command line: `warn_missing_payloads`): Boolean, default false. Use along with "payload_dir" to be warned of missing example payloads. When true, the doc generator will emit a warning for missing examples for all documented schemas, missing Action Response examples with the action has an "actionResponse" property, and missing Action Request examples when the action has parameters.
 - with_table_numbering: Boolean, default false. Applies to markdown output only! When true, table captions and references will be added to the output. You will need to run a post-processor on the output to complete the numbering. See TABLE_NUMBER_README.md[TABLE_NUMBER_README.md].
 
 
@@ -55,6 +57,23 @@ The combine_multiple_refs attribute specifies a threshold at which multiple refe
 ```
       "combine_multiple_refs": 3,
 ```
+
+#### supplement_md_dir
+
+The supplement_dir attribute specifies a directory location for supplemental markdown content, on a schema-by-schema basis. This directory should contain a separate file for each documented schema for which you intend to provide supplemental content. Each file should be named with the schema name and a .md suffix; for example "Chassis.md".
+
+Within these markdown files, headings with a distinct format are used to identify different chunks of text:
+
+| Field | Delimiter | Purpose |
+| ----- | --------- | ------- |
+| description | #-- description | Replaces the schema's description |
+| jsonpayload | #-- jsonpayload | Example payload for this schema (or descriptive text to take the place of such a payload) |
+| property_details | #-- property_details | Marks the beginning of a block of Property Details for specific properties |
+| (property name)  | ##-- PropertyName | Marks a property details block for PropertyName. Can be used to add a Property Details section for a property that is not an enum. (Note double-#)|
+
+Note that these properties may also be supplied in the schema_supplement attribute in the Content Supplement Config file. In the case of a conflict, the Content Supplement Config file takes precedence.
+
+A very simple example can be found in doc_generator/tests/samples/supplement_tests/md_supplements/
 
 #### object_reference_disposition
 
@@ -131,9 +150,10 @@ The schema_supplement attribute defines a dictionary of structured content, incl
             },
             "property_details": {
                 "EnumPropertyName": "A string, plain text or markdown. This will be inserted after the property description and prior to the table of enum details in the property information under Property Details.",
-                "property_details": {
-                   "UUID": "\nThe UUID property contains a value that represents the universal unique identifier number (UUID) of a system.\n\nThe UUID property is a string data type. The format of the string is the 35-character string format specified in RFC4122: \"xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\". Each x represents a hexadecimal digit (0-f).\n\nRegarding the case of the hex values, RFC4122 specifies that the hex values should be lowercase characters. Most modern scripting languages typically also represent hex values in lowercase characters following the RFC. However, dmidecode, WMI and some Redfish implementations currently use uppercase characters for UUID on output."
-                }
+                "UUID": "\nThe UUID property contains a value that represents the universal unique identifier number (UUID) of a system.\n\nThe UUID property is a string data type. The format of the string is the 35-character string format specified in RFC4122: \"xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\". Each x represents a hexadecimal digit (0-f).\n\nRegarding the case of the hex values, RFC4122 specifies that the hex values should be lowercase characters. Most modern scripting languages typically also represent hex values in lowercase characters following the RFC. However, dmidecode, WMI and some Redfish implementations currently use uppercase characters for UUID on output."
+            },
+            "action_details": {
+                "ResetBios": "A string, plain text or markdown. This will be inserted after the schema-supplied description of the action in the Actions details section."
             }
 	}
 ```
@@ -143,6 +163,8 @@ Here, "SchemaName" may be a bare schema name, or it may be a schema name with an
 If `description` or `intro` are specified for a schema, that value will replace the description of the schema. If both are specified, the `description` will be output, followed by the `intro`.
 
 The `mockup` and `jsonpayload` attributes are mutually exclusive. If both are provided, the content found at `mockup` will take precedence. Using a payload directory (specified as `payload_dir` in the Base Configuration file) is preferred over using these attributes.
+
+Note that `description`, `jsonpayload`, `property_details`, and `action_details` may instead be supplied in markdown files, by specifying a directory of markdown files with "supplement_md_dir".
 
 ## Examples
 

@@ -625,21 +625,8 @@ pre.code{
         return '\n'.join(contents) + '\n'
 
 
-    def format_action_details(self, prop_name, action_details):
-        """Generate a formatted Actions section from supplemental markup."""
-
-        contents = []
-        contents.append(self.formatter.head_four(action_details.get('action_name', prop_name), self.level))
-        contents.append(self.formatter.markdown_to_html(action_details.get('text', '')))
-        if action_details.get('example'):
-            example = '```json\n' + action_details['example'] + '\n```\n'
-            contents.append(self.formatter.para(_('Example Action POST:')))
-            contents.append(self.formatter.markdown_to_html(example))
-
-        return '\n'.join(contents) + '\n'
-
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
-                                     version_strings=None):
+                                     version_strings=None, supplemental_details=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -664,6 +651,9 @@ pre.code{
         if deprecated_descr:
             formatted.append(self.formatter.para(italic(deprecated_descr)))
         formatted.append(self.formatter.para(prop_descr))
+
+        if supplemental_details:
+            formatted.append(self.formatter.markdown_to_html(supplemental_details))
 
         # Add the URIs for this action.
         formatted.append(self.format_uri_block_for_action(action_name, self.current_uris));
