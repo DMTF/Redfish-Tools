@@ -23,7 +23,6 @@ import gettext
 from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
 
-
 class InfoWarning(UserWarning):
     """ A warning class for informational messages that don't need a stack trace. """
     pass
@@ -47,10 +46,13 @@ class DocGenerator:
         translations.install()
         _ = translations.gettext
 
-        # Set up our simplified warning format. We need _ defined with the correct language before we do this.
+        # Set up our simplified warning format.
         def simple_warning_format(message, category, filename, lineno, file=None, line=None):
             """ a basic format for warnings from this program """
-            if category == InfoWarning:
+
+            msg = str(message)
+            message_skips_trace = 'MISSING JSON' in msg or 'mismatch detected in descriptions' in msg
+            if category == InfoWarning or message_skips_trace:
                 return '  Info: %(message)s' % {'message': message} + "\n"
             else:
                 return '  Warning: %(message)s (%(filename)s: %(lineno)s)' % {'message': message, 'filename': filename, 'lineno': lineno} + "\n"
@@ -66,6 +68,24 @@ class DocGenerator:
                 data = f.read()
                 if data:
                     config['payloads'][name] = data
+
+        if config.get('supplement_md_dir'):
+            import parse_md_supplement
+            supplement_dir = config.get('supplement_md_dir')
+            config['md_supplements'] = {}
+            supplement_files = [x for x in os.scandir(supplement_dir) if (x.is_file() and x.name.endswith('.md')) ]
+            for direntry in supplement_files:
+                schema_name = direntry.name[:-3]
+                f = open(direntry.path, 'r')
+                try:
+                    md_data = f.read()
+                except Exception as ex:
+                    warnings.warn('Problem with supplemental file "%(filename)s": %(ex)s' %
+                                      {'filename': direntry.path, 'ex': str(ex)})
+                if md_data:
+                    parsed_data = parse_md_supplement.parse_markdown_supplement(md_data, direntry.name)
+                    config['md_supplements'][schema_name] = parsed_data
+
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
@@ -1092,6 +1112,8 @@ class DocGenerator:
         parser.add_argument('--subset', dest='subset_doc',
                             help=('Path to a JSON profile document. Generates "Schema subset" '
                                   'output, with the subset defined in the JSON profile document.'))
+        parser.add_argument('--warn_missing_payloads', action='store_true', dest='warn_missing_payloads', default=False,
+                                help='Warn on missing JSON payloads')
 
         parser.add_argument('--property_index', action='store_true', dest='property_index', default=None,
                             help='Produce Property Index output.')
@@ -1189,6 +1211,7 @@ class DocGenerator:
             'units_translation': {},
             'combine_multiple_refs': 0,
             'with_table_numbering': False,
+            'warn_missing_payloads': False,
             }
 
         # combined_args is an intermediate dictionary, combining command-line and config parameters.
@@ -1217,8 +1240,9 @@ class DocGenerator:
                 'format', 'outfile', 'payload_dir', 'normative',
                 'profile_doc', 'subset_doc',
                 'property_index', 'property_index_config_out', 'escape_chars',
-                'locale'
+                'locale', 'warn_missing_payloads'
                 ]
+
             for x in config_args:
                 if config_data.get(x) and (x not in combined_args or combined_args[x] is None):
                     combined_args[x] = config_data[x]
@@ -1422,6 +1446,8 @@ class DocGenerator:
 
         if combined_args.get('locale'):
             config['locale'] = combined_args['locale']
+
+        config['warn_missing_payloads'] = combined_args.get('warn_missing_payloads', False)
 
         return config
 

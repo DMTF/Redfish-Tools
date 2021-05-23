@@ -368,7 +368,7 @@ describe('Mockup Syntax Tests', () => {
       if(process.env.TRAVIS === undefined || process.env.TRAVIS_BRANCH === 'master') {
         //Ignore the paging file, the external error example, contrained composition request, and action requests/responses
         if(file.includes('$ref') === false && file.includes('/ExtErrorResp') === false && file.includes('/ConstrainedCompositionCapabilities') === false &&
-           file.includes('Request.json') === false && file.includes('Response.json') === false) {
+           file.includes('Request.json') === false && file.includes('Response.json') === false && file.includes("-request") === false && file.includes("-response") === false) {
           it('Is Valid Type', function() {
             validCSDLTypeInMockup(json, file);
           });

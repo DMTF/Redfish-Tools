@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2018-2021 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -28,7 +28,7 @@ schema_supplement = {
     'description': "SUPPLEMENT-SUPPLIED DESCRIPTION for Endpoint",
     'intro': "SUPPLEMENT-SUPPLIED INTRO for Endpoint",
     'jsonpayload': "SUPPLEMENT-SUPPLIED JSON for Endpoint",
-    },
+    }
     }
 
 property_description_overrides = {
@@ -50,7 +50,6 @@ base_config = {
     'wants_common_objects': True,
     'profile': {},
     'escape_chars': [],
-    'schema_supplement': schema_supplement,
     'property_description_overrides': property_description_overrides,
     'intro_content': "# Common Objects\n\n[insert_common_objects]\n\ntext1\n~pagebreak~\ntext2\n",
     }
@@ -66,6 +65,8 @@ def test_supplement_output_html (mockRequest):
 
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    config['schema_supplement'] = schema_supplement
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
@@ -98,10 +99,44 @@ def test_supplement_output_html (mockRequest):
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_supplement_output_action_details_in_html (mockRequest):
+    """ Test of action_details in supplement config. We happen to exercise HTML output here. """
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'html'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'certificate_service'))
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    config['schema_supplement'] = {
+        'CertificateService': {
+            'action_details': {
+                'ReplaceCertificate': "ACTION DETAILS for ReplaceCertificate",
+                "GenerateCSR": "ACTION DETAILS for GenerateCSR",
+                }
+            }
+        }
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # This test verifies the text was picked up, but not that it was placed correctly.
+    expected_strings = [
+        '<p>ACTION DETAILS for GenerateCSR</p>',
+        '<p>ACTION DETAILS for ReplaceCertificate</p>',
+        ]
+    for es in expected_strings:
+        assert es in output
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_supplement_description_vs_full_html (mockRequest):
 
     config = copy.deepcopy(base_config)
     config['output_format'] = 'html'
+    config['schema_supplement'] = schema_supplement
 
     config['property_description_overrides'] = {
         "IPv4Address": "This is a description override for the IPv4Address object.",
@@ -161,9 +196,104 @@ def test_supplement_output_slate (mockRequest):
     config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
     config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
 
+    config['schema_supplement'] = schema_supplement
+
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
     # Check for ~pagebreak~ converted to <p style="page-break-before: always">
     pbrk_location = output[output.find('text1') : output.find('text2')]
     assert '<p style="page-break-before: always"></p>' in pbrk_location, "HTML output lacked expected page break markup"
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_supplement_file_parsing (mockRequest):
+    """ Parse supplementary blocks from a markdown file """
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'ipaddresses'))
+    supplement_md_dir = os.path.abspath(os.path.join(testcase_path, 'md_supplements'))
+
+    config['supplement_md_dir'] = supplement_md_dir
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    assert docGen.config['md_supplements'] ==  {
+        "Endpoint": {
+            "description": "INTRO FOR Endpoint schema.\n\nThis one happens to be multiple lines.",
+            "jsonpayload": '''```json
+{ "payload": "A chunk of JSON from the md supplement" }
+```''',
+            "property_details": {
+                "HostReservationMemoryBytes": "PROPERTY DETAILS for HostReservationMemoryBytes"
+                }
+            },
+            "CertificateService": {
+                "action_details": {
+                    "ReplaceCertificate": "ACTION DETAILS for ReplaceCertificate",
+                    "GenerateCSR": "ACTION DETAILS for GenerateCSR"
+                    }
+                }
+        }
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_supplement_output_from_files (mockRequest):
+    """ Test of supplementary blocks pulled in from markdown file(s) rather than schema_supplement """
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'ipaddresses'))
+    supplement_md_dir = os.path.abspath(os.path.join(testcase_path, 'md_supplements'))
+
+    config['supplement_md_dir'] = supplement_md_dir
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # This test verifies the text was picked up, but not that it was placed correctly.
+    expected_strings = [
+        "INTRO FOR Endpoint schema.\n\nThis one happens to be multiple lines.",
+        '```json\n{ "payload": "A chunk of JSON from the md supplement" }\n```',
+        "PROPERTY DETAILS for HostReservationMemoryBytes",
+        '#### HostReservationMemoryBytes:', # This is a Property Details heading
+        ]
+    for es in expected_strings:
+        assert es in output
+
+
+@patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
+def test_supplement_output_from_files_with_action_details (mockRequest):
+    """ Test of supplementary blocks for Action Details pulled in from markdown file(s) """
+
+    config = copy.deepcopy(base_config)
+    config['output_format'] = 'markdown'
+
+    input_dir = os.path.abspath(os.path.join(testcase_path, 'certificate_service'))
+    supplement_md_dir = os.path.abspath(os.path.join(testcase_path, 'md_supplements'))
+
+    config['supplement_md_dir'] = supplement_md_dir
+
+    config['uri_to_local'] = {'redfish.dmtf.org/schemas/v1': input_dir}
+    config['local_to_uri'] = { input_dir : 'redfish.dmtf.org/schemas/v1'}
+
+    docGen = DocGenerator([ input_dir ], '/dev/null', config)
+    output = docGen.generate_docs()
+
+    # This test verifies the text was picked up, but not that it was placed correctly.
+    expected_strings = [
+        'ACTION DETAILS for GenerateCSR',
+        'ACTION DETAILS for ReplaceCertificate',
+        ]
+    for es in expected_strings:
+        assert es in output

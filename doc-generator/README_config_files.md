@@ -85,6 +85,7 @@ For a mapping of configuration keys to command-line arguments, see [Mapping of c
 * [subset_doc](#subset_doc)
 * [suppress_version_history](#suppress_version_history)
 * [uri_mapping](#uri_mapping)
+* [warn_missing_payloads](#warn_missing_payloads)
 * [version](#version)
 
 #### actions_in_property_table
@@ -372,7 +373,20 @@ Object. Defines partial URL of schema repositories as attributes, and local dire
    "redfish.dmtf.org/schemas/v1": "./json-schema"
 }
 ```
-   
+
+#### warn_missing_payloads
+
+Boolean. Use with `payload_dir` to receive warnings about missing example payloads.
+
+Value is:
+
+* `true`. Receive warnings about missing:
+
+    * Examples for all documented schemas
+    * Action response examples when the action has an `actionResponse` property
+    * Action request examples when the action has parameters.
+* `false`. (Default) Do not receive warnings.
+
 #### version
 
 String. Defines an optional version string, which might be meaningful in the future.

@@ -19,7 +19,7 @@ from format_utils import FormatUtils
 class MarkdownGenerator(DocFormatter):
     """Provides methods for generating markdown from Redfish schemas.
 
-    Markdown is targeted to the Slate documentation tool: https://github.com/lord/slate
+    "slate" mode markdown is targeted to the Slate documentation tool: https://github.com/lord/slate
     """
 
 
@@ -263,16 +263,29 @@ class MarkdownGenerator(DocFormatter):
         # If profile reqs are present, massage them:
         profile_access = self.format_base_profile_access(formatted_details)
 
-        if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
-            if profile_access:
-                prop_type += '<br><br>' + self.formatter.italic(profile_access)
-        elif prop_access:
-            prop_type += '<br><br>' + self.formatter.italic(prop_access)
+        if self.markdown_mode == 'slate':
+            if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+                if profile_access:
+                    prop_type += '<br><br>' + self.formatter.italic(profile_access)
+            elif prop_access:
+                prop_type += '<br><br>' + self.formatter.italic(prop_access)
 
 
         row = []
         row.append(indentation_string + name_and_version)
         row.append(prop_type)
+        if self.markdown_mode != 'slate':
+            if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+                if profile_access:
+                    row.append(self.formatter.italic(profile_access))
+                else:
+                    row.append('')
+            else:
+                if prop_access:
+                    row.append(self.formatter.italic(prop_access))
+                else:
+                    row.append('')
+
         row.append(formatted_details['descr'])
 
         formatted.append('| ' + ' | '.join(row) + ' |')
@@ -489,23 +502,8 @@ class MarkdownGenerator(DocFormatter):
         return formatted
 
 
-    def format_action_details(self, prop_name, action_details):
-        """Generate a formatted Actions section from supplemental markup."""
-
-        contents = []
-        contents.append(self.format_head_four(action_details.get('action_name', prop_name), self.level))
-        if action_details.get('text'):
-            contents.append(action_details.get('text'))
-        if action_details.get('example'):
-            example = '```json\n' + action_details['example'] + '\n```\n'
-            contents.append(_('Example Action POST:') + '\n')
-            contents.append(example)
-
-        return '\n'.join(contents) + '\n'
-
-
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
-                                     version_strings=None):
+                                     version_strings=None, supplemental_details=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -528,12 +526,15 @@ class MarkdownGenerator(DocFormatter):
         if self.markdown_mode == 'slate':
             formatted.append(self.formatter.head_five(name_and_version, self.level))
         else:
-            formatted.append(self.formatter.head_three(name_and_version, self.level))
+            formatted.append(self.formatter.head_four(name_and_version, self.level))
 
         if deprecated_descr:
             formatted.append(self.formatter.para(italic(deprecated_descr)))
-        formatted.append(self.formatter.head_four(_("Description"), self.level))
+        formatted.append(self.formatter.para(self.formatter.bold(_("Description"))))
         formatted.append(self.formatter.para(prop_descr))
+
+        if supplemental_details:
+            formatted.append("\n" + supplemental_details)
 
         # Add the URIs for this action.
         formatted.append(self.format_uri_block_for_action(action_name, self.current_uris));
@@ -543,8 +544,13 @@ class MarkdownGenerator(DocFormatter):
         if action_parameters:
             rows = []
             # Table start:
-            rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Notes') + "     |")
-            rows.append("| --- | --- | --- |")
+
+            if self.markdown_mode == 'slate':
+                rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Notes') + "     |")
+                rows.append("| --- | --- | --- |")
+            else:
+                rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Attributes') + '   | ' + _('Notes') + "     |")
+                rows.append("| --- | --- | --- | --- |")
 
             param_names = [x for x in action_parameters.keys()]
 
@@ -555,7 +561,7 @@ class MarkdownGenerator(DocFormatter):
 
             param_names.sort(key=str.lower)
 
-        heading = self.formatter.head_four(_("Action parameters"), self.level)
+        heading = self.formatter.para(self.formatter.bold(_("Action parameters")))
         if len(param_names):
             for param_name in param_names:
                 formatted_parameters = self.format_property_row(schema_ref, param_name, action_parameters[param_name], ['Actions', prop_name], False, True)
@@ -566,10 +572,12 @@ class MarkdownGenerator(DocFormatter):
                 caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name})
                 preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")) + "\n"
                 formatted_rows = preamble +  formatted_rows + caption
+            else:
+                formatted.append(heading)
             formatted.append(formatted_rows)
 
         else:
-            formatted.append(self.formatter.para(heading))
+            formatted.append(heading)
             formatted.append(self.formatter.para(_("This action takes no parameters.")))
 
         return "\n".join(formatted)
@@ -663,9 +671,14 @@ class MarkdownGenerator(DocFormatter):
 
                 if preamble:
                     contents.append(preamble)
-                contents.append('|Property     |Type     |Notes     |')
 
-                contents.append('| --- | --- | --- |')
+                if self.markdown_mode == 'slate':
+                    contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Notes') + '     |')
+                    contents.append('| --- | --- | --- |')
+                else:
+                    contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Attributes') + '   |' + _('Notes') + '     |')
+                    contents.append('| --- | --- | --- | --- |')
+
                 contents.append('\n'.join(section['properties']))
 
                 if caption:
@@ -710,6 +723,7 @@ class MarkdownGenerator(DocFormatter):
                             contents.append(info['formatted_descr'])
 
             if section.get('json_payload') and (self.markdown_mode != 'slate'): # Otherwise, this was inserted above.
+                contents.append(self.formatter.head_three(_('Example response'), self.level))
                 contents.append(section['json_payload'])
 
         self.sections = []
@@ -769,10 +783,54 @@ search: true
             collections_doc = self.generate_collections_doc()
             output = output.replace('[insert_collections]', collections_doc, 1)
 
+        if self.config.get('add_toc'):
+            output = self.generate_toc_and_add_anchors(output)
+
         # Replace pagebreak markers with HTML pagebreak markup
         output = output.replace('~pagebreak~', '<p style="page-break-before: always"></p>')
 
         return output
+
+
+    def generate_toc_and_add_anchors(self, markdown_blob):
+        """ Generate a TOC for a blob of markdown, add anchors to markdown, and insert TOC """
+
+        import urllib
+
+        toc = ''
+        output_blob = ''
+        anchors_seen = []
+        for line in markdown_blob.splitlines():
+            heading = None
+            if line.startswith('# '):
+                prefix = '# '
+                heading = line[2:]
+                indent = 0
+            if line.startswith('## '):
+                prefix = '## '
+                heading = line[3:]
+                indent = 1
+            if heading:
+                anchor = urllib.parse.quote(heading.lower().replace(' ', '-'))
+                if anchor in anchors_seen:
+                    initial_anchor = anchor
+                    num = 0
+                    while anchor in anchors_seen:
+                        num = num + 1
+                        anchor = initial_anchor + '-' + str(num)
+                anchors_seen.append(anchor)
+
+                toc += self.formatter.para(('   ' * indent) + '- [' + heading + '](#' + anchor + ')')
+                line = prefix + '<a name="' + anchor + '"></a>' + heading
+
+            output_blob = output_blob + '\n' + line
+
+        if '[add_toc]' in output_blob:
+            output_blob = output_blob.replace('[add_toc]', toc, 1)
+        else:
+            output_blob = toc + "\n" + output_blob
+
+        return output_blob
 
 
     def process_intro(self, intro_blob):
@@ -801,6 +859,7 @@ search: true
             'profile_resources': self.config.get('profile_resources', {}),
             'wants_common_objects': self.config.get('wants_common_objects'),
             'actions_in_property_table': self.config.get('actions_in_property_table', True),
+            'output_format': self.config.get('output_format')
             }
 
         for line in intro_blob.splitlines():
@@ -858,23 +917,13 @@ search: true
         """ Add the URIs (which should be a list) """
         uri_block = self.format_head_three(_('URIs'), self.level)
         for uri in sorted(uris, key=str.lower):
-            uri_block += "\n" + self.format_uri(uri)
+            uri_block += "\n" + self.format_uri(uri) + "<br>"
         self.this_section['uris'] = uri_block + "\n"
 
 
     def add_conditional_requirements(self, text):
         """ Add a conditional requirements, which should already be formatted """
         self.this_section['conditional_requirements'] = "\n**" + _('Conditional Requirements') + ":**\n\n" + text + "\n"
-
-
-    def format_uri_block_for_action(self, action, uris):
-        """ Create a URI block for this action & the resource's URIs """
-        uri_block = self.formatter.head_four(_("Action URIs"), self.level)
-        for uri in sorted(uris, key=str.lower):
-            uri = uri + "/Actions/" + action
-            uri_block += "\n" + self.format_uri(uri)
-
-        return uri_block
 
 
     def format_json_payload(self, json_payload):
