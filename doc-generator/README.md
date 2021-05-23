@@ -253,6 +253,10 @@ To configure the [output format and mode](#output-formats-and-modes) and other a
                      <td align="left" valign="top"></td>
                   </tr>
                   <tr>
+                     <td align="left" valign="top"><a href="README_config_files.md#warn_missing_payloads" title="README_config_files.md#warn_missing_payloads">warn_missing_payloads</a></td>
+                     <td align="left" valign="top"><a href="#usage" title="#usage">--warn_missing_payloads</a></td>
+                  </tr>
+                  <tr>
                      <td align="left" valign="top"><a href="README_config_files.md#version" title="README_config_files.md#version">version</a></td>
                      <td align="left" valign="top"></td>
                   </tr>
