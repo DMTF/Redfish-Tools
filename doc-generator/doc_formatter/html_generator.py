@@ -348,15 +348,15 @@ pre.code{
                 and not as_action_parameters):
             if formatted_details['read_only']:
                 prop_access = '<nobr>' + _('read-only') + '</nobr>'
-            else:
-                # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
-                # emit read-only.
-                if (self.config.get('subset_mode')
-                        and formatted_details.get('profile_write_req')
-                        and (formatted_details['profile_write_req'] == 'None')):
-                    prop_access = '<nobr>' + _('read-only') + '</nobr>'
-                else:
-                    prop_access = '<nobr>' + _('read-write') + '</nobr>'
+            # else:
+            #     # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
+            #     # emit read-only.
+            #     if (self.config.get('subset_mode')
+            #             and formatted_details.get('profile_write_req')
+            #             and (formatted_details['profile_write_req'] == 'None')):
+            #         prop_access = '<nobr>' + _('read-only') + '</nobr>'
+            #     else:
+            #         prop_access = '<nobr>' + _('read-write') + '</nobr>'
 
         if formatted_details['prop_required'] or formatted_details.get('required_parameter'):
             prop_access += ' <nobr>' + _('required') + '</nobr>'
@@ -440,7 +440,7 @@ pre.code{
         # Property enums, look for MinSupportValues/RecommendedValues.
         profile_mode = self.config.get('profile_mode')
         subset_mode = self.config.get('subset_mode')
-        if profile_mode or subset_mode: # TODO: split these up
+        if profile_mode:
             if profile is None:
                 profile = {}
             profile_values = profile.get('Values', [])
@@ -452,14 +452,18 @@ pre.code{
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
 
+        if subset_mode:
+            pass # TODO
+
         # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
         # means all values are supported.
         # Otherwise, Values/ParameterValues specifies the set that should be listed.
         if subset_mode:
-            if len(profile_values):
-                enum = [x for x in enum if x in profile_values]
-            elif len(profile_parameter_values):
-                enum = [x for x in enum if x in profile_parameter_values]
+            pass # TODO
+            # if len(profile_values):
+            #     enum = [x for x in enum if x in profile_values]
+            # elif len(profile_parameter_values):
+            #     enum = [x for x in enum if x in profile_parameter_values]
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
@@ -679,8 +683,9 @@ pre.code{
             param_names = [x for x in action_parameters.keys()]
 
             if self.config.get('subset_mode'):
-                if profile and profile.get('Parameters'):
-                    param_names = [x for x in profile['Parameters'].keys() if x in param_names]
+                pass # TODO
+                # if profile and profile.get('Parameters'):
+                #     param_names = [x for x in profile['Parameters'].keys() if x in param_names]
                 # If there is no profile for this action, all parameters should be output.
 
             param_names.sort(key=str.lower)

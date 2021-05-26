@@ -84,29 +84,24 @@ class DocGenerator:
                     config['md_supplements'][schema_name] = parsed_data
 
         if config.get('subset_mode'):
-            #  TODO: rework for new-style subset docs (we probably just ingest.)
-            profile_resources = DocGenUtilities.load_as_json(config.get('subset_doc')).get('Resources', {})
+            subset_resources = DocGenUtilities.load_as_json(config.get('subset_doc')).get('IncludeSchemas')
 
-            # Warn the user if a profile specifies items in selected schemas that "don't make sense":
-            for schema_name in ['IPAddresses', 'Redundancy', 'Resource', 'Settings']:
-                if schema_name in profile_resources:
-                    warnings.warn('Subsets should not specify requirements directly on the "%(name)s" schema.' %
-                                      {'name': schema_name})
+            if subset_resources:
+                # Warn the user if a profile specifies items in selected schemas that "don't make sense":
+                for schema_name in ['IPAddresses', 'Redundancy', 'Resource', 'Settings']:
+                    if schema_name in subset_resources:
+                        warnings.warn('Subsets should not specify requirements directly on the "%(name)s" schema.' %
+                                          {'name': schema_name})
 
-            if not profile_resources:
+            if not subset_resources:
                 warnings.warn('No subset found; unable to produce subset mode documentation.')
                 sys.exit()
 
-            # Index profile_resources by Repository & schema name
-            profile_resources_indexed = {}
-            for schema_name in profile_resources.keys():
-                profile_data = profile_resources[schema_name]
-                repository = profile_data.get('Repository', 'redfish.dmtf.org/schemas/v1')
-                normalized_uri = repository + '/' + schema_name + '.json'
-                profile_data['Schema_Name'] = schema_name
-                profile_resources_indexed[normalized_uri] = profile_data
-
-            self.config['profile_resources'] = profile_resources_indexed
+            # Add default Baseline to each entry:
+            for schema_name in subset_resources.keys():
+                if not subset_resources[schema_name].get('Baseline'):
+                    subset_resources[schema_name]['Baseline'] = True
+            self.config['subset_resources'] = subset_resources
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
@@ -402,8 +397,8 @@ class DocGenerator:
         for normalized_uri in grouped_files.keys():
             data = self.process_files(normalized_uri, grouped_files[normalized_uri])
             if not data:
-                # If we're in profile mode, this is probably normal.
-                if not self.config.get('profile_mode') or self.config.get('subset_mode'):
+                # If we're in profile mode or subset mode this is probably normal; otherwise warn.
+                if not (self.config.get('profile_mode') or self.config.get('subset_mode')):
                     warnings.warn('Unable to process files for %(uri)s' % {'uri': normalized_uri})
                 continue
             data['uris'] = schema_data[normalized_uri].get('_uris', [])
@@ -661,6 +656,7 @@ class DocGenerator:
         profile_mode = self.config.get('profile_mode')
         profile = self.config.get('profile_resources', {})
         subset_mode = self.config.get('subset_mode')
+        subset = self.config.get('subset_resources', {})
 
         data = DocGenUtilities.load_as_json(filename)
 
@@ -686,25 +682,23 @@ class DocGenerator:
             property_data['versionDeprecated'] = data.get('versionDeprecated')
 
         min_version = False
-        if profile_mode or subset_mode:
+        if profile_mode:
             schema_profile = profile.get(generalized_uri)
             if schema_profile:
-                if subset_mode:
+                min_version = schema_profile.get('MinVersion')
+                if min_version:
+                    if version:
+                        property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s'
+                            % {'minversion': min_version, 'version': version})
+                    else:
+                        # this is unlikely
+                        property_data['name_and_version'] += ' ' + ' v%(version)s+' % {'version': min_version}
+                elif version:
                     property_data['name_and_version'] += ' ' + version
-                else:
-                    min_version = schema_profile.get('MinVersion')
-                    if min_version:
-                        if version:
-                            property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s'
-                                % {'minversion': min_version, 'version': version})
-                        else:
-                            # this is unlikely
-                            property_data['name_and_version'] += ' ' + ' v%(version)s+' % {'version': min_version}
-                    elif version:
-                        property_data['name_and_version'] += ' ' + version
             else:
                 # Skip schemas that aren't mentioned in the profile:
                 return {}
+
         elif version:
             property_data['name_and_version'] += ' ' + version
 
@@ -766,6 +760,9 @@ class DocGenerator:
         profile_mode = self.config.get('profile_mode')
         profile = self.config.get('profile_resources', {})
 
+        subset_mode = self.config.get('subset_mode')
+        subset = self.config.get('subset_resources', {})
+
         data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
 
@@ -795,6 +792,12 @@ class DocGenerator:
             if not schema_profile:
                 # Skip schemas that aren't mentioned in the profile:
                 return property_data
+
+        # if subset_mode:
+        #     schema_subset = subset.get(schema_name)
+        #     if not schema_subset:
+        #         # Skip schemas that aren't mentioned in the profile:
+        #         return property_data
 
         definitions = data.get('definitions')
         if 'definitions' not in property_data:

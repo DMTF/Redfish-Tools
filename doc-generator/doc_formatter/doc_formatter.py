@@ -517,6 +517,7 @@ class DocFormatter:
             details = property_data[schema_ref]
             schema_name = details['schema_name']
             profile = config.get('profile_resources', {}).get(schema_ref, {})
+            subset  = config.get('subset_resources', {}).get(schema_name, {})
             self.ref_deduplicator[schema_ref] = {}
 
             version = property_data.get('latest_version', '1')
@@ -601,8 +602,10 @@ class DocFormatter:
 
                 properties = details['properties']
                 prop_names = [x for x in properties.keys()]
-                if (self.config.get('profile_mode') or self.config.get('subset_mode')) and profile:
+                if self.config.get('profile_mode') and profile:
                     prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
+                if self.config.get('subset_mode') and subset:
+                    prop_names = self.filter_props_by_subset(prop_names, subset)
 
                 prop_names = self.organize_prop_names(prop_names)
 
@@ -868,6 +871,7 @@ class DocFormatter:
             for elt in prop_anyof:
                 if '$ref' in elt:
                     this_ref = elt.get('$ref')
+
                     if excerpt_copy_name:
                         prop_ref = this_ref
                         break
@@ -1146,6 +1150,8 @@ class DocFormatter:
 
             # If this is a nullable property (based on {type: 'null'} object AnyOf), add 'null' to the type.
             if is_nullable:
+                if len(prop_infos) < 1:
+                    import pdb;pdb.set_trace()
                 prop_infos[0]['nullable'] = True
                 if prop_infos[0].get('type'):
                     prop_infos[0]['type'] = [prop_infos[0]['type'], 'null']
@@ -1167,6 +1173,28 @@ class DocFormatter:
         return prop_names
 
 
+    def filter_props_by_subset(self, prop_names, subset):
+
+        if subset is None:
+            warnings.warn("filter_props_by_subset was called with no subset data")
+            return prop_names
+
+        filtered_names = []
+        if subset.get('Baseline'):
+            filtered_names = [x for x in prop_names]
+            for name, instrs in subset.get('Properties', {}).items():
+                if not instrs.get('Include', True):
+                    if name in filtered_names:
+                        filtered_names.remove(name)
+
+        else:
+            for name, instrs in subset.get('Properties', {}).items():
+                if instrs.get('Include') and name not in filtered_names:
+                    filtered_names.append(name)
+
+        return filtered_names
+
+
     def filter_props_by_profile(self, prop_names, profile, schema_requires, is_action=False):
 
         if profile is None:
@@ -1176,13 +1204,12 @@ class DocFormatter:
         if profile.get('PropertyRequirements') is None and not is_action:
             # if a resource is specified with no PropertyRequirements, include them all...
             # but do omit "Actions" if there are no ActionRequirements (profile mode).
-            # For subset mode, "Actions" should be included either way.
-            if self.config.get('subset_mode') or (profile.get('ActionRequirements') and len(profile['ActionRequirements'])):
+            if profile.get('ActionRequirements') and len(profile['ActionRequirements']):
                 return prop_names
             else:
                 return [x for x in prop_names if x != 'Actions']
 
-        if self.config.get('profile_mode') == 'terse' or self.config.get('subset_mode'):
+        if self.config.get('profile_mode') == 'terse':
             if is_action:
                 profile_props = [x for x in profile.keys()]
             else:
@@ -1243,9 +1270,13 @@ class DocFormatter:
     def skip_schema(self, schema_name):
         """ True if this schema should be skipped in the output """
 
-        if self.config.get('profile_mode') or self.config.get('subset_mode'):
+        if self.config.get('profile_mode'):
             if schema_name in self.config.get('profile', {}).get('Resources', {}):
                 return False
+
+        if self.config.get('subset_mode'):
+            if schema_name not in self.config.get('subset_resources').keys():
+                return True
 
         if schema_name in self.config.get('excluded_schemas', []):
             return True
@@ -1429,7 +1460,7 @@ class DocFormatter:
         profile = None
         if '_profile' in prop_info:
             profile = prop_info['_profile']
-        elif (self.config.get('profile_mode') or self.config.get('subset_mode')) and prop_name: # TODO: unclear if this clause is still needed.
+        elif self.config.get('profile_mode') and prop_name:
             prop_brief_name = prop_name
             profile_section = 'PropertyRequirements'
             if within_action:
@@ -1872,14 +1903,18 @@ class DocFormatter:
         prop_names = patterns = profile = False
         if len(prop_path) and prop_path[0] == 'Actions':
             profile_section = 'ActionRequirements'
+            subset_section = 'Actions'
         else:
             profile_section = 'PropertyRequirements'
+            subset_section = 'Properties'
+
+        subset = None
 
         if properties:
 
             prop_names = [x for x in properties.keys()]
 
-            if self.config.get('profile_mode') == 'terse' or self.config.get('subset_mode'):
+            if self.config.get('profile_mode') == 'terse':
 
                 if '_profile' in prop_info:
                     profile = prop_info['_profile']
@@ -1890,12 +1925,25 @@ class DocFormatter:
                     prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
                 prop_names.sort(key=str.lower)
 
+            elif self.config.get('subset_mode'):
+                print(prop_names)
+                if '_subset' in prop_info:
+                    subset = prop_info['_subset']
+                elif len(prop_path):
+                    subset = self.get_prop_subset(in_schema_name, prop_path, subset_section)
+
+                if subset:
+                    prop_names = self.filter_props_by_subset(prop_names, subset)
+                print(prop_names)
+
+            else:
+                prop_names = self.exclude_annotations(prop_names)
+
                 filtered_properties = {}
                 for k in prop_names:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
-            else:
-                prop_names = self.exclude_annotations(prop_names)
+
 
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
@@ -2215,6 +2263,46 @@ class DocFormatter:
                 prop_reqs = prop_profile.get('PropertyRequirements', prop_profile.get('Parameters', {}))
 
         return prop_profile
+
+
+    def get_prop_subset(self, schema_name, prop_path, section):
+        """Get subset data for the specified property.
+
+        Section is "Properties" or "Actions."
+        """
+
+        prop_subset = None
+        subset = self.config.get('subset_resources', {}).get(schema_name)
+        if subset:
+            prop_subset = {}
+            prop_subset['Baseline'] = subset.get('Baseline', False)
+
+            if section == 'Actions':
+                subsection = 'Parameters'
+            else:
+                subsection = 'Properties'
+
+            subset = subset.get(section, {}) # 'Properties' or 'Actions'
+            prop_path = prop_path[1:]
+            first = True
+
+            for prop_name in prop_path:
+                if not prop_name:
+                    import pdb; pdb.set_trace()
+                    continue
+                if not first:
+                    subset = subset.get(subsection, {})
+                subset = subset.get(prop_name, {})
+                first = False
+
+        if subset:
+            prop_subset['Properties'] = subset
+
+        import json
+        print(prop_path)
+        print(json.dumps(prop_subset, indent=3))
+        return prop_subset
+
 
 
     def get_latest_version(self, schema_ref):

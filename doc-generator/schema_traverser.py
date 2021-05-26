@@ -68,6 +68,7 @@ class SchemaTraverser:
             if element in schema:
                 schema = schema[element]
             else:
+                import pdb; pdb.set_trace()
                 return None
 
         schema = dict(schema)
