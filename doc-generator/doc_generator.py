@@ -99,7 +99,7 @@ class DocGenerator:
 
             # Add default Baseline to each entry:
             for schema_name in subset_resources.keys():
-                if not subset_resources[schema_name].get('Baseline'):
+                if 'Baseline' not in subset_resources[schema_name].keys():
                     subset_resources[schema_name]['Baseline'] = True
             self.config['subset_resources'] = subset_resources
 

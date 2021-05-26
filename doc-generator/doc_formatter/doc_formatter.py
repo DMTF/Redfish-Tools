@@ -1189,7 +1189,7 @@ class DocFormatter:
 
         else:
             for name, instrs in subset.get('Properties', {}).items():
-                if instrs.get('Include') and name not in filtered_names:
+                if instrs.get('Include', True) and name not in filtered_names:
                     filtered_names.append(name)
 
         return filtered_names
