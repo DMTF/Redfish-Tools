@@ -96,7 +96,7 @@ class DocFormatter:
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
             'readonly', 'prop_required', 'prop_required_on_create', 'requiredParameter', 'required_parameter',
             'versionAdded', 'versionDeprecated', 'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated',
-            'translation', '_profile'
+            'translation', '_profile', '_subset'
             ]
 
 
@@ -281,7 +281,7 @@ class DocFormatter:
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                    supplemental_details, parent_prop_info, profile={}):
+                                    supplemental_details, parent_prop_info, profile=None, subset=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
         raise NotImplementedError
 
@@ -313,7 +313,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings=None):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings=None, subset=None):
         """Generate a formatted Actions section from parameters data"""
         raise NotImplementedError
 
@@ -614,7 +614,9 @@ class DocFormatter:
                     for prop_name in prop_names:
                         prop_info = properties[prop_name]
                         if profile:
-                            prop_info['_profile'] = profile.get('PropertyRequirements', {}.get(prop_name))
+                            prop_info['_profile'] = profile.get('PropertyRequirements', {}).get(prop_name)
+                        if subset:
+                            prop_info['_subset'] = subset.get('Properties', {}).get(prop_name)
 
                         # Note: we are calling extend_property_info here solely for the purpose of counting refs.
                         # In the next loop we call it again to generate the data to format -- we need to get the complete count
@@ -638,6 +640,8 @@ class DocFormatter:
                     prop_info['required_parameter'] = prop_info.get('requiredParameter')
                     if profile:
                         prop_info['_profile'] = profile.get('PropertyRequirements', {}).get(prop_name)
+                    if subset:
+                        prop_info['_subset'] = subset.get('Properties', {}).get(prop_name)
 
                     prop_infos = self.extend_property_info(schema_ref, prop_info)
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
@@ -1150,8 +1154,6 @@ class DocFormatter:
 
             # If this is a nullable property (based on {type: 'null'} object AnyOf), add 'null' to the type.
             if is_nullable:
-                if len(prop_infos) < 1:
-                    import pdb;pdb.set_trace()
                 prop_infos[0]['nullable'] = True
                 if prop_infos[0].get('type'):
                     prop_infos[0]['type'] = [prop_infos[0]['type'], 'null']
@@ -1179,16 +1181,24 @@ class DocFormatter:
             warnings.warn("filter_props_by_subset was called with no subset data")
             return prop_names
 
+        if 'AliasBootOrder' in prop_names:
+            import pdb; pdb.set_trace()
+
+        # Actions have Parameters, properties have Properties.
+        subsection = 'Properties'
+        if 'Parameters' in subset:
+            subsection = 'Parameters'
+
         filtered_names = []
-        if subset.get('Baseline'):
+        if subset.get('Baseline') or subset.get('Include') or subset.get('Version'):
             filtered_names = [x for x in prop_names]
-            for name, instrs in subset.get('Properties', {}).items():
+            for name, instrs in subset.get(subsection, {}).items():
                 if not instrs.get('Include', True):
                     if name in filtered_names:
                         filtered_names.remove(name)
 
         else:
-            for name, instrs in subset.get('Properties', {}).items():
+            for name, instrs in subset.get(subsection, {}).items():
                 if instrs.get('Include', True) and name not in filtered_names:
                     filtered_names.append(name)
 
@@ -1349,6 +1359,15 @@ class DocFormatter:
             path_to_prop.append(prop_name)
             fallback_profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
+        if self.config.get(subset_mode) and prop_name:
+           subset_section = 'Properties'
+           if within_action:
+               subset_section = 'Actions'
+           path_to_prop = prop_path.copy()
+           path_to_prop.append(prop_name)
+           schema_name = traverser.get_schema_name(schema_ref)
+           fallback_subset = self.get_prop_subset(schema_name, path_to_prop, subset_section)
+
         anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path)
                          for x in prop_infos]
 
@@ -1394,6 +1413,11 @@ class DocFormatter:
             profile = parsed['_profile']
         else:
             profile = fallback_profile
+
+        if '_subset' in parsed:
+            subset = parsed['_subset']
+        else:
+            subset = fallback_subset
 
         if profile is not None:
             parsed['is_in_profile'] = True
@@ -1473,6 +1497,19 @@ class DocFormatter:
                 path_to_prop.append(prop_brief_name)
             profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
+        # Get the subset spec if we're in subset mode. Similar to above.
+        subset = None
+        if '_subset' in prop_info:
+            subset = prop_info['_subset']
+        elif self.config.get('subset_mode') and prop_name:
+            subset_section = 'Properties'
+            if within_action or (len(prop_path) and prop_path[0] == 'Actions'):
+                subset_section = 'Actions'
+            path_to_prop = prop_path.copy()
+            if not prop_info.get('_in_items'):
+                path_to_prop.append(prop_name)
+            subset = self.get_prop_subset(schema_name, path_to_prop, subset_section)
+
         # Some special treatment is required for Actions
         is_action = prop_name == 'Actions'
         if within_action:
@@ -1519,14 +1556,19 @@ class DocFormatter:
 
         if within_action:
             # Extend and parse parameter info
+            if prop_name == '#Outlet.PowerControl':
+                import pdb; pdb.set_trace()
             for action_param in action_parameters.keys():
-                params = action_parameters[action_param]
+                params = action_parameters[action_param].copy()
+                if subset:
+                    param_subset = subset.get('Parameters', {}).get(action_param)
+                    params['_subset'] = param_subset
                 params = self.extend_property_info(schema_ref, params)
                 action_parameters[action_param] = params
 
             version_strings = self.format_version_strings(prop_info)
             action_details = self.format_action_parameters(schema_ref, prop_name, descr,
-                                                               action_parameters, profile, version_strings)
+                                                               action_parameters, profile, version_strings, subset)
 
             # Provisional inserts. These need to go in a different place depending on layout.
             action_response_formatted = ''
@@ -1672,7 +1714,7 @@ class DocFormatter:
                                                                  prop_enum, prop_enum_details,
                                                                  supplemental_details,
                                                                  prop_info,
-                                                                 profile=profile)
+                                                                 profile=profile, subset=subset)
             prop_detail_key = prop_info.get('_ref_uri', '_inline')
             if prop_info.get('_in_items') and len(prop_path):
                 # In items, the prop_path is expected to include the prop name at this point.
@@ -1926,7 +1968,7 @@ class DocFormatter:
                 prop_names.sort(key=str.lower)
 
             elif self.config.get('subset_mode'):
-                print(prop_names)
+
                 if '_subset' in prop_info:
                     subset = prop_info['_subset']
                 elif len(prop_path):
@@ -1934,7 +1976,6 @@ class DocFormatter:
 
                 if subset:
                     prop_names = self.filter_props_by_subset(prop_names, subset)
-                print(prop_names)
 
             else:
                 prop_names = self.exclude_annotations(prop_names)
@@ -2273,9 +2314,14 @@ class DocFormatter:
 
         prop_subset = None
         subset = self.config.get('subset_resources', {}).get(schema_name)
+
+        if schema_name == 'Outlet' and '#Outlet.PowerControl' in prop_path:
+            import pdb; pdb.set_trace()
+
         if subset:
             prop_subset = {}
             prop_subset['Baseline'] = subset.get('Baseline', False)
+            prop_subset['Version'] = subset.get('Version', False)
 
             if section == 'Actions':
                 subsection = 'Parameters'
@@ -2288,7 +2334,6 @@ class DocFormatter:
 
             for prop_name in prop_path:
                 if not prop_name:
-                    import pdb; pdb.set_trace()
                     continue
                 if not first:
                     subset = subset.get(subsection, {})
@@ -2296,11 +2341,8 @@ class DocFormatter:
                 first = False
 
         if subset:
-            prop_subset['Properties'] = subset
+            prop_subset[subsection] = subset
 
-        import json
-        print(prop_path)
-        print(json.dumps(prop_subset, indent=3))
         return prop_subset
 
 

@@ -793,12 +793,6 @@ class DocGenerator:
                 # Skip schemas that aren't mentioned in the profile:
                 return property_data
 
-        # if subset_mode:
-        #     schema_subset = subset.get(schema_name)
-        #     if not schema_subset:
-        #         # Skip schemas that aren't mentioned in the profile:
-        #         return property_data
-
         definitions = data.get('definitions')
         if 'definitions' not in property_data:
             property_data['definitions'] = {}

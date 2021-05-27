@@ -199,7 +199,7 @@ class PropertyIndexGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, parent_prop_info, profile=None):
+                                supplemental_details, parent_prop_info, profile=None, subset=None):
         """ Handle enum information """
         pass
 

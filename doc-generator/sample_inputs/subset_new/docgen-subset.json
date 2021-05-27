@@ -31,14 +31,24 @@
 		    "Parameters": {
 		        "PowerState": {
 			    "Include": true,
-			    "SupportedValues": [ "On", "Off"]
+			    "SupportedValues": [ "Off"]
 		        }
 		    }
 	        }
 	    }
         },
         "ComputerSystem": {
-	    "Version": "1.8"
+	    "Version": "1.8",
+            "Properties": {
+                "Boot": {
+                    "Include": true,
+                    "Properties": {
+                        "AliasBootOrder": {
+                            "Include": false
+                        }
+                    }
+                }
+            }
         },
         "ServiceRoot": {}
     }

@@ -419,7 +419,7 @@ pre.code{
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                    supplemental_details, parent_prop_info, profile=None):
+                                    supplemental_details, parent_prop_info, profile=None, subset=None):
         """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
@@ -446,17 +446,9 @@ pre.code{
                                   + profile_recommended_values)
 
         if subset_mode:
-            pass # TODO
-
-        # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
-        # means all values are supported.
-        # Otherwise, Values/ParameterValues specifies the set that should be listed.
-        if subset_mode:
-            pass # TODO
-            # if len(profile_values):
-            #     enum = [x for x in enum if x in profile_values]
-            # elif len(profile_parameter_values):
-            #     enum = [x for x in enum if x in profile_parameter_values]
+            supported_values = subset.get('SupportedValues')
+            if supported_values:
+                enum = [x for x in enum if x in supported_values]
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
@@ -637,7 +629,7 @@ pre.code{
         return '\n'.join(contents) + '\n'
 
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
-                                     version_strings=None):
+                                     version_strings=None, subset=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -675,11 +667,10 @@ pre.code{
 
             param_names = [x for x in action_parameters.keys()]
 
-            if self.config.get('subset_mode'):
-                pass # TODO
-                # if profile and profile.get('Parameters'):
-                #     param_names = [x for x in profile['Parameters'].keys() if x in param_names]
-                # If there is no profile for this action, all parameters should be output.
+            if self.config.get('subset_mode') and subset:
+                supported_values = subset.get('SupportedValues')
+                if supported_values:
+                    param_names = [x for x in param_names if x in supported_values]
 
             param_names.sort(key=str.lower)
 
