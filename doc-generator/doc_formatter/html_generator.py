@@ -760,7 +760,11 @@ pre.code{
                         paths_sorted.sort(key=str.lower)
                         for path in paths_sorted:
                             info = det_info[path_to_ref[path]]
-                            deets_content.append(self.formatter.head_five("In " + path + ":", 0))
+                            if path:
+                                path_text = _("In %(path)s:") % {'path': path}
+                            else:
+                                path_text = _("In top level:")
+                            deets_content.append(self.formatter.head_five(path_text, 0))
                             deets_content.append(info['formatted_descr'])
 
                 deets.append(self.formatter.make_div('\n'.join(deets_content),

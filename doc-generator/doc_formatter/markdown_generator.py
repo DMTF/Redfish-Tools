@@ -728,7 +728,10 @@ class MarkdownGenerator(DocFormatter):
                         paths_sorted.sort(key=str.lower)
                         for path in paths_sorted:
                             info = det_info[path_to_ref[path]]
-                            path_text = _("In %(path)s:") % {'path': path}
+                            if path:
+                                path_text = _("In %(path)s:") % {'path': path}
+                            else:
+                                path_text = _("In top level:")
                             if self.markdown_mode == 'slate':
                                 contents.append(self.formatter.para(self.formatter.bold(path_text)))
                             else:

@@ -1181,9 +1181,6 @@ class DocFormatter:
             warnings.warn("filter_props_by_subset was called with no subset data")
             return prop_names
 
-        if 'AliasBootOrder' in prop_names:
-            import pdb; pdb.set_trace()
-
         # Actions have Parameters, properties have Properties.
         subsection = 'Properties'
         if 'Parameters' in subset:
@@ -1556,8 +1553,6 @@ class DocFormatter:
 
         if within_action:
             # Extend and parse parameter info
-            if prop_name == '#Outlet.PowerControl':
-                import pdb; pdb.set_trace()
             for action_param in action_parameters.keys():
                 params = action_parameters[action_param].copy()
                 if subset:
@@ -2315,9 +2310,6 @@ class DocFormatter:
         prop_subset = None
         subset = self.config.get('subset_resources', {}).get(schema_name)
 
-        if schema_name == 'Outlet' and '#Outlet.PowerControl' in prop_path:
-            import pdb; pdb.set_trace()
-
         if subset:
             prop_subset = {}
             prop_subset['Baseline'] = subset.get('Baseline', False)
@@ -2341,7 +2333,11 @@ class DocFormatter:
                 first = False
 
         if subset:
-            prop_subset[subsection] = subset
+            if subsection in subset:
+                subset['Baseline'] = prop_subset['Baseline']
+                prop_subset = subset
+            else:
+                prop_subset[subsection] = subset
 
         return prop_subset
 
