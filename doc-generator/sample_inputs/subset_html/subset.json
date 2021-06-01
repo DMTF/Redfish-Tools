@@ -1,0 +1,55 @@
+{
+    "IncludeSchemas": {
+	"Circuit": {
+	    "Version": "1.1"
+	},
+	"Facility": {
+	    "Baseline": false,
+	    "Properties": {
+	        "AmbientMetrics": {},
+	        "EnvironmentMetrics": {},
+	        "FacilityType": {}
+            }
+	},
+        "Outlet": {
+	    "Baseline": true,
+	    "Properties": {
+	        "OutletType": {
+		    "PropertyDetails": "This could be a way to generate the Property Details section?",
+		    "SupportedValues": [ "NEMA_5_15R", "NEMA_5_20R", "NEMA_L5_20R" ]
+	        },
+	        "IndicatorLED": {
+		    "Include": false
+	        }
+	    },
+	    "Actions": {
+	        "#Outlet.ResetMetrics": {
+		    "Include": false
+	        },
+	        "#Outlet.PowerControl": {
+		    "Include": true,
+		    "Parameters": {
+		        "PowerState": {
+			    "Include": true,
+			    "SupportedValues": [ "Off"]
+		        }
+		    }
+	        }
+	    }
+        },
+        "ComputerSystem": {
+	    "Version": "1.8",
+            "Properties": {
+                "Boot": {
+                    "Include": true,
+                    "Properties": {
+                        "AliasBootOrder": {
+                            "Include": false
+                        }
+                    }
+                }
+            }
+        },
+        "ServiceRoot": {}
+    }
+}

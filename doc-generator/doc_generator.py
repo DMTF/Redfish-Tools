@@ -1368,24 +1368,45 @@ class DocGenerator:
             else:
                 config['profile_mode'] = 'verbose'
 
-            profile_doc = combined_args['profile_doc']
+            profile_doc = os.path.normpath(combined_args['profile_doc'])
+            errors = []
             try:
-                profile = open(profile_doc, 'r', encoding="utf8")
-                config['profile_doc'] = profile_doc
+                profile_doc_local = os.path.normpath(os.path.join(config_data['config_dir'], subset_doc))
+                profile = open(profile_doc_local, 'r', encoding="utf8")
+                profile.close()
+                config['profile_doc'] = profile_doc_local
             except (OSError) as ex:
-                warnings.warn('Unable to open %(filename)s to read: %(message)s' %  {'filename': profile_doc, 'message': str(ex)})
-                sys.exit()
+                errors.append(str(ex))
+                try:
+                    profile = open(profile_doc, 'r', encoding="utf8")
+                    profile.close()
+                    config['profile_doc'] = profile_doc
+                except (OSError) as ex:
+                    errors.append(str(ex))
+                    warnings.warn('Unable to open profile to read; \n  %(error1)s\n  %(error2)s' %{
+                        'error1': errors[0], 'error2': errors[1]})
+                    sys.exit()
 
         if combined_args.get('subset_doc'):
             config['subset_mode'] = True
-            subset_doc = combined_args['subset_doc']
+            subset_doc = os.path.normpath(combined_args['subset_doc'])
+            errors = []
             try:
-                profile = open(subset_doc, 'r', encoding="utf8")
+                subset_doc_local = os.path.normpath(os.path.join(config_data['config_dir'], subset_doc))
+                profile = open(subset_doc_local, 'r', encoding="utf8")
                 profile.close()
-                config['subset_doc'] = subset_doc
+                config['subset_doc'] = subset_doc_local
             except (OSError) as ex:
-                warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename': profile_doc, 'message': str(ex)})
-                sys.exit()
+                errors.append(str(ex))
+                try:
+                    profile = open(subset_doc, 'r', encoding="utf8")
+                    profile.close()
+                    config['subset_doc'] = subset_doc
+                except (OSError) as ex:
+                    errors.append(str(ex))
+                    warnings.warn('Unable to open subset file to read; \n  %(error1)s\n  %(error2)s' %{
+                        'error1': errors[0], 'error2': errors[1]})
+                    sys.exit()
         else:
             config['subset_mode'] = False
 
@@ -1523,6 +1544,7 @@ def main():
 
     # path of some files will be relative to path of config file:
     config_dir = os.path.dirname(config_fn)
+    config_data['config_dir'] = config_dir
 
     # Is there a content supplement file?
     if config_data.get('content_supplement'):
@@ -1542,7 +1564,7 @@ def main():
         supp_config_data = {}
 
     # If boilerplate is specified, read it in now.
-    boilerplate_fns = {'boilerplate_intro': 'intro_content', 'boilerplate_postscript': 'postscript_content'}
+    boilerplate_fns=  {'boilerplate_intro': 'intro_content', 'boilerplate_postscript': 'postscript_content'}
     for fn, content_key in boilerplate_fns.items():
         if config_data.get(fn):
             boilerplate_fn = os.path.normpath(os.path.join(config_dir, config_data[fn]))
