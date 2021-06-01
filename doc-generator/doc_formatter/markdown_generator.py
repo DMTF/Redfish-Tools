@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2021 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -236,14 +236,7 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['read_only']:
                 prop_access = _('read-only')
             else:
-                # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
-                # emit read-only.
-                if (self.config.get('subset_mode')
-                            and formatted_details.get('profile_write_req')
-                            and (formatted_details['profile_write_req'] == 'None')):
-                    prop_access = _('read-only')
-                else:
-                    prop_access = _('read-write')
+                prop_access = _('read-write')
 
         # Action parameters don't have read/write properties, but they can be required/optional.
         if as_action_parameters:
@@ -334,14 +327,10 @@ class MarkdownGenerator(DocFormatter):
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
 
-            # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
-            # means all values are supported.
-            # Otherwise, Values/ParameterValues specifies the set that should be listed.
             if subset_mode:
-                if len(profile_values):
-                    enum = [x for x in enum if x in profile_values]
-                elif len(profile_parameter_values):
-                    enum = [x for x in enum if x in profile_parameter_values]
+                supported_values = subset.get('SupportedValues')
+                if supported_values:
+                    enum = [x for x in enum if x in supported_values]
 
         if prop_description:
             contents.append(self.escape_for_markdown(prop_description, self.config.get('escape_chars', [])))
@@ -567,10 +556,10 @@ class MarkdownGenerator(DocFormatter):
 
             param_names = [x for x in action_parameters.keys()]
 
-            if self.config.get('subset_mode'):
-                if profile.get('Parameters'):
-                    param_names = [x for x in profile['Parameters'].keys() if x in param_names]
-                # If there is no profile for this action, all parameters should be output.
+            if self.config.get('subset_mode') and subset:
+                supported_values = subset.get('SupportedValues')
+                if supported_values:
+                    param_names = [x for x in param_names if x in supported_values]
 
             param_names.sort(key=str.lower)
 
