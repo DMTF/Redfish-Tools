@@ -531,10 +531,22 @@ class DocGenerator:
                         if refpath_path == '/definitions/idRef':
                             continue
                         ref_fn = refpath_uri.split('/')[-1]
-                        # Skip files that are not present.
+
+                        version_string = DocGenUtilities.get_ref_version(ref_fn)
                         ref_filename = os.path.abspath(os.path.join(root, ref_fn))
+
+                        # If we're in subset mode, check the version and skip if > subset spec:
+                        subset  = self.config.get('subset_resources', {}).get(schema_name, {})
+                        if subset.get('Version'):
+                            version_len = len(subset['Version'].split('.'))
+                            major_minor_version = '.'.join(version_string.split('.')[0:version_len])
+                            compare = DocGenUtilities.compare_versions(major_minor_version, subset['Version'])
+                            if compare > 0:
+                                continue
+
+
+                        # Skip files that are not present.
                         if ref_filename in file_list:
-                            version_string = DocGenUtilities.get_ref_version(ref_fn)
                             file_data = {'root': root,
                                          'filename': ref_fn,
                                          'ref': refpath_path,
