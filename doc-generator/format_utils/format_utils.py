@@ -97,7 +97,7 @@ class FormatUtils():
 
     def add_table_caption(self, caption):
         self.last_caption = caption
-        return _('Table') + ': ' + _('Table') + ' TBL_nn: <a name=table_TBL_nn>' + caption + '</a>'
+        return _('Table') + ': ' + caption + ' \\label{Table_TBL_nn}'
 
     def add_table_reference(self, lead_in):
-        return lead_in + '[' + _('Table') + ' TBL_nn++](#table_TBL_nn \"' + self.last_caption + '\").'
+        return lead_in + _('Table') + ' \\ref{Table_TBL_nn++}' + '.'
