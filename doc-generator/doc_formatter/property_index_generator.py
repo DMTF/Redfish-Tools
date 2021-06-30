@@ -204,7 +204,8 @@ class PropertyIndexGenerator(DocFormatter):
         pass
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
+                                     version_strings=None, subset=None):
         """Generate a formatted Actions section from parameters data"""
         return ''
 
