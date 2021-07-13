@@ -267,19 +267,19 @@ class AbstractType(Type):
         if self.name not in self._types:
             raise SchemaError("AbstractType {} is not defined".format(self.name))
 
-        if self.name is 'PrimitiveType':
+        if self.name == 'PrimitiveType':
             self.provides_type = ['Edm.PrimitiveType']
-        elif self.name is 'ComplexType':
+        elif self.name == 'ComplexType':
             self.provides_type = ['Edm.ComplexType']
-        elif self.name is 'EntityType':
+        elif self.name == 'EntityType':
             self.provides_type = ['Edm.EntityType']
-        elif self.name is 'AnnotationPath':
+        elif self.name == 'AnnotationPath':
             self.vocabulary_term = True
             self.provides_type = ['Edm.AnnotationPath']
-        elif self.name is 'PropertyPath':
+        elif self.name == 'PropertyPath':
             self.vocabulary_term = True
             self.provides_type = ['Edm.ComplexType', 'Edm.PrimitiveType', 'Edm.EnumType']
-        elif self.name is 'NavigationPropertyPath':
+        elif self.name == 'NavigationPropertyPath':
             self.vocabulary_term = True
             self.provides_type = ['Edm.NavigationPropertyPath']
 
