@@ -102,9 +102,9 @@ const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1
 const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
-const PluralSchemaWhiteList = ['ChassisCollection', 'MemoryChunksCollection', 'TriggersCollection'];
+const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
-                                 'DeepOperations', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
+                                 'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
                                  'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
                                  'RegistryEntries', 'ResourceBlockLimits', 'Status', 'Thresholds', 'UpdateParameters', 'VoltageSensors'];
 //All of the entries in the following object were errors and should only be allowed in the file they are currently present in
@@ -663,7 +663,7 @@ function noPluralSchemas(csdl) {
     if(schemas[i]._Name.startsWith('Org.OData')) {
       continue;
     }
-    if(PluralSchemaWhiteList.indexOf(schemas[i]._Name) !== -1) {
+    if(PluralSchemaAllowList.indexOf(schemas[i]._Name) !== -1) {
       continue;
     }
     if(schemas[i]._Name.includes('sCollection') || schemas[i]._Name.includes('s_v1')) {
