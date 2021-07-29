@@ -38,7 +38,7 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
 
 /***************** White lists ******************************/
 //Units that don't exist in UCUM
-const unitsWhiteList = ['RPM', 'V.A', '{tot}', '1/s/TBy'];
+const unitsWhiteList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h'];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -61,7 +61,8 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'NFSv4_0', 'NFSv4_1', 'SMBv3_0', 'SMBv2_1', 'SMBv2_0', 'SMBv3_1_1',
                                     'SMBv3_0_2', 'Bits_0', 'Bits_128', 'Bits_192', 'Bits_256', 'Bits_112',
                                     'ISO8859_1', 'UTF_8', 'UTF_16', 'UCS_2', 'RPCSEC_GSS', 'HMAC128_SHA224',
-                                    'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512' ];
+                                    'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512', 'TLS_PSK', 'TLS_AES_128_GCM_SHA256',
+                                    'TLS_AES_256_GCM_SHA384'];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 //Properties that have units but don't have the unit names in them
@@ -74,7 +75,7 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps'};
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
@@ -102,9 +103,9 @@ const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1
 const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
-const PluralSchemaWhiteList = ['ChassisCollection', 'MemoryChunksCollection', 'TriggersCollection'];
+const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
-                                 'DeepOperations', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
+                                 'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
                                  'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
                                  'RegistryEntries', 'ResourceBlockLimits', 'Status', 'Thresholds', 'UpdateParameters', 'VoltageSensors'];
 //All of the entries in the following object were errors and should only be allowed in the file they are currently present in
@@ -663,7 +664,7 @@ function noPluralSchemas(csdl) {
     if(schemas[i]._Name.startsWith('Org.OData')) {
       continue;
     }
-    if(PluralSchemaWhiteList.indexOf(schemas[i]._Name) !== -1) {
+    if(PluralSchemaAllowList.indexOf(schemas[i]._Name) !== -1) {
       continue;
     }
     if(schemas[i]._Name.includes('sCollection') || schemas[i]._Name.includes('s_v1')) {
