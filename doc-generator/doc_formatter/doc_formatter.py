@@ -222,7 +222,7 @@ class DocFormatter:
             if part.startswith('{') and part.endswith('}'):
                 part = self.formatter.italic(part)
             uri_parts_highlighted.append(part)
-        uri_highlighted = '/'.join(uri_parts_highlighted)
+        uri_highlighted = '/&#8203;'.join(uri_parts_highlighted)
         return uri_highlighted
 
 
