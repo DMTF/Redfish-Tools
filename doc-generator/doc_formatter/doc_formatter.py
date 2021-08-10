@@ -1538,6 +1538,8 @@ class DocFormatter:
         prop_units = prop_info.get('units')
 
         read_only = prop_info.get('readonly')
+        if subset and subset.get('readonly'):
+            read_only = True
 
         prop_required = prop_info.get('prop_required') or prop_name in prop_info.get('parent_requires', [])
         prop_required_on_create = prop_info.get('prop_required_on_create') or prop_name in prop_info.get('parent_requires_on_create', [])

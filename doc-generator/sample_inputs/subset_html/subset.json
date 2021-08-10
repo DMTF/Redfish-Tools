@@ -20,7 +20,10 @@
 	        },
 	        "IndicatorLED": {
 		    "Include": false
-	        }
+	        },
+                "PowerOnDelaySeconds": {
+                    "readonly": true
+                }
 	    },
 	    "Actions": {
 	        "#Outlet.ResetMetrics": {
