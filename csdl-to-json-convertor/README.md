@@ -31,7 +31,7 @@ The CSDL-to-JSON converter, [csdl-to-json.py](csdl-to-json.py#L1 "csdl-to-json.p
 
 To configure the generated JSON Schema files, define configuration keys in a JSON configuration file. To specify the path to the configuration file, use the [--config](#usage "#usage") command‑line argument.
 
-If you do not specify a configuration file or omit any configuration keys from the specified configuration file, the converter uses the key values in the default [dmtf&#8209;config.json](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file. The configration file defines these [configuration keys](#table-1--configuration-keys "#table-1--configuration-keys"):
+If you do not specify a configuration file or omit any configuration keys from the specified configuration file, the converter uses the key values in the default [dmtf&#8209;config.json](dmtf-config.json#L1 "dmtf-config.json#L1") configuration file. The configuration file defines these [configuration keys](#table-1--configuration-keys "#table-1--configuration-keys"):
 
 <b id="table-1--configuration-keys">Table 1 &mdash; Configuration keys</b>
 

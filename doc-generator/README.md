@@ -81,192 +81,196 @@ To configure the [output format and mode](#output-formats-and-modes) and other a
             <p>The base configuration file can point to the optional <a href="README_config_files.md#content-supplement-configuration-file" title="README_config_files.md#content-supplement-configuration-file">content supplement configuration file</a>, which also contains configuration keys.</p>
             <p>To specify the path to the base configuration file, use the <a href="#usage" title="#usage">--config</a> command‑line argument.</p>
             <p>You can specify some configuration options through command-line arguments only, and some through configuration keys only.</p>
-            <p>The names of some configuration keys differ from their command&#8209;line argument equivalents. Unless otherwise noted, configuration keys have the same meaning as their command&#8209;line argument equivalents. The following table maps command-line arguments to configuration keys:</p>
-            <blockquote><b>Note:</b> You define all keys in the base configuration file unless otherwise noted.</blockquote>
-            <table id="table-mapping-of-command-line-arguments-to-configuration-keys">
-               <caption><b>Mapping of command-line-arguments to configuration keys</b></caption>
-               <thead>
-                  <tr>
-                     <th align="left" valign="top">Configuration key</th>
-                     <th align="left" valign="top">Command-line argument</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#actions_in_property_table" title="README_config_files.md#actions_in_property_table">actions_in_property_table</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#add_toc" title="README_config_files.md#add_toc">add_toc</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#boilerplate_intro" title="README_config_files.md#boilerplate_intro">boilerplate_intro</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#boilerplate_postscript" title="README_config_files.md#boilerplate_postscript">boilerplate_postscript</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#combine_multiple_refs" title="README_config_files.md#combine_multiple_refs">combine_multiple_refs</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--config</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#content_supplement" title="README_config_files.md#content_supplement">content_supplement</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--sup</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#description" title="README_config_files.md#description">description</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#description-1" title="README_config_files.md#description-1">description</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#description_overrides" title="README_config_files.md#description_overrides">description_overrides</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#escape_chars" title="README_config_files.md#escape_chars">escape_chars</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--escape</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#excluded_annotations" title="README_config_files.md#excluded_annotations">excluded_annotations</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#excluded_pattern_properties" title="README_config_files.md#excluded_pattern_properties">excluded_pattern_properties</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#excluded_properties" title="README_config_files.md#excluded_properties">excluded_properties</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#excluded_schemas" title="README_config_files.md#excluded_schemas">excluded_schemas</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#format" title="README_config_files.md#format">format</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--format</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--help</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#html_title" title="README_config_files.md#html_title">html_title</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#import_from" title="README_config_files.md#import_from">import_from</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">import_from</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#keywords" title="README_config_files.md#keywords">keywords</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#locale" title="README_config_files.md#locale">locale</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#normative" title="README_config_files.md#normative">normative</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--normative</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#object_reference_disposition" title="README_config_files.md#object_reference_disposition">object_reference_disposition</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#omit_version_in_headers" title="README_config_files.md#omit_version_in_headers">omit_version_in_headers</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#outfile" title="README_config_files.md#outfile">outfile</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--out</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#payload_dir" title="README_config_files.md#payload_dir">payload_dir</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--payload_dir</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#profile_doc" title="README_config_files.md#profile_doc">profile_doc</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--profile</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#profile_terse" title="README_config_files.md#profile_terse">profile_terse</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--terse</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#profile_uri_to_local" title="README_config_files.md#profile_uri_to_local">profile_uri_to_local</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#property_description_overrides" title="README_config_files.md#property_description_overrides">property_description_overrides</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#property_fulldescription_overrides" title="README_config_files.md#property_fulldescription_overrides">property_fulldescription_overrides</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#property_index" title="README_config_files.md#property_index">property_index</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--property_index</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#property_index_config_out" title="README_config_files.md#property_index_config_out">property_index_config_out</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--property_index_config_out</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#registry_uri_to_local" title="README_config_files.md#registry_uri_to_local">registry_uri_to_local</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#schema_link_replacements" title="README_config_files.md#schema_link_replacements">schema_link_replacements</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#schema_supplement" title="README_config_files.md#schema_supplement">schema_supplement</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#subset_doc" title="README_config_files.md#subset_doc">subset_doc</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--subset</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#suppress_version_history" title="README_config_files.md#suppress_version_history">suppress_version_history</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#units_translation" title="README_config_files.md#units_translation">units_translation</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#uri_mapping" title="README_config_files.md#uri_mapping">uri_mapping</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#warn_missing_payloads" title="README_config_files.md#warn_missing_payloads">warn_missing_payloads</a></td>
-                     <td align="left" valign="top"><a href="#usage" title="#usage">--warn_missing_payloads</a></td>
-                  </tr>
-                  <tr>
-                     <td align="left" valign="top"><a href="README_config_files.md#version" title="README_config_files.md#version">version</a></td>
-                     <td align="left" valign="top"></td>
-                  </tr>
-               </tbody>
-            </table>
-            <p id="footnote1"><b><sup>[1]</sup></b> Define this key in the content supplement configuration file.</p>
+            <p>The names of some configuration keys differ from their command&#8209;line argument equivalents. Unless otherwise noted, configuration keys have the same meaning as their command&#8209;line argument equivalents. <a href="table-2--mapping-of-command-line-arguments-to-configuration-keys">Table 2</a> maps command-line arguments to configuration keys.</p>
          </td>
       </tr>
    </tbody>
 </table>
+
+The following table maps command-line arguments to configuration keys:
+
+<blockquote><b>Note:</b> You define all keys in the base configuration file unless otherwise noted.</blockquote>
+
+<table id="table-2--mapping-of-command-line-arguments-to-configuration-keys">
+   <caption><b>Table 2 &mdash; Mapping of command-line-arguments to configuration keys</b></caption>
+   <thead>
+      <tr>
+         <th align="left" valign="top">Configuration key</th>
+         <th align="left" valign="top">Command-line argument</th>
+      </tr>
+   </thead>
+   <tbody>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#actions_in_property_table" title="README_config_files.md#actions_in_property_table">actions_in_property_table</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#add_toc" title="README_config_files.md#add_toc">add_toc</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#boilerplate_intro" title="README_config_files.md#boilerplate_intro">boilerplate_intro</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#boilerplate_postscript" title="README_config_files.md#boilerplate_postscript">boilerplate_postscript</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#combine_multiple_refs" title="README_config_files.md#combine_multiple_refs">combine_multiple_refs</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--config</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#content_supplement" title="README_config_files.md#content_supplement">content_supplement</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--sup</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#description" title="README_config_files.md#description">description</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#description-1" title="README_config_files.md#description-1">description</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#description_overrides" title="README_config_files.md#description_overrides">description_overrides</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#escape_chars" title="README_config_files.md#escape_chars">escape_chars</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--escape</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#excluded_annotations" title="README_config_files.md#excluded_annotations">excluded_annotations</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#excluded_pattern_properties" title="README_config_files.md#excluded_pattern_properties">excluded_pattern_properties</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#excluded_properties" title="README_config_files.md#excluded_properties">excluded_properties</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#excluded_schemas" title="README_config_files.md#excluded_schemas">excluded_schemas</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#format" title="README_config_files.md#format">format</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--format</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--help</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#html_title" title="README_config_files.md#html_title">html_title</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#import_from" title="README_config_files.md#import_from">import_from</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">import_from</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#keywords" title="README_config_files.md#keywords">keywords</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#locale" title="README_config_files.md#locale">locale</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#normative" title="README_config_files.md#normative">normative</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--normative</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#object_reference_disposition" title="README_config_files.md#object_reference_disposition">object_reference_disposition</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#omit_version_in_headers" title="README_config_files.md#omit_version_in_headers">omit_version_in_headers</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#outfile" title="README_config_files.md#outfile">outfile</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--out</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#payload_dir" title="README_config_files.md#payload_dir">payload_dir</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--payload_dir</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#profile_doc" title="README_config_files.md#profile_doc">profile_doc</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--profile</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#profile_terse" title="README_config_files.md#profile_terse">profile_terse</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--terse</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#profile_uri_to_local" title="README_config_files.md#profile_uri_to_local">profile_uri_to_local</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#property_description_overrides" title="README_config_files.md#property_description_overrides">property_description_overrides</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#property_fulldescription_overrides" title="README_config_files.md#property_fulldescription_overrides">property_fulldescription_overrides</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#property_index" title="README_config_files.md#property_index">property_index</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--property_index</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#property_index_config_out" title="README_config_files.md#property_index_config_out">property_index_config_out</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--property_index_config_out</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#registry_uri_to_local" title="README_config_files.md#registry_uri_to_local">registry_uri_to_local</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#schema_link_replacements" title="README_config_files.md#schema_link_replacements">schema_link_replacements</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#schema_supplement" title="README_config_files.md#schema_supplement">schema_supplement</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#subset_doc" title="README_config_files.md#subset_doc">subset_doc</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--subset</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#suppress_version_history" title="README_config_files.md#suppress_version_history">suppress_version_history</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#units_translation" title="README_config_files.md#units_translation">units_translation</a><a href="#footnote1"><b><sup>[1]</sup></b></a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#uri_mapping" title="README_config_files.md#uri_mapping">uri_mapping</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#warn_missing_payloads" title="README_config_files.md#warn_missing_payloads">warn_missing_payloads</a></td>
+         <td align="left" valign="top"><a href="#usage" title="#usage">--warn_missing_payloads</a></td>
+      </tr>
+      <tr>
+         <td align="left" valign="top"><a href="README_config_files.md#version" title="README_config_files.md#version">version</a></td>
+         <td align="left" valign="top"></td>
+      </tr>
+   </tbody>
+</table>
+<p id="footnote1"><b><sup>[1]</sup></b> Define this key in the content supplement configuration file.</p>
 
 ## Output formats and modes
 
@@ -276,10 +280,10 @@ Depending on the output format and mode, only certain command-line arguments and
 
 The *output format* defines the format of the generated document. Specify the format through either the <a href="README_config_files.md#format" title="README_config_files.md#format">format</a> configuration key or the <a href="#usage" title="#usage">--format</a> command-line argument. For a description of the output formats, see [Table 1 &mdash; Output formats](README_config_files.md#table-1--output-formats "README_config_files.md#table-1--output-formats").
 
-<a id="output-formats-and-modes"></a>The *output mode* defines the audience for and the type of generated documentation. [Table 2](#table-2--output-modes "#table-2--output-modes") describes the output modes:
+<a id="output-formats-and-modes"></a>The *output mode* defines the audience for and the type of generated documentation. [Table 3](#table-3--output-modes "#table-3--output-modes") describes the output modes:
 
-<table id="table-2--output-modes">
-   <caption><b>Table 2 &mdash; Output modes</b></caption>
+<table id="table-3--output-modes">
+   <caption><b>Table 3 &mdash; Output modes</b></caption>
    <thead>
       <tr>
          <th align="left" valign="top">Output&nbsp;mode</th>
