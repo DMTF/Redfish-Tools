@@ -102,7 +102,7 @@ const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
 const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
-const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry'];
+const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
                                  'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
@@ -1300,7 +1300,7 @@ function validCSDLTypeInMockup(json, file) {
             }
             //This should be a NavigationProperty pointing to an EntityType, make sure it is a link...
             if(propValue['@odata.id'] === undefined && !('Redfish.ExcerptCopy' in CSDLProperty.Annotations)) {
-              if(!file.includes('non-resource-examples')) {
+              if(!file.includes('non-resource-examples') && !file.includes('Event-v1-example.json')) {
                 throw new Error('Property "'+propName+'" is an EntityType, but the value does not contain an @odata.id!');
               }
             }
