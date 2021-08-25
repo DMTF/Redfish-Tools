@@ -102,7 +102,7 @@ const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
 const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
-const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
+const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
                                  'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
@@ -1431,7 +1431,7 @@ function getCSDLWithUri(type) {
   if(type.Annotations !== undefined && type.Annotations['Redfish.Uris'] !== undefined) {
     return type;
   }
-  if(NoUriWhitelist.indexOf(type.Name) !== -1) {
+  if(NoUriAllowList.indexOf(type.Name) !== -1) {
     return type;
   }
   if(type.BaseType) {
