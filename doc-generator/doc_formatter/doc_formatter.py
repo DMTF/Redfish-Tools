@@ -523,11 +523,11 @@ class DocFormatter:
                 payload_key = DocGenUtilities.get_payload_name(schema_name, version)
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
-                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    json_payload = payload
                 else:
                     if self.config.get('warn_missing_payloads'):
                         warnings.warn("MISSING JSON PAYLOAD FOR SCHEMA '%(schema_name)s'." %{'schema_name': schema_name})
-            else:
+            if not json_payload and supplemental.get('jsonpayload'):
                 json_payload = supplemental.get('jsonpayload')
 
             definitions = details['definitions']
@@ -777,7 +777,9 @@ class DocFormatter:
                     ref_id += '_v' + version
 
                 cp_gen.add_section(prop_name, ref_id, schema_ref)
-                cp_gen.add_json_payload(supplemental.get('jsonpayload'))
+                if supplemental.get('jsonpayload'):
+                    payload = supplemental.get('jsonpayload')
+                    cp_gen.add_json_payload(payload)
 
                 # Override with supplemental schema description, if provided
                 # If there is a supplemental "description" or "intro", it replaces
@@ -1534,7 +1536,7 @@ class DocFormatter:
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name, 'request-example')
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
-                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    json_payload = payload
                     heading = self.formatter.para(self.formatter.bold(_("Request Example")))
                     request_payload = heading + self.format_json_payload(json_payload)
                 else:
@@ -1547,7 +1549,7 @@ class DocFormatter:
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name, 'response-example')
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
-                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    json_payload = payload
                     heading = self.formatter.para(self.formatter.bold(_("Response Example")))
                     response_payload = heading + self.format_json_payload(json_payload)
                 else:
@@ -1559,7 +1561,7 @@ class DocFormatter:
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name)
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
-                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    json_payload = payload
                     heading = self.formatter.para(self.formatter.bold(_("Example")))
                     example_payload = heading + self.format_json_payload(json_payload) + action_details
 
