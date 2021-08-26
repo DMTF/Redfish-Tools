@@ -7,14 +7,14 @@ search: true
 
 ## NetworkDeviceFunction 1.3.2
 
-The revision history is summarized in [Table TBL_nn++](#table_TBL_nn "Revision history").
+The revision history is summarized in Table \ref{Table_TBL_nn++}.
 
 |     |     |
 | --- | --- |
 | **Version** | *v1.3* |
 | **Release** | 2018.2 |
 
-Table: Table TBL_nn: <a name=table_TBL_nn>Revision history</a>
+Table: Revision history \label{Table_TBL_nn}
 ### Description
 
 A Network Device Function represents a logical interface exposed by the network adapter.
@@ -22,7 +22,7 @@ A Network Device Function represents a logical interface exposed by the network 
 
 ### Properties
 
-The properties defined for the NetworkDeviceFunction 1.3.2 schema are summarized in [Table TBL_nn++](#table_TBL_nn "NetworkDeviceFunction 1.3.2 properties").
+The properties defined for the NetworkDeviceFunction 1.3.2 schema are summarized in Table \ref{Table_TBL_nn++}.
 
 |Property     |Type     |Attributes   |Notes     |
 | --- | --- | --- | --- |
@@ -100,14 +100,14 @@ The properties defined for the NetworkDeviceFunction 1.3.2 schema are summarized
 | } |   |   |
 | **Status** {} | object |  | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |
 | **VirtualFunctionsEnabled** | boolean | *read-only<br>(null)* | Whether Single Root I/O Virtualization (SR-IOV) Virual Functions (VFs) are enabled for this Network Device Function. |
-Table: Table TBL_nn: <a name=table_TBL_nn>NetworkDeviceFunction 1.3.2 properties</a>
+Table: NetworkDeviceFunction 1.3.2 properties \label{Table_TBL_nn}
 
 
 ### Property details
 
 #### AuthenticationMethod:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "AuthenticationMethod property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The iSCSI boot authentication method for this network device function.
 
 | string | Description |
@@ -115,10 +115,10 @@ The iSCSI boot authentication method for this network device function.
 | CHAP | iSCSI Challenge Handshake Authentication Protocol (CHAP) authentication is used. |
 | MutualCHAP | iSCSI Mutual Challenge Handshake Authentication Protocol (CHAP) authentication is used. |
 | None | No iSCSI authentication is used. |
-Table: Table TBL_nn: <a name=table_TBL_nn>AuthenticationMethod property values</a>
+Table: AuthenticationMethod property values \label{Table_TBL_nn}
 #### BootMode:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "BootMode property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The boot mode configured for this network device function.
 
 | string | Description |
@@ -128,20 +128,20 @@ The boot mode configured for this network device function.
 | FibreChannelOverEthernet | Boot this device using the embedded Fibre Channel over Ethernet (FCoE) boot support and configuration.  Only applicable if the NetworkDeviceFunctionType is set to FibreChannelOverEthernet. |
 | iSCSI | Boot this device using the embedded iSCSI boot support and configuration.  Only applicable if the NetworkDeviceFunctionType is set to iSCSI. |
 | PXE | Boot this device using the embedded PXE support.  Only applicable if the NetworkDeviceFunctionType is set to Ethernet. |
-Table: Table TBL_nn: <a name=table_TBL_nn>BootMode property values</a>
+Table: BootMode property values \label{Table_TBL_nn}
 #### IPAddressType:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "IPAddressType property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP address fields.
 
 | string | Description |
 | --- | --- |
 | IPv4 | IPv4 addressing is used for all IP-fields in this object. |
 | IPv6 | IPv6 addressing is used for all IP-fields in this object. |
-Table: Table TBL_nn: <a name=table_TBL_nn>IPAddressType property values</a>
+Table: IPAddressType property values \label{Table_TBL_nn}
 #### NetDevFuncCapabilities:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "NetDevFuncCapabilities property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 Capabilities of this network device function.
 
 | string | Description |
@@ -151,10 +151,10 @@ Capabilities of this network device function.
 | FibreChannel | Appears to the operating system as a Fibre Channel device. |
 | FibreChannelOverEthernet | Appears to the operating system as an FCoE device. |
 | iSCSI | Appears to the operating system as an iSCSI device. |
-Table: Table TBL_nn: <a name=table_TBL_nn>NetDevFuncCapabilities property values</a>
+Table: NetDevFuncCapabilities property values \label{Table_TBL_nn}
 #### NetDevFuncType:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "NetDevFuncType property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The configured capability of this network device function.
 
 | string | Description |
@@ -164,24 +164,24 @@ The configured capability of this network device function.
 | FibreChannel | Appears to the operating system as a Fibre Channel device. |
 | FibreChannelOverEthernet | Appears to the operating system as an FCoE device. |
 | iSCSI | Appears to the operating system as an iSCSI device. |
-Table: Table TBL_nn: <a name=table_TBL_nn>NetDevFuncType property values</a>
+Table: NetDevFuncType property values \label{Table_TBL_nn}
 #### WWNSource:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "WWNSource property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The configuration source of the WWNs for this connection (WWPN and WWNN).
 
 | string | Description |
 | --- | --- |
 | ConfiguredLocally | The set of FC/FCoE boot targets was applied locally through API or UI. |
 | ProvidedByFabric | The set of FC/FCoE boot targets was applied by the Fibre Channel fabric. |
-Table: Table TBL_nn: <a name=table_TBL_nn>WWNSource property values</a>
+Table: WWNSource property values \label{Table_TBL_nn}
 
 ## NetworkDeviceFunctionCollection
 
 
 ### Properties
 
-The properties defined for the NetworkDeviceFunctionCollection schema are summarized in [Table TBL_nn++](#table_TBL_nn "NetworkDeviceFunctionCollection properties").
+The properties defined for the NetworkDeviceFunctionCollection schema are summarized in Table \ref{Table_TBL_nn++}.
 
 |Property     |Type     |Attributes   |Notes     |
 | --- | --- | --- | --- |
@@ -192,7 +192,7 @@ The properties defined for the NetworkDeviceFunctionCollection schema are summar
 | } ] |   |   |
 | **Name** | string | *read-only* | The name of the resource or array element. |
 | **Oem** {} | object |  | This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections. See the *Resource* schema for details on this property. |
-Table: Table TBL_nn: <a name=table_TBL_nn>NetworkDeviceFunctionCollection properties</a>
+Table: NetworkDeviceFunctionCollection properties \label{Table_TBL_nn}
 
 
 ## NetworkPort 1.1.0
@@ -204,7 +204,7 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 
 ### Properties
 
-The properties defined for the NetworkPort 1.1.0 schema are summarized in [Table TBL_nn++](#table_TBL_nn "NetworkPort 1.1.0 properties").
+The properties defined for the NetworkPort 1.1.0 schema are summarized in Table \ref{Table_TBL_nn++}.
 
 |Property     |Type     |Attributes   |Notes     |
 | --- | --- | --- | --- |
@@ -241,14 +241,14 @@ The properties defined for the NetworkPort 1.1.0 schema are summarized in [Table
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**LinkSpeedMbps** | number | *read-only<br>(null)* | The speed of the link in Mbps when this link network technology is active. |
 | } ] |   |   |
 | **WakeOnLANEnabled** | boolean | *read-write<br>(null)* | Whether Wake on LAN (WoL) is enabled for this network port. |
-Table: Table TBL_nn: <a name=table_TBL_nn>NetworkPort 1.1.0 properties</a>
+Table: NetworkPort 1.1.0 properties \label{Table_TBL_nn}
 
 
 ### Property details
 
 #### ActiveLinkTechnology:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "ActiveLinkTechnology property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 Network Port Active Link Technology.
 
 | string | Description |
@@ -256,10 +256,10 @@ Network Port Active Link Technology.
 | Ethernet | The port is capable of connecting to an Ethernet network. |
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
 | InfiniBand | The port is capable of connecting to an InfiniBand network. |
-Table: Table TBL_nn: <a name=table_TBL_nn>ActiveLinkTechnology property values</a>
+Table: ActiveLinkTechnology property values \label{Table_TBL_nn}
 #### FlowControlConfiguration:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "FlowControlConfiguration property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The locally configured 802.3x flow control setting for this network port.
 
 | string | Description |
@@ -268,10 +268,10 @@ The locally configured 802.3x flow control setting for this network port.
 | RX | IEEE 802.3x flow control may be initiated by the link partner. |
 | TX | IEEE 802.3x flow control may be initiated by this station. |
 | TX_RX | IEEE 802.3x flow control may be initiated by this station or the link partner. |
-Table: Table TBL_nn: <a name=table_TBL_nn>FlowControlConfiguration property values</a>
+Table: FlowControlConfiguration property values \label{Table_TBL_nn}
 #### FlowControlStatus:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "FlowControlStatus property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).
 
 | string | Description |
@@ -280,10 +280,10 @@ The 802.3x flow control behavior negotiated with the link partner for this netwo
 | RX | IEEE 802.3x flow control may be initiated by the link partner. |
 | TX | IEEE 802.3x flow control may be initiated by this station. |
 | TX_RX | IEEE 802.3x flow control may be initiated by this station or the link partner. |
-Table: Table TBL_nn: <a name=table_TBL_nn>FlowControlStatus property values</a>
+Table: FlowControlStatus property values \label{Table_TBL_nn}
 #### LinkNetworkTechnology:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "LinkNetworkTechnology property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The self-described link network technology capabilities of this port.
 
 | string | Description |
@@ -291,24 +291,24 @@ The self-described link network technology capabilities of this port.
 | Ethernet | The port is capable of connecting to an Ethernet network. |
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
 | InfiniBand | The port is capable of connecting to an InfiniBand network. |
-Table: Table TBL_nn: <a name=table_TBL_nn>LinkNetworkTechnology property values</a>
+Table: LinkNetworkTechnology property values \label{Table_TBL_nn}
 #### LinkStatus:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "LinkStatus property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The status of the link between this port and its link partner.
 
 | string | Description |
 | --- | --- |
 | Down | The port is enabled but link is down. |
 | Up | The port is enabled and link is good (up). |
-Table: Table TBL_nn: <a name=table_TBL_nn>LinkStatus property values</a>
+Table: LinkStatus property values \label{Table_TBL_nn}
 #### SupportedEthernetCapabilities:
 
-The defined property values are listed in [Table TBL_nn++](#table_TBL_nn "SupportedEthernetCapabilities property values").
+The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The set of Ethernet capabilities that this port supports.
 
 | string | Description |
 | --- | --- |
 | EEE | IEEE 802.3az Energy Efficient Ethernet (EEE) is supported on this port. |
 | WakeOnLAN | Wake on LAN (WoL) is supported on this port. |
-Table: Table TBL_nn: <a name=table_TBL_nn>SupportedEthernetCapabilities property values</a>
+Table: SupportedEthernetCapabilities property values \label{Table_TBL_nn}
