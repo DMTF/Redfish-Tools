@@ -1002,6 +1002,9 @@ pre.code{
 
     def format_json_payload(self, json_payload):
         """ Format a json payload for output. """
+        # Add markdown for formatting. Conditional because some inputs may provide it.
+        if '```json' not in json_payload:
+            json_payload = '```json\n' + json_payload.strip() + '\n```\n'
         return ('<div class="json-payload">' +
                     self.formatter.markdown_to_html(json_payload) + '</div>')
 
