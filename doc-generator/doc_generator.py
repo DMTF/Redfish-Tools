@@ -1456,7 +1456,6 @@ def parse_schema_supplement(supp_data):
     """ Vet and extend supp_data. Any "mockup" entries in supp_data should be file paths or URIs to be expanded. """
     for schema_name, data in supp_data.items():
         if 'mockup' in data:
-            import pdb; pdb.set_trace()
             mockup_location = data.get('mockup')
             mockup = None
             ml_lower = mockup_location.lower()
