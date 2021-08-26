@@ -960,7 +960,7 @@ class DocGenerator:
 
                 ref_info = traverser.find_ref_data(this_ref)
                 if not ref_info:
-                    warnings.warn("Can't find schema file for %{ref}s", {'ref': this_ref})
+                    warnings.warn("Can't find schema file for %(ref)s" %{'ref': this_ref})
                     continue
                 if 'properties' in ref_info:
                     ref_properties = ref_info['properties']
