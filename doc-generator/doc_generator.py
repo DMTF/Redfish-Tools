@@ -1470,14 +1470,14 @@ def parse_schema_supplement(supp_data):
                                           {'uri': mockup_location, 'status_code': response.status})
                 except Exception as ex:
                     warnings.warn('Unable to retrieve Mockup from URL "%(uri)s": %(ex)s' % {'uri': mockup_location, 'ex': str(ex)})
-                else:
-                    # treat it as a local file
-                    try:
-                        mockup_file = open(mockup_location, 'r', encoding="utf8")
-                        mockup = mockup_file.read()
-                    except Exception as ex:
-                        warnings.warn('Unable to open Mockup file "%(uri)s" to read: %(ex)s'
-                                              % {'uri': mockup_location, 'ex': str(ex)})
+            else:
+                # treat it as a local file
+                try:
+                    mockup_file = open(mockup_location, 'r', encoding="utf8")
+                    mockup = mockup_file.read()
+                except Exception as ex:
+                    warnings.warn('Unable to open Mockup file "%(uri)s" to read: %(ex)s'
+                                          % {'uri': mockup_location, 'ex': str(ex)})
 
             if mockup:
                 if data.get('jsonpayload'):
