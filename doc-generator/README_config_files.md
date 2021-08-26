@@ -44,6 +44,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - subset_doc (command_line: `subset`): Path to a JSON document. Generates "Schema subset" output, with the subset defined in that document.
 - supplement_md_dir: Directory location for markdown files with supplemental text. Optional. See below for more detail.
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
+- warn_missing_payloads (command line: `warn_missing_payloads`): Boolean, default false. Use along with "payload_dir" to be warned of missing example payloads. When true, the doc generator will emit a warning for missing examples for all documented schemas, missing Action Response examples with the action has an "actionResponse" property, and missing Action Request examples when the action has parameters.
 - with_table_numbering: Boolean, default false. Applies to markdown output only! When true, table captions and references will be added to the output. You will need to run a post-processor on the output to complete the numbering. See TABLE_NUMBER_README.md[TABLE_NUMBER_README.md].
 
 
@@ -149,9 +150,10 @@ The schema_supplement attribute defines a dictionary of structured content, incl
             },
             "property_details": {
                 "EnumPropertyName": "A string, plain text or markdown. This will be inserted after the property description and prior to the table of enum details in the property information under Property Details.",
-                "property_details": {
-                   "UUID": "\nThe UUID property contains a value that represents the universal unique identifier number (UUID) of a system.\n\nThe UUID property is a string data type. The format of the string is the 35-character string format specified in RFC4122: \"xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\". Each x represents a hexadecimal digit (0-f).\n\nRegarding the case of the hex values, RFC4122 specifies that the hex values should be lowercase characters. Most modern scripting languages typically also represent hex values in lowercase characters following the RFC. However, dmidecode, WMI and some Redfish implementations currently use uppercase characters for UUID on output."
-                }
+                "UUID": "\nThe UUID property contains a value that represents the universal unique identifier number (UUID) of a system.\n\nThe UUID property is a string data type. The format of the string is the 35-character string format specified in RFC4122: \"xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\". Each x represents a hexadecimal digit (0-f).\n\nRegarding the case of the hex values, RFC4122 specifies that the hex values should be lowercase characters. Most modern scripting languages typically also represent hex values in lowercase characters following the RFC. However, dmidecode, WMI and some Redfish implementations currently use uppercase characters for UUID on output."
+            },
+            "action_details": {
+                "ResetBios": "A string, plain text or markdown. This will be inserted after the schema-supplied description of the action in the Actions details section."
             }
 	}
 ```
@@ -162,7 +164,7 @@ If `description` or `intro` are specified for a schema, that value will replace 
 
 The `mockup` and `jsonpayload` attributes are mutually exclusive. If both are provided, the content found at `mockup` will take precedence. Using a payload directory (specified as `payload_dir` in the Base Configuration file) is preferred over using these attributes.
 
-Note that `description`, `jsonpayload`, and `property_details` may instead be supplied in markdown files, by specifying a directory of markdown files with "supplement_md_dir".
+Note that `description`, `jsonpayload`, `property_details`, and `action_details` may instead be supplied in markdown files, by specifying a directory of markdown files with "supplement_md_dir".
 
 ## Examples
 

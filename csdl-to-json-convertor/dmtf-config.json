@@ -1,5 +1,5 @@
 {
-    "Copyright": "Copyright 2014-2020 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "Copyright": "Copyright 2014-2021 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
     "RedfishSchema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
     "ODataSchema": "http://redfish.dmtf.org/schemas/v1/odata-v4.json",
     "Location": "http://redfish.dmtf.org/schemas/v1/",

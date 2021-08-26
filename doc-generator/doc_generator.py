@@ -46,10 +46,13 @@ class DocGenerator:
         translations.install()
         _ = translations.gettext
 
-        # Set up our simplified warning format. We need _ defined with the correct language before we do this.
+        # Set up our simplified warning format.
         def simple_warning_format(message, category, filename, lineno, file=None, line=None):
             """ a basic format for warnings from this program """
-            if category == InfoWarning:
+
+            msg = str(message)
+            message_skips_trace = 'MISSING JSON' in msg or 'mismatch detected in descriptions' in msg
+            if category == InfoWarning or message_skips_trace:
                 return '  Info: %(message)s' % {'message': message} + "\n"
             else:
                 return '  Warning: %(message)s (%(filename)s: %(lineno)s)' % {'message': message, 'filename': filename, 'lineno': lineno} + "\n"
@@ -1136,6 +1139,8 @@ class DocGenerator:
         parser.add_argument('--subset', dest='subset_doc',
                             help=('Path to a JSON profile document. Generates "Schema subset" '
                                   'output, with the subset defined in the JSON profile document.'))
+        parser.add_argument('--warn_missing_payloads', action='store_true', dest='warn_missing_payloads', default=False,
+                                help='Warn on missing JSON payloads')
 
         parser.add_argument('--property_index', action='store_true', dest='property_index', default=None,
                             help='Produce Property Index output.')
@@ -1233,6 +1238,7 @@ class DocGenerator:
             'units_translation': {},
             'combine_multiple_refs': 0,
             'with_table_numbering': False,
+            'warn_missing_payloads': False,
             }
 
         # combined_args is an intermediate dictionary, combining command-line and config parameters.
@@ -1261,8 +1267,9 @@ class DocGenerator:
                 'format', 'outfile', 'payload_dir', 'normative',
                 'profile_doc', 'subset_doc',
                 'property_index', 'property_index_config_out', 'escape_chars',
-                'locale'
+                'locale', 'warn_missing_payloads'
                 ]
+
             for x in config_args:
                 if config_data.get(x) and (x not in combined_args or combined_args[x] is None):
                     combined_args[x] = config_data[x]
@@ -1491,6 +1498,8 @@ class DocGenerator:
         if combined_args.get('locale'):
             config['locale'] = combined_args['locale']
 
+        config['warn_missing_payloads'] = combined_args.get('warn_missing_payloads', False)
+
         return config
 
 
@@ -1512,14 +1521,14 @@ def parse_schema_supplement(supp_data):
                                           {'uri': mockup_location, 'status_code': response.status})
                 except Exception as ex:
                     warnings.warn('Unable to retrieve Mockup from URL "%(uri)s": %(ex)s' % {'uri': mockup_location, 'ex': str(ex)})
-                else:
-                    # treat it as a local file
-                    try:
-                        mockup_file = open(mockup_location, 'r', encoding="utf8")
-                        mockup = mockup_file.read()
-                    except Exception as ex:
-                        warnings.warn('Unable to open Mockup file "%(uri)s" to read: %(ex)s'
-                                              % {'uri': mockup_location, 'ex': str(ex)})
+            else:
+                # treat it as a local file
+                try:
+                    mockup_file = open(mockup_location, 'r', encoding="utf8")
+                    mockup = mockup_file.read()
+                except Exception as ex:
+                    warnings.warn('Unable to open Mockup file "%(uri)s" to read: %(ex)s'
+                                          % {'uri': mockup_location, 'ex': str(ex)})
 
             if mockup:
                 if data.get('jsonpayload'):

@@ -221,7 +221,7 @@ class DocFormatter:
             if part.startswith('{') and part.endswith('}'):
                 part = self.formatter.italic(part)
             uri_parts_highlighted.append(part)
-        uri_highlighted = '/'.join(uri_parts_highlighted)
+        uri_highlighted = '/&#8203;'.join(uri_parts_highlighted)
         return uri_highlighted
 
 
@@ -308,13 +308,8 @@ class DocFormatter:
 
         return None
 
-    def format_action_details(self, prop_name, action_details):
-        """Generate a formatted Actions section from supplemental markdown."""
-        raise NotImplementedError
-
-
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
-                                     version_strings=None, subset=None):
+                                     version_strings=None, supplemental_details=None, subset=None):
         """Generate a formatted Actions section from parameters data"""
         raise NotImplementedError
 
@@ -530,6 +525,9 @@ class DocFormatter:
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
                     json_payload = '```json\n' + payload.strip() + '\n```\n'
+                else:
+                    if self.config.get('warn_missing_payloads'):
+                        warnings.warn("MISSING JSON PAYLOAD FOR SCHEMA '%(schema_name)s'." %{'schema_name': schema_name})
             else:
                 json_payload = supplemental.get('jsonpayload')
 
@@ -1515,6 +1513,8 @@ class DocFormatter:
 
         # Only objects within Actions have parameters
         action_parameters = prop_info.get('parameters', {})
+        has_action_parameters = len(action_parameters) > 0
+
 
         prop_info = self.apply_overrides(prop_info, schema_name, prop_name)
 
@@ -1555,6 +1555,13 @@ class DocFormatter:
         add_link_text = prop_info.get('add_link_text', '')
 
         if within_action:
+
+            # Get the ActionName part of #SchemaName.ActionName. Example: from #Bios.ResetBios, we want "ResetBios"
+            short_name = prop_name
+            if prop_name.startswith('#'): # expected
+                prop_name_parts = prop_name.split('.')
+                short_name = prop_name_parts[-1]
+
             # Extend and parse parameter info
             for action_param in action_parameters.keys():
                 params = action_parameters[action_param].copy()
@@ -1564,17 +1571,25 @@ class DocFormatter:
                 params = self.extend_property_info(schema_ref, params)
                 action_parameters[action_param] = params
 
+            supplemental_details = None
+            supplemental = self.get_supplemental_details(schema_ref)
+            if supplemental:
+                supplemental_details = supplemental.get('action_details', {}).get(short_name)
+
             version_strings = self.format_version_strings(prop_info)
             action_details = self.format_action_parameters(schema_ref, prop_name, descr,
-                                                               action_parameters, profile, version_strings, subset)
+                                                               action_parameters, profile, version_strings,
+                                                               supplemental_details, subset)
 
             # Provisional inserts. These need to go in a different place depending on layout.
             action_response_formatted = ''
             request_payload = ''
             response_payload = ''
             example_payload = ''
+            has_action_response = False;
 
             if prop_info.get('actionResponse'):
+                has_action_response = True;
                 action_response = prop_info['actionResponse']
                 action_response_extended = self.extend_property_info(schema_ref, action_response)
                 action_response_formatted = self.format_action_response(schema_ref, prop_name, action_response_extended[0])
@@ -1583,11 +1598,6 @@ class DocFormatter:
 
             if self.config.get('payloads'):
                 version = self.get_latest_version(prop_info.get('_from_schema_ref'))
-                short_name = prop_name
-                if prop_name.startswith('#'): # expected
-                    # Example: from #Bios.ResetBios, we want "ResetBios"
-                    prop_name_parts = prop_name.split('.')
-                    short_name = prop_name_parts[-1]
 
                 # Insert action request payload, if present.
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name, 'request-example')
@@ -1596,6 +1606,11 @@ class DocFormatter:
                     json_payload = '```json\n' + payload.strip() + '\n```\n'
                     heading = self.formatter.para(self.formatter.bold(_("Request Example")))
                     request_payload = heading + self.format_json_payload(json_payload)
+                else:
+                    if self.config.get('warn_missing_payloads') and has_action_parameters: # has parameters
+                        warnings.warn("MISSING JSON PAYLOAD FOR ACTION REQUEST for '%(schema_name)s : %(action_name)s'" %
+                                          {'schema_name': schema_name, 'action_name': short_name})
+
 
                 # Insert action response payload, if present.
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name, 'response-example')
@@ -1604,6 +1619,10 @@ class DocFormatter:
                     json_payload = '```json\n' + payload.strip() + '\n```\n'
                     heading = self.formatter.para(self.formatter.bold(_("Response Example")))
                     response_payload = heading + self.format_json_payload(json_payload)
+                else:
+                    if self.config.get('warn_missing_payloads') and has_action_response:
+                        warnings.warn("MISSING JSON PAYLOAD FOR ACTION RESPONSE for '%(schema_name)s : %(action_name)s'" %
+                                          {'schema_name': schema_name, 'action_name': short_name})
 
                 # Old-style action payloads: this allowed for just one payload (response, presumably) per action
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name)
@@ -2369,7 +2388,7 @@ class DocFormatter:
                                                         schema_supplement.get(schema_name, {}))
 
             if md_supp:
-                for key in ['description', 'jsonpayload', 'property_details']:
+                for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
                     if md_supp.get(key) and key not in supplemental:
                         supplemental[key] = md_supp[key]
 
