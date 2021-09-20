@@ -1549,7 +1549,8 @@ def main():
     if config_fn:
         config_data = DocGenerator.parse_config_file(config_fn)
     else:
-        config_data = {}
+        warnings.warn('A configuration file is required (option --config)');
+        sys.exit()
 
     # path of some files will be relative to path of config file:
     config_dir = os.path.dirname(config_fn)
