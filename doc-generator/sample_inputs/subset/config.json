@@ -5,10 +5,11 @@
     "import_from": [ "./json-schema" ],
     "outfile": "subset.html",
     "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
-    "profile_uri_to_local": {"redfish.dmtf.org/profiles": "../Redfish-Tools/doc-generator/sample_inputs"},
-    "suppress_version_history": true,
-    "html_title": "Sample Profile-focused Document",
-    "subset_doc": "../Redfish-Tools/doc-generator/sample_inputs/OCPBasicServer.v1_0_0.json",
+    "suppress_version_history": false,
+    "add_toc": true,
+    "combine_multiple_refs": 3,
+    "html_title": "Sample Subset Document",
+    "subset_doc": "docgen-subset.json",
     "excluded_annotations": [
         "*@odata.count",
         "*@odata.navigationLink"
@@ -20,7 +21,5 @@
     ],
     "excluded_schemas": [
         "*Collection"
-    ],
-    "boilerplate_intro": "./intro.md",
-    "content_supplement": "./content_supplement.json"
+    ]
 }

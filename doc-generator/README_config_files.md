@@ -166,12 +166,98 @@ The `mockup` and `jsonpayload` attributes are mutually exclusive. If both are pr
 
 Note that `description`, `jsonpayload`, `property_details`, and `action_details` may instead be supplied in markdown files, by specifying a directory of markdown files with "supplement_md_dir".
 
+## Subset Config File
+
+Subset mode is intended for authors of specifications that use a subset of Redfish. The subset config file allows you to selectively include schemas and to filter their properties either by supported version, or by specifying individual properties to include or exclude.
+
+In its simplest form, use "IncludeSchemas" to specify which schemas to document:
+
+```
+{
+    "IncludeSchemas": {
+        "Circuit": {},
+        "Outlet": {}
+    }
+}
+```
+
+The Doc generator retrieves definitions from schemas outside the IncludeSchemas list as needed to populate definitions of included properties.
+
+Specify "Version" to get documentation showing everything in that version, but nothing newer:
+
+```
+{
+    "IncludeSchemas": {
+        "Circuit": {
+            "Version": "1.1"
+        },
+        "Outlet": {}
+    }
+}
+```
+
+For finer-grained support, specify:
+
+ - Baseline: boolean, if true, include everything except as noted. If false, include only what is noted. Default is true.
+ - Properties and Actions: specify specific properties to treat differently from Baseline:
+   - "Include": false indicates property/action should be omitted. Default is true; empty object for a property name means include the property.
+   - SupportedValues: (for enums), limit supported values to the given list.
+
+In the following example:
+ - Only three properties from the "Facility" schema are to be documented (Baseline is false, with properties specified)
+ - For the "Outlet" schema, all properties except "IndicatorLED" are to be included. All Actions except "#Outlet.ResetMetrics" are to be included.
+ - "OutletType" in the "Outlet" schema has a limited set of values ("SupportedValues")
+ - "#Outlet.PowerControl" shows an included Action with a limited set of "SupportedValues".
+```
+{
+    "IncludeSchemas": {
+	"Circuit": {
+	    "Version": "1.1"
+	},
+	"Facility": {
+	    "Baseline": false,
+	    "Properties": {
+	        "AmbientMetrics": {},
+	        "EnvironmentMetrics": {},
+	        "FacilityType": {}
+            }
+	},
+        "Outlet": {
+	    "Baseline": true,
+	    "Properties": {
+	        "OutletType": {
+		    "SupportedValues": [ "NEMA_5_15R", "NEMA_5_20R", "NEMA_L5_20R" ]
+	        },
+	        "IndicatorLED": {
+		    "Include": false
+	        }
+	    },
+	    "Actions": {
+	        "#Outlet.ResetMetrics": {
+		    "Include": false
+	        },
+	        "#Outlet.PowerControl": {
+		    "Include": true,
+		    "Parameters": {
+		        "PowerState": {
+			    "Include": true,
+			    "SupportedValues": [ "Off"]
+		        }
+		    }
+	        }
+	    }
+        }
+    }
+}
+
+```
+
 ## Examples
 
 Several files in the sample_inputs directory provide examples of configuration files that might be used to produce different types of documentation. Below are some example command-line invocations.
 
 These assume that you have a clone of the DMTF/Redfish repo and the DMTF/Redfish-Tools repo in the same parent directory, and that your working directory is the Redfish clone -- so that the schemas are in ./json-schema and doc_generator.py is at ../Redfish-Tools/doc-generator/doc_generator.py relative to your current working directory.
-n
+
 Note that the config files themselves contain references to other files in this directory.
 
 
@@ -195,7 +281,7 @@ Config file references the profile OCPBasicServer.v1_0_0.json (which in turn ref
 
   python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/subset/config.json
 
-Config file references the profile OCPBasicServer.v1_0_0.json (which in turn references OCPManagedDevice.v1_0_0.json).
+This config file specifies the subset document sample_inputs/subset/docgen-subset.json.
 
 
 ### Produce Property Index output (HTML format):
