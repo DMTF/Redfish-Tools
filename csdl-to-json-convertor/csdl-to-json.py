@@ -214,9 +214,10 @@ class CSDLToJSON:
 
                     # Process Action definitions
                     # This is needed for OEM actions since there's no strong tie between a standard resource and an OEM action
+                    # The unversioned definition will contain an anyOf to point to each version
                     if child.tag == ODATA_TAG_ACTION:
                         if self.is_oem_action( child ):
-                            self.generate_action( child, self.json_out[self.namespace_under_process]["definitions"] )
+                            self.generate_abstract_object( child, self.json_out[self.namespace_under_process]["definitions"] )
 
                     # Process EnumType definitions
                     if child.tag == ODATA_TAG_ENUM:
@@ -471,6 +472,13 @@ class CSDLToJSON:
                     namespace = self.get_attrib( schema, "Namespace" )
                     if namespace != self.namespace_under_process:
                         if does_version_apply( oldest_version, namespace ) and self.is_latest_errata( namespace ):
+                            json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
+            elif object.tag == ODATA_TAG_ACTION:
+                # Actions only appear in the unversioned namespace; need to make assumptions based on the version tag
+                for schema in self.root.iter( ODATA_TAG_SCHEMA ):
+                    namespace = self.get_attrib( schema, "Namespace" )
+                    if namespace != self.namespace_under_process:
+                        if self.does_definition_apply( object, self.namespace_under_process ) and self.is_latest_errata( namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
