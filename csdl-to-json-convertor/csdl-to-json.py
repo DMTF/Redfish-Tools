@@ -212,6 +212,13 @@ class CSDLToJSON:
                         self.generate_capabilities( child, self.json_out[self.namespace_under_process]["definitions"] )
                         self.add_version_details( child, self.json_out[self.namespace_under_process]["definitions"][self.get_attrib( child, "Name" )] )
 
+                    # Process Action definitions
+                    # This is needed for OEM actions since there's no strong tie between a standard resource and an OEM action
+                    # The unversioned definition will contain an anyOf to point to each version
+                    if child.tag == ODATA_TAG_ACTION:
+                        if self.is_oem_action( child ):
+                            self.generate_abstract_object( child, self.json_out[self.namespace_under_process]["definitions"] )
+
                     # Process EnumType definitions
                     if child.tag == ODATA_TAG_ENUM:
                         self.generate_enum( child, self.json_out[self.namespace_under_process]["definitions"] )
@@ -466,6 +473,13 @@ class CSDLToJSON:
                     if namespace != self.namespace_under_process:
                         if does_version_apply( oldest_version, namespace ) and self.is_latest_errata( namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
+            elif object.tag == ODATA_TAG_ACTION:
+                # Actions only appear in the unversioned namespace; need to make assumptions based on the version tag
+                for schema in self.root.iter( ODATA_TAG_SCHEMA ):
+                    namespace = self.get_attrib( schema, "Namespace" )
+                    if namespace != self.namespace_under_process:
+                        if self.does_definition_apply( object, self.namespace_under_process ) and self.is_latest_errata( namespace ):
+                            json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
         for child in object:
@@ -653,9 +667,10 @@ class CSDLToJSON:
 
         # Hook it into the Actions object definition to be one of its properties
         name = self.get_attrib( action, "Name" )
-        self.init_object_definition( "Actions", json_def )
-        action_prop = "#" + self.namespace_under_process.split( "." )[0] + "." + name
-        json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
+        if not self.is_oem_action( action ):
+            self.init_object_definition( "Actions", json_def )
+            action_prop = "#" + self.namespace_under_process.split( "." )[0] + "." + name
+            json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
 
         # Add version details to the Action
         self.add_version_details( action, json_def[name] )
@@ -1407,6 +1422,24 @@ class CSDLToJSON:
                 if ( version1[0] == version2[0] ) and ( version1[1] == version2[1] ) and ( version1[2] < version2[2] ):
                     is_latest = False
         return is_latest
+
+    def is_oem_action( self, action ):
+        """
+        Checks if an action is an OEM action
+
+        Args:
+            action: The action structure
+
+        Returns:
+            True if the action is an OEM action, False otherwise
+        """
+
+        # If the binding parameter points to an OemActions object, this is an OEM action
+        for param in action:
+            if param.tag == ODATA_TAG_PARAMETER:
+                if self.get_attrib( param, "Type", True ).endswith( ".OemActions" ):
+                    return True
+        return False
 
 def main():
     """
