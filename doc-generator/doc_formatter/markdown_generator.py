@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2021 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -179,7 +179,7 @@ class MarkdownGenerator(DocFormatter):
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
 
-        if formatted_details['profile_purpose'] and (self.config.get('profile_mode') != 'subset'):
+        if formatted_details['profile_purpose'] and self.config.get('profile_mode'):
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
             formatted_details['descr'] += self.formatter.bold(formatted_details['profile_purpose'])
@@ -236,14 +236,7 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['read_only']:
                 prop_access = _('read-only')
             else:
-                # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
-                # emit read-only.
-                if ((self.config.get('profile_mode') == 'subset')
-                        and formatted_details.get('profile_write_req')
-                        and (formatted_details['profile_write_req'] == 'None')):
-                        prop_access = _('read-only')
-                else:
-                    prop_access = _('read-write')
+                prop_access = _('read-write')
 
         # Action parameters don't have read/write properties, but they can be required/optional.
         if as_action_parameters:
@@ -264,7 +257,7 @@ class MarkdownGenerator(DocFormatter):
         profile_access = self.format_base_profile_access(formatted_details)
 
         if self.markdown_mode == 'slate':
-            if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+            if self.config.get('profile_mode'):
                 if profile_access:
                     prop_type += '<br><br>' + self.formatter.italic(profile_access)
             elif prop_access:
@@ -275,7 +268,7 @@ class MarkdownGenerator(DocFormatter):
         row.append(indentation_string + name_and_version)
         row.append(prop_type)
         if self.markdown_mode != 'slate':
-            if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+            if self.config.get('profile_mode'):
                 if profile_access:
                     row.append(self.formatter.italic(profile_access))
                 else:
@@ -307,7 +300,7 @@ class MarkdownGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, parent_prop_info, profile=None):
+                                supplemental_details, parent_prop_info, profile=None, subset=None):
         """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
@@ -320,7 +313,8 @@ class MarkdownGenerator(DocFormatter):
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
         # Property enums, look for MinSupportValues/RecommendedValues.
         profile_mode = self.config.get('profile_mode')
-        if profile_mode:
+        subset_mode = self.config.get('subset_mode')
+        if profile_mode or subset_mode: # TODO: split these up
             if profile is None:
                 profile = {}
 
@@ -333,14 +327,10 @@ class MarkdownGenerator(DocFormatter):
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
 
-            # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
-            # means all values are supported.
-            # Otherwise, Values/ParameterValues specifies the set that should be listed.
-            if profile_mode == 'subset':
-                if len(profile_values):
-                    enum = [x for x in enum if x in profile_values]
-                elif len(profile_parameter_values):
-                    enum = [x for x in enum if x in profile_parameter_values]
+            if subset_mode:
+                supported_values = subset.get('SupportedValues')
+                if supported_values:
+                    enum = [x for x in enum if x in supported_values]
 
         if prop_description:
             contents.append(self.escape_for_markdown(prop_description, self.config.get('escape_chars', [])))
@@ -355,7 +345,7 @@ class MarkdownGenerator(DocFormatter):
         enum_translations = parent_prop_info.get('enumTranslations', {})
 
         if enum_details:
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' | ' + _('Profile Specifies') + ' |')
                 contents.append('| --- | --- | --- |')
             else:
@@ -409,7 +399,7 @@ class MarkdownGenerator(DocFormatter):
                     else:
                         descr = self.formatter.italic(deprecated_descr)
 
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     profile_spec = ''
                     # Note: don't wrap the following strings for trnaslation; self.text_map handles that.
                     if enum_item in profile_values:
@@ -425,7 +415,7 @@ class MarkdownGenerator(DocFormatter):
                     contents.append('| ' + enum_name + ' | ' + descr + ' |')
 
         elif enum:
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 contents.append('| ' + prop_type + ' | '+ _('Profile Specifies') + ' |')
                 contents.append('| --- | --- |')
             else:
@@ -477,7 +467,7 @@ class MarkdownGenerator(DocFormatter):
                         else:
                             enum_name += ' ' + self.formatter.italic(_('(deprecated in v%(deprecated_version)s and later.)') % {'deprecated_version': deprecated_display})
 
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     profile_spec = ''
                     # Note: don't wrap the following strings for trnaslation; self.text_map handles that.
                     if enum_name in profile_values:
@@ -503,7 +493,7 @@ class MarkdownGenerator(DocFormatter):
 
 
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
-                                     version_strings=None, supplemental_details=None):
+                                     version_strings=None, supplemental_details=None, subset=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -554,10 +544,10 @@ class MarkdownGenerator(DocFormatter):
 
             param_names = [x for x in action_parameters.keys()]
 
-            if self.config.get('profile_mode') == 'subset':
-                if profile.get('Parameters'):
-                    param_names = [x for x in profile['Parameters'].keys() if x in param_names]
-                # If there is no profile for this action, all parameters should be output.
+            if self.config.get('subset_mode') and subset:
+                supported_values = subset.get('SupportedValues')
+                if supported_values:
+                    param_names = [x for x in param_names if x in supported_values]
 
             param_names.sort(key=str.lower)
 
@@ -587,7 +577,7 @@ class MarkdownGenerator(DocFormatter):
         """Common formatting logic for profile_access column"""
 
         profile_access = ''
-        if not self.config['profile_mode']:
+        if not self.config.get('profile_mode'):
             return profile_access
 
         # Each requirement  may be Mandatory, Recommended, IfImplemented, Conditional, or (None)
@@ -715,7 +705,10 @@ class MarkdownGenerator(DocFormatter):
                         paths_sorted.sort(key=str.lower)
                         for path in paths_sorted:
                             info = det_info[path_to_ref[path]]
-                            path_text = _("In %(path)s:") % {'path': path}
+                            if path:
+                                path_text = _("In %(path)s:") % {'path': path}
+                            else:
+                                path_text = _("In top level:")
                             if self.markdown_mode == 'slate':
                                 contents.append(self.formatter.para(self.formatter.bold(path_text)))
                             else:

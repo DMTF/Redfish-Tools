@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2021 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -349,14 +349,7 @@ pre.code{
             if formatted_details['read_only']:
                 prop_access = '<nobr>' + _('read-only') + '</nobr>'
             else:
-                # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
-                # emit read-only.
-                if ((self.config.get('profile_mode') == 'subset')
-                        and formatted_details.get('profile_write_req')
-                        and (formatted_details['profile_write_req'] == 'None')):
-                        prop_access = '<nobr>' + _('read-only') + '</nobr>'
-                else:
-                    prop_access = '<nobr>' + _('read-write') + '</nobr>'
+                prop_access = '<nobr>' + _('read-write') + '</nobr>'
 
         if formatted_details['prop_required'] or formatted_details.get('required_parameter'):
             prop_access += ' <nobr>' + _('required') + '</nobr>'
@@ -372,7 +365,7 @@ pre.code{
         profile_access = self.format_base_profile_access(formatted_details)
 
         descr = formatted_details['descr']
-        if formatted_details['profile_purpose'] and (self.config.get('profile_mode') != 'subset'):
+        if formatted_details['profile_purpose'] and self.config.get('profile_mode'):
             descr += '<br>' + self.formatter.bold(_('Profile Purpose: %(purpose)s') % {'purpose': formatted_details['profile_purpose']})
 
         # Conditional Requirements
@@ -396,10 +389,10 @@ pre.code{
 
         row = []
         row.append(indentation_string + name_and_version)
-        if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+        if self.config.get('profile_mode'):
             row.append(profile_access)
         row.append(prop_type)
-        if not self.config.get('profile_mode') or self.config.get('profile_mode') == 'subset':
+        if not self.config.get('profile_mode'):
             row.append(prop_access)
         row.append(descr)
 
@@ -426,7 +419,7 @@ pre.code{
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                    supplemental_details, parent_prop_info, profile=None):
+                                    supplemental_details, parent_prop_info, profile=None, subset=None):
         """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
@@ -439,6 +432,7 @@ pre.code{
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
         # Property enums, look for MinSupportValues/RecommendedValues.
         profile_mode = self.config.get('profile_mode')
+        subset_mode = self.config.get('subset_mode')
         if profile_mode:
             if profile is None:
                 profile = {}
@@ -451,14 +445,10 @@ pre.code{
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
 
-        # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
-        # means all values are supported.
-        # Otherwise, Values/ParameterValues specifies the set that should be listed.
-        if profile_mode == 'subset':
-            if len(profile_values):
-                enum = [x for x in enum if x in profile_values]
-            elif len(profile_parameter_values):
-                enum = [x for x in enum if x in profile_parameter_values]
+        if subset_mode:
+            supported_values = subset.get('SupportedValues')
+            if supported_values:
+                enum = [x for x in enum if x in supported_values]
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
@@ -475,7 +465,7 @@ pre.code{
 
         if enum_details:
             headings = [prop_type, _('Description')]
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 headings.append(_('Profile Specifies'))
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -535,7 +525,7 @@ pre.code{
                         descr = self.formatter.italic(deprecated_descr)
                 cells = [enum_name, descr]
 
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     if enum_item in profile_values:
                         cells.append(self.text_map('Mandatory'))
                     elif enum_item in profile_min_support_values:
@@ -552,7 +542,7 @@ pre.code{
 
         elif enum:
             headings = [prop_type]
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 headings.append(_('Profile Specifies'))
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -607,7 +597,7 @@ pre.code{
 
 
                 cells = [enum_name]
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     if enum_name in profile_values:
                         cells.append(self.text_map('Mandatory'))
                     elif enum_name in profile_min_support_values:
@@ -626,7 +616,7 @@ pre.code{
 
 
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
-                                     version_strings=None, supplemental_details=None):
+                                     version_strings=None, supplemental_details=None, subset=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -667,10 +657,10 @@ pre.code{
 
             param_names = [x for x in action_parameters.keys()]
 
-            if self.config.get('profile_mode') == 'subset':
-                if profile and profile.get('Parameters'):
-                    param_names = [x for x in profile['Parameters'].keys() if x in param_names]
-                # If there is no profile for this action, all parameters should be output.
+            if self.config.get('subset_mode') and subset:
+                supported_values = subset.get('SupportedValues')
+                if supported_values:
+                    param_names = [x for x in param_names if x in supported_values]
 
             param_names.sort(key=str.lower)
 
@@ -760,7 +750,11 @@ pre.code{
                         paths_sorted.sort(key=str.lower)
                         for path in paths_sorted:
                             info = det_info[path_to_ref[path]]
-                            deets_content.append(self.formatter.head_five("In " + path + ":", 0))
+                            if path:
+                                path_text = _("In %(path)s:") % {'path': path}
+                            else:
+                                path_text = _("In top level:")
+                            deets_content.append(self.formatter.head_five(path_text, 0))
                             deets_content.append(info['formatted_descr'])
 
                 deets.append(self.formatter.make_div('\n'.join(deets_content),
