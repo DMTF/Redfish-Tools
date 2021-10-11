@@ -86,6 +86,7 @@ For a mapping of configuration keys to command-line arguments, see [Mapping of c
 * [suppress_version_history](#suppress_version_history)
 * [uri_mapping](#uri_mapping)
 * [warn_missing_payloads](#warn_missing_payloads)
+* [with_table_numbering](#with_table_numbering)
 * [version](#version)
 
 #### actions_in_property_table
@@ -387,6 +388,15 @@ Value is:
     * Action request examples when the action has parameters.
 * `false`. (Default) Do not receive warnings.
 
+#### with_table_numbering
+
+Boolean.
+
+Applies to Markdown output only. 
+
+* `true`. Adds table captions and references to the output. You must run a post-processor on the output to complete the numbering. See [Table numbering README](TABLE_NUMBER_README.md).
+* `false`. Default. Does not add table captions and references to the output.
+
 #### version
 
 String. Defines an optional version string, which might be meaningful in the future.
@@ -638,3 +648,4 @@ This file can include an `[add_toc]` directive that specifies location for the t
 The boilerplate postscript file is a Markdown or HTML file that contains supplementary content to include in the output after the generated documentation.
 
 This file can include an `[add_toc]` directive that specifies location for the table of contents.
+

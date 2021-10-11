@@ -94,7 +94,7 @@ const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
                                   'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml',
                                   'StorageReplicaInfo_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
                                   'VolumeCollection_v1.xml' ];
-const ContosoSchemaFileList = [ 'ContosoExtensions_v1.xml', 'TurboencabulatorService_v1.xml' ];
+const ContosoSchemaFileList = [ 'ContosoAccountService_v1.xml', 'ContosoServiceRoot_v1.xml', 'TurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'TurboencabulatorService', 'LineOfService' ];
 const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X/StorageGroups/10", "https://10.23.11.12/redfish/v1/Systems/FileServer/StorageServices/X/StorageGroups/10", "https://10.1.1.13/redfish/v1/StorageServices/A/Volume/ABC", "https://10.1.22.18/redfish/v1/StorageServices/X/Volume/A1x2", "https://10.1.22.18/redfish/v1/StorageServices/X/Volumes/A1x2", "http://hf.contoso.org/redfish/v1/Systems/FileServer/StorageServices/2/StorageGroups/2","https://10.12.1.12/redfish/v1/StorageServices/2/Volumes/5"];
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
@@ -102,7 +102,7 @@ const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
 const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
-const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
+const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
                                  'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
@@ -1300,7 +1300,7 @@ function validCSDLTypeInMockup(json, file) {
             }
             //This should be a NavigationProperty pointing to an EntityType, make sure it is a link...
             if(propValue['@odata.id'] === undefined && !('Redfish.ExcerptCopy' in CSDLProperty.Annotations)) {
-              if(!file.includes('non-resource-examples')) {
+              if(!file.includes('non-resource-examples') && !file.includes('Event-v1-example.json')) {
                 throw new Error('Property "'+propName+'" is an EntityType, but the value does not contain an @odata.id!');
               }
             }
@@ -1431,7 +1431,7 @@ function getCSDLWithUri(type) {
   if(type.Annotations !== undefined && type.Annotations['Redfish.Uris'] !== undefined) {
     return type;
   }
-  if(NoUriWhitelist.indexOf(type.Name) !== -1) {
+  if(NoUriAllowList.indexOf(type.Name) !== -1) {
     return type;
   }
   if(type.BaseType) {
