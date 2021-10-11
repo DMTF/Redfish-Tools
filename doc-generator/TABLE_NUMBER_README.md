@@ -1,4 +1,5 @@
-# Table Numbering README
+# Table numbering README
+
 > last modified: 10 November 2020
 
 [[Redfish doc generator README]](README.md#redfish-doc-generator "README.md#redfish-doc-generator")
@@ -19,10 +20,11 @@
 ## Solution
 
 Routines were added to create:
-- a standardized reference from the text to a table
-- a standardized table caption
-- a set of substitution tokens for table numbering
-  - TBL_NN: The current table number
-  - TBL_NN++: The next table number (i.e., pre-increment)
 
-An awk routine (table_number.awk) was added to the Swordfish documentation tools to replace the tokens with actual table numbers, once a full set of md source files had been generated. It also handles some document variable substitutions, and a numbering sequence for figures, though those are not directly related to the ISO issue.
+- A standardized reference from the text to a table
+- A standardized table caption
+- A set of substitution tokens for table numbering
+    - TBL_NN: The current table number
+    - TBL_NN++: The next table number, such as pre-increment)
+
+An awk routine (`table_number.awk`) was added to the Swordfish documentation tools to replace the tokens with actual table numbers, once a full set of md source files had been generated. It also handles some document variable substitutions, and a numbering sequence for figures, though those are not directly related to the ISO issue.
