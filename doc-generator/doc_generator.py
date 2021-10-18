@@ -20,6 +20,7 @@ import copy
 import functools
 import warnings
 import gettext
+import urllib
 from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
 
