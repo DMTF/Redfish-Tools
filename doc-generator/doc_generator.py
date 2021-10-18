@@ -1284,15 +1284,16 @@ class DocGenerator:
             if config_data.get('import_from') and not combined_args.get('import_from'):
                 combined_args['import_from'] = config_data['import_from']
 
-            # config_flags don't have command-line overrides; they should be added to config directly.
-            config_flags = [
+            # config_only don't have command-line overrides; they should be added to config directly.
+            config_only = [
                 'units_translation', 'suppress_version_history',
                 'actions_in_property_table', 'html_title',
                 'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
                 'combine_multiple_refs', 'omit_version_in_headers',
+                'supplement_md_dir',
                 'description_overrides' # this is for property_index mode only
                 ]
-            for x in config_flags:
+            for x in config_only:
                 if x in config_data:
                     config[x] = config_data[x]
 
@@ -1356,18 +1357,22 @@ class DocGenerator:
                     outfile_name += '.md'
         config['outfile_name'] = outfile_name
 
-        # If payload_dir was provided, verify that it is a readable directory:
-        if combined_args.get('payload_dir'):
-            payload_dir = combined_args.get('payload_dir')
-            try:
-                if os.path.isdir(combined_args['payload_dir']):
-                    config['payload_dir'] = combined_args['payload_dir']
-                else:
-                    warnings.warn('"%(dirname)s" is not a directory. Exiting.' % {'dirname': combined_args['payload_dir']})
+        # Verify directories, if specified, are actually directories:
+        for config_dir in ['payload_dir', 'supplement_md_dir']:
+            if combined_args.get(config_dir):
+                payload_dir = combined_args.get(config_dir)
+                try:
+                    if os.path.isdir(combined_args[config_dir]):
+                        config[config_dir] = combined_args[config_dir]
+                    else:
+                        warnings.warn('"%(dirname)s" is not a directory. Exiting.' % {'dirname': combined_args[config_dir]})
+                        sys.exit();
+                except (Exception) as ex:
+                    warnings.warn('Unable to read %(config_dir) "%(dirname)s": %(message)s' % {
+                        'config_dir': config_dir,
+                        'dirname': combined_args['payload_dir'],
+                        'message': str(ex)})
                     sys.exit();
-            except (Exception) as ex:
-                warnings.warn('Unable to read payload_dir "%(dirname)s": %(message)s' % {'dirname': combined_args['payload_dir'], 'message': str(ex)})
-                sys.exit();
 
         # Check profile document, if specified
         if combined_args.get('profile_doc'):
