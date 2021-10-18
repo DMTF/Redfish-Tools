@@ -60,7 +60,7 @@ The combine_multiple_refs attribute specifies a threshold at which multiple refe
 
 #### supplement_md_dir
 
-The supplement_dir attribute specifies a directory location for supplemental markdown content, on a schema-by-schema basis. This directory should contain a separate file for each documented schema for which you intend to provide supplemental content. Each file should be named with the schema name and a .md suffix; for example "Chassis.md".
+The supplement_md_dir attribute specifies a directory location for supplemental markdown content, on a schema-by-schema basis. This directory should contain a separate file for each documented schema for which you intend to provide supplemental content. Each file should be named with the schema name and a .md suffix; for example "Chassis.md".
 
 Within these markdown files, headings with a distinct format are used to identify different chunks of text:
 
