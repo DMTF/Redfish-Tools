@@ -268,11 +268,7 @@ class JSONToYAML:
                     if "anyOf" in definition:
                         if self.is_collection( definition ):
                             # Determine what the reference will look like based on its members
-                            if def_name == "DriveCollection":
-                                # This is the only known case where a collection resource and its respective singular resource is owned by two different groups
-                                reference = "http://redfish.dmtf.org/schemas/swordfish/v1"
-                            else:
-                                reference = re.search( "^(.+)\/\w+\.json", definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"] ).group( 1 )
+                            reference = re.search( "^(.+)\/\w+\.json", definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"] ).group( 1 )
                             reference = reference + "/" + def_name + ".yaml#/components/schemas/" + def_name + "_" + def_name
 
                             # Pull out the filename of the collection members to see if it's being converted now
