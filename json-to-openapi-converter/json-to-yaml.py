@@ -155,6 +155,8 @@ class JSONToYAML:
                     service_doc["paths"][uri]["delete"] = self.generate_operation( uri, DELETE_RESPONSES )
             else:
                 service_doc["paths"][uri]["post"] = self.generate_operation( uri, ACTION_RESPONSES, True )
+        service_doc["paths"]["/redfish/v1/$metadata"] = self.generate_metadata_operations()
+        service_doc["paths"]["/redfish/v1/odata"] = self.generate_odata_operations()
 
         out_string = yaml.dump( service_doc, default_flow_style = False )
         with open( service_file, "w" ) as file:
@@ -547,24 +549,24 @@ class JSONToYAML:
             An object containing the definition of the Redfish Error payload
         """
         redfish_error = {
-            "description": "The error payload from a Redfish Service.",
-            "x-longDescription": "The Redfish Specification-described type shall contain an error payload from a Redfish Service.",
+            "description": "The error payload from a Redfish service.",
+            "x-longDescription": "The Redfish Specification-described type shall contain an error payload from a Redfish service.",
             "type": "object",
             "properties": {
                 "error": {
-                    "description": "The properties that describe an error from a Redfish Service.",
-                    "x-longDescription": "The Redfish Specification-described type shall contain properties that describe an error from a Redfish Service.",
+                    "description": "The properties that describe an error from a Redfish service.",
+                    "x-longDescription": "The Redfish Specification-described type shall contain properties that describe an error from a Redfish service.",
                     "type": "object",
                     "properties": {
                         "code": {
-                            "description": "A string indicating a specific MessageId from a Message Registry.",
-                            "x-longDescription": "This property shall contain a string indicating a specific MessageId from a Message Registry.",
+                            "description": "A string indicating a specific MessageId from a message registry.",
+                            "x-longDescription": "This property shall contain a string indicating a specific MessageId from a message registry.",
                             "readOnly": True,
                             "type": "string"
                         },
                         "message": {
-                            "description": "A human-readable error message corresponding to the message in a Message Registry.",
-                            "x-longDescription": "This property shall contain a human-readable error message corresponding to the message in a Message Registry.",
+                            "description": "A human-readable error message corresponding to the message in a message registry.",
+                            "x-longDescription": "This property shall contain a human-readable error message corresponding to the message in a message registry.",
                             "readOnly": True,
                             "type": "string"
                         },
@@ -686,7 +688,7 @@ class JSONToYAML:
                     response["content"] = content_error
         elif http_status == 202:
             # 202 Accepted: Task is returned
-            response["description"] = "Accepted; a Task has been generated"
+            response["description"] = "Accepted; a task has been generated"
             if content_task is not None:
                 response["content"] = content_task
         elif http_status == 204:
@@ -761,6 +763,113 @@ class JSONToYAML:
             pass
 
         return False
+
+    def generate_metadata_operations( self ):
+        """
+        Creates the operation objects for /redfish/v1/$metadata
+
+        Returns:
+            The operation objects for /redfish/v1/$metadata
+        """
+
+        metadata = {
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/xml": {}
+                        },
+                        "description": "OData $metadata."
+                    },
+                    "default": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RedfishError"
+                                }
+                            }
+                        },
+                        "description": "Error condition"
+                    }
+                }
+            }
+        }
+        return metadata
+
+    def generate_odata_operations( self ):
+        """
+        Creates the operation objects for /redfish/v1/odata
+
+        Returns:
+            The operation objects for /redfish/v1/odata
+        """
+
+        odata = {
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "description": "The OData service document from a Redfish service.",
+                                    "type": "object",
+                                    "properties": {
+                                        "@odata.context": {
+                                            "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml#/components/schemas/odata-v4_context"
+                                        },
+                                        "value": {
+                                            "description": "The list of services provided by the Redfish service.",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "description": "User-friendly resource name of the resource.",
+                                                        "readOnly": True,
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "description": "Type of resource.  Value is `Singleton` for all cases defined by Redfish.",
+                                                        "readOnly": True,
+                                                        "type": "string"
+                                                    },
+                                                    "url": {
+                                                        "description": "Relative URL for the top-level resource.",
+                                                        "readOnly": True,
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name",
+                                                    "kind",
+                                                    "uri"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            "type": "array"
+                                        }
+                                    },
+                                    "required": [
+                                        "@odata.context",
+                                        "value"
+                                    ]
+                                }
+                            }
+                        },
+                        "description": "OData service document"
+                    },
+                    "default": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RedfishError"
+                                }
+                            }
+                        },
+                        "description": "Error condition"
+                    }
+                }
+            }
+        }
+        return odata
 
 def is_unversioned( name ):
     """
