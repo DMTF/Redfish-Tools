@@ -783,7 +783,7 @@ class JSONToYAML:
                         "content": {
                             "application/xml": {}
                         },
-                        "description": "OData $metadata"
+                        "description": "OData $metadata."
                     },
                     "default": {
                         "content": {
@@ -822,16 +822,16 @@ class JSONToYAML:
                                             "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml#/components/schemas/odata-v4_context"
                                         },
                                         "value": {
-                                            "description": "The list of services provided by the Redfish service",
+                                            "description": "The list of services provided by the Redfish service.",
                                             "items": {
                                                 "properties": {
                                                     "name": {
-                                                        "description": "User-friendly resource name of the resource",
+                                                        "description": "User-friendly resource name of the resource.",
                                                         "readOnly": True,
                                                         "type": "string"
                                                     },
                                                     "kind": {
-                                                        "description": "Type of resource.  Value is `Singleton` for all cases defined by Redfish",
+                                                        "description": "Type of resource.  Value is `Singleton` for all cases defined by Redfish.",
                                                         "readOnly": True,
                                                         "type": "string"
                                                     },
