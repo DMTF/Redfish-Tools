@@ -360,7 +360,7 @@ class MarkdownGenerator(DocFormatter):
                 contents.append('| :--- | :------ | :--- |')
             else:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' |')
-                contents.append('| :--- | :--- |')
+                contents.append('| :--- | :------------ |')
             enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = enum_item
