@@ -357,10 +357,10 @@ class MarkdownGenerator(DocFormatter):
         if enum_details:
             if profile_mode and profile_mode != 'subset':
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' | ' + _('Profile Specifies') + ' |')
-                contents.append('| --- | --- | --- |')
+                contents.append('| :--- | :------ | :--- |')
             else:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' |')
-                contents.append('| --- | --- |')
+                contents.append('| :--- | :--- |')
             enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = enum_item
@@ -550,7 +550,7 @@ class MarkdownGenerator(DocFormatter):
                 rows.append("| --- | --- | --- |")
             else:
                 rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Attributes') + '   | ' + _('Notes') + "     |")
-                rows.append("| --- | --- | --- | --- |")
+                rows.append("| :--- | --- | --- | :--------- |")
 
             param_names = [x for x in action_parameters.keys()]
 
@@ -677,7 +677,7 @@ class MarkdownGenerator(DocFormatter):
                     contents.append('| --- | --- | --- |')
                 else:
                     contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Attributes') + '   |' + _('Notes') + '     |')
-                    contents.append('| --- | --- | --- | --- |')
+                    contents.append('| :--- | --- | --- | :--------------------- |')
 
                 contents.append('\n'.join(section['properties']))
 
