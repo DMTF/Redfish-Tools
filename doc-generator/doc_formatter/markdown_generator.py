@@ -427,10 +427,10 @@ class MarkdownGenerator(DocFormatter):
         elif enum:
             if profile_mode and profile_mode != 'subset':
                 contents.append('| ' + prop_type + ' | '+ _('Profile Specifies') + ' |')
-                contents.append('| --- | --- |')
+                contents.append('| :--- | :--- |')
             else:
                 contents.append('| ' + prop_type + ' |')
-                contents.append('| --- |')
+                contents.append('| :--- |')
             for enum_item in enum:
                 enum_name = enum_item
                 version = version_depr = deprecated_descr = None
@@ -547,10 +547,10 @@ class MarkdownGenerator(DocFormatter):
 
             if self.markdown_mode == 'slate':
                 rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Notes') + "     |")
-                rows.append("| --- | --- | --- |")
+                rows.append("| :--- | :--- | :--- |")
             else:
                 rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Attributes') + '   | ' + _('Notes') + "     |")
-                rows.append("| :--- | :--- | :--- | :--------- |")
+                rows.append("| :--- | :--- | :--- | :--------------------- |")
 
             param_names = [x for x in action_parameters.keys()]
 
@@ -759,11 +759,7 @@ class MarkdownGenerator(DocFormatter):
         else:
             doc_title = _('Schema Documentation')
 
-        prelude = "---\ntitle: " + doc_title + """
-
-search: true
----
-"""
+        prelude = ""
 
         intro = self.config.get('intro_content')
         if intro:
