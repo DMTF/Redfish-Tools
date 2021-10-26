@@ -81,17 +81,25 @@ class FormatUtils():
     def make_header_row(self, cells):
         return self.make_row(cells)
 
-    def _make_separator_row(self, num):
-        return self.make_row(['---' for x in range(0, num)])
+    def _make_separator_row(self, num, force_col_width=False):
+        if force_col_width:
+            # Some tables need their column widths adjusted based on their usage
+            # At this time there are fixed proportions for two types of tables
+            # Long term it would be good to dynamically check for this since this usage isn't sustainable
+            if num == 2:
+                return '| :--- | :------------ |'
+            elif num == 4:
+                return '| :--- | :--- | :--- | :--------------------- |'
+        return self.make_row([':---' for x in range(0, num)])
 
-    def make_table(self, rows, header_rows=None, css_class=None):
+    def make_table(self, rows, header_rows=None, css_class=None, force_col_width=False):
 
         # Get the number of cells from the first row.
         firstrow = rows[0]
         numcells = firstrow.count(' | ') + 1
         if not header_rows:
             header_rows = [ self.make_header_row(['   ' for x in range(0, numcells)]) ]
-        header_rows.append(self._make_separator_row(numcells))
+        header_rows.append(self._make_separator_row(numcells, force_col_width=force_col_width))
 
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
 

@@ -619,7 +619,7 @@ class MarkdownGenerator(DocFormatter):
         if prop_description:
             contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
 
-        obj_table = self.formatter.make_table(rows)
+        obj_table = self.formatter.make_table(rows, force_col_width=True)
         contents.append(obj_table)
 
         return "\n".join(contents)
