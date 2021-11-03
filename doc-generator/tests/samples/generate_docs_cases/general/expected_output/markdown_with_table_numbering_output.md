@@ -1,8 +1,3 @@
----
-title: Schema Documentation
-
-search: true
----
 
 
 ## NetworkDeviceFunction 1.3.2
