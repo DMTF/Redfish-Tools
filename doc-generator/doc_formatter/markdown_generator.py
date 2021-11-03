@@ -674,7 +674,7 @@ class MarkdownGenerator(DocFormatter):
 
                 if self.markdown_mode == 'slate':
                     contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Notes') + '     |')
-                    contents.append('| --- | --- | --- |')
+                    contents.append('| :--- | :--- | :--- |')
                 else:
                     contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Attributes') + '   |' + _('Notes') + '     |')
                     contents.append('| :--- | :--- | :--- | :--------------------- |')
