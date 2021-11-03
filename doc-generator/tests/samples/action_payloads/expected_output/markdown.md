@@ -3,7 +3,7 @@
 **Response Payload**
 
 |     |     |     |     |
-| :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- | :---------------------------------------- |
 | { |  |  |  |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CSRString** | string | *read-only required* | The string for the certificate signing request. |
 | } |  |  |  |
