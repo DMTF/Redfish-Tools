@@ -36,9 +36,9 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
   skipCheckSchemaList = config.get('Redfish.ExternalOwnedSchemas');
 }
 
-/***************** White lists ******************************/
+/***************** Allow lists ******************************/
 //Units that don't exist in UCUM
-const unitsWhiteList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h'];
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h'];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -72,10 +72,10 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests', 'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS',
                                           'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical',
                                           'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated', 'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized',
-                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats'];
+                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours'};
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
@@ -450,7 +450,7 @@ function validUnitsTest(csdl) {
   }
   for(let i = 0; i < measures.length; i++) {
     let unitName = measures[i].String;
-    if(unitsWhiteList.indexOf(unitName) !== -1) {
+    if(unitsAllowList.indexOf(unitName) !== -1) {
       continue;
     }
     let pos = unitName.indexOf('/s');
@@ -1810,7 +1810,7 @@ function propertyNameUnitCheck(csdl) {
       if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
         continue;
       }
-      if(unitsWhiteList.includes(unitCode)) {
+      if(unitsAllowList.includes(unitCode)) {
         if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
           continue;
         }
