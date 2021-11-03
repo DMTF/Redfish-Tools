@@ -332,7 +332,7 @@ class DocFormatter:
         # Add a closing } to the last row:
         rows = self.add_object_close(rows, '', '}', 4)
 
-        formatted.append(self.formatter.make_table(rows, force_col_width=True))
+        formatted.append(self.formatter.make_table(rows, last_column_wide=True))
 
         return "\n".join(formatted)
 
@@ -825,7 +825,7 @@ class DocFormatter:
         for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
             item_text = self.format_uris_for_table(uris)
             rows.append(self.formatter.make_row([collection_name, item_text]))
-        doc = self.formatter.make_table(rows, [header], 'uris', force_col_width=True)
+        doc = self.formatter.make_table(rows, [header], 'uris', last_column_wide=True)
 
         return doc
 

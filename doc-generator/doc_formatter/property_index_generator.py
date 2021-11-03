@@ -448,7 +448,7 @@ class PropertyIndexGenerator(DocFormatter):
             config_out.close()
 
         headers = self.formatter.make_header_row([_('Property Name'), _('Defined In Schema(s)'), _('Type'), _('Description')])
-        table = self.formatter.make_table(rows, [headers], force_col_width=True)
+        table = self.formatter.make_table(rows, [headers], last_column_wide=True)
         return table
 
 
