@@ -48,7 +48,7 @@ def test_action_for_rekey_markdown(mockRequest):
 **Response Payload**
 
 |     |     |     |     |
-| --- | --- | --- | --- |
+| :--- | :--- | :--- | :---------------------------------------- |
 | { |  |  |  |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Certificate** *(v1.1+)* { | object<br><br>* required* | The link to the certificate being rekeyed. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to another Certificate resource. |
