@@ -38,7 +38,7 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
 
 /***************** Allow lists ******************************/
 //Units that don't exist in UCUM
-const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h'];
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min'];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -75,7 +75,7 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh'};
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
