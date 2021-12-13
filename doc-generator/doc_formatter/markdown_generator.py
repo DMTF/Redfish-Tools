@@ -327,7 +327,7 @@ class MarkdownGenerator(DocFormatter):
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
 
-            if subset_mode:
+            if subset_mode and subset:
                 supported_values = subset.get('SupportedValues')
                 if supported_values:
                     enum = [x for x in enum if x in supported_values]
