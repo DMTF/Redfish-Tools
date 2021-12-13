@@ -347,10 +347,10 @@ class MarkdownGenerator(DocFormatter):
         if enum_details:
             if profile_mode:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' | ' + _('Profile Specifies') + ' |')
-                contents.append('| --- | --- | --- |')
+                contents.append('| :--- | :------ | :--- |')
             else:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' |')
-                contents.append('| --- | --- |')
+                contents.append('| :--- | :------------ |')
             enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = enum_item
@@ -417,10 +417,10 @@ class MarkdownGenerator(DocFormatter):
         elif enum:
             if profile_mode:
                 contents.append('| ' + prop_type + ' | '+ _('Profile Specifies') + ' |')
-                contents.append('| --- | --- |')
+                contents.append('| :--- | :--- |')
             else:
                 contents.append('| ' + prop_type + ' |')
-                contents.append('| --- |')
+                contents.append('| :--- |')
             for enum_item in enum:
                 enum_name = enum_item
                 version = version_depr = deprecated_descr = None
@@ -537,10 +537,10 @@ class MarkdownGenerator(DocFormatter):
 
             if self.markdown_mode == 'slate':
                 rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Notes') + "     |")
-                rows.append("| --- | --- | --- |")
+                rows.append("| :--- | :--- | :--- |")
             else:
                 rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Attributes') + '   | ' + _('Notes') + "     |")
-                rows.append("| --- | --- | --- | --- |")
+                rows.append("| :--- | :--- | :--- | :--------------------- |")
 
             param_names = [x for x in action_parameters.keys()]
 
@@ -609,7 +609,7 @@ class MarkdownGenerator(DocFormatter):
         if prop_description:
             contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
 
-        obj_table = self.formatter.make_table(rows)
+        obj_table = self.formatter.make_table(rows, last_column_wide=True)
         contents.append(obj_table)
 
         return "\n".join(contents)
@@ -664,10 +664,10 @@ class MarkdownGenerator(DocFormatter):
 
                 if self.markdown_mode == 'slate':
                     contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Notes') + '     |')
-                    contents.append('| --- | --- | --- |')
+                    contents.append('| :--- | :--- | :--- |')
                 else:
                     contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Attributes') + '   |' + _('Notes') + '     |')
-                    contents.append('| --- | --- | --- | --- |')
+                    contents.append('| :--- | :--- | :--- | :--------------------- |')
 
                 contents.append('\n'.join(section['properties']))
 
@@ -752,11 +752,7 @@ class MarkdownGenerator(DocFormatter):
         else:
             doc_title = _('Schema Documentation')
 
-        prelude = "---\ntitle: " + doc_title + """
-
-search: true
----
-"""
+        prelude = ""
 
         intro = self.config.get('intro_content')
         if intro:
