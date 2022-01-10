@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016-2021 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2022 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -932,6 +932,7 @@ pre.code{
             'head': '',
             'heading': '',
             'schema_ref': '',
+            'schema_name': '',
             }
 
         if text:
@@ -941,6 +942,7 @@ pre.code{
             self.this_section['link_id'] = link_id
         if schema_ref:
             self.this_section['schema_ref'] = schema_ref
+            self.this_section['schema_name'] = self.traverser.get_schema_name(self.this_section['schema_ref'])
         elif text:
             self.this_section['schema_ref'] = section_text
         self.sections.append(self.this_section)
