@@ -60,9 +60,9 @@ def test_html_output(mockRequest):
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
-
+    print(output)
     assert expected_output in output
-
+    assert False
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_markdown_output(mockRequest):
