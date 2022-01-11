@@ -56,12 +56,13 @@ def test_html_output(mockRequest):
     config = copy.deepcopy(base_config)
     config['output_format'] = 'html'
 
-    expected_output = open(os.path.join(output_dir, 'output.html')).read().strip()
-
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    assert expected_output in output
+    # This test used to compare a snippet, but with Pygments involved, the test became fragile.
+    assert 'Placeholder for REQUEST' in output
+    assert 'Placeholder for RESPONSE' in output
+
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_markdown_output(mockRequest):
@@ -69,12 +70,12 @@ def test_markdown_output(mockRequest):
     config = copy.deepcopy(base_config)
     config['output_format'] = 'markdown'
 
+    expected_output = open(os.path.join(output_dir, 'markdown.md')).read().strip()
+
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    # This test used to compare a snippet, but with Pygments involved, the test became fragile.
-    assert 'Placeholder for REQUEST' in output
-    assert 'Placeholder for RESPONSE' in output
+    assert expected_output in output
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
