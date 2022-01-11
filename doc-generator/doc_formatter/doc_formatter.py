@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016-2021 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2022 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -1194,7 +1194,6 @@ class DocFormatter:
                 if not instrs.get('Include', True):
                     if name in filtered_names:
                         filtered_names.remove(name)
-
         else:
             for name, instrs in subset.get(subsection, {}).items():
                 if instrs.get('Include', True) and name not in filtered_names:
@@ -1364,7 +1363,7 @@ class DocFormatter:
            path_to_prop = prop_path.copy()
            path_to_prop.append(prop_name)
            schema_name = traverser.get_schema_name(schema_ref)
-           fallback_subset = self.get_prop_subset(schema_name, path_to_prop, subset_section)
+           fallback_subset = self.get_prop_subset(path_to_prop, subset_section)
 
         anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path)
                          for x in prop_infos]
@@ -1506,7 +1505,7 @@ class DocFormatter:
             path_to_prop = prop_path.copy()
             if not prop_info.get('_in_items'):
                 path_to_prop.append(prop_name)
-            subset = self.get_prop_subset(schema_name, path_to_prop, subset_section)
+            subset = self.get_prop_subset(path_to_prop, subset_section)
 
         # Some special treatment is required for Actions
         is_action = prop_name == 'Actions'
@@ -1991,7 +1990,7 @@ class DocFormatter:
                 if '_subset' in prop_info:
                     subset = prop_info['_subset']
                 elif len(prop_path):
-                    subset = self.get_prop_subset(in_schema_name, prop_path, subset_section)
+                    subset = self.get_prop_subset(prop_path, subset_section)
 
                 if subset:
                     prop_names = self.filter_props_by_subset(prop_names, subset)
@@ -2325,12 +2324,15 @@ class DocFormatter:
         return prop_profile
 
 
-    def get_prop_subset(self, schema_name, prop_path, section):
+    def get_prop_subset(self, prop_path, section):
         """Get subset data for the specified property.
+        This will be in the context of the current documented section's
+        schema.
 
-        Section is "Properties" or "Actions."
+        Section is "Properties" or "Actions".
         """
 
+        schema_name = self.this_section['schema_name']
         prop_subset = None
         subset = self.config.get('subset_resources', {}).get(schema_name)
 
@@ -2341,23 +2343,25 @@ class DocFormatter:
 
             if section == 'Actions':
                 subsection = 'Parameters'
+                if prop_path[0] == 'Actions':
+                    prop_path = prop_path[1:]
             else:
                 subsection = 'Properties'
 
             subset = subset.get(section, {}) # 'Properties' or 'Actions'
-            prop_path = prop_path[1:]
             first = True
-
             for prop_name in prop_path:
                 if not prop_name:
                     continue
                 if not first:
-                    subset = subset.get(subsection, {})
+                    subset = subset.get(subsection, {}) # 'Properties' or 'Parameters'
                 subset = subset.get(prop_name, {})
                 first = False
 
         if subset:
-            if subsection in subset:
+            # We generally want to return a subset that has a top-level "subsection" key,
+            # except when we've drilled down to enum "SupportedValues."
+            if subsection in subset or 'SupportedValues' in subset:
                 subset['Baseline'] = prop_subset['Baseline']
                 prop_subset = subset
             else:

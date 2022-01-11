@@ -1,5 +1,5 @@
 # Copyright Notice:
-# Copyright 2016-2021 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2022 Distributed Management Task Force, Inc. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -882,11 +882,16 @@ class MarkdownGenerator(DocFormatter):
             'head': '',
             'heading': '',
             'schema_ref': '',
+            'schema_name': '',
             }
 
         if text:
             self.this_section['head'] = text
             self.this_section['heading'] = '\n' + self.format_head_two(text, self.level)
+
+        if schema_ref:
+            self.this_section['schema_ref'] = schema_ref
+            self.this_section['schema_name'] = self.traverser.get_schema_name(self.this_section['schema_ref'])
 
         self.sections.append(self.this_section)
 
