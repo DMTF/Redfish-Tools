@@ -840,7 +840,7 @@ class JSONToYAML:
                                                 "required": [
                                                     "name",
                                                     "kind",
-                                                    "uri"
+                                                    "url"
                                                 ],
                                                 "type": "object"
                                             },
