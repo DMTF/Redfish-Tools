@@ -108,6 +108,7 @@ let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 
                                  'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
                                  'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
                                  'RegistryEntries', 'ResourceBlockLimits', 'Status', 'Thresholds', 'UpdateParameters', 'VoltageSensors'];
+const SchemasWithBadReleaseStrings = ['EndpointGroup.v1_0_0', 'EndpointGroup.v1_1_0', 'EndpointGroup.v1_2_0'];
 //All of the entries in the following object were errors and should only be allowed in the file they are currently present in
 const PluralEntitiesBadAllow = {
   'AttributeRegistry_v1.xml': ['Dependencies', 'Menus', 'SupportedSystems'],
@@ -1784,6 +1785,12 @@ function schemaReleaseCheck(csdl) {
       }
       if((release.length !== 0) && !schemas[i]._Name.endsWith('_0')) {
         throw new Error('Namespace '+schemas[i]._Name+' contains an unexpected Release term!');
+      }
+      if(release.length > 0 && SchemasWithBadReleaseStrings.indexOf(schemas[i]._Name) === -1) {
+        let matches = release[0].String.match(/^[0-9.]*/);
+        if(matches[0] !== matches.input) {
+          throw new Error('Namespace '+schemas[i]._Name+' contains a Release term with a invalid character!');
+        }
       }
     }
   }
