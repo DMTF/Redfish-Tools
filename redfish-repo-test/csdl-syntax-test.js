@@ -215,6 +215,7 @@ describe('CSDL Tests', () => {
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
       it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);});
       it('Insert restrictions only on collections', () => {insertCollections(csdl);});
+      it('Binding parameters for actions', () =>{actionBindingParameter(csdl);});
       //Pendantic tests...
       if(process.env.PEDANTIC == 1) {
         it('Descriptions have double space after periods', () => {if (!isYang) descriptionSpaceCheck(csdl);});
@@ -1907,6 +1908,23 @@ function insertCollections(csdl) {
       //This is pretty common, let's not allow list it... just allow it
     } else if(entities[i].BaseType !== 'Resource.v1_0_0.ResourceCollection' && insertable) {
       throw new Error('CSDL is insertable but this is not a resource collection!');
+    }
+  }
+}
+
+function actionBindingParameter(csdl) {
+  let actions = CSDL.search(csdl, 'Action');
+  for(let i = 0; i < actions.length; i++) {
+    if(actions[i].IsBound !== true) {
+      throw new Error(actions[i].Name+' does not specify IsBound=true!');
+    }
+    if(actions[i].Parameters.length === 0) {
+      throw new Error(actions[i].Name+' does not specify a binding parameter!');
+    }
+    let paramKeys = Object.keys(actions[i].Parameters);
+    let bindingParam = actions[i].Parameters[paramKeys[0]];
+    if(!bindingParam.Type.endsWith('.Actions') && !bindingParam.Type.endsWith('.OemActions')) {
+      throw new Error(actions[i].Name+' does not specify a binding parameter!');
     }
   }
 }
