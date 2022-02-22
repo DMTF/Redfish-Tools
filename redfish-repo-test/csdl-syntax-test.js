@@ -104,6 +104,8 @@ const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterf
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
+const NoURISSchemaList = ['ActionInfo', 'AttributeRegistry', 'Chipwise', 'CollectionCapabilities', 'ContosoAccountService', 'ContosoServiceRoot', 'Event', 'IPAddresses', 'Manifest', 'Message', 'MessageRegistry', 
+                          'MessageRegistryCollection', 'PhysicalContext', 'PrivilegeRegistry', 'Privileges', 'Protocol', 'Resource', 'Redundancy', 'Service',  'Schedule', 'Settings'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
                                  'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
                                  'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
@@ -215,6 +217,7 @@ describe('CSDL Tests', () => {
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
       it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);});
       it('Insert restrictions only on collections', () => {insertCollections(csdl);});
+      it('URI Checks', () =>{uriChecks(csdl);});
       //Pendantic tests...
       if(process.env.PEDANTIC == 1) {
         it('Descriptions have double space after periods', () => {if (!isYang) descriptionSpaceCheck(csdl);});
@@ -1907,6 +1910,34 @@ function insertCollections(csdl) {
       //This is pretty common, let's not allow list it... just allow it
     } else if(entities[i].BaseType !== 'Resource.v1_0_0.ResourceCollection' && insertable) {
       throw new Error('CSDL is insertable but this is not a resource collection!');
+    }
+  }
+}
+let uriPatterns = {};
+
+function uriChecks(csdl) {
+  let schemas = CSDL.search(csdl, 'Schema');
+  if(schemas.length === 0) {
+    return;
+  }
+  for(let i = 0; i < schemas.length; i++) {
+    if(schemas[i]._Name.includes('v1_')) {
+      continue;
+    }
+    if(NoURISSchemaList.includes(schemas[i]._Name)) {
+      continue;
+    }
+    let uriAnnotations = CSDL.search(schemas[i], 'Annotation', 'Redfish.Uris');
+    if(uriAnnotations.length === 0) {
+      throw new Error(schemas[i]._Name+' is missing Redfish.Uris');
+    }
+    let strings = uriAnnotations[0].Collection.Strings;
+    for(let j = 0; j < strings.length; j++) {
+      let uri = strings[j].replaceAll(/{(.*?)}/g, '{}');
+      if(uriPatterns[uri] !== undefined) {
+        throw new Error('URI Pattern like '+uri+' is present in both '+schemas[i]._Name+' and '+uriPatterns[uri]);
+      }
+      uriPatterns[uri] = schemas[i]._Name;
     }
   }
 }
