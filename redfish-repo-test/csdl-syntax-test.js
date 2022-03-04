@@ -218,6 +218,7 @@ describe('CSDL Tests', () => {
       it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);});
       it('Insert restrictions only on collections', () => {insertCollections(csdl);});
       it('URI Checks', () =>{uriChecks(csdl);});
+      it('Binding parameters for actions', () =>{actionBindingParameter(csdl);});
       //Pendantic tests...
       if(process.env.PEDANTIC == 1) {
         it('Descriptions have double space after periods', () => {if (!isYang) descriptionSpaceCheck(csdl);});
@@ -1913,6 +1914,7 @@ function insertCollections(csdl) {
     }
   }
 }
+
 let uriPatterns = {};
 
 function uriChecks(csdl) {
@@ -1938,6 +1940,23 @@ function uriChecks(csdl) {
         throw new Error('URI Pattern like '+uri+' is present in both '+schemas[i]._Name+' and '+uriPatterns[uri]);
       }
       uriPatterns[uri] = schemas[i]._Name;
+    }
+  }
+}
+
+function actionBindingParameter(csdl) {
+  let actions = CSDL.search(csdl, 'Action');
+  for(let i = 0; i < actions.length; i++) {
+    if(actions[i].IsBound !== true) {
+      throw new Error(actions[i].Name+' does not specify IsBound=true!');
+    }
+    if(actions[i].Parameters.length === 0) {
+      throw new Error(actions[i].Name+' does not specify a binding parameter!');
+    }
+    let paramKeys = Object.keys(actions[i].Parameters);
+    let bindingParam = actions[i].Parameters[paramKeys[0]];
+    if(!bindingParam.Type.endsWith('.Actions') && !bindingParam.Type.endsWith('.OemActions')) {
+      throw new Error(actions[i].Name+' does not specify a binding parameter!');
     }
   }
 }
