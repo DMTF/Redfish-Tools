@@ -122,6 +122,7 @@ const PluralEntitiesBadAllow = {
   'StorageController_v1.xml': ['ANACharacteristics'],
   'Triggers_v1.xml': ['Triggers']
 };
+const CommonWritableObjects = ['IPAddresses.IPv4Address', 'IPAddresses.IPv6StaticAddress', 'IPAddresses.IPv6GatewayStaticAddress', 'Redundancy.RedundantGroup', 'Schedule.Schedule', 'VLanNetworkInterface.VLAN']
 /************************************************************/
 
 if(config.has('Redfish.ExtraPluralAllowed')) {
@@ -1890,6 +1891,16 @@ function updatableReadWrite(csdl) {
     if(perm == 'OData.Permission/ReadWrite' && !updatable) {
       throw new Error('CSDL is not updatable but has read/write properties!');
     } else if(perm == 'OData.Permission/ReadWrite') {
+      found = true;
+    }
+  }
+  let props = CSDL.search(csdl, 'Property');
+  for(let i = 0; i < props.length; i++) {
+    let propType = props[i].Type
+    if(propType.startsWith('Collection(')) {
+      propType = propType.substring(11, propType.length-1);
+    }
+    if(CommonWritableObjects.includes(propType) && updatable) {
       found = true;
     }
   }
