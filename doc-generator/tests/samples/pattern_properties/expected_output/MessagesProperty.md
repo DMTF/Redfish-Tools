@@ -1,4 +1,4 @@
-| **Messages** { | object<br><br>* required* | The pattern property indicates that a free-form string is the unique identifier for the message within the registry. |
+| **Messages** { | object<br><br>*required* | The pattern property indicates that a free-form string is the unique identifier for the message within the registry. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**(pattern)** { | object | Property names follow regular expression pattern "\[A\-Za\-z0\-9\]\+" |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**ClearingLogic** { | object<br><br>*<br>(null)* | The clearing logic associated with this message.  The properties within indicate that what messages are cleared by this message as well as under what conditions. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**ClearsAll** | boolean<br><br>*read-only<br>(null)* | This property indicates that all prior conditions and messages are cleared provided the ClearsIf condition is met. |

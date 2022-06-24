@@ -50,7 +50,7 @@ def test_action_for_rekey_markdown(mockRequest):
 |     |     |     |     |
 | :--- | :--- | :--- | :---------------------------------------- |
 | { |  |  |  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Certificate** *(v1.1+)* { | object<br><br>* required* | The link to the certificate being rekeyed. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Certificate** *(v1.1+)* { | object<br><br>*required* | The link to the certificate being rekeyed. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to another Certificate resource. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} |   |   |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CSRString** *(v1.1+)* | string<br><br>*read-only required* | The string for the certificate signing request. |
