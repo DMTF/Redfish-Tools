@@ -52,12 +52,12 @@ class FormatUtils():
     @staticmethod
     def bold(text):
         """Apply bold to text"""
-        return '**' + text + '**'
+        return '**' + text.strip() + '**'
 
     @staticmethod
     def italic(text):
         """Apply italic to text"""
-        return '*' + text + '*'
+        return '*' + text.strip() + '*'
 
     @staticmethod
     def br():
