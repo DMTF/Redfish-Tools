@@ -551,7 +551,7 @@ class DocFormatter:
 
             # Normative docs prefer longDescription to description
             if config.get('normative') and 'longDescription' in definitions[schema_name]:
-                description = definitions[schema_name].get('longDescription')
+                description = definitions[schema_name].get('description') + '<ul><li>' +definitions[schema_name].get('longDescription') + '</li></ul>'
             else:
                 description = definitions[schema_name].get('description')
 
@@ -1860,7 +1860,7 @@ class DocFormatter:
         pattern = prop_info.get('pattern')
 
         if self.config.get('normative') and normative_descr:
-            descr = normative_descr
+            descr = non_normative_descr + '<ul><li>' + normative_descr + '</li></ul>'
         else:
             descr = non_normative_descr
 
