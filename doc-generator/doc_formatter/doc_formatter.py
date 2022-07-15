@@ -551,7 +551,7 @@ class DocFormatter:
                 conditional_details = self.format_conditional_details(schema_ref, None, conditional_reqs)
 
             # Normative docs prefer longDescription to description
-            if config.get('normative') and 'longDescription' in definitions[schema_name]:
+            if config.get('normative') and 'longDescription' in definitions[schema_name] and definitions[schema_name].get('description') != definitions[schema_name].get('longDescription'):
                 description = definitions[schema_name].get('description') + '<ul><li>' +definitions[schema_name].get('longDescription') + '</li></ul>'
             else:
                 description = definitions[schema_name].get('description')
@@ -1725,6 +1725,9 @@ class DocFormatter:
 
             if self.config.get('normative') and 'enumLongDescriptions' in prop_info:
                 prop_enum_details = prop_info.get('enumLongDescriptions')
+                for key in prop_enum_details:
+                    if prop_info.get('enumDescriptions')[key] != prop_enum_details[key]:
+                        prop_enum_details[key] = prop_info.get('enumDescriptions')[key] + '<ul><li>' + prop_enum_details[key] + '</li></ul>'
             else:
                 prop_enum_details = prop_info.get('enumDescriptions')
 
@@ -1929,7 +1932,7 @@ class DocFormatter:
         non_normative_descr = prop_info.get('description', '')
         pattern = prop_info.get('pattern')
 
-        if self.config.get('normative') and normative_descr:
+        if self.config.get('normative') and normative_descr and non_normative_descr != normative_descr:
             descr = non_normative_descr + '<ul><li>' + normative_descr + '</li></ul>'
         else:
             descr = non_normative_descr
