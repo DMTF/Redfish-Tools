@@ -83,11 +83,15 @@ def test_supplement_output_html (mockRequest):
     # These assertions target strings the supplement provided:
     assert len(status_section) == 1 and 'SUPPLEMENT-SUPPLIED DESCRIPTION for Status' in status_section[0], "Referenced Object (Status) output is missing supplement-supplied description"
     assert len(status_section) == 1 and 'SUPPLEMENT-SUPPLIED INTRO for Status' in status_section[0], "Referenced Object (Status) output is missing supplement-supplied intro"
-    assert len(status_section) == 1 and 'SUPPLEMENT-SUPPLIED JSON for Status' in status_section[0], "Referenced Object (Status) output is missing supplement-supplied json payload"
+    # strip tags from output sections for json payload tests; code highlighting is decorating the
+    # plain-text strings in a way I don't want to rely on.
+    assert len(status_section) == 1 and 'SUPPLEMENT-SUPPLIED JSON for Status' in simple_strip_tags(status_section[0]), "Referenced Object (Status) output is missing supplement-supplied json payload"
 
     assert len(endpoint_section) == 1 and 'SUPPLEMENT-SUPPLIED DESCRIPTION for Endpoint' in endpoint_section[0], "Schema Object (Endpoint) output is missing supplement-supplied description"
     assert len(endpoint_section) == 1 and 'SUPPLEMENT-SUPPLIED INTRO for Endpoint' in endpoint_section[0], "Schema Object (Endpoint) output is missing supplement-supplied intro"
-    assert len(endpoint_section) == 1 and 'SUPPLEMENT-SUPPLIED JSON for Endpoint' in endpoint_section[0], "Schema Object (Endpoint) output is missing supplement-supplied json payload"
+    # strip tags from output sections for json payload tests; code highlighting is decorating the
+    # plain-text strings in a way I don't want to rely on.
+    assert len(endpoint_section) == 1 and 'SUPPLEMENT-SUPPLIED JSON for Endpoint' in simple_strip_tags(endpoint_section[0]), "Schema Object (Endpoint) output is missing supplement-supplied json payload"
 
 
     oem_failed_overrides = [x for x in oem_rows if "This is a description override for the Oem object." not in x]
@@ -297,3 +301,23 @@ def test_supplement_output_from_files_with_action_details (mockRequest):
         ]
     for es in expected_strings:
         assert es in output
+
+
+def simple_strip_tags(s):
+    """ Quick solution to my need to strip tags from output in a couple of the tests.
+    cf. https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python """
+    tag = False
+    quote = False
+    out = ""
+
+    for c in s:
+        if c == '<' and not quote:
+            tag = True
+        elif c == '>' and not quote:
+            tag = False
+        elif (c == '"' or c == "'") and tag:
+            quote = not quote
+        elif not tag:
+            out = out + c
+
+    return out
