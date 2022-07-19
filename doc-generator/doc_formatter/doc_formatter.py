@@ -1723,13 +1723,11 @@ class DocFormatter:
         if prop_enum or supplemental_details:
             has_prop_details = True
 
+            prop_enum_details = prop_info.get('enumDescriptions')
             if self.config.get('normative') and 'enumLongDescriptions' in prop_info:
-                prop_enum_details = prop_info.get('enumLongDescriptions')
                 for key in prop_enum_details:
-                    if prop_info.get('enumDescriptions')[key] != prop_enum_details[key]:
-                        prop_enum_details[key] = prop_info.get('enumDescriptions')[key] + '<ul><li>' + prop_enum_details[key] + '</li></ul>'
-            else:
-                prop_enum_details = prop_info.get('enumDescriptions')
+                    if key in prop_info.get('enumLongDescriptions') and prop_info.get('enumLongDescriptions')[key] != prop_enum_details[key]:
+                        prop_enum_details[key] = prop_enum_details[key] + '<ul><li>' + prop_info.get('enumLongDescriptions')[key] + '</li></ul>'
 
             formatted_details = self.format_property_details(prop_name, prop_type, descr,
                                                                  prop_enum, prop_enum_details,
