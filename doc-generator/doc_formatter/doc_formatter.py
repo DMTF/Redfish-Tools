@@ -1936,7 +1936,7 @@ class DocFormatter:
             descr = non_normative_descr
 
         if self.config.get('normative') and pattern:
-            descr = _('%(descr)s Pattern: %(pattern)s') % {'descr': descr, 'pattern': pattern}
+            descr = _('%(descr)s Pattern: `%(pattern)s`') % {'descr': descr, 'pattern': pattern}
 
         return descr
 
