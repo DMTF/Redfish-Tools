@@ -1119,6 +1119,8 @@ class DocGenerator:
                                   'Default: json-schema'))
         parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=None,
                             help='Produce normative (developer-focused) output')
+        parser.add_argument('--combine_descriptions', action='store_true', dest='combine_descriptions', default=None,
+                            help='Combines informative and normative descriptions into the output')
         parser.add_argument('--format', dest='format',
                             choices=['markdown', 'slate', 'html', 'csv'], help='Output format')
         parser.add_argument('--out', dest='outfile',
@@ -1224,6 +1226,7 @@ class DocGenerator:
             'omit_version_in_headers': False,
             'schema_supplement': {},
             'normative': False,
+            'combine_descriptions': False,
             'escape_chars': [],
             'cwd': cwd,
             'schema_link_replacements': {},
@@ -1265,7 +1268,7 @@ class DocGenerator:
 
             # command-line arguments override the config file.
             config_args = [
-                'format', 'outfile', 'payload_dir', 'normative',
+                'format', 'outfile', 'payload_dir', 'normative', 'combine_descriptions',
                 'profile_doc', 'subset_doc',
                 'property_index', 'property_index_config_out', 'escape_chars',
                 'locale', 'warn_missing_payloads'
@@ -1487,6 +1490,7 @@ class DocGenerator:
             config['schema_supplement'] = parse_schema_supplement(supp_config_data.get('schema_supplement'))
 
         config['normative'] = combined_args.get('normative', False)
+        config['combine_descriptions'] = combined_args.get('combine_descriptions', False)
 
         if config['combine_multiple_refs'] == 1:
             warnings.warn(' '.join(['The combine_multiple_refs setting of 1 does not make sense.',

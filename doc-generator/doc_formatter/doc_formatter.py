@@ -552,7 +552,10 @@ class DocFormatter:
 
             # Normative docs prefer longDescription to description
             if config.get('normative') and 'longDescription' in definitions[schema_name] and definitions[schema_name].get('description') != definitions[schema_name].get('longDescription'):
-                description = definitions[schema_name].get('description') + '<ul><li>' +definitions[schema_name].get('longDescription') + '</li></ul>'
+                if config.get('combine_descriptions'):
+                    description = definitions[schema_name].get('description') + '<ul><li>' +definitions[schema_name].get('longDescription') + '</li></ul>'
+                else:
+                    description = definitions[schema_name].get('longDescription')
             else:
                 description = definitions[schema_name].get('description')
 
@@ -1727,7 +1730,10 @@ class DocFormatter:
             if self.config.get('normative') and 'enumLongDescriptions' in prop_info:
                 for key in prop_enum_details:
                     if key in prop_info.get('enumLongDescriptions') and prop_info.get('enumLongDescriptions')[key] != prop_enum_details[key]:
-                        prop_enum_details[key] = prop_enum_details[key] + '<ul><li>' + prop_info.get('enumLongDescriptions')[key] + '</li></ul>'
+                        if self.config.get('combine_descriptions'):
+                            prop_enum_details[key] = prop_enum_details[key] + '<ul><li>' + prop_info.get('enumLongDescriptions')[key] + '</li></ul>'
+                        else:
+                            prop_enum_details[key] = prop_info.get('enumLongDescriptions')[key]
 
             formatted_details = self.format_property_details(prop_name, prop_type, descr,
                                                                  prop_enum, prop_enum_details,
@@ -1931,7 +1937,10 @@ class DocFormatter:
         pattern = prop_info.get('pattern')
 
         if self.config.get('normative') and normative_descr and non_normative_descr != normative_descr:
-            descr = non_normative_descr + '<ul><li>' + normative_descr + '</li></ul>'
+            if self.config.get('combine_descriptions'):
+                descr = non_normative_descr + '<ul><li>' + normative_descr + '</li></ul>'
+            else:
+                descr = normative_descr
         else:
             descr = non_normative_descr
 
