@@ -123,6 +123,9 @@ const PluralEntitiesBadAllow = {
   'Triggers_v1.xml': ['Triggers']
 };
 const CommonWritableObjects = ['IPAddresses.IPv4Address', 'IPAddresses.IPv6StaticAddress', 'IPAddresses.IPv6GatewayStaticAddress', 'Redundancy.RedundantGroup', 'Schedule.Schedule', 'VLanNetworkInterface.VLAN']
+const SkipPropertyTypeCheck = {
+  'AttributeRegistry_v1.xml': ['CurrentValue', 'DefaultValue', 'MapToValue', 'MapFromValue']
+};
 /************************************************************/
 
 if(config.has('Redfish.ExtraPluralAllowed')) {
@@ -216,6 +219,7 @@ describe('CSDL Tests', () => {
         it('Resources specify capabilities', () => {resourcesSpecifyCapabilities(csdl);});
       }
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
+      it('Property Types are valid', () => {checkValidPropertyType(csdl, fileName);});
       it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);});
       it('Insert restrictions only on collections', () => {insertCollections(csdl);});
       it('URI Checks', () =>{uriChecks(csdl);});
@@ -1517,6 +1521,53 @@ function complexTypeCheck(propType, propValue, propName, type) {
     }
     else {
       checkProperty(childPropName, realType, propValue[childPropName], type, propName);
+    }
+  }
+}
+
+function checkValidPropertyType(csdl, fileName) {
+  // 'Type' attribute can be
+  // - A qualified name that references an enum type element.
+  // - A qualified name that references a complex type element.
+  // - A primitive data type.
+  // - An array of the previous names or types by using the Collection term
+  let validPropertyTypes = [
+    'TypeDefinition',
+    // Reference to Objects
+    'EnumType',
+    'ComplexType',
+    // PrimitveTypes
+    'Edm.Boolean',
+    'Edm.DateTimeOffset',
+    'Edm.Decimal',
+    'Edm.Double',
+    'Edm.Guid',
+    'Edm.Int64',
+    'Edm.String',
+    'Edm.Duration'
+  ]
+  let props = CSDL.search(csdl, 'Property');
+  for(let i = 0; i < props.length; i++) {
+    let prop = props[i];
+    if(fileName in SkipPropertyTypeCheck && SkipPropertyTypeCheck[fileName].includes(prop.Name)) {
+      continue;
+    }
+    let propType = prop.Type;
+    if(propType.startsWith('Collection(')) {
+      propType = propType.substring(11, propType.length-1);
+    }
+    let type = CSDL.findByType(csdl, propType);
+    if(type === null || type === undefined) {
+      throw new Error('Unable to locate type "'+propType+'"');
+    }
+    else {
+      let typeToCheck = propType;
+      if(propType.startsWith('Edm') === false) {
+        typeToCheck = type.constructor.name;
+      }
+      if(validPropertyTypes.indexOf(typeToCheck) === -1) {
+        throw new Error('Use of invalid property type "'+typeToCheck+'"');
+      }
     }
   }
 }
