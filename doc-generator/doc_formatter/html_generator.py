@@ -213,12 +213,22 @@ pre.code{
             translated_name = prop_info[0].get('translation')
             if 'format' in prop_info[0]:
                 format_annotation = prop_info[0]['format']
+            if 'pattern' in prop_info[0]:
+                if prop_info[0].get('pattern') == '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})':
+                    format_annotation = 'uuid'
+                if prop_info[0].get('pattern') == '-?P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?':
+                    format_annotation = 'duration'
         elif isinstance(prop_info, dict):
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
             translated_name = prop_info.get('translation')
             if 'format' in prop_info:
                 format_annotation = prop_info['format']
+            if 'pattern' in prop_info:
+                if prop_info.get('pattern') == '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})':
+                    format_annotation = 'uuid'
+                if prop_info.get('pattern') == '-?P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?':
+                    format_annotation = 'duration'
 
         format_annotation = self.format_annotation_strings.get(format_annotation, format_annotation)
 
