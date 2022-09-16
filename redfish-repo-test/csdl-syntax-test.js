@@ -36,9 +36,9 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
   skipCheckSchemaList = config.get('Redfish.ExternalOwnedSchemas');
 }
 
-/***************** White lists ******************************/
+/***************** Allow lists ******************************/
 //Units that don't exist in UCUM
-const unitsWhiteList = ['RPM', 'V.A', '{tot}', '1/s/TBy'];
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min'];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -61,7 +61,8 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'NFSv4_0', 'NFSv4_1', 'SMBv3_0', 'SMBv2_1', 'SMBv2_0', 'SMBv3_1_1',
                                     'SMBv3_0_2', 'Bits_0', 'Bits_128', 'Bits_192', 'Bits_256', 'Bits_112',
                                     'ISO8859_1', 'UTF_8', 'UTF_16', 'UCS_2', 'RPCSEC_GSS', 'HMAC128_SHA224',
-                                    'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512' ];
+                                    'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512', 'TLS_PSK', 'TLS_AES_128_GCM_SHA256',
+                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad'];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 //Properties that have units but don't have the unit names in them
@@ -71,10 +72,10 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests', 'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS',
                                           'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical',
                                           'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated', 'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized',
-                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats'];
+                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps'};
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
@@ -93,20 +94,23 @@ const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
                                   'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml',
                                   'StorageReplicaInfo_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
                                   'VolumeCollection_v1.xml' ];
-const ContosoSchemaFileList = [ 'ContosoExtensions_v1.xml', 'TurboencabulatorService_v1.xml' ];
+const ContosoSchemaFileList = [ 'ContosoAccountService_v1.xml', 'ContosoServiceRoot_v1.xml', 'TurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'TurboencabulatorService', 'LineOfService' ];
 const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X/StorageGroups/10", "https://10.23.11.12/redfish/v1/Systems/FileServer/StorageServices/X/StorageGroups/10", "https://10.1.1.13/redfish/v1/StorageServices/A/Volume/ABC", "https://10.1.22.18/redfish/v1/StorageServices/X/Volume/A1x2", "https://10.1.22.18/redfish/v1/StorageServices/X/Volumes/A1x2", "http://hf.contoso.org/redfish/v1/Systems/FileServer/StorageServices/2/StorageGroups/2","https://10.12.1.12/redfish/v1/StorageServices/2/Volumes/5"];
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
-const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest' ]
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
-const NoUriWhitelist = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry'];
-const PluralSchemaWhiteList = ['ChassisCollection', 'MemoryChunksCollection', 'TriggersCollection'];
+const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
+const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
+const NoURISSchemaList = ['ActionInfo', 'AttributeRegistry', 'Chipwise', 'CollectionCapabilities', 'ContosoAccountService', 'ContosoServiceRoot', 'Event', 'IPAddresses', 'Manifest', 'Message', 'MessageRegistry', 
+                          'MessageRegistryCollection', 'PhysicalContext', 'PrivilegeRegistry', 'Privileges', 'Protocol', 'Resource', 'Redundancy', 'Service',  'Schedule', 'Settings'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
-                                 'DeepOperations', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
+                                 'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
                                  'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
                                  'RegistryEntries', 'ResourceBlockLimits', 'Status', 'Thresholds', 'UpdateParameters', 'VoltageSensors'];
+const SchemasWithBadReleaseStrings = ['EndpointGroup.v1_0_0', 'EndpointGroup.v1_1_0', 'EndpointGroup.v1_2_0'];
 //All of the entries in the following object were errors and should only be allowed in the file they are currently present in
 const PluralEntitiesBadAllow = {
   'AttributeRegistry_v1.xml': ['Dependencies', 'Menus', 'SupportedSystems'],
@@ -117,6 +121,10 @@ const PluralEntitiesBadAllow = {
   'NetworkDeviceFunction_v1.xml': ['BootTargets'],
   'StorageController_v1.xml': ['ANACharacteristics'],
   'Triggers_v1.xml': ['Triggers']
+};
+const CommonWritableObjects = ['IPAddresses.IPv4Address', 'IPAddresses.IPv6StaticAddress', 'IPAddresses.IPv6GatewayStaticAddress', 'Redundancy.RedundantGroup', 'Schedule.Schedule', 'VLanNetworkInterface.VLAN']
+const SkipPropertyTypeCheck = {
+  'AttributeRegistry_v1.xml': ['CurrentValue', 'DefaultValue', 'MapToValue', 'MapFromValue']
 };
 /************************************************************/
 
@@ -211,8 +219,11 @@ describe('CSDL Tests', () => {
         it('Resources specify capabilities', () => {resourcesSpecifyCapabilities(csdl);});
       }
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
+      it('Property Types are valid', () => {checkValidPropertyType(csdl, fileName);});
       it('Updatable restrictions for read/write props', () => {updatableReadWrite(csdl);});
       it('Insert restrictions only on collections', () => {insertCollections(csdl);});
+      it('URI Checks', () =>{uriChecks(csdl);});
+      it('Binding parameters for actions', () =>{actionBindingParameter(csdl);});
       //Pendantic tests...
       if(process.env.PEDANTIC == 1) {
         it('Descriptions have double space after periods', () => {if (!isYang) descriptionSpaceCheck(csdl);});
@@ -449,7 +460,7 @@ function validUnitsTest(csdl) {
   }
   for(let i = 0; i < measures.length; i++) {
     let unitName = measures[i].String;
-    if(unitsWhiteList.indexOf(unitName) !== -1) {
+    if(unitsAllowList.indexOf(unitName) !== -1) {
       continue;
     }
     let pos = unitName.indexOf('/s');
@@ -663,7 +674,7 @@ function noPluralSchemas(csdl) {
     if(schemas[i]._Name.startsWith('Org.OData')) {
       continue;
     }
-    if(PluralSchemaWhiteList.indexOf(schemas[i]._Name) !== -1) {
+    if(PluralSchemaAllowList.indexOf(schemas[i]._Name) !== -1) {
       continue;
     }
     if(schemas[i]._Name.includes('sCollection') || schemas[i]._Name.includes('s_v1')) {
@@ -1299,7 +1310,7 @@ function validCSDLTypeInMockup(json, file) {
             }
             //This should be a NavigationProperty pointing to an EntityType, make sure it is a link...
             if(propValue['@odata.id'] === undefined && !('Redfish.ExcerptCopy' in CSDLProperty.Annotations)) {
-              if(!file.includes('non-resource-examples')) {
+              if(!file.includes('non-resource-examples') && !file.includes('Event-v1-example.json')) {
                 throw new Error('Property "'+propName+'" is an EntityType, but the value does not contain an @odata.id!');
               }
             }
@@ -1430,7 +1441,7 @@ function getCSDLWithUri(type) {
   if(type.Annotations !== undefined && type.Annotations['Redfish.Uris'] !== undefined) {
     return type;
   }
-  if(NoUriWhitelist.indexOf(type.Name) !== -1) {
+  if(NoUriAllowList.indexOf(type.Name) !== -1) {
     return type;
   }
   if(type.BaseType) {
@@ -1510,6 +1521,53 @@ function complexTypeCheck(propType, propValue, propName, type) {
     }
     else {
       checkProperty(childPropName, realType, propValue[childPropName], type, propName);
+    }
+  }
+}
+
+function checkValidPropertyType(csdl, fileName) {
+  // 'Type' attribute can be
+  // - A qualified name that references an enum type element.
+  // - A qualified name that references a complex type element.
+  // - A primitive data type.
+  // - An array of the previous names or types by using the Collection term
+  let validPropertyTypes = [
+    'TypeDefinition',
+    // Reference to Objects
+    'EnumType',
+    'ComplexType',
+    // PrimitveTypes
+    'Edm.Boolean',
+    'Edm.DateTimeOffset',
+    'Edm.Decimal',
+    'Edm.Double',
+    'Edm.Guid',
+    'Edm.Int64',
+    'Edm.String',
+    'Edm.Duration'
+  ]
+  let props = CSDL.search(csdl, 'Property');
+  for(let i = 0; i < props.length; i++) {
+    let prop = props[i];
+    if(fileName in SkipPropertyTypeCheck && SkipPropertyTypeCheck[fileName].includes(prop.Name)) {
+      continue;
+    }
+    let propType = prop.Type;
+    if(propType.startsWith('Collection(')) {
+      propType = propType.substring(11, propType.length-1);
+    }
+    let type = CSDL.findByType(csdl, propType);
+    if(type === null || type === undefined) {
+      throw new Error('Unable to locate type "'+propType+'"');
+    }
+    else {
+      let typeToCheck = propType;
+      if(propType.startsWith('Edm') === false) {
+        typeToCheck = type.constructor.name;
+      }
+      if(validPropertyTypes.indexOf(typeToCheck) === -1) {
+        throw new Error('Use of invalid property type "'+typeToCheck+'"');
+      }
     }
   }
 }
@@ -1784,6 +1842,12 @@ function schemaReleaseCheck(csdl) {
       if((release.length !== 0) && !schemas[i]._Name.endsWith('_0')) {
         throw new Error('Namespace '+schemas[i]._Name+' contains an unexpected Release term!');
       }
+      if(release.length > 0 && SchemasWithBadReleaseStrings.indexOf(schemas[i]._Name) === -1) {
+        let matches = release[0].String.match(/^[0-9.]*/);
+        if(matches[0] !== matches.input) {
+          throw new Error('Namespace '+schemas[i]._Name+' contains a Release term with a invalid character!');
+        }
+      }
     }
   }
 }
@@ -1809,7 +1873,7 @@ function propertyNameUnitCheck(csdl) {
       if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
         continue;
       }
-      if(unitsWhiteList.includes(unitCode)) {
+      if(unitsAllowList.includes(unitCode)) {
         if(Object.keys(AlternativeUnitNames).includes(originalCode) && propName.endsWith(AlternativeUnitNames[originalCode])) {
           continue;
         }
@@ -1881,6 +1945,16 @@ function updatableReadWrite(csdl) {
       found = true;
     }
   }
+  let props = CSDL.search(csdl, 'Property');
+  for(let i = 0; i < props.length; i++) {
+    let propType = props[i].Type
+    if(propType.startsWith('Collection(')) {
+      propType = propType.substring(11, propType.length-1);
+    }
+    if(CommonWritableObjects.includes(propType) && updatable) {
+      found = true;
+    }
+  }
   if(!found && updatable) {
     throw new Error('CSDL is updatable but has no read/write properties!');
   }
@@ -1899,6 +1973,52 @@ function insertCollections(csdl) {
       //This is pretty common, let's not allow list it... just allow it
     } else if(entities[i].BaseType !== 'Resource.v1_0_0.ResourceCollection' && insertable) {
       throw new Error('CSDL is insertable but this is not a resource collection!');
+    }
+  }
+}
+
+let uriPatterns = {};
+
+function uriChecks(csdl) {
+  let schemas = CSDL.search(csdl, 'Schema');
+  if(schemas.length === 0) {
+    return;
+  }
+  for(let i = 0; i < schemas.length; i++) {
+    if(schemas[i]._Name.includes('v1_')) {
+      continue;
+    }
+    if(NoURISSchemaList.includes(schemas[i]._Name)) {
+      continue;
+    }
+    let uriAnnotations = CSDL.search(schemas[i], 'Annotation', 'Redfish.Uris');
+    if(uriAnnotations.length === 0) {
+      throw new Error(schemas[i]._Name+' is missing Redfish.Uris');
+    }
+    let strings = uriAnnotations[0].Collection.Strings;
+    for(let j = 0; j < strings.length; j++) {
+      let uri = strings[j].replaceAll(/{(.*?)}/g, '{}');
+      if(uriPatterns[uri] !== undefined) {
+        throw new Error('URI Pattern like '+uri+' is present in both '+schemas[i]._Name+' and '+uriPatterns[uri]);
+      }
+      uriPatterns[uri] = schemas[i]._Name;
+    }
+  }
+}
+
+function actionBindingParameter(csdl) {
+  let actions = CSDL.search(csdl, 'Action');
+  for(let i = 0; i < actions.length; i++) {
+    if(actions[i].IsBound !== true) {
+      throw new Error(actions[i].Name+' does not specify IsBound=true!');
+    }
+    if(actions[i].Parameters.length === 0) {
+      throw new Error(actions[i].Name+' does not specify a binding parameter!');
+    }
+    let paramKeys = Object.keys(actions[i].Parameters);
+    let bindingParam = actions[i].Parameters[paramKeys[0]];
+    if(!bindingParam.Type.endsWith('.Actions') && !bindingParam.Type.endsWith('.OemActions')) {
+      throw new Error(actions[i].Name+' does not specify a binding parameter!');
     }
   }
 }

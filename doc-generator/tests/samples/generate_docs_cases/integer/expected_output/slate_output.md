@@ -1,8 +1,3 @@
----
-title: Schema Documentation
-
-search: true
----
 
 
 # IntegerTest 1.0.0
@@ -15,7 +10,7 @@ This schema contains one or more properties of type integer.
 ## Properties
 
 |Property     |Type     |Notes     |
-| --- | --- | --- |
+| :--- | :--- | :--- |
 | **Description** | string<br><br>*read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
 | **Links** | <br><br>*read-write* | Contains references to other resources that are related to this resource. |
 | **Name** | string<br><br>*read-only required* | The name of the resource or array element. |

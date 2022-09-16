@@ -483,7 +483,7 @@
                     "versionDeprecated": "v1_3_0"
                 },
                 "PropertyWithAPattern": {
-                    "pattern": "([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})",
+                    "pattern": "([0-9]{3}-[a-fA-F]{3}-[0-9a-fA-F]{4})",
                     "description": "This is a fake property, introduced to show how a pattern is included in generated documentation.",
                     "type": "string"
                 },

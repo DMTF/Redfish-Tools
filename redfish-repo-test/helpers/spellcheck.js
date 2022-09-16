@@ -20,45 +20,67 @@ options.cache = new CSDL.cache(options.useLocal, options.useNetwork);
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 
 //These are words we want to allow for any/all files
-const WordAllowList = ["AccountLockoutThreshold", "ActionInfo", "ACL", "ACPI", "AdditionalProperties", "AddressOrigin", "AHCI", "AES", "aggregate's", "aggregator", "AllocatedBytes", 
-                       "AllowableValues", "API", "APIs", "ARP", "anycast", "ASIC", "ASICs", "ASN", "ASNs", "ATA", "ASHRAE", "AttributeName", "AttributeType", "attribute's", 
-                       "autoconfiguration", "autoconfigured", "AutoExpand", "autonegotiate", "autonegotiating", "autonegotiation", "BFD", "BGP", "BMC", "BMCs", 
-                       "BootOptionReference", "bootable", "BootOrder", "BOOTP", 
-                       "cancelled", "cancelling", //British spelling is fine
-                       "CEE", "chipset", "CIFS", "CLI", "CLP", "colocated", "ComplexTypes", "ComputerSystem", "ComputerSystems", "coprocessor", "conformant", "ConsumedBytes", 
-                       "ContainedBy", "Contoso", "CRC", "CRLs", "CSDL", "DateTime", "DateTimeOffset", "DCB", "DCIM", "DDR", "deduplication", "dereferenceable", "DHCP", "DIMM", 
-                       "DIMMs", "drive's", "DMTF", "DNS", "downloadable", "DriveFailed", "DVD", "ECC", "ECMA", "ECN", "EEE", "EFI", "EIA", "ElectricalContext", "EntryType", 
-                       "ESI", "ETag", "EthernetInterface", "EthernetInterfaceType", "endian", "EntityRole", "EnumMember", "EnumType", "EnumTypes", "EUI", "EventRecord", 
-                       "EventType", "EVI", "EVPN", "FabricAdapter", "failover", "fallback", "FC", "FCoE",
+const WordAllowList = ["AccountLockoutThreshold", "ActionInfo", "ACK", "ACL", "ACPI", "AdditionalProperties", "AddressOrigin", "AHCI", "AES", "aggregate's", "aggregator",
+                       "AllocatedBytes", "AllowableValues", "API", "APIs", "ARP", "anycast", "ASIC", "ASICs", "ASN", "ASNs", "ATA", "ASHRAE", "AttributeName", "AttributeType",
+                       "attribute's",  "autoconfiguration", "autoconfigured", "AutoExpand", "autonegotiate", "autonegotiating", "autonegotiation", "BFD", "BGP", "BMC", "BMCs",
+                       "BootOptionReference", "bootable", "BootOrder", "BOOTP", "cancelled", "cancelling", //British spelling is fine
+                       "CEE", "chipset", "CIFS", "CLI", "CLP", "colocated", "ComplexTypes", "ComponentIntegrity", "composable", "composition", "ComputerSystem", "ComputerSystems",
+                       "coprocessor", "conformant", "ConsumedBytes", "ContainedBy", "Contoso", "CRC", "CRCs", "CRLs", "CSDL", "DataSourceUri", "DateTime", "DateTimeOffset", "DCB",
+                       "DCIM", "DDR", "deduplication", "dereferenceable", "DHCP", "DIMM", "DIMMs", "drive's", "DMTF", "DNS", "downloadable", "DriveFailed", "DVD", "ECC", "ECMA",
+                       "ECN", "EEE", "EFI", "EIA", "ElectricalContext", "EntryType",  "ESI", "ETag", "EthernetInterface", "EthernetInterfaceType", "endian", "EntityRole",
+                       "EnumMember", "EnumType", "EnumTypes", "EUI", "EventRecord", "EventType", "EVI", "EVPN", "FabricAdapter", "failover", "fallback", "FC", "FCoE",
                        "Fibre", "FibreChannel", //British spelling is needed
                        "FICON", "FIP", "FPGA", "ForceRestart", "ForceOff", "FQDN", "FRU", "Gbit", "GenZ", "GiB", "gigabit", "gibibytes", "GPS", "GPU", "GracefulRestart",
-                       "GroupType", "GUID", "HH", "HMAC", "HostingRoles", "hotkey", "hotplug", "HTTP", "HTTPS", 
-                       "hypervisor", "IANA", "IEC", "IEEE's", "IETF", "IGP", "IP", "IPMI", "INCITS", "IncludeOriginOfCondition", "IndicatorLED", "InfiniBand", "IOV", "iQN", 
-                       "iSCSI", "iWARP", "JEDEC", "JEP", "JSON", "keepalive", "Kerberos", "keytab", "KVM", "KVMIP", "LastState", "LBA", "LDAP", "locator", "LogEntry", "LogService",
-                       "LongDescription", "loopback", "LUN", "ManagerAccount", "maskable", "MaxOccurrences", "Mbit", "mebibytes", "MemorySummary", "MessageArg", "MessageArgs", 
-                       "MessageId", "MessageIds", "MessageRegistry", "metadata", "MetricReports", "MetricReportDefinitionType", "MetricValue", "MiB", "Microcontroller", "MTU", 
-                       "Multibit", "multicast", "multihoming", "multihop", "Multipart", "MultiProtocol", "namespace", "namespaces", "NAND", "NavigationProperties", "NDP", "NEMA", 
-                       "NetBIOS", "netmask", "NetworkAdapter", "NGUID", "NIC", "NICs", "NIST", "NQN", "NMI", "NotRedundant", "NSID", "NTP", "NVDIMM", "NVM", "NVMe", "NVN", 
-                       "nullable", "NXP", "OCSP", "OData", "offline", "Oem", "online", "OnStartUpdateRequest", "OperationApplyTime", "Optane", "OriginOfCondition", 
-                       "OriginOfCondition's", "overprovision", "OSI", "passphrase", "passphrases", "PCI", "PCIe", "PDU", "pinout", "PEM", "PLA", "PLDM", "PowerISA", "PPIN", 
-                       "PrivilegeType", "ProcessorSummary", "PushPowerButton", "PXE", "QuickPath", "RackUnit", "RDIMM", "RDMA", "RDP", "RecurrenceInterval", "Redfish", 
-                       "RedfishMetricReport", "Referenceable", "regex", "RegistryPrefix", "RegistryPrefixes", "rekeyed", "RELP", "ReportActions", "Requestor", 
-                       "ResourceStatusChangedCritical", "ResourceType", "ResourceTypes", "Retransfer", "RevisionKind", "roadmap", "RoleId", "SAS", "schemas", "SCP", "SDRAM", 
-                       "SEL", "ServiceLabel", "SEV", "SFF", "SFTP", "SGRAM", "SHA", "signalling", "SLAAC", "SMB", "SMBIOS", "SNIA", "SNMP", "SKU", "SSDP", "SSL", "StandbySpare", 
-                       "stateful", "StartUpdate", "StorageController", "StoragePool", "StoragePools", "StorageServer", "SubModel", "SubSystem", "syslog", "syslogd", "TCM", "TDP", 
-                       "Telecom", "TFTP", "THD", "timestamp", "TLP", "TLS", "TPM", "TriggerActions", "UCUM", "UDIMM", "UDP", "UEFI", "UHCI", "UI", "uri", "URIs", "UltraPath", 
-                       "unhalted", "unicast", "unversioned", "USB", "username", "UTC", "UUID", "ValueName", "VCAT", "virtualization", "VEPA", "versioned", "VLAN", "VLANEnabled", 
+                       "GroupType", "GUID", "GUIDs", "HH", "HMAC", "HostingRoles", "hotkey", "hotplug", "HTTP", "HTTPS", 
+                       "hypervisor", "IANA", "IEC", "IEEE's", "IETF", "IGP", "IP", "IPMI", "INCITS", "IncludeOriginOfCondition", "IndicatorLED", "indices", "InfiniBand", "IOV",
+                       "iQN", "iSCSI", "iWARP", "JEDEC", "JEP", "JSON", "keepalive", "Kerberos", "keytab", "KVM", "KVMIP", "LastState", "LBA", "LDAP", "LLDP", "locator",
+                       "LogEntry", "LogService", "LongDescription", "loopback", "LUN", "ManagerAccount", "maskable", "MaxOccurrences", "Mbit", "mebibytes", "MemorySummary",
+                       "MessageArg", "MessageArgs",  "MessageId", "MessageIds", "MessageRegistry", "metadata", "MetricReports", "MetricReportDefinitionType", "MetricValue", "MiB",
+                       "Microcontroller", "MTU",  "Multibit", "multicast", "multihoming", "multihop", "Multipart", "MultiProtocol", "namespace", "namespaces", "NAK", "NAND",
+                       "NavigationProperties", "NDP", "NEMA",  "NetBIOS", "netmask", "NetworkAdapter", "NGUID", "NIC", "NICs", "NIST", "NQN", "NMI", "NotRedundant", "NSID", "NTP",
+                       "NVDIMM", "NVDIMMs", "NVM", "NVMe", "NVN", "nullable", "NXP", "OCSP", "OData", "offline", "Oem", "online", "OnStartUpdateRequest", "OpenAPI",
+                       "OperationApplyTime", "Optane", "OriginOfCondition",  "OriginOfCondition's", "overprovision", "OSI", "passphrase", "passphrases", "passthrough", "PCI",
+                       "PCIe", "PDU", "pinout", "PEM", "PLA", "PLDM", "PowerISA", "PPIN", 
+                       "PrivilegeType", "ProcessorSummary", "PushPowerButton", "PXE", "QuickPath", "quiescing", "RackUnit", "RDIMM", "RDMA", "RDP", "ReadingType",
+                       "RecurrenceInterval", "Redfish",  "RedfishMetricReport", "Referenceable", "regex", "RegistryPrefix", "RegistryPrefixes", "rekeyed", "RELP", "ReportActions",
+                       "Requestor", "ResourceStatusChangedCritical", "ResourceType", "ResourceTypes", "Retransfer", "RevisionKind", "roadmap", "RoleId", "SAS", "schemas", "SCL",
+                       "SCP", "SDA", "SDRAM", "SEL", "ServiceLabel", "SEV", "SFF", "SFP", "SFTP", "SGRAM", "SHA", "signalling", "SLAAC", "SmartNIC", "SMB", "SMBIOS", "SNIA",
+                       "SNMP", "SKU", "SSDP", "SSL", "StandbySpare",  "stateful", "StartUpdate", "StorageController", "StoragePool", "StoragePools", "StorageServer", "SubModel",
+                       "SubSystem", "syslog", "syslogd", "TCG", "TCM", "TDP", 
+                       "Telecom", "TFTP", "THD", "timestamp", "TLP", "TLS", "TPM", "TriggerActions", "UCUM", "UDIMM", "UDP", "UEFI", "UHCI", "UI", "uri", "URIs", "UltraPath",
+                       "unhalted", "unicast", "unversioned", "USB", "username", "UTC", "UUID", "ValueName", "VCAT", "virtualization", "VEPA", "versioned", "VLAN", "VLANEnabled",
                        "VLANId", "VNC", "VolumeCollection", "VPD", "WMI", "WoL", "WWN", "www", "wildcard", "wildcards", "XON", "XOFF", "XPoint"];
 
 //These are words we only want to allow for certain files
 const PerFileAllowList = {
+    'AccountService_v1.xml': [
+        'TACACS',
+        'OAuth',
+        'jwks',
+        'PasswordExpiration'
+    ],
     'Bios_v1.xml': [
         'AdminPassword',
         'UserPassword'
     ],
     'Certificate_v1.xml': [
         'ALG',
-        'challengePassword'
+        'challengePassword',
+        'commonName',
+        'subjectAltName',
+        'organizationName',
+        'organizationalUnitName',
+        'localityName',
+        'stateOrProvinceName',
+        'countryName',
+        'emailAddress',
+        'givenName',
+        'challengePassword',
+        'unstructuredName',
+        'domainComponent',
+        'serialNumber',
+        'signatureAlgorithm',
+        'OID'
     ],
     'CertificateService_v1.xml': [
         'ALG',
@@ -73,7 +95,11 @@ const PerFileAllowList = {
         'emailAddress',
         'givenName',
         'challengePassword',
-        'unstructuredName'
+        'unstructuredName',
+        'domainComponent',
+        'serialNumber',
+        'signatureAlgorithm',
+        'OID'
     ],
     'Circuit_v1.xml': [
         'cordsets',
@@ -103,6 +129,11 @@ const PerFileAllowList = {
     ],
     'EventService_v1.xml': [
         'AUTH'
+    ],
+    'ExternalAccountProvider_v1.xml': [
+        'TACACS',
+        'OAuth',
+        'jwks'
     ],
     'FabricAdapter_v1.xml': [
         'REQ',
@@ -187,7 +218,7 @@ const PerFileAllowList = {
         'dbx',
         'dbr',
         'dbt',
-        'PKdefault',
+        'PKDefault',
         'KEKDefault',
         'dbDefault',
         'dbxDefault',
@@ -197,7 +228,14 @@ const PerFileAllowList = {
     'Sensor_v1.xml': [
         'Cel',
         'cft',
-        'ResetStatistics' //This was renamed and should only be in this file once
+        'kilopascal',
+        'kPa',
+        'kVAh',
+        'kVARh',
+        'ResetStatistics', //This was renamed and should only be in this file once
+        'VAC',
+        'VDC',
+        'Wh'
     ],
     'Signature_v1.xml': [
         'SignatureData' //From UEFI spec
@@ -205,6 +243,9 @@ const PerFileAllowList = {
     'StorageController_v1.xml': [
         'admin',
         'oF'
+    ],
+    'TaskService_v1.xml': [
+        'TaskState'
     ],
     'TurboencabulatorService_v1.xml': [
         'turboencabulator'
