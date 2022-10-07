@@ -1808,6 +1808,8 @@ class DocFormatter:
                     combined_prop_item['enumVersionAdded'] = prop_info.get('enumVersionAdded')
                     combined_prop_item['enumVersionDeprecated'] = prop_info.get('enumVersionDeprecated')
                     combined_prop_item['enumDeprecated'] = prop_info.get('enumDeprecated')
+                    combined_prop_item['prop_required'] = prop_info.get('prop_required')
+                    combined_prop_item['prop_required_on_create'] = prop_info.get('prop_required_on_create')
                     if self.config.get('normative'):
                         combined_prop_item['longDescription'] = descr
                     else:
