@@ -2409,6 +2409,15 @@ class DocFormatter:
                 for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
                     if md_supp.get(key) and key not in supplemental:
                         supplemental[key] = md_supp[key]
+        elif schema_supplement:
+            # Look up supplemental info based solely on the schema reference
+            # This is to work around the fact that common objects are not cached in the property_data structure
+            supplemental = schema_supplement.get(schema_ref, {})
+            md_supp = schema_md_supplement.get(schema_ref)
+            if md_supp:
+                for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
+                    if md_supp.get(key) and key not in supplemental:
+                        supplemental[key] = md_supp[key]
 
         return supplemental
 
