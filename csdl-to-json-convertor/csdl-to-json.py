@@ -424,6 +424,14 @@ class CSDLToJSON:
                                 json_def[name]["uris"] = []
                             json_def[name]["uris"].append( string.text )
 
+                # Deprecated URIs
+                if term == "Redfish.DeprecatedUris":
+                    for collection in child.iter( ODATA_TAG_COLLECTION ):
+                        for string in collection.iter( ODATA_TAG_STRING ):
+                            if "urisDeprecated" not in json_def[name]:
+                                json_def[name]["urisDeprecated"] = []
+                            json_def[name]["urisDeprecated"].append( string.text )
+
     def generate_abstract_object( self, object, json_def ):
         """
         Processes an abstract EntityType or ComplexType to generate the JSON definition structure
@@ -1089,6 +1097,12 @@ class CSDLToJSON:
             if term == "OData.Permissions":
                 permissions = self.get_attrib( annotation, "EnumMember" )
                 if ( permissions == "OData.Permission/Read" ) or ( permissions == "OData.Permissions/Read" ):
+                    json_type_def["readonly"] = True
+                elif ( permissions == "OData.Permission/Write" ) or ( permissions == "OData.Permissions/Write" ):
+                    json_type_def["writeOnly "] = True
+                    json_type_def["readonly"] = False
+                elif ( permissions == "OData.Permission/None" ) or ( permissions == "OData.Permissions/None" ):
+                    json_type_def["writeOnly "] = False
                     json_type_def["readonly"] = True
                 else:
                     json_type_def["readonly"] = False

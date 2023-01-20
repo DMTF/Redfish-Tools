@@ -315,6 +315,9 @@ class JSONToYAML:
                         self.uri_cache[uri]["deprecated"] = deprecated
                         self.uri_cache[uri]["reasonDeprecated"] = deprecated_reason
                         self.uri_cache[uri]["versionDeprecated"] = deprecated_version
+                        # Specific URIs can be deprecated without deprecating the entire schema
+                        if "urisDeprecated" in definition and uri in definition["urisDeprecated"]:
+                            self.uri_cache[uri]["deprecated"] = True
 
     def check_for_actions( self, json_data, filename ):
         """
