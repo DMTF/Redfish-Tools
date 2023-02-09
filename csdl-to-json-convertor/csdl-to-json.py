@@ -1099,10 +1099,10 @@ class CSDLToJSON:
                 if ( permissions == "OData.Permission/Read" ) or ( permissions == "OData.Permissions/Read" ):
                     json_type_def["readonly"] = True
                 elif ( permissions == "OData.Permission/Write" ) or ( permissions == "OData.Permissions/Write" ):
-                    json_type_def["writeOnly "] = True
+                    json_type_def["writeOnly"] = True
                     json_type_def["readonly"] = False
                 elif ( permissions == "OData.Permission/None" ) or ( permissions == "OData.Permissions/None" ):
-                    json_type_def["writeOnly "] = False
+                    json_type_def["writeOnly"] = False
                     json_type_def["readonly"] = True
                 else:
                     json_type_def["readonly"] = False
