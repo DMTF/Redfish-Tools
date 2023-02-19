@@ -186,7 +186,7 @@ pre.code{
 
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
-        if self.config.get('remove_blanks') != true:
+        if self.config.get('remove_blanks') != True:
             if self.config.get('strip_top_object') and current_depth > 0:
                 indentation_string = '&nbsp;' * 6 * (current_depth -1)
             else:
@@ -194,7 +194,7 @@ pre.code{
 
         # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Actions
         # section and should dial back the indentation by one level.
-        if self.config.get('remove_blanks') != true:
+        if self.config.get('remove_blanks') != True:
             if len(prop_path) > 1 and prop_path[0] == 'Actions':
                 indentation_string = '&nbsp;' * 6 * (current_depth -1)
 
