@@ -1809,6 +1809,8 @@ class DocFormatter:
                     combined_prop_item['enumVersionAdded'] = prop_info.get('enumVersionAdded')
                     combined_prop_item['enumVersionDeprecated'] = prop_info.get('enumVersionDeprecated')
                     combined_prop_item['enumDeprecated'] = prop_info.get('enumDeprecated')
+                    combined_prop_item['prop_required'] = prop_info.get('prop_required')
+                    combined_prop_item['prop_required_on_create'] = prop_info.get('prop_required_on_create')
                     if self.config.get('normative'):
                         combined_prop_item['longDescription'] = descr
                     else:
@@ -2404,6 +2406,15 @@ class DocFormatter:
                 supplemental = schema_supplement.get(schema_key,
                                                         schema_supplement.get(schema_name, {}))
 
+            if md_supp:
+                for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
+                    if md_supp.get(key) and key not in supplemental:
+                        supplemental[key] = md_supp[key]
+        elif schema_supplement:
+            # Look up supplemental info based solely on the schema reference
+            # This is to work around the fact that common objects are not cached in the property_data structure
+            supplemental = schema_supplement.get(schema_ref, {})
+            md_supp = schema_md_supplement.get(schema_ref)
             if md_supp:
                 for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
                     if md_supp.get(key) and key not in supplemental:
