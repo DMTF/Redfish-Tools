@@ -186,6 +186,7 @@ The configuration source of the WWNs for this connection (WWPN and WWNN).
 
 Table: WWNSource property values \label{Table_TBL_nn}
 
+
 ## NetworkDeviceFunctionCollection
 
 
@@ -204,6 +205,7 @@ The properties defined for the NetworkDeviceFunctionCollection schema are summar
 | **Oem** {} | object |  | This is the manufacturer/provider specific extension moniker used to divide the Oem object into sections. See the *Resource* schema for details on this property. |
 
 Table: NetworkDeviceFunctionCollection properties \label{Table_TBL_nn}
+
 
 
 ## NetworkPort 1.1.0
