@@ -1429,7 +1429,11 @@ class MetaData(Element):
         # Parse the included namespaces
         for reference in self._get_elements('Reference'):
             self.references.append(Reference(reference, self))
+        ref_uris = []
         for reference in self.references:
+            if reference.uri in ref_uris:
+                raise SchemaError("Reference to {} found multiple times".format(reference.uri))
+            ref_uris.append(reference.uri)
             self.children.append(reference)
             reference.generate_reference_dictionary(self.namespaces)
 
