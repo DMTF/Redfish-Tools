@@ -12,6 +12,7 @@ The revision history is summarized in Table \ref{Table_TBL_nn++}.
 
 Table: Revision history \label{Table_TBL_nn}
 
+
 ### Description
 
 A Network Device Function represents a logical interface exposed by the network adapter.
