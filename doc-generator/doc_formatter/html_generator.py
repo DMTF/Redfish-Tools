@@ -747,7 +747,7 @@ pre.code{
                 for detail_name in detail_names:
                     det_info = section['property_details'][detail_name]
                     anchor = section['schema_ref'] + '|details|' + detail_name
-                    deets_content.append(self.formatter.head_four(html.escape(detail_name, False) + ':', 0, anchor))
+                    deets_content.append(self.formatter.head_four(html.escape(detail_name, False), 0, anchor))
 
                     if len(det_info) == 1:
                         for x in det_info.values():

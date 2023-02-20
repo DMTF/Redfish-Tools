@@ -208,8 +208,8 @@ class DocFormatter:
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_header = self.formatter.para(self.formatter.bold(_('Action URI:')))
-        uri_content = self.formatter.para('%(link)s' % {'link': '{' + _('Base URI of target resource') + '}/Actions/' + action})
+        uri_header = self.formatter.para(self.formatter.bold(_('Action URI')))
+        uri_content = self.formatter.para('%(link)s' % {'link': self.formatter.italic(_('{Base URI of target resource}')) + '/Actions/' + action})
         return uri_header + '\n\n' + uri_content
 
 

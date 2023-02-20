@@ -725,7 +725,7 @@ class MarkdownGenerator(DocFormatter):
                 detail_names = [x for x in section['property_details'].keys()]
                 detail_names.sort(key=str.lower)
                 for detail_name in detail_names:
-                    contents.append(self.format_head_four(detail_name + ':', 0))
+                    contents.append(self.format_head_four(detail_name, 0))
                     det_info = section['property_details'][detail_name]
 
                     if len(det_info) == 1:
