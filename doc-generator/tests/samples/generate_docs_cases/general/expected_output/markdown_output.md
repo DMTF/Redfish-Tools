@@ -92,7 +92,7 @@ A Network Device Function represents a logical interface exposed by the network 
 
 ### Property details
 
-#### AuthenticationMethod:
+#### AuthenticationMethod
 
 The iSCSI boot authentication method for this network device function.
 
@@ -102,7 +102,7 @@ The iSCSI boot authentication method for this network device function.
 | MutualCHAP | iSCSI Mutual Challenge Handshake Authentication Protocol (CHAP) authentication is used. |
 | None | No iSCSI authentication is used. |
 
-#### BootMode:
+#### BootMode
 
 The boot mode configured for this network device function.
 
@@ -114,7 +114,7 @@ The boot mode configured for this network device function.
 | iSCSI | Boot this device using the embedded iSCSI boot support and configuration.  Only applicable if the NetworkDeviceFunctionType is set to iSCSI. |
 | PXE | Boot this device using the embedded PXE support.  Only applicable if the NetworkDeviceFunctionType is set to Ethernet. |
 
-#### IPAddressType:
+#### IPAddressType
 
 The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP address fields.
 
@@ -123,7 +123,7 @@ The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP addres
 | IPv4 | IPv4 addressing is used for all IP-fields in this object. |
 | IPv6 | IPv6 addressing is used for all IP-fields in this object. |
 
-#### NetDevFuncCapabilities:
+#### NetDevFuncCapabilities
 
 Capabilities of this network device function.
 
@@ -135,7 +135,7 @@ Capabilities of this network device function.
 | FibreChannelOverEthernet | Appears to the operating system as an FCoE device. |
 | iSCSI | Appears to the operating system as an iSCSI device. |
 
-#### NetDevFuncType:
+#### NetDevFuncType
 
 The configured capability of this network device function.
 
@@ -147,7 +147,7 @@ The configured capability of this network device function.
 | FibreChannelOverEthernet | Appears to the operating system as an FCoE device. |
 | iSCSI | Appears to the operating system as an iSCSI device. |
 
-#### WWNSource:
+#### WWNSource
 
 The configuration source of the WWNs for this connection (WWPN and WWNN).
 
@@ -219,7 +219,7 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 
 ### Property details
 
-#### ActiveLinkTechnology:
+#### ActiveLinkTechnology
 
 Network Port Active Link Technology.
 
@@ -229,7 +229,7 @@ Network Port Active Link Technology.
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
 | InfiniBand | The port is capable of connecting to an InfiniBand network. |
 
-#### FlowControlConfiguration:
+#### FlowControlConfiguration
 
 The locally configured 802.3x flow control setting for this network port.
 
@@ -240,7 +240,7 @@ The locally configured 802.3x flow control setting for this network port.
 | TX | IEEE 802.3x flow control may be initiated by this station. |
 | TX_RX | IEEE 802.3x flow control may be initiated by this station or the link partner. |
 
-#### FlowControlStatus:
+#### FlowControlStatus
 
 The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).
 
@@ -251,7 +251,7 @@ The 802.3x flow control behavior negotiated with the link partner for this netwo
 | TX | IEEE 802.3x flow control may be initiated by this station. |
 | TX_RX | IEEE 802.3x flow control may be initiated by this station or the link partner. |
 
-#### LinkNetworkTechnology:
+#### LinkNetworkTechnology
 
 The self-described link network technology capabilities of this port.
 
@@ -261,7 +261,7 @@ The self-described link network technology capabilities of this port.
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
 | InfiniBand | The port is capable of connecting to an InfiniBand network. |
 
-#### LinkStatus:
+#### LinkStatus
 
 The status of the link between this port and its link partner.
 
@@ -270,7 +270,7 @@ The status of the link between this port and its link partner.
 | Down | The port is enabled but link is down. |
 | Up | The port is enabled and link is good (up). |
 
-#### SupportedEthernetCapabilities:
+#### SupportedEthernetCapabilities
 
 The set of Ethernet capabilities that this port supports.
 

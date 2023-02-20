@@ -23,7 +23,7 @@ This schema contains required and requiredOnCreate properties.
 
 ## Property details
 
-### EntryType:
+### EntryType
 
 This is the type of log entry.
 

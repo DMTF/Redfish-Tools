@@ -240,7 +240,7 @@ The locally configured 802.3x flow control setting for this network port.
 | TX | IEEE 802.3x flow control may be initiated by this station. |
 | TX_RX | IEEE 802.3x flow control may be initiated by this station or the link partner. |
 
-### FlowControlStatus:
+### FlowControlStatus
 
 The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).
 
@@ -251,7 +251,7 @@ The 802.3x flow control behavior negotiated with the link partner for this netwo
 | TX | IEEE 802.3x flow control may be initiated by this station. |
 | TX_RX | IEEE 802.3x flow control may be initiated by this station or the link partner. |
 
-### LinkNetworkTechnology:
+### LinkNetworkTechnology
 
 The self-described link network technology capabilities of this port.
 
@@ -261,7 +261,7 @@ The self-described link network technology capabilities of this port.
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
 | InfiniBand | The port is capable of connecting to an InfiniBand network. |
 
-### LinkStatus:
+### LinkStatus
 
 The status of the link between this port and its link partner.
 
@@ -270,7 +270,7 @@ The status of the link between this port and its link partner.
 | Down | The port is enabled but link is down. |
 | Up | The port is enabled and link is good (up). |
 
-### SupportedEthernetCapabilities:
+### SupportedEthernetCapabilities
 
 The set of Ethernet capabilities that this port supports.
 
