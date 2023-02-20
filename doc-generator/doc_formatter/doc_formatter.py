@@ -203,7 +203,7 @@ class DocFormatter:
             caption = self.formatter.add_table_caption(_("Revision history"));
             reference = self.formatter.add_table_reference(_("The revision history is summarized in "));
             formatted = reference + "\n\n" + formatted + "\n\n" + caption
-        self.this_section['release_history'] = formatted
+        self.this_section['release_history'] = formatted + "\n"
 
 
     def format_uri_block_for_action(self, action, uris):
