@@ -968,6 +968,19 @@ class Element(object):
             SchemaError: If an annotation is illegally applying a term to this element.
         """
 
+        # ODATA Team says that the AppliesTo Attribute is more of a guideline than a rule.
+        # From the CSDL Spec: As the intended usage may evolve over time, clients SHOULD be prepared for any annotation
+        # to be applied to any element.
+
+        # This definition inserts expected usage based on modeling patterns in Redfish
+        applies_to_mod_set = {
+            "InsertRestrictions": "EntityType", # POST restrictions for a resource
+            "DeleteRestrictions": "EntityType", # DELETE restrictions for a resource
+            "UpdateRestrictions": "EntityType", # PATCH/PUT restrictions for a resource
+            "IsURL": "Parameter",               # String action parameters that are expected to be URIs
+            "Unit": "Parameter"                 # Numeric action parameters with a unit of measure
+        }
+
         for annotation in self.annotation:
             term = self.find_in_scope(annotation.term)
             if term.applies_to:
@@ -975,10 +988,11 @@ class Element(object):
                 for element in term.applies_to:
                     if type(self).__name__ == element:
                         found_element = True
-# ODATA Team says that the AppliesTo Attribute is more of a guideline than a rule. Because of this
-# things should not be disallowed due to a failure to follow applies to checks.
-#                if not found_element:
-#                    raise SchemaError("Term {} does not apply to this type".format(term.name))
+                if term.name in applies_to_mod_set:
+                    if type(self).__name__ == applies_to_mod_set[term.name]:
+                        found_element = True
+                if not found_element:
+                    raise SchemaError("Term {} does not apply to this type".format(term.name))
 
     def evaluate_expression(self, element):
         """Parses a passed in expression element.
