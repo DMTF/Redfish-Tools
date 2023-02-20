@@ -157,9 +157,9 @@ def test_uris_in_regular_schema_html_output (mockRequest):
 
     # Links should appear with asterisks around {} path parts to highlight them.
     expected_strings = [
-        '/?redfish/?v1/?Managers/?<i>{ManagerId}</i>/?LogServices/?<i>{LogServiceId}</i>/?Entries/?<i><a href="#LogEntry">{LogEntryId}</a></i>',
-        '/?redfish/?v1/?Systems/?<i>{ComputerSystemId}</i>/?LogServices/?<i>{LogServiceId}</i>/?Entries/?<i><a href="#LogEntry">{LogEntryId}</a></i>',
-        '/?redfish/?v1/?CompositionService/?ResourceBlocks/?<i>{ResourceBlockId}</i>/?Systems/?<i>{ComputerSystemId}</i>/?LogServices/?<i>{LogServiceId}</i>/?Entries/?<i><a href="#LogEntry">{LogEntryId}</a></i>'
+        '/​redfish/​v1/​Managers/​<i>{ManagerId}</i>/​LogServices/​<i>{LogServiceId}</i>/​Entries/​<i><a href="#LogEntry">{LogEntryId}</a></i>',
+        '/​redfish/​v1/​Systems/​<i>{ComputerSystemId}</i>/​LogServices/​<i>{LogServiceId}</i>/​Entries/​<i><a href="#LogEntry">{LogEntryId}</a></i>',
+        '/​redfish/​v1/​CompositionService/​ResourceBlocks/​<i>{ResourceBlockId}</i>/​Systems/​<i>{ComputerSystemId}</i>/​LogServices/​<i>{LogServiceId}</i>/​Entries/​<i><a href="#LogEntry">{LogEntryId}</a></i>'
         ]
 
     for x in expected_strings:
