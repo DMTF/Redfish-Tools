@@ -16,6 +16,7 @@ This file contains text similar to what the doc generator would produce. (Albeit
 | --- | --- |
 | **Version** | *v1.3* |
 | **Release** | 2018.2 |
+
 ### Description
 
 A Network Device Function represents a logical interface exposed by the network adapter.
