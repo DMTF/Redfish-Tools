@@ -549,7 +549,7 @@ class MarkdownGenerator(DocFormatter):
 
         if deprecated_descr:
             formatted.append(self.formatter.para(italic(deprecated_descr)))
-        formatted.append(self.formatter.para('&nbsp;\n\n' + self.formatter.bold(_("Description"))))
+        formatted.append(self.formatter.para(self.formatter.bold(_("Description"))))
         formatted.append(self.formatter.para(prop_descr))
 
         if supplemental_details:
