@@ -1,4 +1,4 @@
-### ClearsIf:
+### ClearsIf
 
 This property contains the available OEM specific actions for this resource.
 
@@ -6,7 +6,7 @@ This property contains the available OEM specific actions for this resource.
 | :--- | :------------ |
 | SameOriginOfCondition | Indicates the message is cleared by the other message(s) listed in the ClearingLogic object, provided the OriginOfCondition for both Events are the same. |
 
-### ParamTypes:
+### ParamTypes
 
 The MessageArg types, in order, for the message.
 

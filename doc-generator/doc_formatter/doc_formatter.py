@@ -203,13 +203,14 @@ class DocFormatter:
             caption = self.formatter.add_table_caption(_("Revision history"));
             reference = self.formatter.add_table_reference(_("The revision history is summarized in "));
             formatted = reference + "\n\n" + formatted + "\n\n" + caption
-        self.this_section['release_history'] = formatted
+        self.this_section['release_history'] = formatted + "\n"
 
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_content = self.formatter.para(self.formatter.bold((_('Action URI: %(link)s') % {'link': '{' + _('Base URI of target resource') + '}/Actions/' + action})))
-        return uri_content
+        uri_header = self.formatter.para(self.formatter.bold(_('Action URI')))
+        uri_content = self.formatter.para('%(link)s' % {'link': self.formatter.italic(_('{Base URI of target resource}')) + '/Actions/' + action})
+        return uri_header + '\n\n' + uri_content
 
 
     def format_uri(self, uri):

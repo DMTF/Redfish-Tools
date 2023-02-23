@@ -31,6 +31,7 @@ class MarkdownGenerator(DocFormatter):
             'pattern': ', '
             }
         self.formatter = FormatUtils()
+        self.table_formats = self.config.get('table_formats')
         if self.markdown_mode == 'slate':
             self.layout_payloads = 'top'
         else:
@@ -73,15 +74,21 @@ class MarkdownGenerator(DocFormatter):
 
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
-        if self.config.get('strip_top_object') and current_depth > 0:
-            indentation_string = '&nbsp;' * 6 * (current_depth -1)
+        if self.config.get('remove_blanks') != True:
+            if self.config.get('strip_top_object') and current_depth > 0:
+                indentation_string = '&nbsp;' * 6 * (current_depth -1)
+            else:
+                indentation_string = '&nbsp;' * 6 * current_depth
         else:
-            indentation_string = '&nbsp;' * 6 * current_depth
+            indentation_string = ""
 
         # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Actions
         # section and should dial back the indentation by one level.
-        if len(prop_path) > 1 and prop_path[0] == 'Actions':
-            indentation_string = '&nbsp;' * 6 * (current_depth -1)
+        if self.config.get('remove_blanks') != True:
+            if len(prop_path) > 1 and prop_path[0] == 'Actions':
+                indentation_string = '&nbsp;' * 6 * (current_depth -1)
+        else:
+            indentation_string = ""
 
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
@@ -357,10 +364,16 @@ class MarkdownGenerator(DocFormatter):
         if enum_details:
             if profile_mode:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' | ' + _('Profile Specifies') + ' |')
-                contents.append('| :--- | :------ | :--- |')
+                if self.config.get('table_formats', {}).get("enum_details"):
+                    contents.append(self.config.get('table_formats', {}).get("enum_details"))
+                else:
+                    contents.append('| :--- | :------ | :--- |')
             else:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' |')
-                contents.append('| :--- | :------------ |')
+                if self.config.get('table_formats', {}).get("enum_subset"):
+                    contents.append(self.config.get('table_formats', {}).get("enum_subset"))
+                else:
+                    contents.append('| :--- | :------------ |')
             enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = enum_item
@@ -427,10 +440,16 @@ class MarkdownGenerator(DocFormatter):
         elif enum:
             if profile_mode:
                 contents.append('| ' + prop_type + ' | '+ _('Profile Specifies') + ' |')
-                contents.append('| :--- | :--- |')
+                if self.config.get('table_formats', {}).get("profile_details"):
+                    contents.append(self.config.get('table_formats', {}).get("profile_details"))
+                else:
+                    contents.append('| :--- | :--- |')
             else:
                 contents.append('| ' + prop_type + ' |')
-                contents.append('| :--- |')
+                if self.config.get('table_formats', {}).get("profile_subset"):
+                    contents.append(self.config.get('table_formats', {}).get("profile_subset"))
+                else:
+                    contents.append('| :--- |')
             for enum_item in enum:
                 enum_name = enum_item
                 version = version_depr = deprecated_descr = None
@@ -550,7 +569,11 @@ class MarkdownGenerator(DocFormatter):
                 rows.append("| :--- | :--- | :--- |")
             else:
                 rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Attributes') + '   | ' + _('Notes') + "     |")
-                rows.append("| :--- | :--- | :--- | :--------------------- |")
+                if self.table_formats:
+                    if self.table_formats.get("properties"):
+                        rows.append(self.table_formats.get('action_parameters'))
+                else:
+                    rows.append("| :--- | :--- | :--- | :--------------------- |")
 
             param_names = [x for x in action_parameters.keys()]
 
@@ -570,7 +593,7 @@ class MarkdownGenerator(DocFormatter):
             formatted_rows = '\n'.join(rows) + "\n"
             if self.config.get('with_table_numbering'):
                 caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name})
-                preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")) + "\n"
+                preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")) + "\n\n"
                 formatted_rows = preamble +  formatted_rows + caption
             else:
                 formatted.append(heading)
@@ -677,7 +700,11 @@ class MarkdownGenerator(DocFormatter):
                     contents.append('| :--- | :--- | :--- |')
                 else:
                     contents.append('|' + _('Property') + '     |' + _('Type') + '     |' + _('Attributes') + '   |' + _('Notes') + '     |')
-                    contents.append('| :--- | :--- | :--- | :--------------------- |')
+                    if self.table_formats:
+                        if self.table_formats.get("properties"):
+                            contents.append(self.table_formats.get('properties'))
+                    else:
+                        contents.append('| :--- | :--- | :--- | :--------------------- |')
 
                 contents.append('\n'.join(section['properties']))
 
@@ -698,7 +725,7 @@ class MarkdownGenerator(DocFormatter):
                 detail_names = [x for x in section['property_details'].keys()]
                 detail_names.sort(key=str.lower)
                 for detail_name in detail_names:
-                    contents.append(self.format_head_four(detail_name + ':', 0))
+                    contents.append(self.format_head_four(detail_name, 0))
                     det_info = section['property_details'][detail_name]
 
                     if len(det_info) == 1:

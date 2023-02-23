@@ -186,15 +186,17 @@ pre.code{
 
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
-        if self.config.get('strip_top_object') and current_depth > 0:
-            indentation_string = '&nbsp;' * 6 * (current_depth -1)
-        else:
-            indentation_string = '&nbsp;' * 6 * current_depth
+        if self.config.get('remove_blanks') != True:
+            if self.config.get('strip_top_object') and current_depth > 0:
+                indentation_string = '&nbsp;' * 6 * (current_depth -1)
+            else:
+                indentation_string = '&nbsp;' * 6 * current_depth
 
         # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Actions
         # section and should dial back the indentation by one level.
-        if len(prop_path) > 1 and prop_path[0] == 'Actions':
-            indentation_string = '&nbsp;' * 6 * (current_depth -1)
+        if self.config.get('remove_blanks') != True:
+            if len(prop_path) > 1 and prop_path[0] == 'Actions':
+                indentation_string = '&nbsp;' * 6 * (current_depth -1)
 
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
@@ -745,7 +747,7 @@ pre.code{
                 for detail_name in detail_names:
                     det_info = section['property_details'][detail_name]
                     anchor = section['schema_ref'] + '|details|' + detail_name
-                    deets_content.append(self.formatter.head_four(html.escape(detail_name, False) + ':', 0, anchor))
+                    deets_content.append(self.formatter.head_four(html.escape(detail_name, False), 0, anchor))
 
                     if len(det_info) == 1:
                         for x in det_info.values():

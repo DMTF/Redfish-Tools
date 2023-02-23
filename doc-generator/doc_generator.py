@@ -188,7 +188,7 @@ class DocGenerator:
 
         if not reg_uri:
             warnings.warn('Unable to find registry file for %(repo)s, %(name)s, minimum version %(minversion)s' %
-                              {'repo': reg_repo, 'name': reg_name, 'minversion': reg_minversion})
+                              {'repo': reg_repo, 'name': reg_name, 'minversion': reg_minversion })
             return registry_reqs
 
         # Generate data based on profile
@@ -268,6 +268,7 @@ class DocGenerator:
                                 if strength > candidate_strength:
                                     candidate_strength = strength
                                     candidate = rl
+
             if candidate:
                 versioned_uri = candidate
 
@@ -1243,6 +1244,8 @@ class DocGenerator:
             'combine_multiple_refs': 0,
             'with_table_numbering': False,
             'warn_missing_payloads': False,
+            'table_formats': {},
+            'remove_blanks': False,
             }
 
         # combined_args is an intermediate dictionary, combining command-line and config parameters.
@@ -1294,6 +1297,8 @@ class DocGenerator:
                 'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
                 'combine_multiple_refs', 'omit_version_in_headers',
                 'supplement_md_dir',
+                'table_formats',
+                'remove_blanks',
                 'description_overrides' # this is for property_index mode only
                 ]
             for x in config_only:
@@ -1601,7 +1606,6 @@ def main():
 
     config = DocGenerator.combine_configs(command_line_args=command_line_args, config_data=config_data,
                                               supp_config_data=supp_config_data)
-
     try:
         outfile = open(config['outfile_name'], 'w', encoding="utf8")
     except (OSError) as ex:

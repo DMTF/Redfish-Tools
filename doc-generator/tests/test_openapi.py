@@ -185,8 +185,8 @@ def test_action_uris (mockRequest):
 
     # This used to be more interesting.
     expected_strings = [
-        "{Base URI of target resource}/Actions/Bios.ChangePassword",
-        "{Base URI of target resource}/Actions/Bios.ResetBios",
+        "*{Base URI of target resource}*/Actions/Bios.ChangePassword",
+        "*{Base URI of target resource}*/Actions/Bios.ResetBios",
         ]
 
     for x in expected_strings:

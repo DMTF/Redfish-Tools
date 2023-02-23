@@ -102,7 +102,7 @@ class FormatUtils():
 
     def add_table_caption(self, caption):
         self.last_caption = caption
-        return _('Table') + ': ' + caption + ' \\label{Table_TBL_nn}'
+        return _('\nTable') + ': ' + caption + ' \\label{Table_TBL_nn}\n'
 
     def add_table_reference(self, lead_in):
         return lead_in + _('Table') + ' \\ref{Table_TBL_nn++}' + '.'

@@ -270,7 +270,7 @@ def test_supplement_output_from_files (mockRequest):
         "INTRO FOR Endpoint schema.\n\nThis one happens to be multiple lines.",
         '```json\n{ "payload": "A chunk of JSON from the md supplement" }\n```',
         "PROPERTY DETAILS for HostReservationMemoryBytes",
-        '#### HostReservationMemoryBytes:', # This is a Property Details heading
+        '#### HostReservationMemoryBytes', # This is a Property Details heading
         ]
     for es in expected_strings:
         assert es in output
