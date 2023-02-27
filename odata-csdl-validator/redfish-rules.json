@@ -1,0 +1,9 @@
+{
+    "AppliesToOther": {
+        "InsertRestrictions": [ "EntityType" ],
+        "DeleteRestrictions": [ "EntityType" ],
+        "UpdateRestrictions": [ "EntityType" ],
+        "IsURL": [ "Parameter" ],
+        "Unit": [ "Parameter" ]
+    }
+}

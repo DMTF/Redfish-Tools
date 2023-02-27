@@ -1,16 +1,16 @@
 #! /usr/bin/python3
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
+# Copyright 2016-2023 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
-CSDL Validator version 0.1
+CSDL Validator
 
 File : odata_validator.py
 
 Brief : This file contains the definitions and functionalities for OData
-        validation. It provides the ability to crawl through OData Metadata
-        files, parse them and validate that they are OData 4.0 compliant.
+        validation. It provides the ability to crawl through OData CSDL
+        files, parse them and validate that they are OData 4.0 comformant.
 """
 
 import xml.etree.ElementTree as ET
@@ -26,10 +26,12 @@ import argparse
 import urllib.request
 from urllib.parse import urljoin
 import errno
+import json
 
 global_namespaces = {}
 local_directory = None
 service_path = None
+rules_config = {}
 
 CSDL_NAMES = ['Edmx', 'DataServices', 'Reference', 'Include', 'IncludeAnnotations', 'Schema',
               'Property', 'NavigationProperty', 'ReferentialConstraint', 'OnDelete', 'EntityType',
@@ -972,14 +974,7 @@ class Element(object):
         # From the CSDL Spec: As the intended usage may evolve over time, clients SHOULD be prepared for any annotation
         # to be applied to any element.
 
-        # This definition inserts expected usage based on modeling patterns in Redfish
-        applies_to_mod_set = {
-            "InsertRestrictions": "EntityType", # POST restrictions for a resource
-            "DeleteRestrictions": "EntityType", # DELETE restrictions for a resource
-            "UpdateRestrictions": "EntityType", # PATCH/PUT restrictions for a resource
-            "IsURL": "Parameter",               # String action parameters that are expected to be URIs
-            "Unit": "Parameter"                 # Numeric action parameters with a unit of measure
-        }
+        # The rules configuration file can specify additional AppliesTo usage beyond what's found in schema
 
         for annotation in self.annotation:
             term = self.find_in_scope(annotation.term)
@@ -988,9 +983,10 @@ class Element(object):
                 for element in term.applies_to:
                     if type(self).__name__ == element:
                         found_element = True
-                if term.name in applies_to_mod_set:
-                    if type(self).__name__ == applies_to_mod_set[term.name]:
-                        found_element = True
+                if "AppliesToOther" in rules_config:
+                    if term.name in rules_config["AppliesToOther"]:
+                        if type(self).__name__ in rules_config["AppliesToOther"][term.name]:
+                            found_element = True
                 if not found_element:
                     raise SchemaError("Term {} does not apply to this type".format(term.name))
 
@@ -5623,11 +5619,17 @@ def main():
     """
 
     parser = argparse.ArgumentParser(description="OData Validation Tool")
-    parser.add_argument(
-        "MetaData",
-        help="Path to the metadata to be parsed, could be a url (start with http), file or folder")
-
+    parser.add_argument("--config", "-C", type=str, help="Configuration file containing additional configuration for CSDL rules")
+    parser.add_argument("MetaData", help="Path to the CSDL to test; could be a url (starting with http), file, or folder")
     args = parser.parse_args()
+
+    global rules_config
+    if args.config is not None:
+        try:
+            with open(args.config) as config_file:
+                rules_config = json.load(config_file)
+        except:
+            print("Could not open/load {}; proceeding with default CSDL rules".format(args.config))
 
     if args.MetaData.lower().startswith('http') or os.path.isfile(args.MetaData):
         #Metadata points to a uri or a local file
