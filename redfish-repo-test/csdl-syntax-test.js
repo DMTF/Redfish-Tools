@@ -37,8 +37,8 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
 }
 
 /***************** Allow lists ******************************/
-//Units that don't exist in UCUM
-const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'L/min', 'kJ/kg/K', 'kg/m3', 'm3/min' ];
+//Units that don't exist in UCUM or are complicated to the point where validUnitsTest needs additional work
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3' ];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -455,6 +455,7 @@ function isLink(key) {
 
 function validUnitsTest(csdl) {
   let measures = CSDL.search(csdl, 'Annotation', 'Measures.Unit');
+  let suffixes = [ '/s', '/min' ];
   if(measures.length === 0) {
     return;
   }
@@ -463,21 +464,23 @@ function validUnitsTest(csdl) {
     if(unitsAllowList.indexOf(unitName) !== -1) {
       continue;
     }
-    let pos = unitName.indexOf('/s');
-    if(pos !== -1) {
-      unitName = unitName.substring(0, pos);
+    for(let j = 0; j < suffixes.length; j++) {
+      let pos = unitName.indexOf(suffixes[j]);
+      if(pos !== -1) {
+        unitName = unitName.substring(0, pos);
+      }
     }
     if(Object.keys(ucum.units).includes(unitName)) {
       //Have unit, all good...
-      return;
+      continue;
     }
     else if(Object.keys(ucum.prefixes).includes(unitName[0]) && Object.keys(ucum.units).includes(unitName.substring(1))) {
       //Have prefix and unit, all good...
-      return;
+      continue;
     }
     else if(Object.keys(ucum.prefixes).includes(unitName.substring(0,2)) && Object.keys(ucum.units).includes(unitName.substring(2))) {
       //Have prefix and unit, all good...
-      return;
+      continue;
     }
     throw new Error('Unit name '+unitName+' is not a valid UCUM measure');
   }
