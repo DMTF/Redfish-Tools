@@ -37,8 +37,8 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
 }
 
 /***************** Allow lists ******************************/
-//Units that don't exist in UCUM
-const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min'];
+//Units that don't exist in UCUM or are complicated to the point where validUnitsTest needs additional work
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3' ];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -75,7 +75,7 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB'};
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB', 'kg/m3': 'KgPerCubicMeter', 'L/min': 'LitersPerMinute', 'kJ/kg/K': 'kJoulesPerKgK', 'kPa': 'kPa'};
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
@@ -94,13 +94,13 @@ const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
                                   'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml',
                                   'StorageReplicaInfo_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
                                   'VolumeCollection_v1.xml' ];
-const ContosoSchemaFileList = [ 'ContosoAccountService_v1.xml', 'ContosoServiceRoot_v1.xml', 'TurboencabulatorService_v1.xml' ];
-const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'TurboencabulatorService', 'LineOfService' ];
+const ContosoSchemaFileList = [ 'ContosoAccountService_v1.xml', 'ContosoServiceRoot_v1.xml', 'ContosoTurboencabulatorService_v1.xml' ];
+const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'ContosoTurboencabulatorService', 'LineOfService' ];
 const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X/StorageGroups/10", "https://10.23.11.12/redfish/v1/Systems/FileServer/StorageServices/X/StorageGroups/10", "https://10.1.1.13/redfish/v1/StorageServices/A/Volume/ABC", "https://10.1.22.18/redfish/v1/StorageServices/X/Volume/A1x2", "https://10.1.22.18/redfish/v1/StorageServices/X/Volumes/A1x2", "http://hf.contoso.org/redfish/v1/Systems/FileServer/StorageServices/2/StorageGroups/2","https://10.12.1.12/redfish/v1/StorageServices/2/Volumes/5"];
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
-const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory' ]
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
@@ -455,6 +455,7 @@ function isLink(key) {
 
 function validUnitsTest(csdl) {
   let measures = CSDL.search(csdl, 'Annotation', 'Measures.Unit');
+  let suffixes = [ '/s', '/min' ];
   if(measures.length === 0) {
     return;
   }
@@ -463,21 +464,23 @@ function validUnitsTest(csdl) {
     if(unitsAllowList.indexOf(unitName) !== -1) {
       continue;
     }
-    let pos = unitName.indexOf('/s');
-    if(pos !== -1) {
-      unitName = unitName.substring(0, pos);
+    for(let j = 0; j < suffixes.length; j++) {
+      let pos = unitName.indexOf(suffixes[j]);
+      if(pos !== -1) {
+        unitName = unitName.substring(0, pos);
+      }
     }
     if(Object.keys(ucum.units).includes(unitName)) {
       //Have unit, all good...
-      return;
+      continue;
     }
     else if(Object.keys(ucum.prefixes).includes(unitName[0]) && Object.keys(ucum.units).includes(unitName.substring(1))) {
       //Have prefix and unit, all good...
-      return;
+      continue;
     }
     else if(Object.keys(ucum.prefixes).includes(unitName.substring(0,2)) && Object.keys(ucum.units).includes(unitName.substring(2))) {
       //Have prefix and unit, all good...
-      return;
+      continue;
     }
     throw new Error('Unit name '+unitName+' is not a valid UCUM measure');
   }
