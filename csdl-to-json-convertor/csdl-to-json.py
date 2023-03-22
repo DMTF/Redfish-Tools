@@ -1232,19 +1232,19 @@ class CSDLToJSON:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "-?P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?"
+            pattern = "^P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?$"
         elif type == "Edm.TimeOfDay":
             if is_nullable:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?"
+            pattern = "^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?$"
         elif type == "Edm.Guid":
             if is_nullable:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
+            pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
         elif type == "Edm.Boolean":
             if is_nullable:
                 json_type = [ "boolean", "null" ]
