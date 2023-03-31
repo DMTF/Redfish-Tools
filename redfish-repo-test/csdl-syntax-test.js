@@ -72,7 +72,7 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests', 'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS',
                                           'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical',
                                           'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated', 'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized',
-                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh'];
+                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh','PercentageUsed'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
                               '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB', 'kg/m3': 'KgPerCubicMeter', 'L/min': 'LitersPerMinute', 'kJ/kg/K': 'kJoulesPerKgK', 'kPa': 'kPa'};
@@ -100,7 +100,7 @@ const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
-const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop' ]
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop', 'StorageController', 'StorageControllerMetrics' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
