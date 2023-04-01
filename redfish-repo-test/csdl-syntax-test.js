@@ -38,7 +38,7 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
 
 /***************** Allow lists ******************************/
 //Units that don't exist in UCUM or are complicated to the point where validUnitsTest needs additional work
-const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3' ];
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s' ];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -72,7 +72,7 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests', 'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS',
                                           'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical',
                                           'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated', 'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized',
-                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh','PercentageUsed'];
+                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh','PercentageUsed', 'ReadIOKiBytes', 'WriteIOKiBytes'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
                               '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB', 'kg/m3': 'KgPerCubicMeter', 'L/min': 'LitersPerMinute', 'kJ/kg/K': 'kJoulesPerKgK', 'kPa': 'kPa'};
@@ -90,10 +90,10 @@ const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
                                   'IOConnectivityLineOfService_v1.xml', 'IOConnectivityLoSCapabilities_v1.xml', 'IOPerformanceLineOfService_v1.xml',
                                   'IOPerformanceLoSCapabilities_v1.xml', 'IOStatistics_v1.xml', 'LineOfService_v1.xml', 'LineOfServiceCollection_v1.xml',
                                   'NVMeDomain_v1.xml',
-                                  'NVMeDomainCollection_v1.xml',
+                                  'NVMeDomainCollection_v1.xml', 'NVMeFirmwareImage_v1.xml',
                                   'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml',
                                   'StorageReplicaInfo_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
-                                  'VolumeCollection_v1.xml' ];
+                                  'VolumeCollection_v1.xml', 'VolumeMetrics_v1.xml' ];
 const ContosoSchemaFileList = [ 'ContosoAccountService_v1.xml', 'ContosoServiceRoot_v1.xml', 'ContosoTurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'ContosoTurboencabulatorService', 'LineOfService' ];
 const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X/StorageGroups/10", "https://10.23.11.12/redfish/v1/Systems/FileServer/StorageServices/X/StorageGroups/10", "https://10.1.1.13/redfish/v1/StorageServices/A/Volume/ABC", "https://10.1.22.18/redfish/v1/StorageServices/X/Volume/A1x2", "https://10.1.22.18/redfish/v1/StorageServices/X/Volumes/A1x2", "http://hf.contoso.org/redfish/v1/Systems/FileServer/StorageServices/2/StorageGroups/2","https://10.12.1.12/redfish/v1/StorageServices/2/Volumes/5"];
@@ -105,22 +105,30 @@ const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.x
 const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 const NoURISSchemaList = ['ActionInfo', 'AttributeRegistry', 'Chipwise', 'CollectionCapabilities', 'ContosoAccountService', 'ContosoServiceRoot', 'Event', 'IPAddresses', 'Manifest', 'Message', 'MessageRegistry', 
-                          'MessageRegistryCollection', 'PhysicalContext', 'PrivilegeRegistry', 'Privileges', 'Protocol', 'Resource', 'Redundancy', 'Service',  'Schedule', 'Settings'];
+                          'MessageRegistryCollection', 'PhysicalContext', 'PrivilegeRegistry', 'Privileges', 'Protocol', 'Resource', 'Redundancy', 'Service',  'Schedule', 'Settings', 'FeaturesRegistry', 'IOStatistics', 'LineOfService', 'SpareResourceSet', 'StorageReplicaInfo'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
                                  'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
                                  'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
                                  'RegistryEntries', 'ResourceBlockLimits', 'Status', 'Thresholds', 'UpdateParameters', 'VoltageSensors'];
-const SchemasWithBadReleaseStrings = ['EndpointGroup.v1_0_0', 'EndpointGroup.v1_1_0', 'EndpointGroup.v1_2_0'];
+const SchemasWithBadReleaseStrings = ['EndpointGroup.v1_0_0', 'EndpointGroup.v1_1_0', 'EndpointGroup.v1_2_0', 'ConsistencyGroup.v1_1_0',
+                                    'DataProtectionLoSCapabilities.v1_2_0', 'DataSecurityLoSCapabilities.v1_2_0', 'DataStorageLineOfService.v1_2_0',
+                                    'DataStorageLoSCapabilities.v1_2_0', 'FeaturesRegistry.v1_1_0','FileShare.v1_2_0', 'FileSystem.v1_2_0',
+                                    'IOConnectivityLoSCapabilities.v1_2_0', 'IOPerformanceLoSCapabilities.v1_3_0', 'LineOfService.v1_1_0', 'SpareResourceSet.v1_0_0',
+                                    'StorageGroup.v1_2_0','StorageGroup.v1_5_0', 'StoragePool.v1_2_0', 'StorageService.v1_0_0', 'StorageService.v1_2_0',
+                                    'StorageService.v1_5_0' ];
 //All of the entries in the following object were errors and should only be allowed in the file they are currently present in
 const PluralEntitiesBadAllow = {
   'AttributeRegistry_v1.xml': ['Dependencies', 'Menus', 'SupportedSystems'],
   'ComputerSystem_v1.xml': ['TrustedModules'],
   'Drive_v1.xml': ['Operations'],
+  'HostedStorageServices_v1.xml': ['HostedStorageServices'],
+  'IOStatistics_v1.xml': ['IOStatistics'],
   'MemoryChunks_v1.xml': ['MemoryChunks'],
   'NetworkAdapter_v1.xml': ['Controllers'],
   'NetworkDeviceFunction_v1.xml': ['BootTargets'],
   'StorageController_v1.xml': ['ANACharacteristics'],
-  'Triggers_v1.xml': ['Triggers']
+  'Triggers_v1.xml': ['Triggers'],
+  'Volume_v1.xml': ['NamespaceFeatures']
 };
 const CommonWritableObjects = ['IPAddresses.IPv4Address', 'IPAddresses.IPv6StaticAddress', 'IPAddresses.IPv6GatewayStaticAddress', 'Redundancy.RedundantGroup', 'Schedule.Schedule', 'VLanNetworkInterface.VLAN']
 const SkipPropertyTypeCheck = {
@@ -1520,7 +1528,7 @@ function complexTypeCheck(propType, propValue, propName, type) {
       //TODO Make sure all AllowableValues are valid
     }
     else if(childPropName.indexOf('@Redfish.') !== -1) {
-      //TODO Check other annotations; for now, just let them pass
+      //TODO Check other annotations; for now, just let them passUI
     }
     else {
       checkProperty(childPropName, realType, propValue[childPropName], type, propName);
