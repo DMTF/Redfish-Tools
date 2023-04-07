@@ -1136,6 +1136,10 @@ class CSDLToJSON:
             if term == "OData.AutoExpand":
                 json_type_def["autoExpand"] = True
 
+            # URI Segment
+            if term == "Redfish.URISegment":
+                json_type_def["uriSegment"] = self.get_attrib( annotation, "String" )
+
             # Filter
             if term == "Redfish.Filter":
                 json_type_def["filter"] = self.get_attrib( annotation, "String" )
