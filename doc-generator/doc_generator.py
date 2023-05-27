@@ -705,7 +705,7 @@ class DocGenerator:
                 min_version = schema_profile.get('MinVersion')
                 if min_version:
                     if version:
-                        property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s'
+                        property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s)'
                             % {'minversion': min_version, 'version': version})
                     else:
                         # this is unlikely
@@ -1392,7 +1392,7 @@ class DocGenerator:
             profile_doc = os.path.normpath(combined_args['profile_doc'])
             errors = []
             try:
-                profile_doc_local = os.path.normpath(os.path.join(config_data['config_dir'], subset_doc))
+                profile_doc_local = os.path.normpath(os.path.join(config_data['config_dir'], profile_doc))
                 profile = open(profile_doc_local, 'r', encoding="utf8")
                 profile.close()
                 config['profile_doc'] = profile_doc_local
