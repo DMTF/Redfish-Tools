@@ -2309,7 +2309,7 @@ class DocFormatter:
         Returns None if no data is present ({} is a valid data-present result)."""
 
         prop_profile = None
-        if prop_path[0] == 'Actions':
+        if len(prop_path) and prop_path[0] == 'Actions':
             section = 'ActionRequirements'
 
         if self.config.get('profile_resources'):
