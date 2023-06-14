@@ -851,6 +851,13 @@ class DocFormatter:
             [preamble, collection_file_name] = x.rsplit('/', 1)
             [collection_name, rest] = collection_file_name.split('.', 1)
             uris = sorted(self.property_data[x].get('uris', []), key=str.lower)
+
+            # append Deprecated text for any deprecated URIs
+            urisDeprecated = self.property_data[x].get('urisDeprecated', [])
+            for i in range(len(uris)):
+                if uris[i] in urisDeprecated:
+                    uris[i] += _(" (deprecated)")
+
             data[collection_name] = uris
         return data
 
