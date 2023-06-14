@@ -949,7 +949,7 @@ class MarkdownGenerator(DocFormatter):
         has_resource_block_uris = False
         uri_block = self.format_head_three(_('URIs'), self.level)
         for uri in sorted(uris, key=str.lower):
-            if '{ResourceBlockId}/' in uri:   # trim out resource block-related URIs
+            if (not self.config.get('normative')) and ('{ResourceBlockId}/' in uri):   # trim out resource block-related URIs
                 has_resource_block_uris = True
                 continue
             if uri in urisDeprecated:

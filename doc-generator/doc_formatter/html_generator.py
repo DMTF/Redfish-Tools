@@ -980,10 +980,10 @@ pre.code{
             if uris[i] in urisDeprecated:
                 uris[i] += _(" (deprecated)")
         
-        # if resource block-related URIs are in the list, omit them for brevity
+        # if resource block-related URIs are in the list, omit them for brevity in non-normative output
         has_resource_block_uris = False
         for uri in sorted(uris, key=str.lower):
-            if '{ResourceBlockId}/' in uri:
+            if (not self.config.get('normative')) and ('{ResourceBlockId}/' in uri):
                 has_resource_block_uris = True
             else:
                 uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
