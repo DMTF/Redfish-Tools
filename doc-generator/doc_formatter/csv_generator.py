@@ -288,7 +288,7 @@ class CsvGenerator(DocFormatter):
         pass
 
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ CSV omits URIs """
         pass
 

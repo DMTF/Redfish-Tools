@@ -972,11 +972,26 @@ pre.code{
         self.this_section['deprecation_text'] = depr_text
 
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ Add the URIs (which should be a list) """
         uri_strings = []
+        
+        for i in range(len(uris)):
+            if uris[i] in urisDeprecated:
+                uris[i] += _(" (deprecated)")
+        
+        # if resource block-related URIs are in the list, omit them for brevity
+        has_resource_block_uris = False
         for uri in sorted(uris, key=str.lower):
-            uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
+            if 'ResourceBlocks' in uri:
+                has_resource_block_uris = True
+            else:
+                uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
+
+        # if resource block-related URIs have been trimmed, add a note 
+        if has_resource_block_uris:
+            uri_strings.append('<li class="hanging-indent">' +
+                _("* Note: Resource block-related URIs have been omitted from this list") + '\n</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h4>' + _('URIs:') + '</h4>' + uri_block

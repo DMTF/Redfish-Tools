@@ -407,6 +407,7 @@ class DocGenerator:
                     warnings.warn('Unable to process files for %(uri)s' % {'uri': normalized_uri})
                 continue
             data['uris'] = schema_data[normalized_uri].get('_uris', [])
+            data['urisDeprecated'] = schema_data[normalized_uri].get('_urisDeprecated', [])
 
             if normalized_uri.endswith('Collection.json'):
                 [preamble, collection_name] = normalized_uri.rsplit('/', 1)
@@ -605,6 +606,10 @@ class DocGenerator:
             if 'uris' in data:
                 # Stash these in the unversioned schema_data.
                 all_schemas[normalized_uri]['_uris'] = data['uris']
+            
+            if 'urisDeprecated' in data:
+                # Stash the deprecated URIs as well
+                all_schemas[normalized_uri]['_urisDeprecated'] = data['urisDeprecated']
 
             if len(ref_files):
                 # Add the _is_versioned_schema and  is_collection_of hints to each ref object

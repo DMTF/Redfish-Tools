@@ -944,11 +944,22 @@ class MarkdownGenerator(DocFormatter):
         self.this_section['deprecation_text'] = depr_text + '\n'
 
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ Add the URIs (which should be a list) """
+        has_resource_block_uris = False
         uri_block = self.format_head_three(_('URIs'), self.level)
         for uri in sorted(uris, key=str.lower):
-            uri_block += "\n" + self.format_uri(uri) + "<br>"
+            if 'ResourceBlocks' in uri:   # trim out resource block-related URIs
+                has_resource_block_uris = True
+                continue
+            if uri in urisDeprecated:
+                uri_block += "\n" + self.format_uri(uri) + _(" (deprecated)") +"<br>"
+            else:
+                uri_block += "\n" + self.format_uri(uri) + "<br>"
+
+        if has_resource_block_uris:  # if URIs were trimmed, add a note
+            uri_block += "\n" + _("* Note: Resource block-related URIs have been omitted from this list") + "<br>"
+            
         self.this_section['uris'] = uri_block + "\n"
 
 

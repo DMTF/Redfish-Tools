@@ -178,7 +178,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ Add the uris """
         raise NotImplementedError
 
@@ -586,7 +586,7 @@ class DocFormatter:
                 self.add_deprecation_text(details['deprecated'])
 
             if len(uris):
-                self.add_uris(uris)
+                self.add_uris(uris, details['urisDeprecated'])
                 self.current_uris = uris
             else:
                 self.current_uris = []
