@@ -1223,6 +1223,7 @@ class DocGenerator:
             'excluded_properties': [],
             'excluded_by_match': [],
             'excluded_schemas': [],
+            'excluded_schema_uris': [],
             'excluded_schemas_by_match': [],
             'excluded_pattern_props': [],
             'description_overrides': {},
@@ -1301,7 +1302,7 @@ class DocGenerator:
                 'actions_in_property_table', 'html_title',
                 'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
                 'combine_multiple_refs', 'omit_version_in_headers',
-                'supplement_md_dir',
+                'supplement_md_dir', 'excluded_schema_uris',
                 'table_formats',
                 'remove_blanks',
                 'description_overrides' # this is for property_index mode only

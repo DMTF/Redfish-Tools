@@ -946,19 +946,25 @@ class MarkdownGenerator(DocFormatter):
 
     def add_uris(self, uris, urisDeprecated):
         """ Add the URIs (which should be a list) """
-        has_resource_block_uris = False
+        has_excluded_uris = False
+        
         uri_block = self.format_head_three(_('URIs'), self.level)
         for uri in sorted(uris, key=str.lower):
-            if (not self.config.get('normative')) and ('{ResourceBlockId}/' in uri):   # trim out resource block-related URIs
-                has_resource_block_uris = True
+            exclude_this_uri = False
+            for xuri in self.config.get('excluded_schema_uris'):
+                if xuri in uri:
+                    exclude_this_uri = True
+                    has_excluded_uris = True
+            if exclude_this_uri:
                 continue
+            
             if uri in urisDeprecated:
                 uri_block += "\n" + self.format_uri(uri) + _(" (deprecated)") +"<br>"
             else:
                 uri_block += "\n" + self.format_uri(uri) + "<br>"
 
-        if has_resource_block_uris:  # if URIs were trimmed, add a note
-            uri_block += "\n\* " + _("Note: Resource block-related URIs have been omitted from this list") + "<br>"
+        if has_excluded_uris:  # if URIs were trimmed, add a note
+            uri_block += "\n\* " + _("Note: Some URIs omitted for brevity, refer to schema for the complete list.") + "<br>"
             
         self.this_section['uris'] = uri_block + "\n"
 
