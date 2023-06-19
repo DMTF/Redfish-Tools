@@ -982,7 +982,7 @@ pre.code{
         
         # exclude URIs from the list for brevity
         has_excluded_uris = False
-        excluded_uris = self.config.get('excluded_schema_uris')
+        excluded_uris = self.config.get('excluded_schema_uris', [])
         for uri in sorted(uris, key=str.lower):
             exclude_this_uri = False
             for xuri in excluded_uris:

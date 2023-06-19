@@ -946,12 +946,11 @@ class MarkdownGenerator(DocFormatter):
 
     def add_uris(self, uris, urisDeprecated):
         """ Add the URIs (which should be a list) """
-        has_excluded_uris = False
-        
+        has_excluded_uris = False    
         uri_block = self.format_head_three(_('URIs'), self.level)
         for uri in sorted(uris, key=str.lower):
             exclude_this_uri = False
-            for xuri in self.config.get('excluded_schema_uris'):
+            for xuri in self.config.get('excluded_schema_uris', []):
                 if xuri in uri:
                     exclude_this_uri = True
                     has_excluded_uris = True
