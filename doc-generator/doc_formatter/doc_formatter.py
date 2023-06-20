@@ -1212,6 +1212,10 @@ class DocFormatter:
             warnings.warn("filter_props_by_profile was called with no profile data")
             return prop_names
 
+        # Handle special case for @odata.id for link properties, always include it
+        if prop_names == ['@odata.id']:
+            return(prop_names)
+
         if profile.get('PropertyRequirements') is None and not is_action:
             # if a resource is specified with no PropertyRequirements, include them all...
             # but do omit "Actions" if there are no ActionRequirements (profile mode).
