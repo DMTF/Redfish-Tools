@@ -1193,6 +1193,10 @@ class DocFormatter:
             warnings.warn("filter_props_by_subset was called with no subset data")
             return prop_names
 
+        # Handle special case for @odata.id for link properties, always include it
+        if prop_names == ['@odata.id']:
+            return(prop_names)
+
         # Actions have Parameters, properties have Properties.
         subsection = 'Properties'
         if 'Parameters' in subset:
@@ -2002,7 +2006,7 @@ class DocFormatter:
                     profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
 
                 if profile:
-                    prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
+                    prop_names = self.filter_props_by_profile(prop_names, profile, [], is_action)
                 prop_names.sort(key=str.lower)
 
             elif self.config.get('subset_mode'):
@@ -2316,7 +2320,7 @@ class DocFormatter:
         Returns None if no data is present ({} is a valid data-present result)."""
 
         prop_profile = None
-        if prop_path[0] == 'Actions':
+        if len(prop_path) and prop_path[0] == 'Actions':
             section = 'ActionRequirements'
 
         if self.config.get('profile_resources'):
