@@ -172,7 +172,7 @@ class JSONToYAML:
         """
         try:
             with open( filename ) as yaml_file:
-                yaml_data = yaml.load( yaml_file )
+                yaml_data = yaml.load( yaml_file, Loader=yaml.Loader )
         except:
             print( "ERROR: Could not open {}".format( filename ) )
             return
