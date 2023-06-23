@@ -541,7 +541,7 @@ table.properties{
         """ This is for the schema description. We don't actually use this. """
         pass
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ omit URIs """
         pass
 

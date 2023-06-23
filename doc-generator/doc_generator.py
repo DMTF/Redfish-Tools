@@ -407,6 +407,7 @@ class DocGenerator:
                     warnings.warn('Unable to process files for %(uri)s' % {'uri': normalized_uri})
                 continue
             data['uris'] = schema_data[normalized_uri].get('_uris', [])
+            data['urisDeprecated'] = schema_data[normalized_uri].get('_urisDeprecated', [])
 
             if normalized_uri.endswith('Collection.json'):
                 [preamble, collection_name] = normalized_uri.rsplit('/', 1)
@@ -605,6 +606,10 @@ class DocGenerator:
             if 'uris' in data:
                 # Stash these in the unversioned schema_data.
                 all_schemas[normalized_uri]['_uris'] = data['uris']
+            
+            if 'urisDeprecated' in data:
+                # Stash the deprecated URIs as well
+                all_schemas[normalized_uri]['_urisDeprecated'] = data['urisDeprecated']
 
             if len(ref_files):
                 # Add the _is_versioned_schema and  is_collection_of hints to each ref object
@@ -1218,6 +1223,7 @@ class DocGenerator:
             'excluded_properties': [],
             'excluded_by_match': [],
             'excluded_schemas': [],
+            'excluded_schema_uris': [],
             'excluded_schemas_by_match': [],
             'excluded_pattern_props': [],
             'description_overrides': {},
@@ -1296,7 +1302,7 @@ class DocGenerator:
                 'actions_in_property_table', 'html_title',
                 'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
                 'combine_multiple_refs', 'omit_version_in_headers',
-                'supplement_md_dir',
+                'supplement_md_dir', 'excluded_schema_uris',
                 'table_formats',
                 'remove_blanks',
                 'description_overrides' # this is for property_index mode only
