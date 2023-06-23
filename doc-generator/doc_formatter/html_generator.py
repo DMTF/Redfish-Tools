@@ -972,11 +972,30 @@ pre.code{
         self.this_section['deprecation_text'] = depr_text
 
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ Add the URIs (which should be a list) """
         uri_strings = []
+        
+        for i in range(len(uris)):
+            if uris[i] in urisDeprecated:
+                uris[i] += _(" (deprecated)")
+        
+        # exclude URIs from the list for brevity
+        has_excluded_uris = False
+        excluded_uris = self.config.get('excluded_schema_uris', [])
         for uri in sorted(uris, key=str.lower):
-            uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
+            exclude_this_uri = False
+            for xuri in excluded_uris:
+                if xuri in uri:
+                    exclude_this_uri = True
+                    has_excluded_uris = True
+            if not exclude_this_uri:
+                uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
+
+        # if excluded URIs have been trimmed, add a note 
+        if has_excluded_uris:
+            uri_strings.append('<li class="hanging-indent">' + "* " +
+                _("Note: Some URIs omitted for brevity, refer to schema for the complete list.") + '\n</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h4>' + _('URIs:') + '</h4>' + uri_block
