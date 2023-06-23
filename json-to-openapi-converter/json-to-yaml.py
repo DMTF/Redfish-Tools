@@ -179,6 +179,11 @@ class JSONToYAML:
 
         # Go through each URI
         for uri in yaml_data["paths"]:
+            # Don't add $metadata or odata; these are not formatted like other responses
+            # These will be added back automatically later in the tool
+            if uri == "/redfish/v1/$metadata" or uri == "/redfish/v1/odata":
+                continue
+
             if "get" in yaml_data["paths"][uri]:
                 # This is a resource; copy data to the URI cache
                 self.uri_cache[uri] = {}
