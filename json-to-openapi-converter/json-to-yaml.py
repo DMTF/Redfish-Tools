@@ -180,6 +180,10 @@ class JSONToYAML:
         # Go through each URI
         for uri in yaml_data["paths"]:
             if "get" in yaml_data["paths"][uri]:
+                if "application/json" not in yaml_data["paths"][uri]["get"]["responses"]["200"]["content"]:
+                    # Skip non-JSON URIs
+                    # So far this is limited to /redfish/v1/$metadata, which will be added back in at the end of the conversion
+                    continue
                 # This is a resource; copy data to the URI cache
                 self.uri_cache[uri] = {}
                 self.uri_cache[uri]["reference"] = yaml_data["paths"][uri]["get"]["responses"]["200"]["content"]["application/json"]["schema"]["$ref"]
