@@ -100,7 +100,7 @@ const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
-const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop', 'StorageController', 'StorageControllerMetrics' ]
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop', 'StorageController', 'StorageControllerMetrics', 'AccountService' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
@@ -1285,7 +1285,7 @@ function validCSDLTypeInMockup(json, file) {
         if(namespace === '') {
           throw new Error('Cannot get type of "' + typeLookup + '"');
         }
-        typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName, 1, 15)
+        typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName)
       }
       let propType = CSDL.findByType({_options: options}, typeLookup);
       if(propType === null || propType === undefined) {
@@ -1348,7 +1348,7 @@ function validCSDLTypeInMockup(json, file) {
         if(namespace === '') {
           throw new Error('Cannot get type of "' + typeLookup + '"');
         }
-        typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName, 1, 15)
+        typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName)
       }
       let propType = CSDL.findByType({_options: options}, typeLookup);
       let propValue = json[propName];
@@ -1492,15 +1492,41 @@ function isIdInUri(id, uri) {
   return {uri: uri, extra: rest};
 }
 
-function getLatestTypeVersion(defaultType, namespace, type, majorVersion, minorVersion) {
+function getLatestTypeVersion(defaultType, namespace, type) {
   let schemas = options.cache.getSchemasThatStartWith(namespace+'.');
   schemas.sort((a, b) => {
-    if(a._Name > b._Name) {
+    let a_split = a._Name.split(/[v_]/)
+    let b_split = b._Name.split(/[v_]/)
+    for (let i = 1; i < 4; i++) {
+      a_split[i] = parseInt(a_split[i])
+      b_split[i] = parseInt(b_split[i])
+    }
+
+    // Compare major versions
+    if(a_split[1] > b_split[1]) {
       return -1;
     }
-    else if(a._Name < b._Name) {
+    else if(a_split[1] < b_split[1]) {
       return 1;
     }
+
+    // Compare minor versions
+    if(a_split[2] > b_split[2]) {
+      return -1;
+    }
+    else if(a_split[2] < b_split[2]) {
+      return 1;
+    }
+
+    // Compare errata versions
+    if(a_split[3] > b_split[3]) {
+      return -1;
+    }
+    else if(a_split[3] < b_split[3]) {
+      return 1;
+    }
+
+    // All equal
     return 0;
   });
   for(let i = 0; i < schemas.length; i++) {
@@ -1761,7 +1787,7 @@ function checkProperty(propName, CSDLType, propValue, parentType, parentPropName
       if(namespace === '') {
         throw new Error('Cannot get type of "' + typeLookup + '"');
       }
-      typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName, 1, 15)
+      typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName)
     }
     let propType = CSDL.findByType({_options: options}, typeLookup);
     if(typeof propType === 'string') {
