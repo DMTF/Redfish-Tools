@@ -27,7 +27,7 @@ ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDes
                              "excerpt", "excerptCopy", "excerptCopyOnly", "translation", "enumTranslations", "language", "uriSegment" ]
 
 # List of terms that are removed from the file
-REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter", "actionResponse" ]
+REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "urisDeprecated", "parameters", "requiredParameter", "actionResponse" ]
 
 # Responses allowed
 HEAD_RESPONSES = [ 204 ]
@@ -421,6 +421,22 @@ class JSONToYAML:
             json_data: The JSON object to process
         """
 
+        # Remove "anyOf" terms
+        if "anyOf" in json_data:
+            # Two patterns we follow for "anyOf" usage:
+            # 1) Arrays to show an item can be a particular definition or null
+            # In this case, we need to use the OpenAPI "nullable" term
+            if json_data["anyOf"][-1] == { "type": "null" }:
+                json_data["$ref"] = json_data["anyOf"][0]["$ref"]
+                json_data.pop( "anyOf" )
+                json_data["nullable"] = True
+            # 2) Abstract base definitions that point to every versioned definition
+            # Keeping this causes significant client code bloat, so just use the latest version
+            else:
+                for definition in json_data["anyOf"][-1]:
+                    json_data[definition] = json_data["anyOf"][-1][definition]
+                json_data.pop( "anyOf" )
+
         # Perform one for one replacements (meaning "term" becomes "x-term")
         for replacement in ONE_FOR_ONE_REPLACEMENTS:
             if replacement in json_data:
@@ -460,29 +476,6 @@ class JSONToYAML:
         if "type" in json_data:
             if json_data["type"] == "integer":
                 json_data["format"] = "int64"
-
-        # Update anyOf to remove null types; OpenAPI defines a "nullable" term
-        if "anyOf" in json_data:
-            obj_count = 0
-            is_nullable = False
-            for i, item in enumerate( json_data["anyOf"] ):
-                if item == { "type": "null" }:
-                    is_nullable = True
-                else:
-                    obj_count += 1
-            if ( obj_count == 1 ) and ( "$ref" in json_data["anyOf"][0] ) and is_nullable:
-                json_data["$ref"] = json_data["anyOf"][0]["$ref"]
-                json_data.pop( "anyOf" )
-                json_data["nullable"] = True
-
-        # Update Resource Collections to remove the anyOf term
-        for definition in json_data:
-            if self.is_collection( json_data[definition] ):
-                try:
-                    if len( json_data[definition]["anyOf"] ) == 2:
-                        json_data[definition] = json_data[definition]["anyOf"][1]
-                except:
-                    pass
 
         # Update $ref to use the form "/components/schemas/" instead of "/definitions/"
         if "$ref" in json_data:
