@@ -126,6 +126,7 @@ const PluralEntitiesBadAllow = {
   'MemoryChunks_v1.xml': ['MemoryChunks'],
   'NetworkAdapter_v1.xml': ['Controllers'],
   'NetworkDeviceFunction_v1.xml': ['BootTargets'],
+  'NVMeDomain_v1.xml': ['DomainContents'],
   'StorageController_v1.xml': ['ANACharacteristics'],
   'Triggers_v1.xml': ['Triggers'],
   'Volume_v1.xml': ['NamespaceFeatures']
