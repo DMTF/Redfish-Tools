@@ -486,7 +486,7 @@ class CSDLToJSON:
                 for schema in self.root.iter( ODATA_TAG_SCHEMA ):
                     namespace = self.get_attrib( schema, "Namespace" )
                     if namespace != self.namespace_under_process:
-                        if self.does_definition_apply( object, self.namespace_under_process ) and self.is_latest_errata( namespace ):
+                        if self.does_definition_apply( object, namespace ) and self.is_latest_errata( namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
@@ -677,7 +677,14 @@ class CSDLToJSON:
         name = self.get_attrib( action, "Name" )
         if not self.is_oem_action( action ):
             self.init_object_definition( "Actions", json_def )
+            # Find the binding parameter from the action to generate the name in JSON Schema; the name of the binding
+            # parameter is the first segment of the action name.  If not found, use the namespace under process to
+            # generate the name of the action.
             action_prop = "#" + self.namespace_under_process.split( "." )[0] + "." + name
+            for child in action:
+                if child.tag == ODATA_TAG_PARAMETER:
+                    action_prop = "#" + self.get_attrib( child, "Name" ) + "." + name
+                    break
             json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
 
         # Add version details to the Action
