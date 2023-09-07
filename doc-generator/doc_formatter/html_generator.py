@@ -1,6 +1,6 @@
 # Copyright Notice:
-# Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# Copyright 2016-2022 Distributed Management Task Force, Inc. All rights reserved.
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File : html_generator.py
@@ -186,15 +186,17 @@ pre.code{
 
         # strip_top_object is used for fragments, to allow output of just the properties
         # without the enclosing object:
-        if self.config.get('strip_top_object') and current_depth > 0:
-            indentation_string = '&nbsp;' * 6 * (current_depth -1)
-        else:
-            indentation_string = '&nbsp;' * 6 * current_depth
+        if self.config.get('remove_blanks') != True:
+            if self.config.get('strip_top_object') and current_depth > 0:
+                indentation_string = '&nbsp;' * 6 * (current_depth -1)
+            else:
+                indentation_string = '&nbsp;' * 6 * current_depth
 
         # If prop_path starts with Actions and is more than 1 deep, we are outputting for an Actions
         # section and should dial back the indentation by one level.
-        if len(prop_path) > 1 and prop_path[0] == 'Actions':
-            indentation_string = '&nbsp;' * 6 * (current_depth -1)
+        if self.config.get('remove_blanks') != True:
+            if len(prop_path) > 1 and prop_path[0] == 'Actions':
+                indentation_string = '&nbsp;' * 6 * (current_depth -1)
 
         collapse_array = False # Should we collapse a list description into one row? For lists of simple types
         has_enum = False
@@ -213,12 +215,22 @@ pre.code{
             translated_name = prop_info[0].get('translation')
             if 'format' in prop_info[0]:
                 format_annotation = prop_info[0]['format']
+            if 'pattern' in prop_info[0]:
+                if (prop_info[0].get('pattern') == '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') or (prop_info[0].get('pattern') == '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})'):
+                    format_annotation = 'uuid'
+                if (prop_info[0].get('pattern') == '^P(\\d+D)?(T(\\d+H)?(\\d+M)?(\\d+(.\\d+)?S)?)?$') or (prop_info[0].get('pattern') == '-?P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?'):
+                    format_annotation = 'duration'
         elif isinstance(prop_info, dict):
             has_enum = 'enum' in prop_info
             is_excerpt = prop_info.get('_is_excerpt')
             translated_name = prop_info.get('translation')
             if 'format' in prop_info:
                 format_annotation = prop_info['format']
+            if 'pattern' in prop_info:
+                if prop_info.get('pattern') == '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})':
+                    format_annotation = 'uuid'
+                if prop_info.get('pattern') == '-?P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?':
+                    format_annotation = 'duration'
 
         format_annotation = self.format_annotation_strings.get(format_annotation, format_annotation)
 
@@ -349,14 +361,7 @@ pre.code{
             if formatted_details['read_only']:
                 prop_access = '<nobr>' + _('read-only') + '</nobr>'
             else:
-                # Special case for subset mode; if profile indicates WriteRequirement === None (present and None),
-                # emit read-only.
-                if ((self.config.get('profile_mode') == 'subset')
-                        and formatted_details.get('profile_write_req')
-                        and (formatted_details['profile_write_req'] == 'None')):
-                        prop_access = '<nobr>' + _('read-only') + '</nobr>'
-                else:
-                    prop_access = '<nobr>' + _('read-write') + '</nobr>'
+                prop_access = '<nobr>' + _('read-write') + '</nobr>'
 
         if formatted_details['prop_required'] or formatted_details.get('required_parameter'):
             prop_access += ' <nobr>' + _('required') + '</nobr>'
@@ -372,7 +377,7 @@ pre.code{
         profile_access = self.format_base_profile_access(formatted_details)
 
         descr = formatted_details['descr']
-        if formatted_details['profile_purpose'] and (self.config.get('profile_mode') != 'subset'):
+        if formatted_details['profile_purpose'] and self.config.get('profile_mode'):
             descr += '<br>' + self.formatter.bold(_('Profile Purpose: %(purpose)s') % {'purpose': formatted_details['profile_purpose']})
 
         # Conditional Requirements
@@ -396,10 +401,10 @@ pre.code{
 
         row = []
         row.append(indentation_string + name_and_version)
-        if self.config.get('profile_mode') and self.config.get('profile_mode') != 'subset':
+        if self.config.get('profile_mode'):
             row.append(profile_access)
         row.append(prop_type)
-        if not self.config.get('profile_mode') or self.config.get('profile_mode') == 'subset':
+        if not self.config.get('profile_mode'):
             row.append(prop_access)
         row.append(descr)
 
@@ -426,7 +431,7 @@ pre.code{
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                    supplemental_details, parent_prop_info, profile=None):
+                                    supplemental_details, parent_prop_info, profile=None, subset=None):
         """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
@@ -439,6 +444,7 @@ pre.code{
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
         # Property enums, look for MinSupportValues/RecommendedValues.
         profile_mode = self.config.get('profile_mode')
+        subset_mode = self.config.get('subset_mode')
         if profile_mode:
             if profile is None:
                 profile = {}
@@ -451,14 +457,10 @@ pre.code{
             profile_all_values = (profile_values + profile_min_support_values + profile_parameter_values
                                   + profile_recommended_values)
 
-        # In subset mode, an action parameter with no Values (property) or ParameterValues (Action)
-        # means all values are supported.
-        # Otherwise, Values/ParameterValues specifies the set that should be listed.
-        if profile_mode == 'subset':
-            if len(profile_values):
-                enum = [x for x in enum if x in profile_values]
-            elif len(profile_parameter_values):
-                enum = [x for x in enum if x in profile_parameter_values]
+        if subset_mode and subset:
+            supported_values = subset.get('SupportedValues')
+            if supported_values:
+                enum = [x for x in enum if x in supported_values]
 
         if prop_description:
             contents.append(self.formatter.para(prop_description))
@@ -475,7 +477,7 @@ pre.code{
 
         if enum_details:
             headings = [prop_type, _('Description')]
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 headings.append(_('Profile Specifies'))
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -535,7 +537,7 @@ pre.code{
                         descr = self.formatter.italic(deprecated_descr)
                 cells = [enum_name, descr]
 
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     if enum_item in profile_values:
                         cells.append(self.text_map('Mandatory'))
                     elif enum_item in profile_min_support_values:
@@ -552,7 +554,7 @@ pre.code{
 
         elif enum:
             headings = [prop_type]
-            if profile_mode and profile_mode != 'subset':
+            if profile_mode:
                 headings.append(_('Profile Specifies'))
             header_row = self.formatter.make_header_row(headings)
             table_rows = []
@@ -607,7 +609,7 @@ pre.code{
 
 
                 cells = [enum_name]
-                if profile_mode and profile_mode != 'subset':
+                if profile_mode:
                     if enum_name in profile_values:
                         cells.append(self.text_map('Mandatory'))
                     elif enum_name in profile_min_support_values:
@@ -626,7 +628,7 @@ pre.code{
 
 
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
-                                     version_strings=None, supplemental_details=None):
+                                     version_strings=None, supplemental_details=None, subset=None):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
@@ -667,10 +669,10 @@ pre.code{
 
             param_names = [x for x in action_parameters.keys()]
 
-            if self.config.get('profile_mode') == 'subset':
-                if profile and profile.get('Parameters'):
-                    param_names = [x for x in profile['Parameters'].keys() if x in param_names]
-                # If there is no profile for this action, all parameters should be output.
+            if self.config.get('subset_mode') and subset:
+                supported_values = subset.get('SupportedValues')
+                if supported_values:
+                    param_names = [x for x in param_names if x in supported_values]
 
             param_names.sort(key=str.lower)
 
@@ -745,7 +747,7 @@ pre.code{
                 for detail_name in detail_names:
                     det_info = section['property_details'][detail_name]
                     anchor = section['schema_ref'] + '|details|' + detail_name
-                    deets_content.append(self.formatter.head_four(html.escape(detail_name, False) + ':', 0, anchor))
+                    deets_content.append(self.formatter.head_four(html.escape(detail_name, False), 0, anchor))
 
                     if len(det_info) == 1:
                         for x in det_info.values():
@@ -760,7 +762,11 @@ pre.code{
                         paths_sorted.sort(key=str.lower)
                         for path in paths_sorted:
                             info = det_info[path_to_ref[path]]
-                            deets_content.append(self.formatter.head_five("In " + path + ":", 0))
+                            if path:
+                                path_text = _("In %(path)s:") % {'path': path}
+                            else:
+                                path_text = _("In top level:")
+                            deets_content.append(self.formatter.head_five(path_text, 0))
                             deets_content.append(info['formatted_descr'])
 
                 deets.append(self.formatter.make_div('\n'.join(deets_content),
@@ -938,6 +944,7 @@ pre.code{
             'head': '',
             'heading': '',
             'schema_ref': '',
+            'schema_name': '',
             }
 
         if text:
@@ -947,6 +954,7 @@ pre.code{
             self.this_section['link_id'] = link_id
         if schema_ref:
             self.this_section['schema_ref'] = schema_ref
+            self.this_section['schema_name'] = self.traverser.get_schema_name(self.this_section['schema_ref'])
         elif text:
             self.this_section['schema_ref'] = section_text
         self.sections.append(self.this_section)
@@ -964,11 +972,30 @@ pre.code{
         self.this_section['deprecation_text'] = depr_text
 
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ Add the URIs (which should be a list) """
         uri_strings = []
+        
+        for i in range(len(uris)):
+            if uris[i] in urisDeprecated:
+                uris[i] += _(" (deprecated)")
+        
+        # exclude URIs from the list for brevity
+        has_excluded_uris = False
+        excluded_uris = self.config.get('excluded_schema_uris', [])
         for uri in sorted(uris, key=str.lower):
-            uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
+            exclude_this_uri = False
+            for xuri in excluded_uris:
+                if xuri in uri:
+                    exclude_this_uri = True
+                    has_excluded_uris = True
+            if not exclude_this_uri:
+                uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
+
+        # if excluded URIs have been trimmed, add a note 
+        if has_excluded_uris:
+            uri_strings.append('<li class="hanging-indent">' + "* " +
+                _("Note: Some URIs omitted for brevity, refer to schema for the complete list.") + '\n</li>')
 
         uri_block = '<ul class="nobullet">' + '\n'.join(uri_strings) + '</ul>'
         uri_content = '<h4>' + _('URIs:') + '</h4>' + uri_block
@@ -1008,6 +1035,9 @@ pre.code{
 
     def format_json_payload(self, json_payload):
         """ Format a json payload for output. """
+        # Add markdown for formatting. Conditional because some inputs may provide it.
+        if '```json' not in json_payload:
+            json_payload = '```json\n' + json_payload.strip() + '\n```\n'
         return ('<div class="json-payload">' +
                     self.formatter.markdown_to_html(json_payload) + '</div>')
 

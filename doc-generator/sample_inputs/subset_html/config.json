@@ -1,0 +1,46 @@
+{
+    "version": "The version string is optional. It may have (future?) meaning in property index mode.",
+    "description": "Redfish Documentation Generator Example: config file for output of subset-mode documentation in HTML format.",
+    "uri_mapping": { "redfish.dmtf.org/schemas/v1": "./json-schema" },
+    "format": "html",
+    "import_from": [ "./json-schema" ],
+    "subset_doc": "./subset.json",
+    "outfile": "subset.html",
+    "add_toc": true,
+    "html_title": "Sample Subset Output",
+    "combine_multiple_refs": 3,
+    "excluded_properties": [
+        "@odata.context",
+        "@odata.type",
+        "@odata.id",
+        "@odata.etag",
+        "Name",
+        "Id",
+        "Description",
+        "Oem"
+    ],
+    "excluded_annotations": [
+        "*@odata.count",
+        "*@odata.navigationLink"
+    ],
+    "excluded_schemas": [
+        "*Collection",
+        "HostedStorageServices",
+        "StorageService",
+        "StorageSystem",
+        "idRef",
+        "Oem"
+    ],
+    "excluded_pattern_properties": [
+        "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$"
+    ],
+    "object_reference_disposition": {
+        "common_object": [
+            "Redundancy"
+        ],
+        "include": [
+            "http://redfish.dmtf.org/schemas/v1/PCIeDevice.json#/definitions/PCIeInterface"
+        ]
+    },
+    "content_supplement": "./content_supplement.json"
+}

@@ -1,6 +1,6 @@
 # Copyright Notice:
-# Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# Copyright 2018-2022 Distributed Management Task Force, Inc. All rights reserved.
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File : property_index_generator.py
@@ -105,6 +105,7 @@ class PropertyIndexGenerator(DocFormatter):
             'property_details': {},
             'head': '',
             'heading': '',
+            'schema_ref': schema_ref,
             'schema_name': text
             }
 
@@ -199,12 +200,13 @@ class PropertyIndexGenerator(DocFormatter):
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                supplemental_details, parent_prop_info, profile=None):
+                                supplemental_details, parent_prop_info, profile=None, subset=None):
         """ Handle enum information """
         pass
 
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
+                                     version_strings=None, supplemental_strings=None, subset=None):
         """Generate a formatted Actions section from parameters data"""
         return ''
 
@@ -448,7 +450,7 @@ class PropertyIndexGenerator(DocFormatter):
             config_out.close()
 
         headers = self.formatter.make_header_row([_('Property Name'), _('Defined In Schema(s)'), _('Type'), _('Description')])
-        table = self.formatter.make_table(rows, [headers])
+        table = self.formatter.make_table(rows, [headers], last_column_wide=True)
         return table
 
 
@@ -539,7 +541,7 @@ table.properties{
         """ This is for the schema description. We don't actually use this. """
         pass
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ omit URIs """
         pass
 

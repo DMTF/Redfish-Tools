@@ -1,8 +1,3 @@
----
-title: Schema Documentation
-
-search: true
----
 
 
 ## RequiredTest 1.0.0
@@ -15,7 +10,7 @@ This schema contains required and requiredOnCreate properties.
 ### Properties
 
 |Property     |Type     |Attributes   |Notes     |
-| --- | --- | --- | --- |
+| :--- | :--- | :--- | :--------------------- |
 | **Description** | string | *read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
 | **EntryType** | string<br>(enum) | *read-only required on create* | This is the type of log entry. *For the possible property values, see EntryType in Property details.* |
 | **HostWatchdogTimer** { | object |  | This object describes the Host Watchdog Timer functionality for this system. |
@@ -28,12 +23,12 @@ This schema contains required and requiredOnCreate properties.
 
 ### Property details
 
-#### EntryType:
+#### EntryType
 
 This is the type of log entry.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | Event | Contains a Redfish-defined message (event). |
 | Oem | Contains an entry in an OEM-defined format. |
 | SEL | Contains a legacy IPMI System Event Log (SEL) entry. |

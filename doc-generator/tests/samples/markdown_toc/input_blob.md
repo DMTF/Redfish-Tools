@@ -16,6 +16,7 @@ This file contains text similar to what the doc generator would produce. (Albeit
 | --- | --- |
 | **Version** | *v1.3* |
 | **Release** | 2018.2 |
+
 ### Description
 
 A Network Device Function represents a logical interface exposed by the network adapter.
@@ -36,7 +37,7 @@ A Network Device Function represents a logical interface exposed by the network 
 
 ### Property details
 
-#### AuthenticationMethod:
+#### AuthenticationMethod
 
 The iSCSI boot authentication method for this network device function.
 
@@ -46,7 +47,7 @@ The iSCSI boot authentication method for this network device function.
 | MutualCHAP | iSCSI Mutual Challenge Handshake Authentication Protocol (CHAP) authentication is used. |
 | None | No iSCSI authentication is used. |
 
-#### BootMode:
+#### BootMode
 
 The boot mode configured for this network device function.
 

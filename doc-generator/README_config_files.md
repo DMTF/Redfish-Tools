@@ -26,6 +26,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - excluded_pattern_properties: pattern properties to omit from output. Note that backslashes must be escaped in JSON ("\" becomes "\\").
 - excluded_properties: A list of property names (strings) to omit. Wildcard match is supported for strings that begin with "*" ("*odata.count" matches "Members\@odata.count" and others).
 - excluded_schemas: Schemas (by name) to omit from output.
+- excluded_schema_uris: Array of strings that if found in each schema URI list, are excluded from the displayed list, with a note added to the list to indicate that some URIs have been omitted.
 - format (command line: `format`): Output format. One of `markdown`, `slate`, `html`, `csv`
 - html_title: A string to use as the `title` element in HTML output.
 - import_from: Name of a file or directory containing JSON schemas to process. Wild cards are acceptable. Default: json-schema.
@@ -41,7 +42,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - property_index (command line: `property_index`): Boolean: Produce Property Index output. See README_Property_Index(README_Property_Index.md) for more information about this mode.
 - property_index_config_out (command line: `property_index_config_out`): Generate an updated config file, with specified filename (property_index mode only).
 - registry_uri_to_local: For profile mode only, an object like uri_mapping, for locations of registries.
-- subset (command_line: `subset`): Path to a JSON profile document. Generates "Schema subset" output, with the subset defined in the JSON profile document.
+- subset_doc (command_line: `subset`): Path to a JSON document. Generates "Schema subset" output, with the subset defined in that document.
 - supplement_md_dir: Directory location for markdown files with supplemental text. Optional. See below for more detail.
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
 - warn_missing_payloads (command line: `warn_missing_payloads`): Boolean, default false. Use along with "payload_dir" to be warned of missing example payloads. When true, the doc generator will emit a warning for missing examples for all documented schemas, missing Action Response examples with the action has an "actionResponse" property, and missing Action Request examples when the action has parameters.
@@ -60,7 +61,7 @@ The combine_multiple_refs attribute specifies a threshold at which multiple refe
 
 #### supplement_md_dir
 
-The supplement_dir attribute specifies a directory location for supplemental markdown content, on a schema-by-schema basis. This directory should contain a separate file for each documented schema for which you intend to provide supplemental content. Each file should be named with the schema name and a .md suffix; for example "Chassis.md".
+The supplement_md_dir attribute specifies a directory location for supplemental markdown content, on a schema-by-schema basis. This directory should contain a separate file for each documented schema for which you intend to provide supplemental content. Each file should be named with the schema name and a .md suffix; for example "Chassis.md".
 
 Within these markdown files, headings with a distinct format are used to identify different chunks of text:
 
@@ -166,12 +167,98 @@ The `mockup` and `jsonpayload` attributes are mutually exclusive. If both are pr
 
 Note that `description`, `jsonpayload`, `property_details`, and `action_details` may instead be supplied in markdown files, by specifying a directory of markdown files with "supplement_md_dir".
 
+## Subset Config File
+
+Subset mode is intended for authors of specifications that use a subset of Redfish. The subset config file allows you to selectively include schemas and to filter their properties either by supported version, or by specifying individual properties to include or exclude.
+
+In its simplest form, use "IncludeSchemas" to specify which schemas to document:
+
+```
+{
+    "IncludeSchemas": {
+        "Circuit": {},
+        "Outlet": {}
+    }
+}
+```
+
+The Doc generator retrieves definitions from schemas outside the IncludeSchemas list as needed to populate definitions of included properties.
+
+Specify "Version" to get documentation showing everything in that version, but nothing newer:
+
+```
+{
+    "IncludeSchemas": {
+        "Circuit": {
+            "Version": "1.1"
+        },
+        "Outlet": {}
+    }
+}
+```
+
+For finer-grained support, specify:
+
+ - Baseline: boolean, if true, include everything except as noted. If false, include only what is noted. Default is true.
+ - Properties and Actions: specify specific properties to treat differently from Baseline:
+   - "Include": false indicates property/action should be omitted. Default is true; empty object for a property name means include the property.
+   - SupportedValues: (for enums), limit supported values to the given list.
+
+In the following example:
+ - Only three properties from the "Facility" schema are to be documented (Baseline is false, with properties specified)
+ - For the "Outlet" schema, all properties except "IndicatorLED" are to be included. All Actions except "#Outlet.ResetMetrics" are to be included.
+ - "OutletType" in the "Outlet" schema has a limited set of values ("SupportedValues")
+ - "#Outlet.PowerControl" shows an included Action with a limited set of "SupportedValues".
+```
+{
+    "IncludeSchemas": {
+	"Circuit": {
+	    "Version": "1.1"
+	},
+	"Facility": {
+	    "Baseline": false,
+	    "Properties": {
+	        "AmbientMetrics": {},
+	        "EnvironmentMetrics": {},
+	        "FacilityType": {}
+            }
+	},
+        "Outlet": {
+	    "Baseline": true,
+	    "Properties": {
+	        "OutletType": {
+		    "SupportedValues": [ "NEMA_5_15R", "NEMA_5_20R", "NEMA_L5_20R" ]
+	        },
+	        "IndicatorLED": {
+		    "Include": false
+	        }
+	    },
+	    "Actions": {
+	        "#Outlet.ResetMetrics": {
+		    "Include": false
+	        },
+	        "#Outlet.PowerControl": {
+		    "Include": true,
+		    "Parameters": {
+		        "PowerState": {
+			    "Include": true,
+			    "SupportedValues": [ "Off"]
+		        }
+		    }
+	        }
+	    }
+        }
+    }
+}
+
+```
+
 ## Examples
 
 Several files in the sample_inputs directory provide examples of configuration files that might be used to produce different types of documentation. Below are some example command-line invocations.
 
 These assume that you have a clone of the DMTF/Redfish repo and the DMTF/Redfish-Tools repo in the same parent directory, and that your working directory is the Redfish clone -- so that the schemas are in ./json-schema and doc_generator.py is at ../Redfish-Tools/doc-generator/doc_generator.py relative to your current working directory.
-n
+
 Note that the config files themselves contain references to other files in this directory.
 
 
@@ -195,7 +282,7 @@ Config file references the profile OCPBasicServer.v1_0_0.json (which in turn ref
 
   python ../Redfish-Tools/doc-generator/doc_generator.py --config=../Redfish-Tools/doc-generator/sample_inputs/subset/config.json
 
-Config file references the profile OCPBasicServer.v1_0_0.json (which in turn references OCPManagedDevice.v1_0_0.json).
+This config file specifies the subset document sample_inputs/subset/docgen-subset.json.
 
 
 ### Produce Property Index output (HTML format):

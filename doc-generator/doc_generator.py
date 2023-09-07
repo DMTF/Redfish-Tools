@@ -1,7 +1,7 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
 # Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File: doc_generator.py
@@ -20,6 +20,7 @@ import copy
 import functools
 import warnings
 import gettext
+import urllib
 from doc_gen_util import DocGenUtilities
 from schema_traverser import SchemaTraverser
 
@@ -86,6 +87,25 @@ class DocGenerator:
                     parsed_data = parse_md_supplement.parse_markdown_supplement(md_data, direntry.name)
                     config['md_supplements'][schema_name] = parsed_data
 
+        if config.get('subset_mode'):
+            subset_resources = DocGenUtilities.load_as_json(config.get('subset_doc')).get('IncludeSchemas')
+
+            if subset_resources:
+                # Warn the user if a profile specifies items in selected schemas that "don't make sense":
+                for schema_name in ['IPAddresses', 'Redundancy', 'Resource', 'Settings']:
+                    if schema_name in subset_resources:
+                        warnings.warn('Subsets should not specify requirements directly on the "%(name)s" schema.' %
+                                          {'name': schema_name})
+
+            if not subset_resources:
+                warnings.warn('No subset found; unable to produce subset mode documentation.')
+                sys.exit()
+
+            # Add default Baseline to each entry:
+            for schema_name in subset_resources.keys():
+                if 'Baseline' not in subset_resources[schema_name].keys():
+                    subset_resources[schema_name]['Baseline'] = True
+            self.config['subset_resources'] = subset_resources
 
         if config.get('profile_mode'):
             config['profile'] = DocGenUtilities.load_as_json(config.get('profile_doc'))
@@ -97,7 +117,7 @@ class DocGenerator:
                         profile_merged, req_profile_name,
                         config['profile']['RequiredProfiles'][req_profile_name])
 
-            if 'Registries' in config['profile'] and (config['profile_mode'] != 'subset'):
+            if 'Registries' in config['profile'] and config['profile_mode']:
                 config['profile']['registries_annotated'] = {}
                 for registry_name in config['profile']['Registries'].keys():
                     registry_summary = self.process_registry(registry_name,
@@ -107,16 +127,9 @@ class DocGenerator:
             profile_resources = self.merge_dicts(profile_merged.get('Resources', {}),
                                                      self.config.get('profile', {}).get('Resources', {}))
 
-            # Warn the user if a profile specifies items in selected schemas that "don't make sense":
-            for schema_name in ['IPAddresses', 'Redundancy', 'Resource', 'Settings']:
-                if schema_name in profile_resources:
-                    warnings.warn('Profiles should not specify requirements directly on the "%(name)s" schema.' %
-                                      {'name': schema_name})
-
-            if config['profile_mode'] != 'subset':
-                profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
-                                                     self.config.get('profile', {}).get('Protocol', {}))
-                self.config['profile_protocol'] = profile_protocol
+            profile_protocol = self.merge_dicts(profile_merged.get('Protocol', {}),
+                                                    self.config.get('profile', {}).get('Protocol', {}))
+            self.config['profile_protocol'] = profile_protocol
 
             if not profile_resources:
                 warnings.warn('No profile resource data found; unable to produce profile mode documentation.')
@@ -175,7 +188,7 @@ class DocGenerator:
 
         if not reg_uri:
             warnings.warn('Unable to find registry file for %(repo)s, %(name)s, minimum version %(minversion)s' %
-                              {'repo': reg_repo, 'name': reg_name, 'minversion': reg_minversion})
+                              {'repo': reg_repo, 'name': reg_name, 'minversion': reg_minversion })
             return registry_reqs
 
         # Generate data based on profile
@@ -255,6 +268,7 @@ class DocGenerator:
                                 if strength > candidate_strength:
                                     candidate_strength = strength
                                     candidate = rl
+
             if candidate:
                 versioned_uri = candidate
 
@@ -388,11 +402,12 @@ class DocGenerator:
         for normalized_uri in grouped_files.keys():
             data = self.process_files(normalized_uri, grouped_files[normalized_uri])
             if not data:
-                # If we're in profile mode, this is probably normal.
-                if not self.config['profile_mode']:
+                # If we're in profile mode or subset mode this is probably normal; otherwise warn.
+                if not (self.config.get('profile_mode') or self.config.get('subset_mode')):
                     warnings.warn('Unable to process files for %(uri)s' % {'uri': normalized_uri})
                 continue
             data['uris'] = schema_data[normalized_uri].get('_uris', [])
+            data['urisDeprecated'] = schema_data[normalized_uri].get('_urisDeprecated', [])
 
             if normalized_uri.endswith('Collection.json'):
                 [preamble, collection_name] = normalized_uri.rsplit('/', 1)
@@ -522,10 +537,22 @@ class DocGenerator:
                         if refpath_path == '/definitions/idRef':
                             continue
                         ref_fn = refpath_uri.split('/')[-1]
-                        # Skip files that are not present.
+
+                        version_string = DocGenUtilities.get_ref_version(ref_fn)
                         ref_filename = os.path.abspath(os.path.join(root, ref_fn))
+
+                        # If we're in subset mode, check the version and skip if > subset spec:
+                        subset  = self.config.get('subset_resources', {}).get(schema_name, {})
+                        if subset.get('Version'):
+                            version_len = len(subset['Version'].split('.'))
+                            major_minor_version = '.'.join(version_string.split('.')[0:version_len])
+                            compare = DocGenUtilities.compare_versions(major_minor_version, subset['Version'])
+                            if compare > 0:
+                                continue
+
+
+                        # Skip files that are not present.
                         if ref_filename in file_list:
-                            version_string = DocGenUtilities.get_ref_version(ref_fn)
                             file_data = {'root': root,
                                          'filename': ref_fn,
                                          'ref': refpath_path,
@@ -579,6 +606,10 @@ class DocGenerator:
             if 'uris' in data:
                 # Stash these in the unversioned schema_data.
                 all_schemas[normalized_uri]['_uris'] = data['uris']
+            
+            if 'urisDeprecated' in data:
+                # Stash the deprecated URIs as well
+                all_schemas[normalized_uri]['_urisDeprecated'] = data['urisDeprecated']
 
             if len(ref_files):
                 # Add the _is_versioned_schema and  is_collection_of hints to each ref object
@@ -646,6 +677,8 @@ class DocGenerator:
 
         profile_mode = self.config.get('profile_mode')
         profile = self.config.get('profile_resources', {})
+        subset_mode = self.config.get('subset_mode')
+        subset = self.config.get('subset_resources', {})
 
         data = DocGenUtilities.load_as_json(filename)
 
@@ -674,22 +707,20 @@ class DocGenerator:
         if profile_mode:
             schema_profile = profile.get(generalized_uri)
             if schema_profile:
-                if profile_mode == 'subset':
+                min_version = schema_profile.get('MinVersion')
+                if min_version:
+                    if version:
+                        property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s)'
+                            % {'minversion': min_version, 'version': version})
+                    else:
+                        # this is unlikely
+                        property_data['name_and_version'] += ' ' + ' v%(version)s+' % {'version': min_version}
+                elif version:
                     property_data['name_and_version'] += ' ' + version
-                else:
-                    min_version = schema_profile.get('MinVersion')
-                    if min_version:
-                        if version:
-                            property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s'
-                                % {'minversion': min_version, 'version': version})
-                        else:
-                            # this is unlikely
-                            property_data['name_and_version'] += ' ' + ' v%(version)s+' % {'version': min_version}
-                    elif version:
-                        property_data['name_and_version'] += ' ' + version
             else:
                 # Skip schemas that aren't mentioned in the profile:
                 return {}
+
         elif version:
             property_data['name_and_version'] += ' ' + version
 
@@ -750,6 +781,9 @@ class DocGenerator:
 
         profile_mode = self.config.get('profile_mode')
         profile = self.config.get('profile_resources', {})
+
+        subset_mode = self.config.get('subset_mode')
+        subset = self.config.get('subset_resources', {})
 
         data = DocGenUtilities.load_as_json(filename)
         schema_name = SchemaTraverser.find_schema_name(filename, data, True)
@@ -933,7 +967,7 @@ class DocGenerator:
 
                 ref_info = traverser.find_ref_data(this_ref)
                 if not ref_info:
-                    warnings.warn("Can't find schema file for %{ref}s", {'ref': this_ref})
+                    warnings.warn("Can't find schema file for %(ref)s" %{'ref': this_ref})
                     continue
                 if 'properties' in ref_info:
                     ref_properties = ref_info['properties']
@@ -1091,6 +1125,8 @@ class DocGenerator:
                                   'Default: json-schema'))
         parser.add_argument('-n', '--normative', action='store_true', dest='normative', default=None,
                             help='Produce normative (developer-focused) output')
+        parser.add_argument('--combine_descriptions', action='store_true', dest='combine_descriptions', default=None,
+                            help='Combines informative and normative descriptions into the output')
         parser.add_argument('--format', dest='format',
                             choices=['markdown', 'slate', 'html', 'csv'], help='Output format')
         parser.add_argument('--out', dest='outfile',
@@ -1187,6 +1223,7 @@ class DocGenerator:
             'excluded_properties': [],
             'excluded_by_match': [],
             'excluded_schemas': [],
+            'excluded_schema_uris': [],
             'excluded_schemas_by_match': [],
             'excluded_pattern_props': [],
             'description_overrides': {},
@@ -1196,6 +1233,7 @@ class DocGenerator:
             'omit_version_in_headers': False,
             'schema_supplement': {},
             'normative': False,
+            'combine_descriptions': False,
             'escape_chars': [],
             'cwd': cwd,
             'schema_link_replacements': {},
@@ -1212,6 +1250,8 @@ class DocGenerator:
             'combine_multiple_refs': 0,
             'with_table_numbering': False,
             'warn_missing_payloads': False,
+            'table_formats': {},
+            'remove_blanks': False,
             }
 
         # combined_args is an intermediate dictionary, combining command-line and config parameters.
@@ -1237,7 +1277,7 @@ class DocGenerator:
 
             # command-line arguments override the config file.
             config_args = [
-                'format', 'outfile', 'payload_dir', 'normative',
+                'format', 'outfile', 'payload_dir', 'normative', 'combine_descriptions',
                 'profile_doc', 'subset_doc',
                 'property_index', 'property_index_config_out', 'escape_chars',
                 'locale', 'warn_missing_payloads'
@@ -1256,15 +1296,18 @@ class DocGenerator:
             if config_data.get('import_from') and not combined_args.get('import_from'):
                 combined_args['import_from'] = config_data['import_from']
 
-            # config_flags don't have command-line overrides; they should be added to config directly.
-            config_flags = [
+            # config_only don't have command-line overrides; they should be added to config directly.
+            config_only = [
                 'units_translation', 'suppress_version_history',
                 'actions_in_property_table', 'html_title',
                 'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
                 'combine_multiple_refs', 'omit_version_in_headers',
+                'supplement_md_dir', 'excluded_schema_uris',
+                'table_formats',
+                'remove_blanks',
                 'description_overrides' # this is for property_index mode only
                 ]
-            for x in config_flags:
+            for x in config_only:
                 if x in config_data:
                     config[x] = config_data[x]
 
@@ -1328,18 +1371,22 @@ class DocGenerator:
                     outfile_name += '.md'
         config['outfile_name'] = outfile_name
 
-        # If payload_dir was provided, verify that it is a readable directory:
-        if combined_args.get('payload_dir'):
-            payload_dir = combined_args.get('payload_dir')
-            try:
-                if os.path.isdir(combined_args['payload_dir']):
-                    config['payload_dir'] = combined_args['payload_dir']
-                else:
-                    warnings.warn('"%(dirname)s" is not a directory. Exiting.' % {'dirname': combined_args['payload_dir']})
+        # Verify directories, if specified, are actually directories:
+        for config_dir in ['payload_dir', 'supplement_md_dir']:
+            if combined_args.get(config_dir):
+                payload_dir = combined_args.get(config_dir)
+                try:
+                    if os.path.isdir(combined_args[config_dir]):
+                        config[config_dir] = combined_args[config_dir]
+                    else:
+                        warnings.warn('"%(dirname)s" is not a directory. Exiting.' % {'dirname': combined_args[config_dir]})
+                        sys.exit();
+                except (Exception) as ex:
+                    warnings.warn('Unable to read %(config_dir) "%(dirname)s": %(message)s' % {
+                        'config_dir': config_dir,
+                        'dirname': combined_args['payload_dir'],
+                        'message': str(ex)})
                     sys.exit();
-            except (Exception) as ex:
-                warnings.warn('Unable to read payload_dir "%(dirname)s": %(message)s' % {'dirname': combined_args['payload_dir'], 'message': str(ex)})
-                sys.exit();
 
         # Check profile document, if specified
         if combined_args.get('profile_doc'):
@@ -1348,23 +1395,47 @@ class DocGenerator:
             else:
                 config['profile_mode'] = 'verbose'
 
-            profile_doc = combined_args['profile_doc']
+            profile_doc = os.path.normpath(combined_args['profile_doc'])
+            errors = []
             try:
-                profile = open(profile_doc, 'r', encoding="utf8")
-                config['profile_doc'] = profile_doc
+                profile_doc_local = os.path.normpath(os.path.join(config_data['config_dir'], profile_doc))
+                profile = open(profile_doc_local, 'r', encoding="utf8")
+                profile.close()
+                config['profile_doc'] = profile_doc_local
             except (OSError) as ex:
-                warnings.warn('Unable to open %(filename)s to read: %(message)s' %  {'filename': profile_doc, 'message': str(ex)})
-                sys.exit()
+                errors.append(str(ex))
+                try:
+                    profile = open(profile_doc, 'r', encoding="utf8")
+                    profile.close()
+                    config['profile_doc'] = profile_doc
+                except (OSError) as ex:
+                    errors.append(str(ex))
+                    warnings.warn('Unable to open profile to read; \n  %(error1)s\n  %(error2)s' %{
+                        'error1': errors[0], 'error2': errors[1]})
+                    sys.exit()
 
         if combined_args.get('subset_doc'):
-            config['profile_mode'] = 'subset'
-            profile_doc = combined_args['subset_doc']
+            config['subset_mode'] = True
+            subset_doc = os.path.normpath(combined_args['subset_doc'])
+            errors = []
             try:
-                profile = open(profile_doc, 'r', encoding="utf8")
-                config['profile_doc'] = profile_doc
+                subset_doc_local = os.path.normpath(os.path.join(config_data['config_dir'], subset_doc))
+                profile = open(subset_doc_local, 'r', encoding="utf8")
+                profile.close()
+                config['subset_doc'] = subset_doc_local
             except (OSError) as ex:
-                warnings.warn('Unable to open %(filename)s to read: %(message)s' % {'filename': profile_doc, 'message': str(ex)})
-                sys.exit()
+                errors.append(str(ex))
+                try:
+                    profile = open(subset_doc, 'r', encoding="utf8")
+                    profile.close()
+                    config['subset_doc'] = subset_doc
+                except (OSError) as ex:
+                    errors.append(str(ex))
+                    warnings.warn('Unable to open subset file to read; \n  %(error1)s\n  %(error2)s' %{
+                        'error1': errors[0], 'error2': errors[1]})
+                    sys.exit()
+        else:
+            config['subset_mode'] = False
 
         if combined_args.get('profile_terse') and not combined_args.get('profile_doc'):
             warnings.warn('Terse output (%(arg_t)s or %(arg_terse)s) requires a profile (--%(arg_profile)s).' %
@@ -1430,6 +1501,7 @@ class DocGenerator:
             config['schema_supplement'] = parse_schema_supplement(supp_config_data.get('schema_supplement'))
 
         config['normative'] = combined_args.get('normative', False)
+        config['combine_descriptions'] = combined_args.get('combine_descriptions', False)
 
         if config['combine_multiple_refs'] == 1:
             warnings.warn(' '.join(['The combine_multiple_refs setting of 1 does not make sense.',
@@ -1470,14 +1542,14 @@ def parse_schema_supplement(supp_data):
                                           {'uri': mockup_location, 'status_code': response.status})
                 except Exception as ex:
                     warnings.warn('Unable to retrieve Mockup from URL "%(uri)s": %(ex)s' % {'uri': mockup_location, 'ex': str(ex)})
-                else:
-                    # treat it as a local file
-                    try:
-                        mockup_file = open(mockup_location, 'r', encoding="utf8")
-                        mockup = mockup_file.read()
-                    except Exception as ex:
-                        warnings.warn('Unable to open Mockup file "%(uri)s" to read: %(ex)s'
-                                              % {'uri': mockup_location, 'ex': str(ex)})
+            else:
+                # treat it as a local file
+                try:
+                    mockup_file = open(mockup_location, 'r', encoding="utf8")
+                    mockup = mockup_file.read()
+                except Exception as ex:
+                    warnings.warn('Unable to open Mockup file "%(uri)s" to read: %(ex)s'
+                                          % {'uri': mockup_location, 'ex': str(ex)})
 
             if mockup:
                 if data.get('jsonpayload'):
@@ -1498,10 +1570,12 @@ def main():
     if config_fn:
         config_data = DocGenerator.parse_config_file(config_fn)
     else:
-        config_data = {}
+        warnings.warn('A configuration file is required (option --config)');
+        sys.exit()
 
     # path of some files will be relative to path of config file:
     config_dir = os.path.dirname(config_fn)
+    config_data['config_dir'] = config_dir
 
     # Is there a content supplement file?
     if config_data.get('content_supplement'):
@@ -1521,7 +1595,7 @@ def main():
         supp_config_data = {}
 
     # If boilerplate is specified, read it in now.
-    boilerplate_fns = {'boilerplate_intro': 'intro_content', 'boilerplate_postscript': 'postscript_content'}
+    boilerplate_fns=  {'boilerplate_intro': 'intro_content', 'boilerplate_postscript': 'postscript_content'}
     for fn, content_key in boilerplate_fns.items():
         if config_data.get(fn):
             boilerplate_fn = os.path.normpath(os.path.join(config_dir, config_data[fn]))
@@ -1538,7 +1612,6 @@ def main():
 
     config = DocGenerator.combine_configs(command_line_args=command_line_args, config_data=config_data,
                                               supp_config_data=supp_config_data)
-
     try:
         outfile = open(config['outfile_name'], 'w', encoding="utf8")
     except (OSError) as ex:

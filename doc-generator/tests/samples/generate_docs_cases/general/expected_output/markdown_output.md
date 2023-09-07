@@ -1,16 +1,12 @@
----
-title: Schema Documentation
-
-search: true
----
 
 
 ## NetworkDeviceFunction 1.3.2
 
 |     |     |
-| --- | --- |
+| :--- | :--- |
 | **Version** | *v1.3* |
 | **Release** | 2018.2 |
+
 ### Description
 
 A Network Device Function represents a logical interface exposed by the network adapter.
@@ -19,7 +15,7 @@ A Network Device Function represents a logical interface exposed by the network 
 ### Properties
 
 |Property     |Type     |Attributes   |Notes     |
-| --- | --- | --- | --- |
+| :--- | :--- | :--- | :--------------------- |
 | **@odata.etag** | string | *read-only* | The current ETag of the resource. |
 | **Actions** *(v1.1+)* {} | object |  | The available actions for this resource. |
 | **AssignablePhysicalPorts** [ { | array |  | The array of physical port references that this network device function may be assigned to. |
@@ -97,67 +93,67 @@ A Network Device Function represents a logical interface exposed by the network 
 
 ### Property details
 
-#### AuthenticationMethod:
+#### AuthenticationMethod
 
 The iSCSI boot authentication method for this network device function.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | CHAP | iSCSI Challenge Handshake Authentication Protocol (CHAP) authentication is used. |
 | MutualCHAP | iSCSI Mutual Challenge Handshake Authentication Protocol (CHAP) authentication is used. |
 | None | No iSCSI authentication is used. |
 
-#### BootMode:
+#### BootMode
 
 The boot mode configured for this network device function.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | Disabled | Do not indicate to UEFI/BIOS that this device is bootable. |
 | FibreChannel | Boot this device using the embedded Fibre Channel support and configuration.  Only applicable if the NetworkDeviceFunctionType is set to FibreChannel. |
 | FibreChannelOverEthernet | Boot this device using the embedded Fibre Channel over Ethernet (FCoE) boot support and configuration.  Only applicable if the NetworkDeviceFunctionType is set to FibreChannelOverEthernet. |
 | iSCSI | Boot this device using the embedded iSCSI boot support and configuration.  Only applicable if the NetworkDeviceFunctionType is set to iSCSI. |
 | PXE | Boot this device using the embedded PXE support.  Only applicable if the NetworkDeviceFunctionType is set to Ethernet. |
 
-#### IPAddressType:
+#### IPAddressType
 
 The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP address fields.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | IPv4 | IPv4 addressing is used for all IP-fields in this object. |
 | IPv6 | IPv6 addressing is used for all IP-fields in this object. |
 
-#### NetDevFuncCapabilities:
+#### NetDevFuncCapabilities
 
 Capabilities of this network device function.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | Disabled | Neither enumerated nor visible to the operating system. |
 | Ethernet | Appears to the operating system as an Ethernet device. |
 | FibreChannel | Appears to the operating system as a Fibre Channel device. |
 | FibreChannelOverEthernet | Appears to the operating system as an FCoE device. |
 | iSCSI | Appears to the operating system as an iSCSI device. |
 
-#### NetDevFuncType:
+#### NetDevFuncType
 
 The configured capability of this network device function.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | Disabled | Neither enumerated nor visible to the operating system. |
 | Ethernet | Appears to the operating system as an Ethernet device. |
 | FibreChannel | Appears to the operating system as a Fibre Channel device. |
 | FibreChannelOverEthernet | Appears to the operating system as an FCoE device. |
 | iSCSI | Appears to the operating system as an iSCSI device. |
 
-#### WWNSource:
+#### WWNSource
 
 The configuration source of the WWNs for this connection (WWPN and WWNN).
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | ConfiguredLocally | The set of FC/FCoE boot targets was applied locally through API or UI. |
 | ProvidedByFabric | The set of FC/FCoE boot targets was applied by the Fibre Channel fabric. |
 
@@ -168,7 +164,7 @@ The configuration source of the WWNs for this connection (WWPN and WWNN).
 ### Properties
 
 |Property     |Type     |Attributes   |Notes     |
-| --- | --- | --- | --- |
+| :--- | :--- | :--- | :--------------------- |
 | **@odata.etag** | string | *read-only* | The current ETag of the resource. |
 | **Description** | string | *read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
 | **Members** [ { | array |  | Contains the members of this collection. |
@@ -187,7 +183,7 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 ### Properties
 
 |Property     |Type     |Attributes   |Notes     |
-| --- | --- | --- | --- |
+| :--- | :--- | :--- | :--------------------- |
 | **Actions** {} | object |  | The available actions for this resource. |
 | **ActiveLinkTechnology** | string<br>(enum) | *read-write<br>(null)* | Network Port Active Link Technology. *For the possible property values, see ActiveLinkTechnology in Property details.* |
 | **AssociatedNetworkAddresses** [ ] | array (string, null) | *read-only* | The array of configured network addresses (MAC or WWN) that are associated with this Network Port, including the programmed address of the lowest numbered Network Device Function, the configured but not active address if applicable, the address for hardware port teaming, or other network addresses. |
@@ -224,62 +220,62 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 
 ### Property details
 
-#### ActiveLinkTechnology:
+#### ActiveLinkTechnology
 
 Network Port Active Link Technology.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | Ethernet | The port is capable of connecting to an Ethernet network. |
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
 | InfiniBand | The port is capable of connecting to an InfiniBand network. |
 
-#### FlowControlConfiguration:
+#### FlowControlConfiguration
 
 The locally configured 802.3x flow control setting for this network port.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | None | No IEEE 802.3x flow control is enabled on this port. |
 | RX | IEEE 802.3x flow control may be initiated by the link partner. |
 | TX | IEEE 802.3x flow control may be initiated by this station. |
 | TX_RX | IEEE 802.3x flow control may be initiated by this station or the link partner. |
 
-#### FlowControlStatus:
+#### FlowControlStatus
 
 The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | None | No IEEE 802.3x flow control is enabled on this port. |
 | RX | IEEE 802.3x flow control may be initiated by the link partner. |
 | TX | IEEE 802.3x flow control may be initiated by this station. |
 | TX_RX | IEEE 802.3x flow control may be initiated by this station or the link partner. |
 
-#### LinkNetworkTechnology:
+#### LinkNetworkTechnology
 
 The self-described link network technology capabilities of this port.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | Ethernet | The port is capable of connecting to an Ethernet network. |
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
 | InfiniBand | The port is capable of connecting to an InfiniBand network. |
 
-#### LinkStatus:
+#### LinkStatus
 
 The status of the link between this port and its link partner.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | Down | The port is enabled but link is down. |
 | Up | The port is enabled and link is good (up). |
 
-#### SupportedEthernetCapabilities:
+#### SupportedEthernetCapabilities
 
 The set of Ethernet capabilities that this port supports.
 
 | string | Description |
-| --- | --- |
+| :--- | :------------ |
 | EEE | IEEE 802.3az Energy Efficient Ethernet (EEE) is supported on this port. |
 | WakeOnLAN | Wake on LAN (WoL) is supported on this port. |

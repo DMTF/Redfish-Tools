@@ -1,6 +1,6 @@
 # Copyright Notice:
 # Copyright 2020 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File: test_action_response.py
@@ -48,9 +48,9 @@ def test_action_for_rekey_markdown(mockRequest):
 **Response Payload**
 
 |     |     |     |     |
-| --- | --- | --- | --- |
+| :--- | :--- | :--- | :---------------------------------------- |
 | { |  |  |  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Certificate** *(v1.1+)* { | object<br><br>* required* | The link to the certificate being rekeyed. |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Certificate** *(v1.1+)* { | object<br><br>*required* | The link to the certificate being rekeyed. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br><br>*read-only* | Link to another Certificate resource. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} |   |   |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CSRString** *(v1.1+)* | string<br><br>*read-only required* | The string for the certificate signing request. |

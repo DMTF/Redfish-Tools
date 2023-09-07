@@ -1,0 +1,17 @@
+{
+    "description": "Redfish Documentation Generator Example: content supplement config file for output of standard-mode documentation in HTML format.",
+    "keywords": {
+        "html_title": "Title from the supplemental doc"
+    },
+    "units_translation": {
+        "s": "seconds",
+        "Mb/s": "Mbits/second",
+        "By": "bytes",
+        "Cel": "Celsius",
+        "MiBy": "mebibytes",
+        "W": "Watts",
+        "V": "Volts",
+        "mW": "milliWatts",
+        "m": "meters"
+    }
+}

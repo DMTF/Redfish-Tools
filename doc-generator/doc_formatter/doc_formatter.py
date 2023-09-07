@@ -1,6 +1,6 @@
 # Copyright Notice:
-# Copyright 2016-2021 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# Copyright 2016-2022 Distributed Management Task Force, Inc. All rights reserved.
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File: doc_formatter.py
@@ -54,12 +54,11 @@ class DocFormatter:
 
         if self.config.get('profile_mode'):
             self.config['MinVersionLT1.6'] = False
-            if self.config['profile_mode'] != 'subset':
-                # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
-                minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
-                compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
-                if compare < 0:
-                    self.config['MinVersionLT1.6'] = True
+            # Check whether Protocol MinVersion is < 1.6; we will need to add a note to URI conditions if so.
+            minversion = self.config.get('profile_protocol', {}).get('MinVersion', '1.0')
+            compare = DocGenUtilities.compare_versions(minversion, '1.6.0')
+            if compare < 0:
+                self.config['MinVersionLT1.6'] = True
 
         # Extend config with some defaults.
         self.config['excluded_pattern_props'] = self.config.get('excluded_pattern_props', [])
@@ -73,11 +72,11 @@ class DocFormatter:
         schemas = [x for x in property_data.keys()]
         for schema_ref in schemas:
             details = self.property_data[schema_ref]
-            if self.skip_schema(details['schema_name']):
+            if details.get('schema_name') and self.skip_schema(details['schema_name']):
                 continue
             if 'common_object_schemas' in self.config and schema_ref in self.config['common_object_schemas']:
                 continue
-            if len(details['properties']):
+            if len(details.get('properties', {})):
                 self.documented_schemas.append(schema_ref)
 
         self.uri_match_keys = None
@@ -97,7 +96,7 @@ class DocFormatter:
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
             'readonly', 'prop_required', 'prop_required_on_create', 'requiredParameter', 'required_parameter',
             'versionAdded', 'versionDeprecated', 'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated',
-            'translation', '_profile'
+            'translation', '_profile', '_subset'
             ]
 
 
@@ -179,7 +178,7 @@ class DocFormatter:
         raise NotImplementedError
 
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ Add the uris """
         raise NotImplementedError
 
@@ -204,13 +203,14 @@ class DocFormatter:
             caption = self.formatter.add_table_caption(_("Revision history"));
             reference = self.formatter.add_table_reference(_("The revision history is summarized in "));
             formatted = reference + "\n\n" + formatted + "\n\n" + caption
-        self.this_section['release_history'] = formatted
+        self.this_section['release_history'] = formatted + "\n"
 
 
     def format_uri_block_for_action(self, action, uris):
         """ Create a URI block for this action & the resource's URIs """
-        uri_content = self.formatter.para(self.formatter.bold((_('Action URI: %(link)s') % {'link': '{' + _('Base URI of target resource') + '}/Actions/' + action})))
-        return uri_content
+        uri_header = self.formatter.para(self.formatter.bold(_('Action URI')))
+        uri_content = self.formatter.para('%(link)s' % {'link': self.formatter.italic(_('{Base URI of target resource}')) + '/Actions/' + action})
+        return uri_header + '\n\n' + uri_content
 
 
     def format_uri(self, uri):
@@ -222,7 +222,7 @@ class DocFormatter:
             if part.startswith('{') and part.endswith('}'):
                 part = self.formatter.italic(part)
             uri_parts_highlighted.append(part)
-        uri_highlighted = '/'.join(uri_parts_highlighted)
+        uri_highlighted = '/&#8203;'.join(uri_parts_highlighted)
         return uri_highlighted
 
 
@@ -282,7 +282,7 @@ class DocFormatter:
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
-                                    supplemental_details, parent_prop_info, profile={}):
+                                    supplemental_details, parent_prop_info, profile=None, subset=None):
         """Generate a formatted table of enum information for inclusion in Property Details."""
         raise NotImplementedError
 
@@ -309,8 +309,8 @@ class DocFormatter:
 
         return None
 
-    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile, version_strings=None,
-                                     supplemental_details=None):
+    def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
+                                     version_strings=None, supplemental_details=None, subset=None):
         """Generate a formatted Actions section from parameters data"""
         raise NotImplementedError
 
@@ -332,7 +332,7 @@ class DocFormatter:
         # Add a closing } to the last row:
         rows = self.add_object_close(rows, '', '}', 4)
 
-        formatted.append(self.formatter.make_table(rows))
+        formatted.append(self.formatter.make_table(rows, last_column_wide=True))
 
         return "\n".join(formatted)
 
@@ -490,6 +490,7 @@ class DocFormatter:
         config = self.config
         schema_supplement = config.get('schema_supplement', {})
         profile_mode = config.get('profile_mode')
+        subset_mode = config.get('subset_mode')
 
         schema_keys = self.documented_schemas
         schema_keys.sort(key=str.lower)
@@ -513,6 +514,7 @@ class DocFormatter:
             details = property_data[schema_ref]
             schema_name = details['schema_name']
             profile = config.get('profile_resources', {}).get(schema_ref, {})
+            subset  = config.get('subset_resources', {}).get(schema_name, {})
             self.ref_deduplicator[schema_ref] = {}
 
             version = property_data.get('latest_version', '1')
@@ -523,11 +525,11 @@ class DocFormatter:
                 payload_key = DocGenUtilities.get_payload_name(schema_name, version)
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
-                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    json_payload = payload
                 else:
                     if self.config.get('warn_missing_payloads'):
                         warnings.warn("MISSING JSON PAYLOAD FOR SCHEMA '%(schema_name)s'." %{'schema_name': schema_name})
-            else:
+            if not json_payload and supplemental.get('jsonpayload'):
                 json_payload = supplemental.get('jsonpayload')
 
             definitions = details['definitions']
@@ -550,8 +552,11 @@ class DocFormatter:
                 conditional_details = self.format_conditional_details(schema_ref, None, conditional_reqs)
 
             # Normative docs prefer longDescription to description
-            if config.get('normative') and 'longDescription' in definitions[schema_name]:
-                description = definitions[schema_name].get('longDescription')
+            if config.get('normative') and 'longDescription' in definitions[schema_name] and definitions[schema_name].get('description') != definitions[schema_name].get('longDescription'):
+                if config.get('combine_descriptions'):
+                    description = definitions[schema_name].get('description') + '<ul><li>' +definitions[schema_name].get('longDescription') + '</li></ul>'
+                else:
+                    description = definitions[schema_name].get('longDescription')
             else:
                 description = definitions[schema_name].get('description')
 
@@ -571,7 +576,7 @@ class DocFormatter:
                 description = supplemental.get('intro', description)
 
             # Profile purpose overrides all:
-            if profile and profile_mode != 'subset':
+            if profile:
                 description = profile.get('Purpose')
 
             if description:
@@ -581,7 +586,7 @@ class DocFormatter:
                 self.add_deprecation_text(details['deprecated'])
 
             if len(uris):
-                self.add_uris(uris)
+                self.add_uris(uris, details['urisDeprecated'])
                 self.current_uris = uris
             else:
                 self.current_uris = []
@@ -602,6 +607,8 @@ class DocFormatter:
                 prop_names = [x for x in properties.keys()]
                 if self.config.get('profile_mode') and profile:
                     prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
+                if self.config.get('subset_mode') and subset:
+                    prop_names = self.filter_props_by_subset(prop_names, subset)
 
                 prop_names = self.organize_prop_names(prop_names)
 
@@ -610,7 +617,9 @@ class DocFormatter:
                     for prop_name in prop_names:
                         prop_info = properties[prop_name]
                         if profile:
-                            prop_info['_profile'] = profile.get('PropertyRequirements', {}.get(prop_name))
+                            prop_info['_profile'] = profile.get('PropertyRequirements', {}).get(prop_name)
+                        if subset:
+                            prop_info['_subset'] = subset.get('Properties', {}).get(prop_name)
 
                         # Note: we are calling extend_property_info here solely for the purpose of counting refs.
                         # In the next loop we call it again to generate the data to format -- we need to get the complete count
@@ -634,6 +643,8 @@ class DocFormatter:
                     prop_info['required_parameter'] = prop_info.get('requiredParameter')
                     if profile:
                         prop_info['_profile'] = profile.get('PropertyRequirements', {}).get(prop_name)
+                    if subset:
+                        prop_info['_subset'] = subset.get('Properties', {}).get(prop_name)
 
                     prop_infos = self.extend_property_info(schema_ref, prop_info)
                     formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
@@ -661,7 +672,7 @@ class DocFormatter:
 
 
 
-        if self.config.get('profile_mode') and self.config['profile_mode'] != 'subset':
+        if self.config.get('profile_mode'):
             # Add registry messages, if in profile.
             registry_reqs = config.get('profile').get('registries_annotated', {})
             if registry_reqs:
@@ -777,7 +788,9 @@ class DocFormatter:
                     ref_id += '_v' + version
 
                 cp_gen.add_section(prop_name, ref_id, schema_ref)
-                cp_gen.add_json_payload(supplemental.get('jsonpayload'))
+                if supplemental.get('jsonpayload'):
+                    payload = supplemental.get('jsonpayload')
+                    cp_gen.add_json_payload(payload)
 
                 # Override with supplemental schema description, if provided
                 # If there is a supplemental "description" or "intro", it replaces
@@ -823,7 +836,7 @@ class DocFormatter:
         for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
             item_text = self.format_uris_for_table(uris)
             rows.append(self.formatter.make_row([collection_name, item_text]))
-        doc = self.formatter.make_table(rows, [header], 'uris')
+        doc = self.formatter.make_table(rows, [header], 'uris', last_column_wide=True)
 
         return doc
 
@@ -838,6 +851,13 @@ class DocFormatter:
             [preamble, collection_file_name] = x.rsplit('/', 1)
             [collection_name, rest] = collection_file_name.split('.', 1)
             uris = sorted(self.property_data[x].get('uris', []), key=str.lower)
+
+            # append Deprecated text for any deprecated URIs
+            urisDeprecated = self.property_data[x].get('urisDeprecated', [])
+            for i in range(len(uris)):
+                if uris[i] in urisDeprecated:
+                    uris[i] += _(" (deprecated)")
+
             data[collection_name] = uris
         return data
 
@@ -867,6 +887,7 @@ class DocFormatter:
             for elt in prop_anyof:
                 if '$ref' in elt:
                     this_ref = elt.get('$ref')
+
                     if excerpt_copy_name:
                         prop_ref = this_ref
                         break
@@ -1166,6 +1187,36 @@ class DocFormatter:
         return prop_names
 
 
+    def filter_props_by_subset(self, prop_names, subset):
+
+        if subset is None:
+            warnings.warn("filter_props_by_subset was called with no subset data")
+            return prop_names
+
+        # Handle special case for @odata.id for link properties, always include it
+        if prop_names == ['@odata.id']:
+            return(prop_names)
+
+        # Actions have Parameters, properties have Properties.
+        subsection = 'Properties'
+        if 'Parameters' in subset:
+            subsection = 'Parameters'
+
+        filtered_names = []
+        if subset.get('Baseline') or subset.get('Include') or subset.get('Version'):
+            filtered_names = [x for x in prop_names]
+            for name, instrs in subset.get(subsection, {}).items():
+                if not instrs.get('Include', True):
+                    if name in filtered_names:
+                        filtered_names.remove(name)
+        else:
+            for name, instrs in subset.get(subsection, {}).items():
+                if instrs.get('Include', True) and name not in filtered_names:
+                    filtered_names.append(name)
+
+        return filtered_names
+
+
     def filter_props_by_profile(self, prop_names, profile, schema_requires, is_action=False):
 
         if profile is None:
@@ -1175,14 +1226,12 @@ class DocFormatter:
         if profile.get('PropertyRequirements') is None and not is_action:
             # if a resource is specified with no PropertyRequirements, include them all...
             # but do omit "Actions" if there are no ActionRequirements (profile mode).
-            # For subset mode, "Actions" should be included either way.
-            if (self.config.get('profile_mode') == 'subset') or (
-                    profile.get('ActionRequirements') and len(profile['ActionRequirements'])):
+            if profile.get('ActionRequirements') and len(profile['ActionRequirements']):
                 return prop_names
             else:
                 return [x for x in prop_names if x != 'Actions']
 
-        if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
+        if self.config.get('profile_mode') == 'terse':
             if is_action:
                 profile_props = [x for x in profile.keys()]
             else:
@@ -1246,6 +1295,10 @@ class DocFormatter:
         if self.config.get('profile_mode'):
             if schema_name in self.config.get('profile', {}).get('Resources', {}):
                 return False
+
+        if self.config.get('subset_mode'):
+            if schema_name not in self.config.get('subset_resources').keys():
+                return True
 
         if schema_name in self.config.get('excluded_schemas', []):
             return True
@@ -1318,6 +1371,15 @@ class DocFormatter:
             path_to_prop.append(prop_name)
             fallback_profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
 
+        if self.config.get(subset_mode) and prop_name:
+           subset_section = 'Properties'
+           if within_action:
+               subset_section = 'Actions'
+           path_to_prop = prop_path.copy()
+           path_to_prop.append(prop_name)
+           schema_name = traverser.get_schema_name(schema_ref)
+           fallback_subset = self.get_prop_subset(path_to_prop, subset_section)
+
         anyof_details = [self.parse_property_info(schema_ref, prop_name, x, prop_path)
                          for x in prop_infos]
 
@@ -1363,6 +1425,11 @@ class DocFormatter:
             profile = parsed['_profile']
         else:
             profile = fallback_profile
+
+        if '_subset' in parsed:
+            subset = parsed['_subset']
+        else:
+            subset = fallback_subset
 
         if profile is not None:
             parsed['is_in_profile'] = True
@@ -1429,7 +1496,7 @@ class DocFormatter:
         profile = None
         if '_profile' in prop_info:
             profile = prop_info['_profile']
-        elif self.config.get('profile_mode') and prop_name: # TODO: unclear if this clause is still needed.
+        elif self.config.get('profile_mode') and prop_name:
             prop_brief_name = prop_name
             profile_section = 'PropertyRequirements'
             if within_action:
@@ -1441,6 +1508,19 @@ class DocFormatter:
             if not prop_info.get('_in_items'):
                 path_to_prop.append(prop_brief_name)
             profile = self.get_prop_profile(schema_ref, path_to_prop, profile_section)
+
+        # Get the subset spec if we're in subset mode. Similar to above.
+        subset = None
+        if '_subset' in prop_info:
+            subset = prop_info['_subset']
+        elif self.config.get('subset_mode') and prop_name:
+            subset_section = 'Properties'
+            if within_action or (len(prop_path) and prop_path[0] == 'Actions'):
+                subset_section = 'Actions'
+            path_to_prop = prop_path.copy()
+            if not prop_info.get('_in_items'):
+                path_to_prop.append(prop_name)
+            subset = self.get_prop_subset(path_to_prop, subset_section)
 
         # Some special treatment is required for Actions
         is_action = prop_name == 'Actions'
@@ -1474,6 +1554,8 @@ class DocFormatter:
         prop_units = prop_info.get('units')
 
         read_only = prop_info.get('readonly')
+        if subset and subset.get('readonly'):
+            read_only = True
 
         prop_required = prop_info.get('prop_required') or prop_name in prop_info.get('parent_requires', [])
         prop_required_on_create = prop_info.get('prop_required_on_create') or prop_name in prop_info.get('parent_requires_on_create', [])
@@ -1498,7 +1580,10 @@ class DocFormatter:
 
             # Extend and parse parameter info
             for action_param in action_parameters.keys():
-                params = action_parameters[action_param]
+                params = action_parameters[action_param].copy()
+                if subset:
+                    param_subset = subset.get('Parameters', {}).get(action_param)
+                    params['_subset'] = param_subset
                 params = self.extend_property_info(schema_ref, params)
                 action_parameters[action_param] = params
 
@@ -1510,7 +1595,7 @@ class DocFormatter:
             version_strings = self.format_version_strings(prop_info)
             action_details = self.format_action_parameters(schema_ref, prop_name, descr,
                                                                action_parameters, profile, version_strings,
-                                                               supplemental_details)
+                                                               supplemental_details, subset)
 
             # Provisional inserts. These need to go in a different place depending on layout.
             action_response_formatted = ''
@@ -1534,7 +1619,7 @@ class DocFormatter:
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name, 'request-example')
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
-                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    json_payload = payload
                     heading = self.formatter.para(self.formatter.bold(_("Request Example")))
                     request_payload = heading + self.format_json_payload(json_payload)
                 else:
@@ -1547,7 +1632,7 @@ class DocFormatter:
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name, 'response-example')
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
-                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    json_payload = payload
                     heading = self.formatter.para(self.formatter.bold(_("Response Example")))
                     response_payload = heading + self.format_json_payload(json_payload)
                 else:
@@ -1559,7 +1644,7 @@ class DocFormatter:
                 payload_key = DocGenUtilities.get_payload_name(prop_info['_schema_name'], version, short_name)
                 payload = self.config['payloads'].get(payload_key)
                 if payload:
-                    json_payload = '```json\n' + payload.strip() + '\n```\n'
+                    json_payload = payload
                     heading = self.formatter.para(self.formatter.bold(_("Example")))
                     example_payload = heading + self.format_json_payload(json_payload) + action_details
 
@@ -1653,16 +1738,20 @@ class DocFormatter:
         if prop_enum or supplemental_details:
             has_prop_details = True
 
+            prop_enum_details = prop_info.get('enumDescriptions')
             if self.config.get('normative') and 'enumLongDescriptions' in prop_info:
-                prop_enum_details = prop_info.get('enumLongDescriptions')
-            else:
-                prop_enum_details = prop_info.get('enumDescriptions')
+                for key in prop_enum_details:
+                    if key in prop_info.get('enumLongDescriptions') and prop_info.get('enumLongDescriptions')[key] != prop_enum_details[key]:
+                        if self.config.get('combine_descriptions'):
+                            prop_enum_details[key] = prop_enum_details[key] + '<ul><li>' + prop_info.get('enumLongDescriptions')[key] + '</li></ul>'
+                        else:
+                            prop_enum_details[key] = prop_info.get('enumLongDescriptions')[key]
 
             formatted_details = self.format_property_details(prop_name, prop_type, descr,
                                                                  prop_enum, prop_enum_details,
                                                                  supplemental_details,
                                                                  prop_info,
-                                                                 profile=profile)
+                                                                 profile=profile, subset=subset)
             prop_detail_key = prop_info.get('_ref_uri', '_inline')
             if prop_info.get('_in_items') and len(prop_path):
                 # In items, the prop_path is expected to include the prop name at this point.
@@ -1731,6 +1820,8 @@ class DocFormatter:
                     combined_prop_item['enumVersionAdded'] = prop_info.get('enumVersionAdded')
                     combined_prop_item['enumVersionDeprecated'] = prop_info.get('enumVersionDeprecated')
                     combined_prop_item['enumDeprecated'] = prop_info.get('enumDeprecated')
+                    combined_prop_item['prop_required'] = prop_info.get('prop_required')
+                    combined_prop_item['prop_required_on_create'] = prop_info.get('prop_required_on_create')
                     if self.config.get('normative'):
                         combined_prop_item['longDescription'] = descr
                     else:
@@ -1859,13 +1950,16 @@ class DocFormatter:
         non_normative_descr = prop_info.get('description', '')
         pattern = prop_info.get('pattern')
 
-        if self.config.get('normative') and normative_descr:
-            descr = normative_descr
+        if self.config.get('normative') and normative_descr and non_normative_descr != normative_descr:
+            if self.config.get('combine_descriptions'):
+                descr = non_normative_descr + '<ul><li>' + normative_descr + '</li></ul>'
+            else:
+                descr = normative_descr
         else:
             descr = non_normative_descr
 
         if self.config.get('normative') and pattern:
-            descr = _('%(descr)s Pattern: %(pattern)s') % {'descr': descr, 'pattern': pattern}
+            descr = _('%(descr)s Pattern: `%(pattern)s`') % {'descr': descr, 'pattern': pattern}
 
         return descr
 
@@ -1893,14 +1987,18 @@ class DocFormatter:
         prop_names = patterns = profile = False
         if len(prop_path) and prop_path[0] == 'Actions':
             profile_section = 'ActionRequirements'
+            subset_section = 'Actions'
         else:
             profile_section = 'PropertyRequirements'
+            subset_section = 'Properties'
+
+        subset = None
 
         if properties:
 
             prop_names = [x for x in properties.keys()]
 
-            if self.config.get('profile_mode') == 'terse' or self.config.get('profile_mode') == 'subset':
+            if self.config.get('profile_mode') == 'terse':
 
                 if '_profile' in prop_info:
                     profile = prop_info['_profile']
@@ -1908,15 +2006,27 @@ class DocFormatter:
                     profile = self.get_prop_profile(schema_ref, prop_path, profile_section)
 
                 if profile:
-                    prop_names = self.filter_props_by_profile(prop_names, profile, parent_requires, is_action)
+                    prop_names = self.filter_props_by_profile(prop_names, profile, [], is_action)
                 prop_names.sort(key=str.lower)
+
+            elif self.config.get('subset_mode'):
+
+                if '_subset' in prop_info:
+                    subset = prop_info['_subset']
+                elif len(prop_path):
+                    subset = self.get_prop_subset(prop_path, subset_section)
+
+                if subset:
+                    prop_names = self.filter_props_by_subset(prop_names, subset)
+
+            else:
+                prop_names = self.exclude_annotations(prop_names)
 
                 filtered_properties = {}
                 for k in prop_names:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
-            else:
-                prop_names = self.exclude_annotations(prop_names)
+
 
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
@@ -2210,7 +2320,7 @@ class DocFormatter:
         Returns None if no data is present ({} is a valid data-present result)."""
 
         prop_profile = None
-        if prop_path[0] == 'Actions':
+        if len(prop_path) and prop_path[0] == 'Actions':
             section = 'ActionRequirements'
 
         if self.config.get('profile_resources'):
@@ -2238,6 +2348,53 @@ class DocFormatter:
         return prop_profile
 
 
+    def get_prop_subset(self, prop_path, section):
+        """Get subset data for the specified property.
+        This will be in the context of the current documented section's
+        schema.
+
+        Section is "Properties" or "Actions".
+        """
+
+        schema_name = self.this_section['schema_name']
+        prop_subset = None
+        subset = self.config.get('subset_resources', {}).get(schema_name)
+
+        if subset:
+            prop_subset = {}
+            prop_subset['Baseline'] = subset.get('Baseline', False)
+            prop_subset['Version'] = subset.get('Version', False)
+
+            if section == 'Actions':
+                subsection = 'Parameters'
+                if prop_path[0] == 'Actions':
+                    prop_path = prop_path[1:]
+            else:
+                subsection = 'Properties'
+
+            subset = subset.get(section, {}) # 'Properties' or 'Actions'
+            first = True
+            for prop_name in prop_path:
+                if not prop_name:
+                    continue
+                if not first:
+                    subset = subset.get(subsection, {}) # 'Properties' or 'Parameters'
+                subset = subset.get(prop_name, {})
+                first = False
+
+        if subset:
+            # We generally want to return a subset that has a top-level "subsection" key,
+            # except when we've drilled down to enum "SupportedValues."
+            if subsection in subset or 'SupportedValues' in subset:
+                subset['Baseline'] = prop_subset['Baseline']
+                prop_subset = subset
+            else:
+                prop_subset[subsection] = subset
+
+        return prop_subset
+
+
+
     def get_latest_version(self, schema_ref):
         """ Look up the latest version of the referenced schema in our property data """
         return  self.property_data.get(schema_ref, {}).get('latest_version')
@@ -2260,6 +2417,15 @@ class DocFormatter:
                 supplemental = schema_supplement.get(schema_key,
                                                         schema_supplement.get(schema_name, {}))
 
+            if md_supp:
+                for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
+                    if md_supp.get(key) and key not in supplemental:
+                        supplemental[key] = md_supp[key]
+        elif schema_supplement:
+            # Look up supplemental info based solely on the schema reference
+            # This is to work around the fact that common objects are not cached in the property_data structure
+            supplemental = schema_supplement.get(schema_ref, {})
+            md_supp = schema_md_supplement.get(schema_ref)
             if md_supp:
                 for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
                     if md_supp.get(key) and key not in supplemental:

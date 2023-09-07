@@ -1,16 +1,16 @@
 #! /usr/bin/python3
 # Copyright Notice:
-# Copyright 2016 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# Copyright 2016-2023 DMTF. All rights reserved.
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
-CSDL Validator version 0.1
+CSDL Validator
 
 File : odata_validator.py
 
 Brief : This file contains the definitions and functionalities for OData
-        validation. It provides the ability to crawl through OData Metadata
-        files, parse them and validate that they are OData 4.0 compliant.
+        validation. It provides the ability to crawl through OData CSDL
+        files, parse them and validate that they are OData 4.0 comformant.
 """
 
 import xml.etree.ElementTree as ET
@@ -26,10 +26,12 @@ import argparse
 import urllib.request
 from urllib.parse import urljoin
 import errno
+import json
 
 global_namespaces = {}
 local_directory = None
 service_path = None
+rules_config = {}
 
 CSDL_NAMES = ['Edmx', 'DataServices', 'Reference', 'Include', 'IncludeAnnotations', 'Schema',
               'Property', 'NavigationProperty', 'ReferentialConstraint', 'OnDelete', 'EntityType',
@@ -267,19 +269,19 @@ class AbstractType(Type):
         if self.name not in self._types:
             raise SchemaError("AbstractType {} is not defined".format(self.name))
 
-        if self.name is 'PrimitiveType':
+        if self.name == 'PrimitiveType':
             self.provides_type = ['Edm.PrimitiveType']
-        elif self.name is 'ComplexType':
+        elif self.name == 'ComplexType':
             self.provides_type = ['Edm.ComplexType']
-        elif self.name is 'EntityType':
+        elif self.name == 'EntityType':
             self.provides_type = ['Edm.EntityType']
-        elif self.name is 'AnnotationPath':
+        elif self.name == 'AnnotationPath':
             self.vocabulary_term = True
             self.provides_type = ['Edm.AnnotationPath']
-        elif self.name is 'PropertyPath':
+        elif self.name == 'PropertyPath':
             self.vocabulary_term = True
             self.provides_type = ['Edm.ComplexType', 'Edm.PrimitiveType', 'Edm.EnumType']
-        elif self.name is 'NavigationPropertyPath':
+        elif self.name == 'NavigationPropertyPath':
             self.vocabulary_term = True
             self.provides_type = ['Edm.NavigationPropertyPath']
 
@@ -968,6 +970,12 @@ class Element(object):
             SchemaError: If an annotation is illegally applying a term to this element.
         """
 
+        # ODATA Team says that the AppliesTo Attribute is more of a guideline than a rule.
+        # From the CSDL Spec: As the intended usage may evolve over time, clients SHOULD be prepared for any annotation
+        # to be applied to any element.
+
+        # The rules configuration file can specify additional AppliesTo usage beyond what's found in schema
+
         for annotation in self.annotation:
             term = self.find_in_scope(annotation.term)
             if term.applies_to:
@@ -975,10 +983,12 @@ class Element(object):
                 for element in term.applies_to:
                     if type(self).__name__ == element:
                         found_element = True
-# ODATA Team says that the AppliesTo Attribute is more of a guideline than a rule. Because of this
-# things should not be disallowed due to a failure to follow applies to checks.
-#                if not found_element:
-#                    raise SchemaError("Term {} does not apply to this type".format(term.name))
+                if "AppliesToOther" in rules_config:
+                    if term.name in rules_config["AppliesToOther"]:
+                        if type(self).__name__ in rules_config["AppliesToOther"][term.name]:
+                            found_element = True
+                if not found_element:
+                    raise SchemaError("Term {} does not apply to this type".format(term.name))
 
     def evaluate_expression(self, element):
         """Parses a passed in expression element.
@@ -1429,7 +1439,11 @@ class MetaData(Element):
         # Parse the included namespaces
         for reference in self._get_elements('Reference'):
             self.references.append(Reference(reference, self))
+        ref_uris = []
         for reference in self.references:
+            if reference.uri in ref_uris:
+                raise SchemaError("Reference to {} found multiple times".format(reference.uri))
+            ref_uris.append(reference.uri)
             self.children.append(reference)
             reference.generate_reference_dictionary(self.namespaces)
 
@@ -5605,11 +5619,17 @@ def main():
     """
 
     parser = argparse.ArgumentParser(description="OData Validation Tool")
-    parser.add_argument(
-        "MetaData",
-        help="Path to the metadata to be parsed, could be a url (start with http), file or folder")
-
+    parser.add_argument("--config", "-C", type=str, help="Configuration file containing additional configuration for CSDL rules")
+    parser.add_argument("MetaData", help="Path to the CSDL to test; could be a url (starting with http), file, or folder")
     args = parser.parse_args()
+
+    global rules_config
+    if args.config is not None:
+        try:
+            with open(args.config) as config_file:
+                rules_config = json.load(config_file)
+        except:
+            print("Could not open/load {}; proceeding with default CSDL rules".format(args.config))
 
     if args.MetaData.lower().startswith('http') or os.path.isfile(args.MetaData):
         #Metadata points to a uri or a local file

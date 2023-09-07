@@ -1,6 +1,6 @@
 # Copyright Notice:
 # Copyright 2019-2020 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File: test_release_history.py
@@ -170,7 +170,7 @@ def test_release_history_output_markdown(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
     expected_output = """|     |     |     |     |     |     |     |     |
-| --- | --- | --- | --- | --- | --- | --- | --- |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Version** | *v1.6* | *v1.5* | *v1.4* | *v1.3* | *v1.2* | *v1.1* | *v1.0* |
 | **Release** | 2018.3 | 2018.2 | 2017.3 | 2017.2 | 2017.1 | 2016.2 | 2016.1 |"""
 

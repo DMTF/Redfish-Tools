@@ -1,6 +1,6 @@
 # Copyright Notice:
 # Copyright 2021 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File: test_action_payloads.py
@@ -56,12 +56,12 @@ def test_html_output(mockRequest):
     config = copy.deepcopy(base_config)
     config['output_format'] = 'html'
 
-    expected_output = open(os.path.join(output_dir, 'output.html')).read().strip()
-
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    assert expected_output in output
+    # This test used to compare a snippet, but with Pygments involved, the test became fragile.
+    assert 'Placeholder for REQUEST' in output
+    assert 'Placeholder for RESPONSE' in output
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.

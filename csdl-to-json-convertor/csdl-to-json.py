@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Copyright Notice:
 # Copyright 2017-2018 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 CSDL to JSON Schema
@@ -212,6 +212,13 @@ class CSDLToJSON:
                         self.generate_capabilities( child, self.json_out[self.namespace_under_process]["definitions"] )
                         self.add_version_details( child, self.json_out[self.namespace_under_process]["definitions"][self.get_attrib( child, "Name" )] )
 
+                    # Process Action definitions
+                    # This is needed for OEM actions since there's no strong tie between a standard resource and an OEM action
+                    # The unversioned definition will contain an anyOf to point to each version
+                    if child.tag == ODATA_TAG_ACTION:
+                        if self.is_oem_action( child ):
+                            self.generate_abstract_object( child, self.json_out[self.namespace_under_process]["definitions"] )
+
                     # Process EnumType definitions
                     if child.tag == ODATA_TAG_ENUM:
                         self.generate_enum( child, self.json_out[self.namespace_under_process]["definitions"] )
@@ -417,6 +424,14 @@ class CSDLToJSON:
                                 json_def[name]["uris"] = []
                             json_def[name]["uris"].append( string.text )
 
+                # Deprecated URIs
+                if term == "Redfish.DeprecatedUris":
+                    for collection in child.iter( ODATA_TAG_COLLECTION ):
+                        for string in collection.iter( ODATA_TAG_STRING ):
+                            if "urisDeprecated" not in json_def[name]:
+                                json_def[name]["urisDeprecated"] = []
+                            json_def[name]["urisDeprecated"].append( string.text )
+
     def generate_abstract_object( self, object, json_def ):
         """
         Processes an abstract EntityType or ComplexType to generate the JSON definition structure
@@ -465,6 +480,13 @@ class CSDLToJSON:
                     namespace = self.get_attrib( schema, "Namespace" )
                     if namespace != self.namespace_under_process:
                         if does_version_apply( oldest_version, namespace ) and self.is_latest_errata( namespace ):
+                            json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
+            elif object.tag == ODATA_TAG_ACTION:
+                # Actions only appear in the unversioned namespace; need to make assumptions based on the version tag
+                for schema in self.root.iter( ODATA_TAG_SCHEMA ):
+                    namespace = self.get_attrib( schema, "Namespace" )
+                    if namespace != self.namespace_under_process:
+                        if self.does_definition_apply( object, namespace ) and self.is_latest_errata( namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
@@ -653,9 +675,17 @@ class CSDLToJSON:
 
         # Hook it into the Actions object definition to be one of its properties
         name = self.get_attrib( action, "Name" )
-        self.init_object_definition( "Actions", json_def )
-        action_prop = "#" + self.namespace_under_process.split( "." )[0] + "." + name
-        json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
+        if not self.is_oem_action( action ):
+            self.init_object_definition( "Actions", json_def )
+            # Find the binding parameter from the action to generate the name in JSON Schema; the name of the binding
+            # parameter is the first segment of the action name.  If not found, use the namespace under process to
+            # generate the name of the action.
+            action_prop = "#" + self.namespace_under_process.split( "." )[0] + "." + name
+            for child in action:
+                if child.tag == ODATA_TAG_PARAMETER:
+                    action_prop = "#" + self.get_attrib( child, "Name" ) + "." + name
+                    break
+            json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
 
         # Add version details to the Action
         self.add_version_details( action, json_def[name] )
@@ -1075,6 +1105,12 @@ class CSDLToJSON:
                 permissions = self.get_attrib( annotation, "EnumMember" )
                 if ( permissions == "OData.Permission/Read" ) or ( permissions == "OData.Permissions/Read" ):
                     json_type_def["readonly"] = True
+                elif ( permissions == "OData.Permission/Write" ) or ( permissions == "OData.Permissions/Write" ):
+                    json_type_def["writeOnly"] = True
+                    json_type_def["readonly"] = False
+                elif ( permissions == "OData.Permission/None" ) or ( permissions == "OData.Permissions/None" ):
+                    json_type_def["writeOnly"] = False
+                    json_type_def["readonly"] = True
                 else:
                     json_type_def["readonly"] = False
 
@@ -1106,6 +1142,10 @@ class CSDLToJSON:
             # Auto Expand
             if term == "OData.AutoExpand":
                 json_type_def["autoExpand"] = True
+
+            # URI Segment
+            if term == "Redfish.URISegment":
+                json_type_def["uriSegment"] = self.get_attrib( annotation, "String" )
 
             # Filter
             if term == "Redfish.Filter":
@@ -1203,19 +1243,19 @@ class CSDLToJSON:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "-?P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?"
+            pattern = "^P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?$"
         elif type == "Edm.TimeOfDay":
             if is_nullable:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?"
+            pattern = "^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?$"
         elif type == "Edm.Guid":
             if is_nullable:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"
+            pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
         elif type == "Edm.Boolean":
             if is_nullable:
                 json_type = [ "boolean", "null" ]
@@ -1407,6 +1447,24 @@ class CSDLToJSON:
                 if ( version1[0] == version2[0] ) and ( version1[1] == version2[1] ) and ( version1[2] < version2[2] ):
                     is_latest = False
         return is_latest
+
+    def is_oem_action( self, action ):
+        """
+        Checks if an action is an OEM action
+
+        Args:
+            action: The action structure
+
+        Returns:
+            True if the action is an OEM action, False otherwise
+        """
+
+        # If the binding parameter points to an OemActions object, this is an OEM action
+        for param in action:
+            if param.tag == ODATA_TAG_PARAMETER:
+                if self.get_attrib( param, "Type", True ).endswith( ".OemActions" ):
+                    return True
+        return False
 
 def main():
     """

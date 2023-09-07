@@ -1,6 +1,6 @@
 # Copyright Notice:
 # Copyright 2018 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File: html_utils.py
@@ -100,7 +100,7 @@ class HtmlUtils(FormatUtils):
         row = ''.join(['<th>' + cell + '</th>' for cell in cells])
         return '<tr>' + row + '</tr>'
 
-    def make_table(self, rows, header_rows=None, css_class=None):
+    def make_table(self, rows, header_rows=None, css_class=None, last_column_wide=False):
 
         """ Make an HTML table from the provided rows, which should be HTML markup """
         if header_rows:

@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Copyright Notice:
 # Copyright 2018 DMTF. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 JSON Schema to OpenAPI YAML
@@ -24,10 +24,10 @@ import yaml
 # List of terms that have a simple one to one conversion
 ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDescriptions", "enumDeprecated", "enumVersionDeprecated", "enumVersionAdded",
                              "units", "requiredOnCreate", "owningEntity", "autoExpand", "release", "versionDeprecated", "versionAdded", "filter",
-                             "excerpt", "excerptCopy", "excerptCopyOnly", "translation", "enumTranslations", "language" ]
+                             "excerpt", "excerptCopy", "excerptCopyOnly", "translation", "enumTranslations", "language", "uriSegment" ]
 
 # List of terms that are removed from the file
-REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter", "actionResponse" ]
+REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "urisDeprecated", "parameters", "requiredParameter", "actionResponse" ]
 
 # Responses allowed
 HEAD_RESPONSES = [ 204 ]
@@ -155,6 +155,8 @@ class JSONToYAML:
                     service_doc["paths"][uri]["delete"] = self.generate_operation( uri, DELETE_RESPONSES )
             else:
                 service_doc["paths"][uri]["post"] = self.generate_operation( uri, ACTION_RESPONSES, True )
+        service_doc["paths"]["/redfish/v1/$metadata"] = self.generate_metadata_operations()
+        service_doc["paths"]["/redfish/v1/odata"] = self.generate_odata_operations()
 
         out_string = yaml.dump( service_doc, default_flow_style = False )
         with open( service_file, "w" ) as file:
@@ -170,13 +172,18 @@ class JSONToYAML:
         """
         try:
             with open( filename ) as yaml_file:
-                yaml_data = yaml.load( yaml_file )
+                yaml_data = yaml.load( yaml_file, Loader=yaml.Loader )
         except:
             print( "ERROR: Could not open {}".format( filename ) )
             return
 
         # Go through each URI
         for uri in yaml_data["paths"]:
+            # Don't add $metadata or odata; these are not formatted like other responses
+            # These will be added back automatically later in the tool
+            if uri == "/redfish/v1/$metadata" or uri == "/redfish/v1/odata":
+                continue
+
             if "get" in yaml_data["paths"][uri]:
                 # This is a resource; copy data to the URI cache
                 self.uri_cache[uri] = {}
@@ -268,11 +275,7 @@ class JSONToYAML:
                     if "anyOf" in definition:
                         if self.is_collection( definition ):
                             # Determine what the reference will look like based on its members
-                            if def_name == "DriveCollection":
-                                # This is the only known case where a collection resource and its respective singular resource is owned by two different groups
-                                reference = "http://redfish.dmtf.org/schemas/swordfish/v1"
-                            else:
-                                reference = re.search( "^(.+)\/\w+\.json", definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"] ).group( 1 )
+                            reference = re.search( "^(.+)\/\w+\.json", definition["anyOf"][-1]["properties"]["Members"]["items"]["$ref"] ).group( 1 )
                             reference = reference + "/" + def_name + ".yaml#/components/schemas/" + def_name + "_" + def_name
 
                             # Pull out the filename of the collection members to see if it's being converted now
@@ -317,6 +320,9 @@ class JSONToYAML:
                         self.uri_cache[uri]["deprecated"] = deprecated
                         self.uri_cache[uri]["reasonDeprecated"] = deprecated_reason
                         self.uri_cache[uri]["versionDeprecated"] = deprecated_version
+                        # Specific URIs can be deprecated without deprecating the entire schema
+                        if "urisDeprecated" in definition and uri in definition["urisDeprecated"]:
+                            self.uri_cache[uri]["deprecated"] = True
 
     def check_for_actions( self, json_data, filename ):
         """
@@ -415,6 +421,22 @@ class JSONToYAML:
             json_data: The JSON object to process
         """
 
+        # Remove "anyOf" terms
+        if "anyOf" in json_data:
+            # Two patterns we follow for "anyOf" usage:
+            # 1) Arrays to show an item can be a particular definition or null
+            # In this case, we need to use the OpenAPI "nullable" term
+            if json_data["anyOf"][-1] == { "type": "null" }:
+                json_data["$ref"] = json_data["anyOf"][0]["$ref"]
+                json_data.pop( "anyOf" )
+                json_data["nullable"] = True
+            # 2) Abstract base definitions that point to every versioned definition
+            # Keeping this causes significant client code bloat, so just use the latest version
+            else:
+                for definition in json_data["anyOf"][-1]:
+                    json_data[definition] = json_data["anyOf"][-1][definition]
+                json_data.pop( "anyOf" )
+
         # Perform one for one replacements (meaning "term" becomes "x-term")
         for replacement in ONE_FOR_ONE_REPLACEMENTS:
             if replacement in json_data:
@@ -454,29 +476,6 @@ class JSONToYAML:
         if "type" in json_data:
             if json_data["type"] == "integer":
                 json_data["format"] = "int64"
-
-        # Update anyOf to remove null types; OpenAPI defines a "nullable" term
-        if "anyOf" in json_data:
-            obj_count = 0
-            is_nullable = False
-            for i, item in enumerate( json_data["anyOf"] ):
-                if item == { "type": "null" }:
-                    is_nullable = True
-                else:
-                    obj_count += 1
-            if ( obj_count == 1 ) and ( "$ref" in json_data["anyOf"][0] ) and is_nullable:
-                json_data["$ref"] = json_data["anyOf"][0]["$ref"]
-                json_data.pop( "anyOf" )
-                json_data["nullable"] = True
-
-        # Update Resource Collections to remove the anyOf term
-        for definition in json_data:
-            if self.is_collection( json_data[definition] ):
-                try:
-                    if len( json_data[definition]["anyOf"] ) == 2:
-                        json_data[definition] = json_data[definition]["anyOf"][1]
-                except:
-                    pass
 
         # Update $ref to use the form "/components/schemas/" instead of "/definitions/"
         if "$ref" in json_data:
@@ -551,24 +550,24 @@ class JSONToYAML:
             An object containing the definition of the Redfish Error payload
         """
         redfish_error = {
-            "description": "The error payload from a Redfish Service.",
-            "x-longDescription": "The Redfish Specification-described type shall contain an error payload from a Redfish Service.",
+            "description": "The error payload from a Redfish service.",
+            "x-longDescription": "The Redfish Specification-described type shall contain an error payload from a Redfish service.",
             "type": "object",
             "properties": {
                 "error": {
-                    "description": "The properties that describe an error from a Redfish Service.",
-                    "x-longDescription": "The Redfish Specification-described type shall contain properties that describe an error from a Redfish Service.",
+                    "description": "The properties that describe an error from a Redfish service.",
+                    "x-longDescription": "The Redfish Specification-described type shall contain properties that describe an error from a Redfish service.",
                     "type": "object",
                     "properties": {
                         "code": {
-                            "description": "A string indicating a specific MessageId from a Message Registry.",
-                            "x-longDescription": "This property shall contain a string indicating a specific MessageId from a Message Registry.",
+                            "description": "A string indicating a specific MessageId from a message registry.",
+                            "x-longDescription": "This property shall contain a string indicating a specific MessageId from a message registry.",
                             "readOnly": True,
                             "type": "string"
                         },
                         "message": {
-                            "description": "A human-readable error message corresponding to the message in a Message Registry.",
-                            "x-longDescription": "This property shall contain a human-readable error message corresponding to the message in a Message Registry.",
+                            "description": "A human-readable error message corresponding to the message in a message registry.",
+                            "x-longDescription": "This property shall contain a human-readable error message corresponding to the message in a message registry.",
                             "readOnly": True,
                             "type": "string"
                         },
@@ -690,7 +689,7 @@ class JSONToYAML:
                     response["content"] = content_error
         elif http_status == 202:
             # 202 Accepted: Task is returned
-            response["description"] = "Accepted; a Task has been generated"
+            response["description"] = "Accepted; a task has been generated"
             if content_task is not None:
                 response["content"] = content_task
         elif http_status == 204:
@@ -765,6 +764,113 @@ class JSONToYAML:
             pass
 
         return False
+
+    def generate_metadata_operations( self ):
+        """
+        Creates the operation objects for /redfish/v1/$metadata
+
+        Returns:
+            The operation objects for /redfish/v1/$metadata
+        """
+
+        metadata = {
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/xml": {}
+                        },
+                        "description": "OData $metadata."
+                    },
+                    "default": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RedfishError"
+                                }
+                            }
+                        },
+                        "description": "Error condition"
+                    }
+                }
+            }
+        }
+        return metadata
+
+    def generate_odata_operations( self ):
+        """
+        Creates the operation objects for /redfish/v1/odata
+
+        Returns:
+            The operation objects for /redfish/v1/odata
+        """
+
+        odata = {
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "description": "The OData service document from a Redfish service.",
+                                    "type": "object",
+                                    "properties": {
+                                        "@odata.context": {
+                                            "$ref": "http://redfish.dmtf.org/schemas/v1/odata-v4.yaml#/components/schemas/odata-v4_context"
+                                        },
+                                        "value": {
+                                            "description": "The list of services provided by the Redfish service.",
+                                            "items": {
+                                                "properties": {
+                                                    "name": {
+                                                        "description": "User-friendly resource name of the resource.",
+                                                        "readOnly": True,
+                                                        "type": "string"
+                                                    },
+                                                    "kind": {
+                                                        "description": "Type of resource.  Value is `Singleton` for all cases defined by Redfish.",
+                                                        "readOnly": True,
+                                                        "type": "string"
+                                                    },
+                                                    "url": {
+                                                        "description": "Relative URL for the top-level resource.",
+                                                        "readOnly": True,
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "name",
+                                                    "kind",
+                                                    "url"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            "type": "array"
+                                        }
+                                    },
+                                    "required": [
+                                        "@odata.context",
+                                        "value"
+                                    ]
+                                }
+                            }
+                        },
+                        "description": "OData service document"
+                    },
+                    "default": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RedfishError"
+                                }
+                            }
+                        },
+                        "description": "Error condition"
+                    }
+                }
+            }
+        }
+        return odata
 
 def is_unversioned( name ):
     """

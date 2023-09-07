@@ -1,6 +1,6 @@
 # Copyright Notice:
 # Copyright 2018-2020 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File: test_openapi.py
@@ -101,9 +101,9 @@ def test_uris_in_regular_schema_slate_output (mockRequest):
 
     # Links should appear with asterisks around {} path parts to highlight them.
     expected_strings = [
-        "/redfish/v1/Managers/*{ManagerId}*/LogServices/*{LogServiceId}*/Entries/*{LogEntryId}*",
-        "/redfish/v1/Systems/*{ComputerSystemId}*/LogServices/*{LogServiceId}*/Entries/*{LogEntryId}*",
-        "/redfish/v1/CompositionService/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/LogServices/*{LogServiceId}*/Entries/*{LogEntryId}*"
+        "/&#8203;redfish/&#8203;v1/&#8203;Managers/&#8203;*{ManagerId}*/&#8203;LogServices/&#8203;*{LogServiceId}*/&#8203;Entries/&#8203;*{LogEntryId}*",
+        "/&#8203;redfish/&#8203;v1/&#8203;Systems/&#8203;*{ComputerSystemId}*/&#8203;LogServices/&#8203;*{LogServiceId}*/&#8203;Entries/&#8203;*{LogEntryId}*",
+        "/&#8203;redfish/&#8203;v1/&#8203;CompositionService/&#8203;ResourceBlocks/&#8203;*{ResourceBlockId}*/&#8203;Systems/&#8203;*{ComputerSystemId}*/&#8203;LogServices/&#8203;*{LogServiceId}*/&#8203;Entries/&#8203;*{LogEntryId}*"
         ]
 
     for x in expected_strings:
@@ -127,9 +127,9 @@ def test_uris_in_collection_schema_slate_output (mockRequest):
     output = docGen.generate_docs()
 
     expected_strings = [
-        "/redfish/v1/Managers/*{ManagerId}*/LogServices/*{LogServiceId}*/STUBCollection",
-        "/redfish/v1/Systems/*{ComputerSystemId}*/LogServices/*{LogServiceId}*/STUBCollection",
-        "/redfish/v1/CompositionService/ResourceBlocks/*{ResourceBlockId}*/Systems/*{ComputerSystemId}*/LogServices/*{LogServiceId}*/STUBCollection"
+        "/&#8203;redfish/&#8203;v1/&#8203;Managers/&#8203;*{ManagerId}*/&#8203;LogServices/&#8203;*{LogServiceId}*/&#8203;STUBCollection",
+        "/&#8203;redfish/&#8203;v1/&#8203;Systems/&#8203;*{ComputerSystemId}*/&#8203;LogServices/&#8203;*{LogServiceId}*/&#8203;STUBCollection",
+        "/&#8203;redfish/&#8203;v1/&#8203;CompositionService/&#8203;ResourceBlocks/&#8203;*{ResourceBlockId}*/&#8203;Systems/&#8203;*{ComputerSystemId}*/&#8203;LogServices/&#8203;*{LogServiceId}*/&#8203;STUBCollection"
         ]
 
     for x in expected_strings:
@@ -185,8 +185,8 @@ def test_action_uris (mockRequest):
 
     # This used to be more interesting.
     expected_strings = [
-        "{Base URI of target resource}/Actions/Bios.ChangePassword",
-        "{Base URI of target resource}/Actions/Bios.ResetBios",
+        "*{Base URI of target resource}*/Actions/Bios.ChangePassword",
+        "*{Base URI of target resource}*/Actions/Bios.ResetBios",
         ]
 
     for x in expected_strings:
