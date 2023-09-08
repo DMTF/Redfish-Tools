@@ -86,6 +86,7 @@ const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
                                   'DataSecurityLoSCapabilities_v1.xml', 'DataStorageLineOfService_v1.xml', 'DataStorageLoSCapabilities_v1.xml',
                                   'FeaturesRegistry_v1.xml', 'FeaturesRegistryCollection_v1.xml',
                                   'FeaturesRegistryService_v1.xml', 'FileShare_v1.xml', 'FileShareCollection_v1.xml', 'FileSystem_v1.xml', 'FileSystemCollection_v1.xml',
+                                  'FileSystemMetrics_v1.xml',
                                   'HostedStorageServices_v1.xml',
                                   'IOConnectivityLineOfService_v1.xml', 'IOConnectivityLoSCapabilities_v1.xml', 'IOPerformanceLineOfService_v1.xml',
                                   'IOPerformanceLoSCapabilities_v1.xml', 'IOStatistics_v1.xml', 'LineOfService_v1.xml', 'LineOfServiceCollection_v1.xml',
@@ -93,6 +94,7 @@ const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
                                   'NVMeDomainCollection_v1.xml', 'NVMeFirmwareImage_v1.xml',
                                   'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml',
                                   'StorageReplicaInfo_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
+                                  'StoragePoolMetrics_v1.xml', 'StorageServiceMetrics_v1.xml', 
                                   'VolumeCollection_v1.xml', 'VolumeMetrics_v1.xml' ];
 const ContosoSchemaFileList = [ 'ContosoAccountService_v1.xml', 'ContosoServiceRoot_v1.xml', 'ContosoTurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'ContosoTurboencabulatorService', 'LineOfService' ];
