@@ -422,7 +422,7 @@ class JSONToYAML:
         """
 
         # Remove "anyOf" terms
-        if "anyOf" in json_data:
+        if "anyOf" in json_data and len( json_data["anyOf"] ) > 0:
             # Two patterns we follow for "anyOf" usage:
             # 1) Arrays to show an item can be a particular definition or null
             # In this case, we need to use the OpenAPI "nullable" term
