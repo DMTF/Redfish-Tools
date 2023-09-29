@@ -514,163 +514,219 @@ class DocFormatter:
             details = property_data[schema_ref]
             schema_name = details['schema_name']
             profile = config.get('profile_resources', {}).get(schema_ref, {})
-            subset  = config.get('subset_resources', {}).get(schema_name, {})
+            subset = config.get('subset_resources', {}).get(schema_name, {})
             self.ref_deduplicator[schema_ref] = {}
 
             version = property_data.get('latest_version', '1')
             supplemental = self.get_supplemental_details(schema_ref)
 
-            json_payload = None
-            if self.config.get('payloads'):
-                payload_key = DocGenUtilities.get_payload_name(schema_name, version)
-                payload = self.config['payloads'].get(payload_key)
-                if payload:
-                    json_payload = payload
+            # Generate a number of sections based on if we have Usecases
+            if 'UseCases' in profile:
+                my_sections = profile['UseCases']
+                my_sections = sorted(my_sections, key=lambda c: c.get('UseCaseTitle'))
+            else:
+                my_sections = [profile]
+
+            for section in my_sections:
+                is_usecase = 'UseCaseTitle' in section
+
+                json_payload = None
+                if self.config.get('payloads'):
+                    payload_key = DocGenUtilities.get_payload_name(schema_name, version)
+                    payload = self.config['payloads'].get(payload_key)
+                    if payload:
+                        json_payload = payload
+                    else:
+                        if self.config.get('warn_missing_payloads'):
+                            warnings.warn("MISSING JSON PAYLOAD FOR SCHEMA '%(schema_name)s'." %{'schema_name': schema_name})
+                if not json_payload and supplemental.get('jsonpayload'):
+                    json_payload = supplemental.get('jsonpayload')
+
+                definitions = details['definitions']
+
+                if config.get('omit_version_in_headers'):
+                    section_name = schema_name
                 else:
-                    if self.config.get('warn_missing_payloads'):
-                        warnings.warn("MISSING JSON PAYLOAD FOR SCHEMA '%(schema_name)s'." %{'schema_name': schema_name})
-            if not json_payload and supplemental.get('jsonpayload'):
-                json_payload = supplemental.get('jsonpayload')
+                    section_name = details['name_and_version']
 
-            definitions = details['definitions']
+                if is_usecase:
+                    section_name += ' ({})'.format(section.get('UseCaseTitle', 'Missing Usecase Title'))
+                
+                # Begin formatting schema here
 
-            if config.get('omit_version_in_headers'):
-                section_name = schema_name
-            else:
-                section_name = details['name_and_version']
-            self.add_section(section_name, schema_name, schema_ref)
-            self.current_version = {}
+                self.add_section(section_name, schema_name, schema_ref)
+                self.current_version = {}
 
-            if profile.get('URIs'):
-                uris = profile['URIs']
-            else:
-                uris = details['uris']
-
-            conditional_details = None
-            if profile.get('ConditionalRequirements'):
-                conditional_reqs = profile.get('ConditionalRequirements')
-                conditional_details = self.format_conditional_details(schema_ref, None, conditional_reqs)
-
-            # Normative docs prefer longDescription to description
-            if config.get('normative') and 'longDescription' in definitions[schema_name] and definitions[schema_name].get('description') != definitions[schema_name].get('longDescription'):
-                if config.get('combine_descriptions'):
-                    description = definitions[schema_name].get('description') + '<ul><li>' +definitions[schema_name].get('longDescription') + '</li></ul>'
+                if section.get('URIs'):
+                    uris = section['URIs']
                 else:
-                    description = definitions[schema_name].get('longDescription')
-            else:
-                description = definitions[schema_name].get('description')
+                    uris = details['uris']
 
-            required = definitions[schema_name].get('required', [])
-            required_on_create = definitions[schema_name].get('requiredOnCreate', [])
+                required = definitions[schema_name].get('required', [])
+                required_on_create = definitions[schema_name].get('requiredOnCreate', [])
 
-            # Override with supplemental schema description, if provided
-            # If there is a supplemental "description" or "intro", it replaces
-            # the description in the schema. If both are present, the "description"
-            # should be output, followed by the "intro".
-            if supplemental.get('description') and supplemental.get('intro'):
-                description = (supplemental.get('description') + '\n\n' +
-                               supplemental.get('intro'))
-            elif supplemental.get('description'):
-                description = supplemental.get('description')
-            else:
-                description = supplemental.get('intro', description)
+                if is_usecase:
+                    # Combine Purpose and Conditionals into description statement
+                    description_text = 'This section describes a UseCase of {}.'.format(schema_name)
 
-            # Profile purpose overrides all:
-            if profile:
-                description = profile.get('Purpose')
+                    section_requirement = section.get('ReadRequirement', 'Mandatory')
+                    if section_requirement == 'Mandatory':
+                        description_text += '\n\nA service is required to implement this UseCase. (Mandatory)'
+                    elif section_requirement == 'Recommended':
+                        description_text += '\n\nA service is recommended to implement this UseCase. (Recommended)'
+                    elif section_requirement == 'IfImplemented':
+                        description_text += '\n\nThis UseCase is required if it is present.  (IfImplemented)'
+                        
+                    if section.get('Purpose'):
+                        description_text += "\n\nPurpose:  {}".format(section.get('Purpose'))
 
-            if description:
-                self.add_description(description)
+                    if section.get('MinVersion'):
+                        description_text += '\n\nThe resource must be at least version:  {}'.format(section.get('MinVersion'))
 
-            if details.get('deprecated'):
-                self.add_deprecation_text(details['deprecated'])
+                    if section.get('UseCaseKeyProperty') and section.get('UsesectionComparison') and section.get('UsesectionKeyValues'):
+                        description_text += '\n\nThese requirements apply to resources where {} is "{}" to one of the following: {}'.format(
+                            section.get('UseCaseKeyProperty'),
+                            section.get('UseCaseComparison'),
+                            ', '.join(['"{}"'.format(x) for x in section.get('UseCaseKeyValues')])
+                        )
 
-            if len(uris):
-                self.add_uris(uris, details['urisDeprecated'])
-                self.current_uris = uris
-            else:
-                self.current_uris = []
+                    if uris: 
+                        if 'URIs' in section:
+                            description_text += "\n\nThis UseCase is must exist at the following URIs: "
+                        else:
+                            description_text += "\n\nThis UseCase may be found at the following URIs: "
+                        if len(uris):
+                            self.add_uris(uris, details['urisDeprecated'])
+                            self.current_uris = uris
+                        else:
+                            self.current_uris = []
 
-            if details.get('release_history') and not self.config.get('suppress_version_history'):
-                self.add_release_history(details['release_history'], details.get('versionDeprecated'))
+                    self.add_description(description_text)
 
-            if conditional_details:
-                self.add_conditional_requirements(conditional_details)
+                else:
+                    conditional_details = None
+                    if section.get('ConditionalRequirements'):
+                        conditional_reqs = section.get('ConditionalRequirements')
+                        conditional_details = self.format_conditional_details(schema_ref, None, conditional_reqs)
 
-            self.add_json_payload(json_payload)
+                    # Normative docs prefer longDescription to description
+                    if config.get('normative') and 'longDescription' in definitions[schema_name] and definitions[schema_name].get('description') != definitions[schema_name].get('longDescription'):
+                        if config.get('combine_descriptions'):
+                            description = definitions[schema_name].get('description') + '<ul><li>' +definitions[schema_name].get('longDescription') + '</li></ul>'
+                        else:
+                            description = definitions[schema_name].get('longDescription')
+                    else:
+                        description = definitions[schema_name].get('description')
 
-            if 'properties' in details.keys():
-                prop_details = {}
-                conditional_details = {}
+                    # Override with supplemental schema description, if provided
+                    # If there is a supplemental "description" or "intro", it replaces
+                    # the description in the schema. If both are present, the "description"
+                    # should be output, followed by the "intro".
+                    if supplemental.get('description') and supplemental.get('intro'):
+                        description = (supplemental.get('description') + '\n\n' +
+                                    supplemental.get('intro'))
+                    elif supplemental.get('description'):
+                        description = supplemental.get('description')
+                    else:
+                        description = supplemental.get('intro', description)
 
-                properties = details['properties']
-                prop_names = [x for x in properties.keys()]
-                if self.config.get('profile_mode') and profile:
-                    prop_names = self.filter_props_by_profile(prop_names, profile, required, False)
-                if self.config.get('subset_mode') and subset:
-                    prop_names = self.filter_props_by_subset(prop_names, subset)
+                    # Profile purpose overrides all
+                    # NOTE: Does this apply even if the Profile has no purpose listed, or just for Schema?
+                    if section:
+                        description = section.get('Purpose')
 
-                prop_names = self.organize_prop_names(prop_names)
+                    if description:
+                        self.add_description(description)
 
-                # If combining of multiple refs is requested, do a first pass, counting refs:
-                if self.config.get('combine_multiple_refs', 0) > 1:
+                    if details.get('deprecated'):
+                        self.add_deprecation_text(details['deprecated'])
+
+                    if len(uris):
+                        self.add_uris(uris, details['urisDeprecated'])
+                        self.current_uris = uris
+                    else:
+                        self.current_uris = []
+
+                    if details.get('release_history') and not self.config.get('suppress_version_history'):
+                        self.add_release_history(details['release_history'], details.get('versionDeprecated'))
+
+                    if conditional_details:
+                        self.add_conditional_requirements(conditional_details)
+
+                self.add_json_payload(json_payload)
+
+                # Print out all applicable properties
+                # If we have UseCases, this should not apply.  
+                if 'properties' in details.keys():
+                    prop_details = {}
+                    conditional_details = {}
+
+                    properties = details['properties']
+                    prop_names = [x for x in properties.keys()]
+                    if self.config.get('profile_mode') and section:
+                        prop_names = self.filter_props_by_profile(prop_names, section, required, False)
+                    if self.config.get('subset_mode') and subset:
+                        prop_names = self.filter_props_by_subset(prop_names, subset)
+
+                    prop_names = self.organize_prop_names(prop_names)
+
+                    # If combining of multiple refs is requested, do a first pass, counting refs:
+                    if self.config.get('combine_multiple_refs', 0) > 1:
+                        for prop_name in prop_names:
+                            prop_info = properties[prop_name]
+                            if section:
+                                prop_info['_profile'] = section.get('PropertyRequirements', {}).get(prop_name)
+                            if subset:
+                                prop_info['_subset'] = subset.get('Properties', {}).get(prop_name)
+
+                            # Note: we are calling extend_property_info here solely for the purpose of counting refs.
+                            # In the next loop we call it again to generate the data to format -- we need to get the complete count
+                            # of in-schema refs before generating data to format.
+                            prop_infos = self.extend_property_info(schema_ref, prop_info)
+
+                            # If we've extended an in-schema reference, capture it:
+                            prop_info_ref_uri = self.count_ref_in_schema(schema_ref, prop_infos[0])
+
+                            # Extend further so all ref counts are updated before we start formatting output:
+                            self.extend_and_count_refs(schema_ref, prop_infos)
+
+                        self.ref_counts[schema_ref] = self.summarize_duplicates(self.ref_deduplicator.get(schema_ref, {}))
+
                     for prop_name in prop_names:
                         prop_info = properties[prop_name]
-                        if profile:
-                            prop_info['_profile'] = profile.get('PropertyRequirements', {}).get(prop_name)
+                        prop_info['prop_required'] = prop_info.get('prop_required') or prop_name in required
+                        prop_info['prop_required_on_create'] = prop_info.get('prop_required_on_create') or prop_name in required_on_create
+                        prop_info['parent_requires'] = required
+                        prop_info['parent_requires_on_create'] = required_on_create
+                        prop_info['required_parameter'] = prop_info.get('requiredParameter')
+                        if section:
+                            prop_info['_profile'] = section.get('PropertyRequirements', {}).get(prop_name)
                         if subset:
                             prop_info['_subset'] = subset.get('Properties', {}).get(prop_name)
 
-                        # Note: we are calling extend_property_info here solely for the purpose of counting refs.
-                        # In the next loop we call it again to generate the data to format -- we need to get the complete count
-                        # of in-schema refs before generating data to format.
                         prop_infos = self.extend_property_info(schema_ref, prop_info)
+                        formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
+                        if formatted:
+                            # Skip "Actions" if requested. Everything else is output.
+                            if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
+                                self.add_property_row(formatted['row'])
+                            if formatted['details']:
+                                self.merge_prop_details(prop_details, formatted['details'])
+                            if formatted['action_details']:
+                                self.add_action_details(formatted['action_details'])
+                            if formatted.get('profile_conditional_details'):
+                                conditional_details.update(formatted['profile_conditional_details'])
 
-                        # If we've extended an in-schema reference, capture it:
-                        prop_info_ref_uri = self.count_ref_in_schema(schema_ref, prop_infos[0])
+                    if self.common_property_details:
+                        self.merge_prop_details(prop_details, self.common_property_details)
+                    if len(prop_details):
+                        self.merge_prop_details(self.this_section['property_details'], prop_details)
 
-                        # Extend further so all ref counts are updated before we start formatting output:
-                        self.extend_and_count_refs(schema_ref, prop_infos)
-
-                    self.ref_counts[schema_ref] = self.summarize_duplicates(self.ref_deduplicator.get(schema_ref, {}))
-
-                for prop_name in prop_names:
-                    prop_info = properties[prop_name]
-                    prop_info['prop_required'] = prop_info.get('prop_required') or prop_name in required
-                    prop_info['prop_required_on_create'] = prop_info.get('prop_required_on_create') or prop_name in required_on_create
-                    prop_info['parent_requires'] = required
-                    prop_info['parent_requires_on_create'] = required_on_create
-                    prop_info['required_parameter'] = prop_info.get('requiredParameter')
-                    if profile:
-                        prop_info['_profile'] = profile.get('PropertyRequirements', {}).get(prop_name)
-                    if subset:
-                        prop_info['_subset'] = subset.get('Properties', {}).get(prop_name)
-
-                    prop_infos = self.extend_property_info(schema_ref, prop_info)
-                    formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
-                    if formatted:
-                        # Skip "Actions" if requested. Everything else is output.
-                        if prop_name != 'Actions' or self.config.get('actions_in_property_table', True):
-                            self.add_property_row(formatted['row'])
-                        if formatted['details']:
-                            self.merge_prop_details(prop_details, formatted['details'])
-                        if formatted['action_details']:
-                            self.add_action_details(formatted['action_details'])
-                        if formatted.get('profile_conditional_details'):
-                            conditional_details.update(formatted['profile_conditional_details'])
-
-                if self.common_property_details:
-                    self.merge_prop_details(prop_details, self.common_property_details)
-                if len(prop_details):
-                    self.merge_prop_details(self.this_section['property_details'], prop_details)
-
-                if len(conditional_details):
-                    cond_names = [x for x in conditional_details.keys()]
-                    cond_names.sort(key=str.lower)
-                    for cond_name in cond_names:
-                        self.add_profile_conditional_details(conditional_details[cond_name])
-
-
+                    if len(conditional_details):
+                        cond_names = [x for x in conditional_details.keys()]
+                        cond_names.sort(key=str.lower)
+                        for cond_name in cond_names:
+                            self.add_profile_conditional_details(conditional_details[cond_name])
 
         if self.config.get('profile_mode'):
             # Add registry messages, if in profile.
@@ -1216,14 +1272,18 @@ class DocFormatter:
 
         return filtered_names
 
-
     def filter_props_by_profile(self, prop_names, profile, schema_requires, is_action=False):
-
         if profile is None:
             warnings.warn("filter_props_by_profile was called with no profile data")
             return prop_names
 
         if profile.get('PropertyRequirements') is None and not is_action:
+            # If USECASE, then don't return anything except Action
+            if 'UseCaseTitle' in profile:
+                if 'ActionRequirements' in profile and len(profile['ActionRequirements']):
+                    return [x for x in prop_names if x == 'Actions']  # Only Action
+                else:
+                    return []
             # if a resource is specified with no PropertyRequirements, include them all...
             # but do omit "Actions" if there are no ActionRequirements (profile mode).
             if profile.get('ActionRequirements') and len(profile['ActionRequirements']):
