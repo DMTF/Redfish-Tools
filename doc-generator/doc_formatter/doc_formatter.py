@@ -1278,12 +1278,6 @@ class DocFormatter:
             return prop_names
 
         if profile.get('PropertyRequirements') is None and not is_action:
-            # If USECASE, then don't return anything except Action
-            if 'UseCaseTitle' in profile:
-                if 'ActionRequirements' in profile and len(profile['ActionRequirements']):
-                    return [x for x in prop_names if x == 'Actions']  # Only Action
-                else:
-                    return []
             # if a resource is specified with no PropertyRequirements, include them all...
             # but do omit "Actions" if there are no ActionRequirements (profile mode).
             if profile.get('ActionRequirements') and len(profile['ActionRequirements']):
