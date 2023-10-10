@@ -36,6 +36,25 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
   skipCheckSchemaList = config.get('Redfish.ExternalOwnedSchemas');
 }
 
+var privilegeRegistry = null;
+if(config.has('Redfish.PrivilegeRegistryGlob')) {
+  const files = glob.sync(config.get('Redfish.PrivilegeRegistryGlob'));
+  //Find the latest version...
+  let fileName = files[0];
+  for(let i = 1; i < files.length; i++) {
+    if(files[i].localeCompare(fileName) > 0) {
+      fileName = files[i];
+    }
+  }
+  data = fs.readFileSync(fileName);
+  try {
+    json = JSON.parse(data.toString('utf-8'));
+  } catch(err) {
+    throw err;
+  }
+  privilegeRegistry = json;
+}
+
 /***************** Allow lists ******************************/
 //Units that don't exist in UCUM or are complicated to the point where validUnitsTest needs additional work
 const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s' ];
@@ -62,7 +81,7 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'SMBv3_0_2', 'Bits_0', 'Bits_128', 'Bits_192', 'Bits_256', 'Bits_112',
                                     'ISO8859_1', 'UTF_8', 'UTF_16', 'UCS_2', 'RPCSEC_GSS', 'HMAC128_SHA224',
                                     'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512', 'TLS_PSK', 'TLS_AES_128_GCM_SHA256',
-                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad'];
+                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad', 'CFB128_AES192', 'CFB128_AES256'];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 //Properties that have units but don't have the unit names in them
@@ -228,6 +247,9 @@ describe('CSDL Tests', () => {
         it('All definitions shall include Description and LongDescription annotations', () => {definitionsHaveAnnotations(csdl);});
         it('All versioned, non-errata namespaces have Release', () => {schemaReleaseCheck(csdl);});
         it('Resources specify capabilities', () => {resourcesSpecifyCapabilities(csdl);});
+        if(privilegeRegistry !== null) {
+          it('All EntityTypes are in Privilege Registry', () => {enityTypeInPrivilegeRegistry(csdl);});
+        }
       }
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
       it('Property Types are valid', () => {checkValidPropertyType(csdl, fileName);});
@@ -2059,6 +2081,25 @@ function actionBindingParameter(csdl) {
     let bindingParam = actions[i].Parameters[paramKeys[0]];
     if(!bindingParam.Type.endsWith('.Actions') && !bindingParam.Type.endsWith('.OemActions')) {
       throw new Error(actions[i].Name+' does not specify a binding parameter!');
+    }
+  }
+}
+
+function enityTypeInPrivilegeRegistry(csdl) {
+  let entities = CSDL.search(csdl, 'EntityType');
+  for(let i = 0; i < entities.length; i++) {
+    //Only look at the root entity types...
+    if(entities[i].BaseType === 'Resource.v1_0_0.Resource') {
+      let found = false;
+      for(let j = 0; j < privilegeRegistry.Mappings.length; j++) {
+        if(entities[i].Name === privilegeRegistry.Mappings[j].Entity) {
+          found = true;
+          break;
+        }
+      }
+      if(!found) {
+        throw new Error(entities[i].Name+' is not present in Privilege Registry!');
+      }
     }
   }
 }
