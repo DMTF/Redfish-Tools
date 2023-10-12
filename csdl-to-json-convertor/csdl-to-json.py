@@ -1222,7 +1222,7 @@ class CSDLToJSON:
                 json_type = [ "integer", "null" ]
             else:
                 json_type = "integer"
-        elif type == "Edm.Decimal":
+        elif ( type == "Edm.Decimal" ) or ( type == "Edm.Double" ):
             if is_nullable:
                 json_type = [ "number", "null" ]
             else:
