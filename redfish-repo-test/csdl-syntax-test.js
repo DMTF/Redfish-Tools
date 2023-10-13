@@ -156,6 +156,7 @@ const CommonWritableObjects = ['IPAddresses.IPv4Address', 'IPAddresses.IPv6Stati
 const SkipPropertyTypeCheck = {
   'AttributeRegistry_v1.xml': ['CurrentValue', 'DefaultValue', 'MapToValue', 'MapFromValue']
 };
+const EntitiesNotInPrivilegeRegistry = ['Event'];
 /************************************************************/
 
 if(config.has('Redfish.ExtraPluralAllowed')) {
@@ -2090,6 +2091,10 @@ function enityTypeInPrivilegeRegistry(csdl) {
   for(let i = 0; i < entities.length; i++) {
     //Only look at the root entity types...
     if(entities[i].BaseType === 'Resource.v1_0_0.Resource') {
+      if(EntitiesNotInPrivilegeRegistry.indexOf(entities[i].Name) !== -1) {
+        //Skip entities like Event that shouldn't be in the privilege registry
+        continue;
+      }
       let found = false;
       for(let j = 0; j < privilegeRegistry.Mappings.length; j++) {
         if(entities[i].Name === privilegeRegistry.Mappings[j].Entity) {
