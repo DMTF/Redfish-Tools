@@ -114,7 +114,7 @@ optional arguments:
 
 Example:
    doc_generator.py --format=html
-   doc_generator.py --format=html --out=/path/to/output/index.html /path/to/spmf/json-files
+   doc_generator.py --format=html --out=/path/to/output/index.html /path/to/redfish/json-files
 ```
 
 Refer to [Property Index Mode](README_Property_Index.md) for documentation on Property Index mode.
