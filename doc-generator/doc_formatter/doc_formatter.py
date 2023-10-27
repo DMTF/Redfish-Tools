@@ -144,7 +144,7 @@ class DocFormatter:
             if version_deprecated:
                 version_depr_text = self.escape_text(version_depr)
                 deprecated_display = self.truncate_version(version_depr_text, 2)
-                version_string = _('(v%(version_number)s, deprecated v%(deprecated_version)s') % {'version_number': version_display, 'deprecated_version':  deprecated_display}
+                version_string = _('(v%(version_number)s, deprecated v%(deprecated_version)s)') % {'version_number': version_display, 'deprecated_version':  deprecated_display}
                 deprecated_descr = self.escape_text(_('Deprecated in v%(deprecated_version)s and later. %(explanation)s') % {'deprecated_version': deprecated_display,
                                                                                                                                 'explanation': version_deprecated_explanation})
             else:
