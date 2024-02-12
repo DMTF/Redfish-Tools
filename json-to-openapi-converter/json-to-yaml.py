@@ -143,7 +143,15 @@ class JSONToYAML:
         service_doc["paths"] = {}
         for uri in self.uri_cache:
             service_doc["paths"][uri] = {}
+
+            # Build the parameters for the URI
+            parameters = self.generate_parameters( uri )
+            if parameters is not None:
+                service_doc["paths"][uri]["parameters"] = parameters
+
+            # Generate the operation constructs allowed by the URI
             if not self.uri_cache[uri]["action"]:
+                # URI is for a resource; add GET, and potentially POST, PATCH, PUT, and DELETE based on the capabilities
                 #service_doc["paths"][uri]["head"] = self.generate_operation( uri, HEAD_RESPONSES )
                 service_doc["paths"][uri]["get"] = self.generate_operation( uri, GET_RESPONSES )
                 if self.uri_cache[uri]["insertable"]:
@@ -154,10 +162,14 @@ class JSONToYAML:
                 if self.uri_cache[uri]["deletable"]:
                     service_doc["paths"][uri]["delete"] = self.generate_operation( uri, DELETE_RESPONSES )
             else:
+                # URI is for an action; add POST
                 service_doc["paths"][uri]["post"] = self.generate_operation( uri, ACTION_RESPONSES, True )
+
+        # Add in the well-known OData URIs that are not defined by schema files
         service_doc["paths"]["/redfish/v1/$metadata"] = self.generate_metadata_operations()
         service_doc["paths"]["/redfish/v1/odata"] = self.generate_odata_operations()
 
+        # Write the constructed openapi.yaml file
         out_string = yaml.dump( service_doc, default_flow_style = False )
         with open( service_file, "w" ) as file:
             file.write( out_string )
@@ -605,11 +617,6 @@ class JSONToYAML:
             An operation object
         """
         operation = {}
-
-        # Build the parameters for the operation
-        parameters = self.generate_parameters( uri )
-        if parameters is not None:
-            operation["parameters"] = parameters
 
         # Build the request body for the operation
         if ( add_request_body == True ) and ( "requestBody" in self.uri_cache[uri] ):
