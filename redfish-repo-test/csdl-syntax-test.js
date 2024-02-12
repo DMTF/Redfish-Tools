@@ -81,17 +81,19 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'SMBv3_0_2', 'Bits_0', 'Bits_128', 'Bits_192', 'Bits_256', 'Bits_112',
                                     'ISO8859_1', 'UTF_8', 'UTF_16', 'UCS_2', 'RPCSEC_GSS', 'HMAC128_SHA224',
                                     'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512', 'TLS_PSK', 'TLS_AES_128_GCM_SHA256',
-                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad', 'CFB128_AES192', 'CFB128_AES256'];
+                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad', 'CFB128_AES192', 'CFB128_AES256',
+                                    'LPDDR5_SDRAM', 'PLDMv1_0', 'PLDMv1_1', 'PLDMv1_2', 'PLDMv1_3', 'eMMC'];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 //Properties that have units but don't have the unit names in them
-const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'CapableSpeedGbs', 'Duration',
-                                          'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser', 'MaxAllowableOperatingValue', 'MaxBytesPerSecond',
-                                          'MaxFrameSize', 'MaxIOOperationsPerSecondPerTerabyte', 'MaxReadingRange', 'MaxReadingRangeTemp', 'MaxSamplePeriod', 'MaxSupportedBytesPerSecond', 'MinAllowableOperatingValue',
-                                          'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests', 'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS',
-                                          'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical',
-                                          'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated', 'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized',
-                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh','PercentageUsed', 'ReadIOKiBytes', 'WriteIOKiBytes'];
+const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'AllocatedBandwidth',
+                                          'CapableSpeedGbs', 'Duration', 'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser',
+                                          'MaxAllowableOperatingValue', 'MaxBytesPerSecond', 'MaxFrameSize', 'MaxIOOperationsPerSecondPerTerabyte', 'MaxReadingRange', 'MaxReadingRangeTemp', 'MaxSamplePeriod',
+                                          'MaxSupportedBytesPerSecond', 'MinAllowableOperatingValue', 'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests',
+                                          'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS', 'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests',
+                                          'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical', 'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated',
+                                          'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized', 'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh','PercentageUsed',
+                                          'ReadIOKiBytes', 'WriteIOKiBytes'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
                               '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB', 'kg/m3': 'KgPerCubicMeter', 'L/min': 'LitersPerMinute', 'kJ/kg/K': 'kJoulesPerKgK', 'kPa': 'kPa'};
@@ -126,7 +128,7 @@ const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.x
 const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 const NoURISSchemaList = ['ActionInfo', 'AttributeRegistry', 'Chipwise', 'CollectionCapabilities', 'ContosoAccountService', 'ContosoServiceRoot', 'Event', 'IPAddresses', 'Manifest', 'Message', 'MessageRegistry', 
-                          'MessageRegistryCollection', 'PhysicalContext', 'PrivilegeRegistry', 'Privileges', 'Protocol', 'Resource', 'Redundancy', 'Service',  'Schedule', 'Settings', 'FeaturesRegistry', 'IOStatistics', 'LineOfService', 'SpareResourceSet', 'StorageReplicaInfo'];
+                          'MessageRegistryCollection', 'PhysicalContext', 'PrivilegeRegistry', 'Privileges', 'Protocol', 'ResolutionStep', 'Resource', 'Redundancy', 'Service',  'Schedule', 'Settings', 'FeaturesRegistry', 'IOStatistics', 'LineOfService', 'SpareResourceSet', 'StorageReplicaInfo'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
                                  'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
                                  'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
