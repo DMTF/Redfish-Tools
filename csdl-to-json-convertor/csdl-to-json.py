@@ -1118,6 +1118,9 @@ class CSDLToJSON:
             if term == "OData.IsURL":
                 if self.get_attrib( annotation, "Bool", False, "true" ) == "true":
                     json_type_def["format"] = "uri-reference"
+            if term == "Redfish.IsEmail":
+                if self.get_attrib( annotation, "Bool", False, "true" ) == "true":
+                    json_type_def["format"] = "idn-email"
 
             # Units
             if term == "Measures.Unit":
