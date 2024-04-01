@@ -571,8 +571,8 @@ class JSONToYAML:
                     "type": "object",
                     "properties": {
                         "code": {
-                            "description": "A string indicating a specific MessageId from a message registry.",
-                            "x-longDescription": "This property shall contain a string indicating a specific MessageId from a message registry.",
+                            "description": "A string indicating a specific `MessageId` from a message registry.",
+                            "x-longDescription": "This property shall contain a string indicating a specific `MessageId` from a message registry.",
                             "readOnly": True,
                             "type": "string"
                         },
