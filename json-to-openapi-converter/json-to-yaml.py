@@ -437,11 +437,10 @@ class JSONToYAML:
         if "anyOf" in json_data and len( json_data["anyOf"] ) > 0:
             # Two patterns we follow for "anyOf" usage:
             # 1) Arrays to show an item can be a particular definition or null
-            # In this case, we need to use the OpenAPI "nullable" term
+            # In this case, we need to use the OpenAPI "oneOf" term to point to the reference and null
             if json_data["anyOf"][-1] == { "type": "null" }:
-                json_data["$ref"] = json_data["anyOf"][0]["$ref"]
+                json_data["oneOf"] = [ { "$ref": json_data["anyOf"][0]["$ref"] }, { "enum": [ "null" ] } ]
                 json_data.pop( "anyOf" )
-                json_data["nullable"] = True
             # 2) Abstract base definitions that point to every versioned definition
             # Keeping this causes significant client code bloat, so just use the latest version
             else:
@@ -572,8 +571,8 @@ class JSONToYAML:
                     "type": "object",
                     "properties": {
                         "code": {
-                            "description": "A string indicating a specific MessageId from a message registry.",
-                            "x-longDescription": "This property shall contain a string indicating a specific MessageId from a message registry.",
+                            "description": "A string indicating a specific `MessageId` from a message registry.",
+                            "x-longDescription": "This property shall contain a string indicating a specific `MessageId` from a message registry.",
                             "readOnly": True,
                             "type": "string"
                         },
