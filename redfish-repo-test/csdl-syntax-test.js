@@ -57,7 +57,7 @@ if(config.has('Redfish.PrivilegeRegistryGlob')) {
 
 /***************** Allow lists ******************************/
 //Units that don't exist in UCUM or are complicated to the point where validUnitsTest needs additional work
-const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s' ];
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s', 'kV.A', 'V.A' ];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -96,7 +96,7 @@ const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'Ac
                                           'ReadIOKiBytes', 'WriteIOKiBytes'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB', 'kg/m3': 'KgPerCubicMeter', 'L/min': 'LitersPerMinute', 'kJ/kg/K': 'kJoulesPerKgK', 'kPa': 'kPa'};
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB', 'kg/m3': 'KgPerCubicMeter', 'L/min': 'LitersPerMinute', 'kJ/kg/K': 'kJoulesPerKgK', 'kPa': 'kPa', 'kV.A': 'kVA', 'V.A': 'VA' };
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
@@ -123,7 +123,7 @@ const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
-const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop', 'StorageController', 'StorageControllerMetrics', 'AccountService' ]
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop', 'StorageController', 'StorageControllerMetrics', 'AccountService', 'IOStatistics' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
