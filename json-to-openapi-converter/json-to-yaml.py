@@ -439,7 +439,7 @@ class JSONToYAML:
             # 1) Arrays to show an item can be a particular definition or null
             # In this case, we need to use the OpenAPI "oneOf" term to point to the reference and null
             if json_data["anyOf"][-1] == { "type": "null" }:
-                json_data["oneOf"] = [ { "$ref": json_data["anyOf"][0]["$ref"] }, { "enum": [ "null" ] } ]
+                json_data["oneOf"] = [ { "$ref": json_data["anyOf"][0]["$ref"] }, { "enum": [ None ] } ]
                 json_data.pop( "anyOf" )
             # 2) Abstract base definitions that point to every versioned definition
             # Keeping this causes significant client code bloat, so just use the latest version
