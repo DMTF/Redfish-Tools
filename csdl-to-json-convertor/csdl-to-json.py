@@ -324,12 +324,7 @@ class CSDLToJSON:
                          excerpt_list.append(e)
             if "excerptCopyOnly" in prop:
                 count = count + 1
-        if count == 1:
-            # Exactly 1 excerpt; this happens if only the Name property is an excerpt
-            # Do not make an excerpt definition for this
-            base_def["properties"]["Name"].pop( "excerpt" )
-            return
-        elif count < 1:
+        if count == 0:
             # No excerpts at all
             return
 
