@@ -425,12 +425,13 @@ class JSONToYAML:
 
         self.uri_cache.update( action_uri_cache )
 
-    def update_object( self, json_data ):
+    def update_object( self, json_data, auto_expand = False ):
         """
         Performs a recursive update of all objects in the JSON object
 
         Args:
             json_data: The JSON object to process
+            auto_expand: Controls if this pass treats the definition as auto-expanded
         """
 
         # Remove "anyOf" terms
@@ -493,6 +494,9 @@ class JSONToYAML:
             if json_data["$ref"][0] == "#":
                 # Local reference
                 json_data["$ref"] = json_data["$ref"].replace( "#/definitions/", "#/components/schemas/" + self.current_schema + "_", 1 )
+            elif json_data.get( "x-autoExpand", False ) or auto_expand:
+                # Expanded resource; build a full reference
+                json_data["$ref"] = build_external_reference( json_data["$ref"] )
             else:
                 # External reference; find the definition and check if it's a link to a resource or some other definition
                 id_ref = False
@@ -547,7 +551,11 @@ class JSONToYAML:
         # Perform the same process on all other objects in the structure
         for key in json_data:
             if isinstance( json_data[key], dict ):
-                self.update_object( json_data[key] )
+                if key == "items":
+                    # When processing array definitions, need to carry forward auto-expand to build the right reference
+                    self.update_object( json_data[key], auto_expand = json_data.get( "x-autoExpand", False ) )
+                else:
+                    self.update_object( json_data[key] )
             elif isinstance( json_data[key], list ):
                 for i, item in enumerate( json_data[key] ):
                     if isinstance( json_data[key][i], dict ):
