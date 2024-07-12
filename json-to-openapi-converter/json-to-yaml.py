@@ -121,6 +121,7 @@ class JSONToYAML:
                     out_filename_short = filename.rsplit( ".", 1 )[0] + ".yaml"
                     if len( [ i for i in do_not_write if out_filename_short.startswith( i ) ] ) == 0:
                         if overwrite or is_unversioned( filename ) or ( not os.path.isfile( out_filename ) ):
+                            yaml.Dumper.ignore_aliases = lambda *args : True
                             out_string = yaml.dump( json_data, default_flow_style = False )
                             with open( out_filename, "w" ) as file:
                                 file.write( out_string )
@@ -375,6 +376,7 @@ class JSONToYAML:
                 json_data["definitions"][action_def + "RequestBody"]["description"] = json_data["definitions"][action_def]["description"]
                 json_data["definitions"][action_def + "RequestBody"]["longDescription"] = json_data["definitions"][action_def]["longDescription"]
                 json_data["definitions"][action_def + "RequestBody"]["properties"] = json_data["definitions"][action_def]["parameters"]
+                json_data["definitions"][action_def + "RequestBody"]["patternProperties"] = json_data["definitions"][action_def]["patternProperties"]
 
                 # Determine which parameters are required
                 for parameter, parameter_object in json_data["definitions"][action_def + "RequestBody"]["properties"].items():
