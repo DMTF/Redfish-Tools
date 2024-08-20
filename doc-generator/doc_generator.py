@@ -1245,6 +1245,7 @@ class DocGenerator:
             'with_table_numbering': False,
             'warn_missing_payloads': False,
             'table_formats': {},
+            'table_xref_formats': {},
             'remove_blanks': False,
             }
 
@@ -1298,6 +1299,7 @@ class DocGenerator:
                 'combine_multiple_refs', 'omit_version_in_headers',
                 'supplement_md_dir',
                 'table_formats',
+                'table_xref_formats',
                 'remove_blanks',
                 'description_overrides' # this is for property_index mode only
                 ]

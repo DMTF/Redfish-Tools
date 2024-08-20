@@ -22,7 +22,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - combine_multiple_refs: specifies a threshold at which multiple references to the same object within a schema will be moved into Property Details, instead of expanded in place. See below for more detail.
 - content_supplement: location of a content supplement file. This is a JSON file that specifies content substitutions to be made within the generated schema documentation. If a relative path, should be relative to the location of the config file.
 - escape_chars (command line: `escape`): Characters to escape in generated Markdown. For example, use --escape=@ if strings with embedded @ are being converted to mailto links by your markdown processor.
-- excluded_annotations: A list of annotation names (strings) to omit. Wildcard match is supported for strings that begin with "*".
+- excluded_annotations: A list of annotation names (strings) to omit. Wildcard match is supported for strings that begin with "\*".
 - excluded_pattern_properties: pattern properties to omit from output. Note that backslashes must be escaped in JSON ("\" becomes "\\").
 - excluded_properties: A list of property names (strings) to omit. Wildcard match is supported for strings that begin with "*" ("*odata.count" matches "Members\@odata.count" and others).
 - excluded_schemas: Schemas (by name) to omit from output.
@@ -43,9 +43,10 @@ Note that the names of some config keys differ from their command-line counterpa
 - registry_uri_to_local: For profile mode only, an object like uri_mapping, for locations of registries.
 - subset_doc (command_line: `subset`): Path to a JSON document. Generates "Schema subset" output, with the subset defined in that document.
 - supplement_md_dir: Directory location for markdown files with supplemental text. Optional. See below for more detail.
+- table_xref_format: For markdown only! Used with *with-table-numbering*. Defines format of caption numbering and xref numbering
 - uri_mapping: this should be an object with the partial URL of schema repositories as attributes, and local directory paths as values.
 - warn_missing_payloads (command line: `warn_missing_payloads`): Boolean, default false. Use along with "payload_dir" to be warned of missing example payloads. When true, the doc generator will emit a warning for missing examples for all documented schemas, missing Action Response examples with the action has an "actionResponse" property, and missing Action Request examples when the action has parameters.
-- with_table_numbering: Boolean, default false. Applies to markdown output only! When true, table captions and references will be added to the output. You will need to run a post-processor on the output to complete the numbering. See TABLE_NUMBER_README.md[TABLE_NUMBER_README.md].
+- with_table_numbering: Boolean, default false. Applies to markdown output only! When true, table captions and references will be added to the output. You will need to run a post-processor on the output to complete the numbering. See TABLE_NUMBER_README.md[TABLE_NUMBER_README.md]. See 'table-xref-format' for additional information.
 
 
 ### In More Detail
