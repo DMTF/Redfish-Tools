@@ -1,0 +1,6 @@
+{
+    "OemConfigurationFilePath": "contoso-example-schema-configs/config.json",
+    "OemBindingsFilePath": "contoso-oem-extensions.json",
+    "StoreConfigInSeparateFiles": true,
+    "EnableNewAdditionsByDefault": false
+}
