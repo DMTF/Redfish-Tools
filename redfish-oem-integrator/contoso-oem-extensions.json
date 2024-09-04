@@ -1,0 +1,16 @@
+{
+    "ServiceRoot": {
+        "Oem": {
+            "Contoso": {
+                "$ref": "http://Contoso.com/schemas/ContosoServiceRoot.json#/definitions/ContosoServiceRoot"
+            }
+        }
+    },
+    "AccountService": {
+        "OemActions": {
+            "#ContosoAccountService.AutoConfig": {
+                "$ref": "http://Contoso.com/schemas/ContosoAccountService.json#/definitions/AutoConfig"
+            }
+        }
+    }
+}
