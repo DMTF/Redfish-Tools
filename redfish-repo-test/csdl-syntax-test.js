@@ -86,7 +86,7 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 //Properties that have units but don't have the unit names in them
-const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'AllocatedBandwidth',
+const PropertyNamesWithoutCorrectUnits = ['AbsoluteSessionTimeout', 'AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'AllocatedBandwidth',
                                           'CapableSpeedGbs', 'Duration', 'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser',
                                           'MaxAllowableOperatingValue', 'MaxBytesPerSecond', 'MaxFrameSize', 'MaxIOOperationsPerSecondPerTerabyte', 'MaxReadingRange', 'MaxReadingRangeTemp', 'MaxSamplePeriod',
                                           'MaxSupportedBytesPerSecond', 'MinAllowableOperatingValue', 'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests',
