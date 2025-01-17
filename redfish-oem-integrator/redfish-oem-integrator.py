@@ -320,10 +320,11 @@ class JsonSchemaConfigHelper:
                     # print("Traversing from ../{}/.. to ../{}/{}/..".format(prop, prop, prop_path[i+1]))
                     prop_d = self.__schema["definitions"][ref]["properties"][prop_path[i+1]]
         except Exception as e:
-            print(self.__schema_name)
-            print(property_path)
-            print(prop_d)
-            raise(e)
+            #print(self.__schema_name)
+            #print(property_path)
+            #print(prop_d)
+            #raise(e)
+            pass
 
     def remove_action(self, action):
         assert(self.is_versioned_entity()), "Actions are present only in versioned schemas"
@@ -346,13 +347,16 @@ class JsonSchemaConfigHelper:
                 action_params_d = self.__schema["definitions"][action].get("parameters")
                 param_d = action_params_d.get(param)
                 if param_d == None:
-                    raise(IllegalSchemaModificationRequestException)
+                    raise(KeyError)
                 if param_d.get("requiredParameter") == True:
                     raise(IllegalSchemaModificationRequestException)
                 action_params_d.pop(param)
                 self.__is_changed= True
             else:
                 raise(UnsupportedFeatureException)
+        except (AttributeError, KeyError):
+            # Action/parameter might not be supported in this version of the schema; ignore it
+            pass
         except Exception as e:
             print(f"Got Exception: {e}")
             raise(e)
