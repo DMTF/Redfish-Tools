@@ -204,8 +204,8 @@ class DocFormatter:
                caption = self.formatter.add_table_caption(_("Revision history"), self.config["table_xref_formats"]["caption"])
                reference = self.formatter.add_table_reference(_("The revision history is summarized in "), self.config["table_xref_formats"]["reference"])
             else:
-               caption = self.formatter.add_table_caption(_("Revision history"), "Talble TBL_nn");
-               reference = self.formatter.add_table_reference(_("The revision history is summarized in "), "Talble TBL_nn");
+               caption = self.formatter.add_table_caption(_("Revision history"));
+               reference = self.formatter.add_table_reference(_("The revision history is summarized in "));
             formatted = reference + "\n\n" + formatted + "\n\n" + caption
         self.this_section['release_history'] = formatted + "\n"
 
