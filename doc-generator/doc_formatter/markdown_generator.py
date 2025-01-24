@@ -518,9 +518,6 @@ class MarkdownGenerator(DocFormatter):
             if self.table_xref_formats:
                 caption = self.formatter.add_table_caption(_("%(prop_name)s property values") % {'prop_name': prop_name}, self.table_xref_formats['caption'])
                 preamble = self.formatter.add_table_reference(_("The defined property values are listed in "), self.table_xref_formats['reference'])
-            else:
-                caption = self.formatter.add_table_caption(_("%(prop_name)s property values") % {'prop_name': prop_name})
-                preamble = self.formatter.add_table_reference(_("The defined property values are listed in ") )
             formatted = preamble + '\n' + formatted + caption
 
         return formatted
@@ -600,12 +597,7 @@ class MarkdownGenerator(DocFormatter):
                 if self.table_xref_formats:
                     caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name}, self.table_xref_formats['caption'])
                     preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in "), self.table_xref_formats['reference']) + "\n\n"
-                else:
-                    caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name}))
-                    preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")) + "\n\n"
-                caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name}))
-                preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in "))+ "\n\n"
-                formatted_rows = preamble +  formatted_rows + caption
+                    formatted_rows = preamble +  formatted_rows + caption
             else:
                 formatted.append(heading)
             formatted.append(formatted_rows)
@@ -697,9 +689,6 @@ class MarkdownGenerator(DocFormatter):
                     if self.table_xref_formats:
                         caption = self.formatter.add_table_caption(section["head"] + " properties", self.table_xref_formats['caption'])
                         preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ", self.table_xref_formats['reference']) + "\n"
-                    else:
-                        caption = self.formatter.add_table_caption(section["head"] + " properties"))
-                        preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ")) + "\n"
                 else:
                     caption = preamble = ''
 

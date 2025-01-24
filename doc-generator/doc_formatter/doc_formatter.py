@@ -42,7 +42,7 @@ class DocFormatter:
         self.sections = []
         self.registry_sections = []
         self.collapse_list_of_simple_type = True
-        self.formatter = FormatUtils() # Non-markdown formatters will override this.
+        self.formatter = FormatUtils(config) # Non-markdown formatters will override this.
         self.layout_payloads = 'bottom' # Do payloads go at top of section or bottom?
         self.current_uris = []
         self.ref_deduplicator = {} # Tracks use of refs within a schema to assist in combining them for output.
@@ -201,11 +201,8 @@ class DocFormatter:
         formatted = self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)])
         if self.config.get('with_table_numbering'):
             if "table_xref_format" in self.config:
-               caption = self.formatter.add_table_caption(_("Revision history"), self.config["table_xref_formats"]["caption"])
-               reference = self.formatter.add_table_reference(_("The revision history is summarized in "), self.config["table_xref_formats"]["reference"])
-            else:
-               caption = self.formatter.add_table_caption(_("Revision history"));
-               reference = self.formatter.add_table_reference(_("The revision history is summarized in "));
+               caption = self.formatter.add_table_caption(_("Revision history"))
+               reference = self.formatter.add_table_reference(_("The revision history is summarized in "))
             formatted = reference + "\n\n" + formatted + "\n\n" + caption
         self.this_section['release_history'] = formatted + "\n"
 

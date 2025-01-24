@@ -12,7 +12,10 @@ Initial author: Second Rise LLC.
 
 class FormatUtils():
 
-    last_caption = ""
+   last_caption = ""
+   def __init__(self, config):
+      self.config = config
+
 
     def head_one(self, text, level, anchor_id=None):
         """Add a top-level heading, relative to the generator's level"""
@@ -102,7 +105,7 @@ class FormatUtils():
 
     def add_table_caption(self, caption):
         self.last_caption = caption
-        return _('\nTable') + ': ' + caption + _('{#tbl:Table_TBL_nn}\n')
+        return _('\nTable') + ': ' + caption + self.config['table_xref_format']['caption']
 
     def add_table_reference(self, lead_in):
-        return lead_in + _(' +@tbl:Table_TBL_nn++') + '.'
+        return lead_in + self.config['table_xref_format']['reference']
