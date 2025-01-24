@@ -12,8 +12,8 @@ Initial author: Second Rise LLC.
 
 class FormatUtils():
 
-   last_caption = ""
-   def __init__(self, config):
+    last_caption = ""
+    def __init__(self, config):
       self.config = config
 
 
@@ -105,7 +105,7 @@ class FormatUtils():
 
     def add_table_caption(self, caption):
         self.last_caption = caption
-        return _('\nTable') + ': ' + caption + self.config['table_xref_format']['caption']
+        return _('\nTable') + ': ' + caption + self.config['table_xref_formats']['caption']
 
     def add_table_reference(self, lead_in):
-        return lead_in + self.config['table_xref_format']['reference']
+        return lead_in + self.config['table_xref_formats']['reference']
