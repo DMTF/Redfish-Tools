@@ -1,6 +1,6 @@
 # Copyright Notice:
 # Copyright 2016-2022 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File : markdown_generator.py
@@ -948,11 +948,27 @@ class MarkdownGenerator(DocFormatter):
         self.this_section['deprecation_text'] = depr_text + '\n'
 
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ Add the URIs (which should be a list) """
+        has_excluded_uris = False    
         uri_block = self.format_head_three(_('URIs'), self.level)
         for uri in sorted(uris, key=str.lower):
-            uri_block += "\n" + self.format_uri(uri) + "<br>"
+            exclude_this_uri = False
+            for xuri in self.config.get('excluded_schema_uris', []):
+                if xuri in uri:
+                    exclude_this_uri = True
+                    has_excluded_uris = True
+            if exclude_this_uri:
+                continue
+            
+            if uri in urisDeprecated:
+                uri_block += "\n" + self.format_uri(uri) + _(" (deprecated)") +"<br>"
+            else:
+                uri_block += "\n" + self.format_uri(uri) + "<br>"
+
+        if has_excluded_uris:  # if URIs were trimmed, add a note
+            uri_block += "\n\* " + _("Note: Some URIs omitted for brevity, refer to schema for the complete list.") + "<br>"
+            
         self.this_section['uris'] = uri_block + "\n"
 
 

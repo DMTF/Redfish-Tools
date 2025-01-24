@@ -26,6 +26,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - excluded_pattern_properties: pattern properties to omit from output. Note that backslashes must be escaped in JSON ("\" becomes "\\").
 - excluded_properties: A list of property names (strings) to omit. Wildcard match is supported for strings that begin with "*" ("*odata.count" matches "Members\@odata.count" and others).
 - excluded_schemas: Schemas (by name) to omit from output.
+- excluded_schema_uris: Array of strings that if found in each schema URI list, are excluded from the displayed list, with a note added to the list to indicate that some URIs have been omitted.
 - format (command line: `format`): Output format. One of `markdown`, `slate`, `html`, `csv`
 - html_title: A string to use as the `title` element in HTML output.
 - import_from: Name of a file or directory containing JSON schemas to process. Wild cards are acceptable. Default: json-schema.

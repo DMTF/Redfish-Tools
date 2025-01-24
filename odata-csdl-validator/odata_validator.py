@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Copyright Notice:
 # Copyright 2016-2023 DMTF. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 CSDL Validator
@@ -79,7 +79,7 @@ SIMPLE_ID_RE = re.compile(
                                                             Cf=''.join(UNICODE_CATEGORY['Cf'])))
 
 NAMESPACE_RE = re.compile((u'[{L}{Nl}_][{L}{Nl}{Nd}{Mn}{Mc}{Pc}{Cf}]{{0,}}'
-                           '(\.[{L}{Nl}_][{L}{Nl}{Nd}{Mn}{Mc}{Pc}{Cf}]{{0,}}){{0,}}'
+                           '(\\.[{L}{Nl}_][{L}{Nl}{Nd}{Mn}{Mc}{Pc}{Cf}]{{0,}}){{0,}}'
                           ).format(L=''.join(UNICODE_CATEGORY['L']),
                                    Nl=''.join(UNICODE_CATEGORY['Nl']),
                                    Nd=''.join(UNICODE_CATEGORY['Nd']),
@@ -89,7 +89,7 @@ NAMESPACE_RE = re.compile((u'[{L}{Nl}_][{L}{Nl}{Nd}{Mn}{Mc}{Pc}{Cf}]{{0,}}'
                                    Cf=''.join(UNICODE_CATEGORY['Cf'])))
 
 QUALIFIED_NAME_RE = re.compile((u'[{L}{Nl}_][{L}{Nl}{Nd}{Mn}{Mc}{Pc}{Cf}]{{0,}}'
-                                '(\.[{L}{Nl}_][{L}{Nl}{Nd}{Mn}{Mc}{Pc}{Cf}]{{0,}}){{1,}}'
+                                '(\\.[{L}{Nl}_][{L}{Nl}{Nd}{Mn}{Mc}{Pc}{Cf}]{{0,}}){{1,}}'
                                ).format(L=''.join(UNICODE_CATEGORY['L']),
                                         Nl=''.join(UNICODE_CATEGORY['Nl']),
                                         Nd=''.join(UNICODE_CATEGORY['Nd']),
@@ -5637,7 +5637,7 @@ def main():
         try:
             # Try to extract the path to the service in case the request is a remote URI
             # This will be used later to resolve relative references
-            service_path = re.search("^https?:\/\/[^/]+", args.MetaData).group(0)
+            service_path = re.search("^https?:\\/\\/[^/]+", args.MetaData).group(0)
         except:
             pass
         MetaData(args.MetaData)

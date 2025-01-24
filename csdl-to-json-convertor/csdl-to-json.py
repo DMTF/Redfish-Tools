@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Copyright Notice:
 # Copyright 2017-2018 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 CSDL to JSON Schema
@@ -324,12 +324,7 @@ class CSDLToJSON:
                          excerpt_list.append(e)
             if "excerptCopyOnly" in prop:
                 count = count + 1
-        if count == 1:
-            # Exactly 1 excerpt; this happens if only the Name property is an excerpt
-            # Do not make an excerpt definition for this
-            base_def["properties"]["Name"].pop( "excerpt" )
-            return
-        elif count < 1:
+        if count == 0:
             # No excerpts at all
             return
 
@@ -486,7 +481,7 @@ class CSDLToJSON:
                 for schema in self.root.iter( ODATA_TAG_SCHEMA ):
                     namespace = self.get_attrib( schema, "Namespace" )
                     if namespace != self.namespace_under_process:
-                        if self.does_definition_apply( object, self.namespace_under_process ) and self.is_latest_errata( namespace ):
+                        if self.does_definition_apply( object, namespace ) and self.is_latest_errata( namespace ):
                             json_def[name]["anyOf"].append( { "$ref": self.location + namespace + ".json#/definitions/" + name } )
 
         # Add descriptions
@@ -677,7 +672,14 @@ class CSDLToJSON:
         name = self.get_attrib( action, "Name" )
         if not self.is_oem_action( action ):
             self.init_object_definition( "Actions", json_def )
+            # Find the binding parameter from the action to generate the name in JSON Schema; the name of the binding
+            # parameter is the first segment of the action name.  If not found, use the namespace under process to
+            # generate the name of the action.
             action_prop = "#" + self.namespace_under_process.split( "." )[0] + "." + name
+            for child in action:
+                if child.tag == ODATA_TAG_PARAMETER:
+                    action_prop = "#" + self.get_attrib( child, "Name" ) + "." + name
+                    break
             json_def["Actions"]["properties"][action_prop] = { "$ref": "#/definitions/" + name }
 
         # Add version details to the Action
@@ -1111,6 +1113,9 @@ class CSDLToJSON:
             if term == "OData.IsURL":
                 if self.get_attrib( annotation, "Bool", False, "true" ) == "true":
                     json_type_def["format"] = "uri-reference"
+            if term == "Redfish.IsEmail":
+                if self.get_attrib( annotation, "Bool", False, "true" ) == "true":
+                    json_type_def["format"] = "idn-email"
 
             # Units
             if term == "Measures.Unit":
@@ -1215,7 +1220,7 @@ class CSDLToJSON:
                 json_type = [ "integer", "null" ]
             else:
                 json_type = "integer"
-        elif type == "Edm.Decimal":
+        elif ( type == "Edm.Decimal" ) or ( type == "Edm.Double" ):
             if is_nullable:
                 json_type = [ "number", "null" ]
             else:

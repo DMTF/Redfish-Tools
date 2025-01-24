@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 # Copyright Notice:
 # Copyright 2018 DMTF. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 JSON Schema to OpenAPI YAML
@@ -27,7 +27,7 @@ ONE_FOR_ONE_REPLACEMENTS = [ "longDescription", "enumDescriptions", "enumLongDes
                              "excerpt", "excerptCopy", "excerptCopyOnly", "translation", "enumTranslations", "language", "uriSegment" ]
 
 # List of terms that are removed from the file
-REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "parameters", "requiredParameter", "actionResponse" ]
+REMOVED_TERMS = [ "insertable", "updatable", "deletable", "uris", "urisDeprecated", "parameters", "requiredParameter", "actionResponse" ]
 
 # Responses allowed
 HEAD_RESPONSES = [ 204 ]
@@ -121,6 +121,7 @@ class JSONToYAML:
                     out_filename_short = filename.rsplit( ".", 1 )[0] + ".yaml"
                     if len( [ i for i in do_not_write if out_filename_short.startswith( i ) ] ) == 0:
                         if overwrite or is_unversioned( filename ) or ( not os.path.isfile( out_filename ) ):
+                            yaml.Dumper.ignore_aliases = lambda *args : True
                             out_string = yaml.dump( json_data, default_flow_style = False )
                             with open( out_filename, "w" ) as file:
                                 file.write( out_string )
@@ -143,7 +144,15 @@ class JSONToYAML:
         service_doc["paths"] = {}
         for uri in self.uri_cache:
             service_doc["paths"][uri] = {}
+
+            # Build the parameters for the URI
+            parameters = self.generate_parameters( uri )
+            if parameters is not None:
+                service_doc["paths"][uri]["parameters"] = parameters
+
+            # Generate the operation constructs allowed by the URI
             if not self.uri_cache[uri]["action"]:
+                # URI is for a resource; add GET, and potentially POST, PATCH, PUT, and DELETE based on the capabilities
                 #service_doc["paths"][uri]["head"] = self.generate_operation( uri, HEAD_RESPONSES )
                 service_doc["paths"][uri]["get"] = self.generate_operation( uri, GET_RESPONSES )
                 if self.uri_cache[uri]["insertable"]:
@@ -154,10 +163,14 @@ class JSONToYAML:
                 if self.uri_cache[uri]["deletable"]:
                     service_doc["paths"][uri]["delete"] = self.generate_operation( uri, DELETE_RESPONSES )
             else:
+                # URI is for an action; add POST
                 service_doc["paths"][uri]["post"] = self.generate_operation( uri, ACTION_RESPONSES, True )
+
+        # Add in the well-known OData URIs that are not defined by schema files
         service_doc["paths"]["/redfish/v1/$metadata"] = self.generate_metadata_operations()
         service_doc["paths"]["/redfish/v1/odata"] = self.generate_odata_operations()
 
+        # Write the constructed openapi.yaml file
         out_string = yaml.dump( service_doc, default_flow_style = False )
         with open( service_file, "w" ) as file:
             file.write( out_string )
@@ -172,13 +185,18 @@ class JSONToYAML:
         """
         try:
             with open( filename ) as yaml_file:
-                yaml_data = yaml.load( yaml_file )
+                yaml_data = yaml.load( yaml_file, Loader=yaml.Loader )
         except:
             print( "ERROR: Could not open {}".format( filename ) )
             return
 
         # Go through each URI
         for uri in yaml_data["paths"]:
+            # Don't add $metadata or odata; these are not formatted like other responses
+            # These will be added back automatically later in the tool
+            if uri == "/redfish/v1/$metadata" or uri == "/redfish/v1/odata":
+                continue
+
             if "get" in yaml_data["paths"][uri]:
                 # This is a resource; copy data to the URI cache
                 self.uri_cache[uri] = {}
@@ -358,6 +376,7 @@ class JSONToYAML:
                 json_data["definitions"][action_def + "RequestBody"]["description"] = json_data["definitions"][action_def]["description"]
                 json_data["definitions"][action_def + "RequestBody"]["longDescription"] = json_data["definitions"][action_def]["longDescription"]
                 json_data["definitions"][action_def + "RequestBody"]["properties"] = json_data["definitions"][action_def]["parameters"]
+                json_data["definitions"][action_def + "RequestBody"]["patternProperties"] = json_data["definitions"][action_def]["patternProperties"]
 
                 # Determine which parameters are required
                 for parameter, parameter_object in json_data["definitions"][action_def + "RequestBody"]["properties"].items():
@@ -408,13 +427,29 @@ class JSONToYAML:
 
         self.uri_cache.update( action_uri_cache )
 
-    def update_object( self, json_data ):
+    def update_object( self, json_data, auto_expand = False ):
         """
         Performs a recursive update of all objects in the JSON object
 
         Args:
             json_data: The JSON object to process
+            auto_expand: Controls if this pass treats the definition as auto-expanded
         """
+
+        # Remove "anyOf" terms
+        if "anyOf" in json_data and len( json_data["anyOf"] ) > 0:
+            # Two patterns we follow for "anyOf" usage:
+            # 1) Arrays to show an item can be a particular definition or null
+            # In this case, we need to use the OpenAPI "oneOf" term to point to the reference and null
+            if json_data["anyOf"][-1] == { "type": "null" }:
+                json_data["oneOf"] = [ { "$ref": json_data["anyOf"][0]["$ref"] }, { "enum": [ None ] } ]
+                json_data.pop( "anyOf" )
+            # 2) Abstract base definitions that point to every versioned definition
+            # Keeping this causes significant client code bloat, so just use the latest version
+            else:
+                for definition in json_data["anyOf"][-1]:
+                    json_data[definition] = json_data["anyOf"][-1][definition]
+                json_data.pop( "anyOf" )
 
         # Perform one for one replacements (meaning "term" becomes "x-term")
         for replacement in ONE_FOR_ONE_REPLACEMENTS:
@@ -456,34 +491,14 @@ class JSONToYAML:
             if json_data["type"] == "integer":
                 json_data["format"] = "int64"
 
-        # Update anyOf to remove null types; OpenAPI defines a "nullable" term
-        if "anyOf" in json_data:
-            obj_count = 0
-            is_nullable = False
-            for i, item in enumerate( json_data["anyOf"] ):
-                if item == { "type": "null" }:
-                    is_nullable = True
-                else:
-                    obj_count += 1
-            if ( obj_count == 1 ) and ( "$ref" in json_data["anyOf"][0] ) and is_nullable:
-                json_data["$ref"] = json_data["anyOf"][0]["$ref"]
-                json_data.pop( "anyOf" )
-                json_data["nullable"] = True
-
-        # Update Resource Collections to remove the anyOf term
-        for definition in json_data:
-            if self.is_collection( json_data[definition] ):
-                try:
-                    if len( json_data[definition]["anyOf"] ) == 2:
-                        json_data[definition] = json_data[definition]["anyOf"][1]
-                except:
-                    pass
-
         # Update $ref to use the form "/components/schemas/" instead of "/definitions/"
         if "$ref" in json_data:
             if json_data["$ref"][0] == "#":
                 # Local reference
                 json_data["$ref"] = json_data["$ref"].replace( "#/definitions/", "#/components/schemas/" + self.current_schema + "_", 1 )
+            elif json_data.get( "x-autoExpand", False ) or auto_expand:
+                # Expanded resource; build a full reference
+                json_data["$ref"] = build_external_reference( json_data["$ref"] )
             else:
                 # External reference; find the definition and check if it's a link to a resource or some other definition
                 id_ref = False
@@ -538,7 +553,11 @@ class JSONToYAML:
         # Perform the same process on all other objects in the structure
         for key in json_data:
             if isinstance( json_data[key], dict ):
-                self.update_object( json_data[key] )
+                if key == "items":
+                    # When processing array definitions, need to carry forward auto-expand to build the right reference
+                    self.update_object( json_data[key], auto_expand = json_data.get( "x-autoExpand", False ) )
+                else:
+                    self.update_object( json_data[key] )
             elif isinstance( json_data[key], list ):
                 for i, item in enumerate( json_data[key] ):
                     if isinstance( json_data[key][i], dict ):
@@ -562,8 +581,8 @@ class JSONToYAML:
                     "type": "object",
                     "properties": {
                         "code": {
-                            "description": "A string indicating a specific MessageId from a message registry.",
-                            "x-longDescription": "This property shall contain a string indicating a specific MessageId from a message registry.",
+                            "description": "A string indicating a specific `MessageId` from a message registry.",
+                            "x-longDescription": "This property shall contain a string indicating a specific `MessageId` from a message registry.",
                             "readOnly": True,
                             "type": "string"
                         },
@@ -607,11 +626,6 @@ class JSONToYAML:
             An operation object
         """
         operation = {}
-
-        # Build the parameters for the operation
-        parameters = self.generate_parameters( uri )
-        if parameters is not None:
-            operation["parameters"] = parameters
 
         # Build the request body for the operation
         if ( add_request_body == True ) and ( "requestBody" in self.uri_cache[uri] ):
