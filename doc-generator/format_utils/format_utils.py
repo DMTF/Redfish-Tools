@@ -105,4 +105,4 @@ class FormatUtils():
         return _('\nTable') + ': ' + caption + _('{#tbl:Table_TBL_nn}\n')
 
     def add_table_reference(self, lead_in):
-        return lead_in + _(' +@tbl:Table_TBL_nn++)' + '.'
+        return lead_in + _(' +@tbl:Table_TBL_nn++') + '.'
