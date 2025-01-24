@@ -1,7 +1,7 @@
 #! /usr/local/bin/python3
 # Copyright Notice:
 # Copyright 2016-2020 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File: doc_generator.py
@@ -407,6 +407,7 @@ class DocGenerator:
                     warnings.warn('Unable to process files for %(uri)s' % {'uri': normalized_uri})
                 continue
             data['uris'] = schema_data[normalized_uri].get('_uris', [])
+            data['urisDeprecated'] = schema_data[normalized_uri].get('_urisDeprecated', [])
 
             if normalized_uri.endswith('Collection.json'):
                 [preamble, collection_name] = normalized_uri.rsplit('/', 1)
@@ -605,6 +606,10 @@ class DocGenerator:
             if 'uris' in data:
                 # Stash these in the unversioned schema_data.
                 all_schemas[normalized_uri]['_uris'] = data['uris']
+            
+            if 'urisDeprecated' in data:
+                # Stash the deprecated URIs as well
+                all_schemas[normalized_uri]['_urisDeprecated'] = data['urisDeprecated']
 
             if len(ref_files):
                 # Add the _is_versioned_schema and  is_collection_of hints to each ref object
@@ -705,7 +710,7 @@ class DocGenerator:
                 min_version = schema_profile.get('MinVersion')
                 if min_version:
                     if version:
-                        property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s'
+                        property_data['name_and_version'] += ' ' + ('v%(minversion)s (current release: v%(version)s)'
                             % {'minversion': min_version, 'version': version})
                     else:
                         # this is unlikely
@@ -1218,6 +1223,7 @@ class DocGenerator:
             'excluded_properties': [],
             'excluded_by_match': [],
             'excluded_schemas': [],
+            'excluded_schema_uris': [],
             'excluded_schemas_by_match': [],
             'excluded_pattern_props': [],
             'description_overrides': {},
@@ -1297,7 +1303,7 @@ class DocGenerator:
                 'actions_in_property_table', 'html_title',
                 'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
                 'combine_multiple_refs', 'omit_version_in_headers',
-                'supplement_md_dir',
+                'supplement_md_dir', 'excluded_schema_uris',
                 'table_formats',
                 'table_xref_formats',
                 'remove_blanks',
@@ -1394,7 +1400,7 @@ class DocGenerator:
             profile_doc = os.path.normpath(combined_args['profile_doc'])
             errors = []
             try:
-                profile_doc_local = os.path.normpath(os.path.join(config_data['config_dir'], subset_doc))
+                profile_doc_local = os.path.normpath(os.path.join(config_data['config_dir'], profile_doc))
                 profile = open(profile_doc_local, 'r', encoding="utf8")
                 profile.close()
                 config['profile_doc'] = profile_doc_local

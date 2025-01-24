@@ -1,6 +1,6 @@
 # Copyright Notice:
 # Copyright 2018-2022 Distributed Management Task Force, Inc. All rights reserved.
-# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
+# License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
 
 """
 File : property_index_generator.py
@@ -541,7 +541,7 @@ table.properties{
         """ This is for the schema description. We don't actually use this. """
         pass
 
-    def add_uris(self, uris):
+    def add_uris(self, uris, urisDeprecated):
         """ omit URIs """
         pass
 

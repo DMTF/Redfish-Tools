@@ -6,3 +6,5 @@
 *.pyc
 redfish-repo-test/node_modules/
 redfish-repo-test/package-lock.json
+.vs/
+doc-generator/.idea/

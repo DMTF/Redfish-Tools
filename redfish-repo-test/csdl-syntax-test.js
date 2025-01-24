@@ -36,9 +36,28 @@ if(config.has('Redfish.ExternalOwnedSchemas')) {
   skipCheckSchemaList = config.get('Redfish.ExternalOwnedSchemas');
 }
 
+var privilegeRegistry = null;
+if(config.has('Redfish.PrivilegeRegistryGlob')) {
+  const files = glob.sync(config.get('Redfish.PrivilegeRegistryGlob'));
+  //Find the latest version...
+  let fileName = files[0];
+  for(let i = 1; i < files.length; i++) {
+    if(files[i].localeCompare(fileName) > 0) {
+      fileName = files[i];
+    }
+  }
+  data = fs.readFileSync(fileName);
+  try {
+    json = JSON.parse(data.toString('utf-8'));
+  } catch(err) {
+    throw err;
+  }
+  privilegeRegistry = json;
+}
+
 /***************** Allow lists ******************************/
 //Units that don't exist in UCUM or are complicated to the point where validUnitsTest needs additional work
-const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s' ];
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s', 'kV.A', 'V.A' ];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
@@ -62,20 +81,23 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'SMBv3_0_2', 'Bits_0', 'Bits_128', 'Bits_192', 'Bits_256', 'Bits_112',
                                     'ISO8859_1', 'UTF_8', 'UTF_16', 'UCS_2', 'RPCSEC_GSS', 'HMAC128_SHA224',
                                     'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512', 'TLS_PSK', 'TLS_AES_128_GCM_SHA256',
-                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad'];
+                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad', 'CFB128_AES192', 'CFB128_AES256',
+                                    'LPDDR5_SDRAM', 'PLDMv1_0', 'PLDMv1_1', 'PLDMv1_2', 'PLDMv1_3', 'eMMC',
+                                    'CXL1_1', 'CXL2_0', 'CXL3_0', 'CXL3_1', 'CXL3_2'];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
 //Properties that have units but don't have the unit names in them
-const PropertyNamesWithoutCorrectUnits = ['AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'CapableSpeedGbs', 'Duration',
-                                          'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser', 'MaxAllowableOperatingValue', 'MaxBytesPerSecond',
-                                          'MaxFrameSize', 'MaxIOOperationsPerSecondPerTerabyte', 'MaxReadingRange', 'MaxReadingRangeTemp', 'MaxSamplePeriod', 'MaxSupportedBytesPerSecond', 'MinAllowableOperatingValue',
-                                          'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests', 'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS',
-                                          'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests', 'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical',
-                                          'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated', 'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized',
-                                          'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh','PercentageUsed', 'ReadIOKiBytes', 'WriteIOKiBytes'];
+const PropertyNamesWithoutCorrectUnits = ['AbsoluteSessionTimeout', 'AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'AllocatedBandwidth',
+                                          'CapableSpeedGbs', 'Duration', 'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser',
+                                          'MaxAllowableOperatingValue', 'MaxBytesPerSecond', 'MaxFrameSize', 'MaxIOOperationsPerSecondPerTerabyte', 'MaxReadingRange', 'MaxReadingRangeTemp', 'MaxSamplePeriod',
+                                          'MaxSupportedBytesPerSecond', 'MinAllowableOperatingValue', 'MinReadingRange', 'MinReadingRangeTemp', 'MinSamplePeriod', 'NegotiatedSpeedGbs', 'NonIORequests',
+                                          'OperatingSpeedMhz', 'PercentComplete', 'PercentOfData', 'PercentOfIOPS', 'PercentSynced', 'PercentageComplete', 'ReactiveVAR', 'ReadHitIORequests', 'ReadIORequests',
+                                          'RecoveryTimeObjective', 'SessionTimeout', 'UpperThresholdCritical', 'UpperThresholdFatal', 'UpperThresholdNonCritical', 'UpperThresholdUser', 'WhenActivated',
+                                          'WhenDeactivated', 'WhenEstablished', 'WhenSuspended', 'WhenSynchronized', 'WriteHitIORequests', 'WriteIORequests','NumberLBAFormats','ReactivekVARh','PercentageUsed',
+                                          'ReadIOKiBytes', 'WriteIOKiBytes'];
 //Values that have other acceptable Unit nomenclature
 const AlternativeUnitNames = {'mm': 'Mm', 'kg': 'Kg', 'A': 'Amps', 'Cel': 'Celsius', 'Hz': 'Hz', 'GiBy': 'GiB', 'Gbit/s': 'Gbps', 'KiBy': 'KiBytes', 'Mbit/s': 'Mbps', 'MiBy': 'MiB', 'min': 'Min', 'MHz': 'MHz', 'ms': 'Ms',
-                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB', 'kg/m3': 'KgPerCubicMeter', 'L/min': 'LitersPerMinute', 'kJ/kg/K': 'kJoulesPerKgK', 'kPa': 'kPa'};
+                              '%': 'Percentage', 'V': 'Voltage', 'V.A': 'VA', 'W': 'Wattage', '[IO]/s': 'IOPS', 'mA': 'MilliAmps', 'W.h': 'WattHours', 'A.h': 'AmpHours', 'kV.A.h': 'kVAh', '{rev}/min': 'RPM', 'KiBy': 'KiB', 'kg/m3': 'KgPerCubicMeter', 'L/min': 'LitersPerMinute', 'kJ/kg/K': 'kJoulesPerKgK', 'kPa': 'kPa', 'kV.A': 'kVA', 'V.A': 'VA' };
 
 const ODataSchemaFileList = [ 'Org.OData.Core.V1.xml', 'Org.OData.Capabilities.V1.xml', 'Org.OData.Measures.V1.xml' ];
 const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
@@ -86,6 +108,7 @@ const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
                                   'DataSecurityLoSCapabilities_v1.xml', 'DataStorageLineOfService_v1.xml', 'DataStorageLoSCapabilities_v1.xml',
                                   'FeaturesRegistry_v1.xml', 'FeaturesRegistryCollection_v1.xml',
                                   'FeaturesRegistryService_v1.xml', 'FileShare_v1.xml', 'FileShareCollection_v1.xml', 'FileSystem_v1.xml', 'FileSystemCollection_v1.xml',
+                                  'FileSystemMetrics_v1.xml',
                                   'HostedStorageServices_v1.xml',
                                   'IOConnectivityLineOfService_v1.xml', 'IOConnectivityLoSCapabilities_v1.xml', 'IOPerformanceLineOfService_v1.xml',
                                   'IOPerformanceLoSCapabilities_v1.xml', 'IOStatistics_v1.xml', 'LineOfService_v1.xml', 'LineOfServiceCollection_v1.xml',
@@ -93,6 +116,7 @@ const SwordfishSchemaFileList = [ 'Capacity_v1.xml',
                                   'NVMeDomainCollection_v1.xml', 'NVMeFirmwareImage_v1.xml',
                                   'SpareResourceSet_v1.xml', 'StorageGroup_v1.xml', 'StorageGroupCollection_v1.xml', 'StoragePool_v1.xml', 'StoragePoolCollection_v1.xml',
                                   'StorageReplicaInfo_v1.xml', 'StorageServiceCollection_v1.xml', 'StorageSystemCollection_v1.xml', 'StorageService_v1.xml', 'Volume_v1.xml',
+                                  'StoragePoolMetrics_v1.xml', 'StorageServiceMetrics_v1.xml', 
                                   'VolumeCollection_v1.xml', 'VolumeMetrics_v1.xml' ];
 const ContosoSchemaFileList = [ 'ContosoAccountService_v1.xml', 'ContosoServiceRoot_v1.xml', 'ContosoTurboencabulatorService_v1.xml' ];
 const EntityTypesWithNoActions = [ 'ServiceRoot', 'ItemOrCollection', 'Item', 'ReferenceableMember', 'Resource', 'ResourceCollection', 'ActionInfo', 'ContosoTurboencabulatorService', 'LineOfService' ];
@@ -100,12 +124,12 @@ const WhiteListMockupLinks = [ "https://10.23.11.12/redfish/v1/StorageServices/X
 const OldRegistries = ['Base.1.0.0.json', 'ResourceEvent.1.0.0.json', 'TaskEvent.1.0.0.json', 'Redfish_1.0.1_PrivilegeRegistry.json', 'Redfish_1.0.2_PrivilegeRegistry.json'];
 const NamespacesWithReleaseTerm = ['PhysicalContext', 'Protocol' ];
 const NamespacesWithoutReleaseTerm = ['RedfishExtensions.v1_0_0', 'Validation.v1_0_0', 'RedfishError.v1_0_0', 'Schedule.v1_0_0', 'Schedule.v1_1_0' ];
-const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop', 'StorageController', 'StorageControllerMetrics' ]
+const NamespacesWithGlobalTypes = ['Resource', 'IPAddresses', 'VLanNetworkInterface', 'Schedule', 'PCIeDevice', 'Message', 'Redundancy', 'Manifest', 'SoftwareInventory', 'CoolingLoop', 'StorageController', 'StorageControllerMetrics', 'AccountService', 'IOStatistics' ]
 const OverRideFiles = ['http://redfish.dmtf.org/schemas/swordfish/v1/Volume_v1.xml'];
 const NoUriAllowList = ['ActionInfo', 'MessageRegistry', 'AttributeRegistry', 'PrivilegeRegistry', 'FeaturesRegistry', 'Event'];
 const PluralSchemaAllowList = ['ChassisCollection', 'ElectricalBusCollection', 'MemoryChunksCollection', 'TriggersCollection'];
 const NoURISSchemaList = ['ActionInfo', 'AttributeRegistry', 'Chipwise', 'CollectionCapabilities', 'ContosoAccountService', 'ContosoServiceRoot', 'Event', 'IPAddresses', 'Manifest', 'Message', 'MessageRegistry', 
-                          'MessageRegistryCollection', 'PhysicalContext', 'PrivilegeRegistry', 'Privileges', 'Protocol', 'Resource', 'Redundancy', 'Service',  'Schedule', 'Settings', 'FeaturesRegistry', 'IOStatistics', 'LineOfService', 'SpareResourceSet', 'StorageReplicaInfo'];
+                          'MessageRegistryCollection', 'PhysicalContext', 'PrivilegeRegistry', 'Privileges', 'Protocol', 'ResolutionStep', 'Resource', 'Redundancy', 'Service',  'Schedule', 'Settings', 'FeaturesRegistry', 'IOStatistics', 'LineOfService', 'SpareResourceSet', 'StorageReplicaInfo'];
 let   PluralEntitiesAllowList = ['Actions', 'AlarmTrips', 'Attributes', 'Bios', 'BootProgress', 'CertificateLocations', 'Chassis', 'CompositionStatus', 'CurrentSensors', 
                                  'DeepOperations', 'ElectricalBus', 'EnergySensors', 'HostedServices', 'HttpPushUriOptions', 'IPTransportDetails', 'Links', 'OemActions', 'MultiplePaths', 
                                  'NVMeControllerAttributes', 'NVMeSMARTCriticalWarnings', 'Parameters', 'PCIeSlots', 'PowerSensors', 'Rates', 'RedfishErrorContents', 
@@ -126,6 +150,7 @@ const PluralEntitiesBadAllow = {
   'MemoryChunks_v1.xml': ['MemoryChunks'],
   'NetworkAdapter_v1.xml': ['Controllers'],
   'NetworkDeviceFunction_v1.xml': ['BootTargets'],
+  'NVMeDomain_v1.xml': ['DomainContents'],
   'StorageController_v1.xml': ['ANACharacteristics'],
   'Triggers_v1.xml': ['Triggers'],
   'Volume_v1.xml': ['NamespaceFeatures']
@@ -134,6 +159,7 @@ const CommonWritableObjects = ['IPAddresses.IPv4Address', 'IPAddresses.IPv6Stati
 const SkipPropertyTypeCheck = {
   'AttributeRegistry_v1.xml': ['CurrentValue', 'DefaultValue', 'MapToValue', 'MapFromValue']
 };
+const EntitiesNotInPrivilegeRegistry = ['Event'];
 /************************************************************/
 
 if(config.has('Redfish.ExtraPluralAllowed')) {
@@ -225,6 +251,9 @@ describe('CSDL Tests', () => {
         it('All definitions shall include Description and LongDescription annotations', () => {definitionsHaveAnnotations(csdl);});
         it('All versioned, non-errata namespaces have Release', () => {schemaReleaseCheck(csdl);});
         it('Resources specify capabilities', () => {resourcesSpecifyCapabilities(csdl);});
+        if(privilegeRegistry !== null) {
+          it('All EntityTypes are in Privilege Registry', () => {enityTypeInPrivilegeRegistry(csdl);});
+        }
       }
       it('Property Names have correct units', () => {propertyNameUnitCheck(csdl);});
       it('Property Types are valid', () => {checkValidPropertyType(csdl, fileName);});
@@ -1285,7 +1314,7 @@ function validCSDLTypeInMockup(json, file) {
         if(namespace === '') {
           throw new Error('Cannot get type of "' + typeLookup + '"');
         }
-        typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName, 1, 15)
+        typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName)
       }
       let propType = CSDL.findByType({_options: options}, typeLookup);
       if(propType === null || propType === undefined) {
@@ -1348,7 +1377,7 @@ function validCSDLTypeInMockup(json, file) {
         if(namespace === '') {
           throw new Error('Cannot get type of "' + typeLookup + '"');
         }
-        typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName, 1, 15)
+        typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName)
       }
       let propType = CSDL.findByType({_options: options}, typeLookup);
       let propValue = json[propName];
@@ -1492,15 +1521,41 @@ function isIdInUri(id, uri) {
   return {uri: uri, extra: rest};
 }
 
-function getLatestTypeVersion(defaultType, namespace, type, majorVersion, minorVersion) {
+function getLatestTypeVersion(defaultType, namespace, type) {
   let schemas = options.cache.getSchemasThatStartWith(namespace+'.');
   schemas.sort((a, b) => {
-    if(a._Name > b._Name) {
+    let a_split = a._Name.split(/[v_]/)
+    let b_split = b._Name.split(/[v_]/)
+    for (let i = 1; i < 4; i++) {
+      a_split[i] = parseInt(a_split[i])
+      b_split[i] = parseInt(b_split[i])
+    }
+
+    // Compare major versions
+    if(a_split[1] > b_split[1]) {
       return -1;
     }
-    else if(a._Name < b._Name) {
+    else if(a_split[1] < b_split[1]) {
       return 1;
     }
+
+    // Compare minor versions
+    if(a_split[2] > b_split[2]) {
+      return -1;
+    }
+    else if(a_split[2] < b_split[2]) {
+      return 1;
+    }
+
+    // Compare errata versions
+    if(a_split[3] > b_split[3]) {
+      return -1;
+    }
+    else if(a_split[3] < b_split[3]) {
+      return 1;
+    }
+
+    // All equal
     return 0;
   });
   for(let i = 0; i < schemas.length; i++) {
@@ -1761,7 +1816,7 @@ function checkProperty(propName, CSDLType, propValue, parentType, parentPropName
       if(namespace === '') {
         throw new Error('Cannot get type of "' + typeLookup + '"');
       }
-      typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName, 1, 15)
+      typeLookup = getLatestTypeVersion(typeLookup, namespace, typeName)
     }
     let propType = CSDL.findByType({_options: options}, typeLookup);
     if(typeof propType === 'string') {
@@ -2030,6 +2085,29 @@ function actionBindingParameter(csdl) {
     let bindingParam = actions[i].Parameters[paramKeys[0]];
     if(!bindingParam.Type.endsWith('.Actions') && !bindingParam.Type.endsWith('.OemActions')) {
       throw new Error(actions[i].Name+' does not specify a binding parameter!');
+    }
+  }
+}
+
+function enityTypeInPrivilegeRegistry(csdl) {
+  let entities = CSDL.search(csdl, 'EntityType');
+  for(let i = 0; i < entities.length; i++) {
+    //Only look at the root entity types...
+    if(entities[i].BaseType === 'Resource.v1_0_0.Resource') {
+      if(EntitiesNotInPrivilegeRegistry.indexOf(entities[i].Name) !== -1) {
+        //Skip entities like Event that shouldn't be in the privilege registry
+        continue;
+      }
+      let found = false;
+      for(let j = 0; j < privilegeRegistry.Mappings.length; j++) {
+        if(entities[i].Name === privilegeRegistry.Mappings[j].Entity) {
+          found = true;
+          break;
+        }
+      }
+      if(!found) {
+        throw new Error(entities[i].Name+' is not present in Privilege Registry!');
+      }
     }
   }
 }
