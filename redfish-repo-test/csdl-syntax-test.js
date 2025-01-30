@@ -85,7 +85,7 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'LPDDR5_SDRAM', 'PLDMv1_0', 'PLDMv1_1', 'PLDMv1_2', 'PLDMv1_3', 'eMMC',
                                     'CXL1_1', 'CXL2_0', 'CXL3_0', 'CXL3_1', 'CXL3_2'];
 //Properties names that are non-Pascal Cased
-const NonPascalCasePropertyWhiteList = ['iSCSIBoot'];
+const NonPascalCasePropertyWhiteList = ['iSCSIBoot', 'mDNS'];
 //Properties that have units but don't have the unit names in them
 const PropertyNamesWithoutCorrectUnits = ['AbsoluteSessionTimeout', 'AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'AllocatedBandwidth',
                                           'CapableSpeedGbs', 'Duration', 'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser',
