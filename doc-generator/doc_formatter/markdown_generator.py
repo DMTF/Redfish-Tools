@@ -688,7 +688,9 @@ class MarkdownGenerator(DocFormatter):
                 if self.config.get('with_table_numbering'):
                     if self.table_xref_formats:
                         caption = self.formatter.add_table_caption(section["head"] + " properties")
-                        preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ") + "\n"
+                        caption = caption + "\n</div>\n"
+                        preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ") + ".\n"
+                        preamble = preamble + "\n<div class=property-table>\n"
                 else:
                     caption = preamble = ''
 
