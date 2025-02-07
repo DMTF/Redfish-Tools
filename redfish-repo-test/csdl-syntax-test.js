@@ -83,7 +83,8 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512', 'TLS_PSK', 'TLS_AES_128_GCM_SHA256',
                                     'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad', 'CFB128_AES192', 'CFB128_AES256',
                                     'LPDDR5_SDRAM', 'PLDMv1_0', 'PLDMv1_1', 'PLDMv1_2', 'PLDMv1_3', 'eMMC',
-                                    'CXL1_1', 'CXL2_0', 'CXL3_0', 'CXL3_1', 'CXL3_2'];
+                                    'CXL1_1', 'CXL2_0', 'CXL3_0', 'CXL3_1', 'CXL3_2',
+                                    'FIPS_140_2', 'FIPS_140_3', 'CNSA_1_0', 'CNSA_2_0'];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot', 'mDNS'];
 //Properties that have units but don't have the unit names in them
