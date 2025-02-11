@@ -60,7 +60,7 @@ class PropertyIndexGenerator(DocFormatter):
             self.formatter = HtmlUtils()
         else:  # CSV also uses the markdown formatter.
             from format_utils import FormatUtils
-            self.formatter = FormatUtils()
+            self.formatter = FormatUtils(config)
 
 
     def emit(self):
