@@ -2127,7 +2127,7 @@ class DocFormatter:
                     base_pattern_info = self.apply_overrides(base_pattern_info, in_schema_name, None)
 
                     # Override the description, if any, with a line describing the pattern.
-                    description = _('Property names follow regular expression pattern "%(pattern)s"') % {'pattern': self.escape_regexp(pattern)}
+                    description = _('Property names follow regular expression pattern `%(pattern)s`') % {'pattern': self.escape_regexp(pattern)}
                     base_pattern_info['description'] = base_pattern_info['longDescription'] = description
                     base_pattern_info['verbatim_description'] = True
 
