@@ -197,13 +197,14 @@ class DocFormatter:
         for elt in summarized:
             versions.append(self.formatter.italic(elt['version']))
             releases.append(elt['release'])
-        heading = self.formatter.head_three(_("Revision history"), self.level);
-        formatted = self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)])
+        heading = self.formatter.head_three(_("Revision history"), self.level)
+        formatted = self.formatter.make_table([self.formatter.make_row(versions), self.formatter.make_row(releases)],css_class="revision_history", caption="Revision History")
         if self.config.get('with_table_numbering'):
             if "table_xref_format" in self.config:
-               caption = self.formatter.add_table_caption(_("Revision history"))
                reference = self.formatter.add_table_reference(_("The revision history is summarized in "))
-            formatted = reference + "\n\n" + formatted + "\n\n" + caption
+            else:
+                reference = ""
+            formatted = reference + "\n\n" + formatted + "\n\n"
         self.this_section['release_history'] = formatted + "\n"
 
 
@@ -333,7 +334,7 @@ class DocFormatter:
         # Add a closing } to the last row:
         rows = self.add_object_close(rows, '', '}', 4)
 
-        formatted.append(self.formatter.make_table(rows, last_column_wide=True))
+        formatted.append(self.formatter.make_table(rows, last_column_wide=True, css_class="action_response"))
 
         return "\n".join(formatted)
 

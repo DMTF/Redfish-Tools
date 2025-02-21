@@ -100,7 +100,7 @@ class HtmlUtils(FormatUtils):
         row = ''.join(['<th>' + cell + '</th>' for cell in cells])
         return '<tr>' + row + '</tr>'
 
-    def make_table(self, rows, header_rows=None, css_class=None, last_column_wide=False):
+    def make_table(self, rows, header_rows=None, css_class=None, last_column_wide=False, caption=None):
 
         """ Make an HTML table from the provided rows, which should be HTML markup """
         if header_rows:

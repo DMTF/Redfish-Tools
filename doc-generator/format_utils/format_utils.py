@@ -92,7 +92,7 @@ class FormatUtils():
             row_pattern = [':---' for x in range(0, num)]
         return self.make_row(row_pattern)
 
-    def make_table(self, rows, header_rows=None, css_class=None, last_column_wide=False):
+    def make_table(self, rows, header_rows=None, css_class=None, last_column_wide=False, caption=None):
 
         # Get the number of cells from the first row.
         firstrow = rows[0]
@@ -100,6 +100,14 @@ class FormatUtils():
         if not header_rows:
             header_rows = [ self.make_header_row(['   ' for x in range(0, numcells)]) ]
         header_rows.append(self._make_separator_row(numcells, last_column_wide=last_column_wide))
+
+        if caption:
+            rows.append(self.add_table_caption(caption))
+
+        #wrap table contents in div tag
+        if css_class:
+            header_rows.insert(0, "<div class=" + css_class + ">")
+            rows.append("</div>")
 
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
 

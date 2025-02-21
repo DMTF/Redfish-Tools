@@ -322,6 +322,9 @@ class MarkdownGenerator(DocFormatter):
         """Generate a formatted table of enum information for inclusion in Property details."""
 
         contents = []
+        div_tag = ""
+        preamble = ""
+        caption = ""
 
         parent_version = parent_prop_info.get('versionAdded')
         if parent_version:
@@ -369,12 +372,14 @@ class MarkdownGenerator(DocFormatter):
                     contents.append(self.config.get('table_formats', {}).get("enum_details"))
                 else:
                     contents.append('| :--- | :------ | :--- |')
+                div_tag = "enum_details_table"
             else:
                 contents.append('| ' + prop_type + ' | ' + _('Description') + ' |')
                 if self.config.get('table_formats', {}).get("enum_subset"):
                     contents.append(self.config.get('table_formats', {}).get("enum_subset"))
                 else:
                     contents.append('| :--- | :------------ |')
+                div_tag = "enum_subset_table"
             enum.sort(key=str.lower)
             for enum_item in enum:
                 enum_name = enum_item
@@ -445,12 +450,14 @@ class MarkdownGenerator(DocFormatter):
                     contents.append(self.config.get('table_formats', {}).get("profile_details"))
                 else:
                     contents.append('| :--- | :--- |')
+                div_tag = "profile_details_table"
             else:
                 contents.append('| ' + prop_type + ' |')
                 if self.config.get('table_formats', {}).get("profile_subset"):
                     contents.append(self.config.get('table_formats', {}).get("profile_subset"))
                 else:
                     contents.append('| :--- |')
+                div_tag = "profile_subset_table"
             for enum_item in enum:
                 enum_name = enum_item
                 version = version_depr = deprecated_descr = None
@@ -518,7 +525,8 @@ class MarkdownGenerator(DocFormatter):
             if self.table_xref_formats:
                 caption = self.formatter.add_table_caption(_("%(prop_name)s property values") % {'prop_name': prop_name})
                 preamble = self.formatter.add_table_reference(_("The defined property values are listed in "))
-            formatted = preamble + '\n' + formatted + caption
+
+            formatted = preamble + '\n\n' + "<div class=" + div_tag + ">\n" + formatted + caption + "\n</div>"
 
         return formatted
 
@@ -528,6 +536,7 @@ class MarkdownGenerator(DocFormatter):
         """Generate a formatted Actions section from parameter data. """
 
         formatted = []
+        div_tag = ""
         version_string = deprecated_descr = None
         if version_strings:
             version_string = version_strings.get('version_string')
@@ -573,7 +582,8 @@ class MarkdownGenerator(DocFormatter):
                 rows.append("| " + _('Parameter Name') + "     | " + _('Type') + "     | " + _('Attributes') + '   | ' + _('Notes') + "     |")
                 if self.table_formats:
                     if self.table_formats.get("properties"):
-                        rows.append(self.table_formats.get('action_parameters'))
+                        rows.append(self.table_formats.get('properties'))
+                        div_tag = "action_parameters_table"
                 else:
                     rows.append("| :--- | :--- | :--- | :--------------------- |")
 
@@ -597,7 +607,7 @@ class MarkdownGenerator(DocFormatter):
                 if self.table_xref_formats:
                     caption = self.formatter.add_table_caption(_("%(prop_name)s action parameters") % {'prop_name': prop_name})
                     preamble = "\n" + heading + "\n\n" +  self.formatter.add_table_reference(_("The parameters for the action which are included in the POST body to the URI shown in the 'target' property of the Action are summarized in ")) + "\n\n"
-                    formatted_rows = preamble +  formatted_rows + caption
+                    formatted_rows = preamble +  "<div class=" + div_tag + ">\n" + formatted_rows + caption + "\n</div>"
             else:
                 formatted.append(heading)
             formatted.append(formatted_rows)
@@ -645,7 +655,7 @@ class MarkdownGenerator(DocFormatter):
         if prop_description:
             contents.append(self.formatter.para(self.escape_for_markdown(prop_description, self.config.get('escape_chars', []))))
 
-        obj_table = self.formatter.make_table(rows, last_column_wide=True)
+        obj_table = self.formatter.make_table(rows, css_class="prop_details", last_column_wide=True)
         contents.append(obj_table)
 
         return "\n".join(contents)
@@ -690,7 +700,7 @@ class MarkdownGenerator(DocFormatter):
                         caption = self.formatter.add_table_caption(section["head"] + " properties")
                         caption = caption + "\n</div>\n"
                         preamble = self.formatter.add_table_reference("The properties defined for the " + section["head"] + " schema are summarized in ") + ".\n"
-                        preamble = preamble + "\n<div class=property-table>\n"
+                        preamble += "\n<div class=properties_table>"
                 else:
                     caption = preamble = ''
 
@@ -713,9 +723,8 @@ class MarkdownGenerator(DocFormatter):
                         contents.append('| :--- | :--- | :--- | :--------------------- |')
 
                 contents.append('\n'.join(section['properties']))
-
                 if caption:
-                    contents.append(caption + '\n')
+                    contents.append(caption)
 
             if section.get('profile_conditional_details'):
                 # sort them now; these can be sub-properties so may not be in alpha order.
