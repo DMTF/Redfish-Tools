@@ -107,13 +107,17 @@ class FormatUtils():
         #wrap table contents in div tag
         if css_class:
             header_rows.insert(0, "<div class=" + css_class + ">")
-            rows.append("</div>")
+            rows.append("</divbar>")
 
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
 
     def add_table_caption(self, caption):
         self.last_caption = caption
-        return _('\nTable') + ': ' + caption + self.config['table_xref_formats']['caption']
+        if self.config['table_xref_formats']:
+            return _('\nTable') + ': ' + caption + self.config['table_xref_formats']['caption']
+        return ''
 
     def add_table_reference(self, lead_in):
-        return lead_in + self.config['table_xref_formats']['reference']
+        if self.config['table_xref_formats']:
+            return lead_in + self.config['table_xref_formats']['reference']
+        return ''
