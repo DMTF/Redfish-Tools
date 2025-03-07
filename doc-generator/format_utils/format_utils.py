@@ -92,7 +92,7 @@ class FormatUtils():
     def make_table(self, rows, header_rows=None, css_class=None, last_column_wide=False):
 
         # Get the number of cells from the first row.
-        firstrow = rows[0]
+        firstrow = rows[0].split('\n')[0]
         numcells = firstrow.count(' | ') + 1
         if not header_rows:
             header_rows = [ self.make_header_row(['   ' for x in range(0, numcells)]) ]
