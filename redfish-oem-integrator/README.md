@@ -46,6 +46,8 @@ The config file contains the following terms to control how the tool processes J
     * See [Resource Config](#resource-config) for more information about the contents.
 * `OemBindingsFilePath`: The filename and path to the file that describes where OEM objects and actions are inserted into the implementation.
     * See [OEM Bindings Config](#oem-bindings-config) for more information about the contents.
+* `AnnotationsFilePath`: The filename and path to the file that describes which schemas need to be annotated.
+    * See [Annotation Bindings Config](#annotation-bindings-config) for more information about the contents.
 * `StoreConfigInSeparateFiles`: `true` indicates if each resource has its own configuration file and `false` indicates if all resouce configurations are contained in a single, monolithic file.
 * `EnableNewAdditionsByDefault`: When parsing the contents of the *input* directory and adding new properties not currently in the resource configuration, `true` will enable the new property in the configuration and `false` will disable the new property in the configuration.
 
@@ -150,6 +152,26 @@ For example:
             "#ContosoAccountService.AutoConfig": {
                 "$ref": "http://Contoso.com/schemas/ContosoAccountService.json#/definitions/AutoConfig"
             }
+        }
+    }
+}
+```
+
+### Annotation Bindings Config
+
+The file referenced by the `AnnotationsFilePath` term contains a JSON object that describes how different annotations are inserted into the JSON Schema output.
+For example:
+
+```
+{
+    "ComputerSystem": {
+        "ComputerSystem": {
+            "@Redfish.Settings": {}
+        }
+    },
+    "UpdateService": {
+        "UpdateService": {
+            "MultipartHttpPushUri@Redfish.OperationApplyTimeSupport": {}
         }
     }
 }
