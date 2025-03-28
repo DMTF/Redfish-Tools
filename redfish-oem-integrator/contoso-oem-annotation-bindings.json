@@ -1,0 +1,12 @@
+{
+    "ComputerSystem": {
+        "ComputerSystem": {
+            "@Redfish.Settings": {}
+        }
+    },
+    "UpdateService": {
+        "UpdateService": {
+            "MultipartHttpPushUri@Redfish.OperationApplyTimeSupport": {}
+        }
+    }
+}

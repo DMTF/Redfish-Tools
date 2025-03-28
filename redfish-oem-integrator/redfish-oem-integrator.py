@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 # Copyright Notice:
-# Copyright 2022-2024 DMTF. All rights reserved.
+# Copyright 2022-2025 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/master/LICENSE.md
 
 """
@@ -17,6 +17,7 @@ import os
 import sys
 import copy
 import shutil
+import re
 
 class UnsupportedFeatureException(Exception):
     "Raised when it hits some feature which is not developed yet"
@@ -50,6 +51,7 @@ class JsonSchemaConfigHelper:
         self.__properties_in_use = set()
         self.__enabled = enabled_by_default
         self.__array_items_support = {}
+        self.__strlen_support = {}
 
     def __del__(self):
         # Process the minItems/maxItems if any
@@ -60,6 +62,13 @@ class JsonSchemaConfigHelper:
                 self.__mark_property_metainfo(prop_to_modify, "minItems", minItems)
             if maxItems is not None:
                 self.__mark_property_metainfo(prop_to_modify, "maxItems", maxItems)
+        for prop_to_modify in self.__strlen_support:
+            minLength = self.__strlen_support[prop_to_modify].get("minLength")
+            maxLength = self.__strlen_support[prop_to_modify].get("maxLength")
+            if minLength is not None:
+                self.__mark_property_metainfo(prop_to_modify, "minLength", minLength)
+            if maxLength is not None:
+                self.__mark_property_metainfo(prop_to_modify, "maxLength", maxLength)
 
         for prop_to_modify in sorted(self.__read_only_props, reverse=True):
             self.__mark_property_metainfo(prop_to_modify, "readonly", True)
@@ -111,6 +120,13 @@ class JsonSchemaConfigHelper:
             else:
                 raise(UnsupportedFeatureException)
         return ref
+
+    def add_annotation(self, target, annotation_prop, annotation_details):
+        '''Add an annotation under the specified Entity or ComplexType'''
+        assert(target in self.__schema["definitions"]), f"Invalid Entity or ComplexType {target} specified in annotation path for {self.__schema_name} schema."
+        assert("properties" in self.__schema["definitions"][target]), f"Invalid Entity or ComplexType {target} specified in annotation path for {self.__schema_name} schema."
+        self.__schema["definitions"][target]["properties"][annotation_prop] = annotation_details
+        self.__is_changed = True
 
     def add_oem_schema_link(self, prop, oem_name, oem_schema_path):
         oem_prop_key = prop + "_Oem"
@@ -287,6 +303,25 @@ class JsonSchemaConfigHelper:
                 self.__array_items_support[property_path]["minItems"] = min_items
         else:
             self.__array_items_support[property_path] = {"minItems": min_items}
+    def set_max_length(self, property_path, length):
+        assert(length > 0), f"Invalid max length {length} passed"
+        if property_path in self.__strlen_support and "minLength" in self.__strlen_support[property_path]:
+            assert(self.__strlen_support[property_path]["minLength"] <= length)
+            old_max = self.__strlen_support[property_path].get("maxLength", 0)
+            if old_max < length:
+                self.__strlen_support[property_path]["maxLength"] = length
+        else:
+            self.__strlen_support[property_path] = {"maxLength": length}
+
+    def set_min_length(self, property_path, length):
+        assert (length > 0), f"Invalid min length {length} passed"
+        if property_path in self.__strlen_support and "maxLength" in self.__strlen_support[property_path]:
+            assert(self.__strlen_support[property_path]["maxLength"] >= length)
+            old_min = self.__strlen_support[property_path].get("minLength", 0)
+            if old_min > length:
+                self.__strlen_support[property_path]["minLength"] = length
+        else:
+            self.__strlen_support[property_path] = {"minLength": length}
 
     def mark_property_readonly(self, property_path):
         assert(self.is_versioned_entity()), "Property Capabilities can be updated only for versioned schemas"
@@ -406,7 +441,7 @@ class JsonSchemaConfigHelper:
             if ref.endswith("/idRef"):
                 continue
             versions.append(ref.split("#",1)[0].rsplit("/",1)[-1])
-        self.__versions = versions
+        self.__versions = sorted(versions, key = lambda x: tuple(x.split(".")[1][1:].split("_")))
         self.__max_version = self.__versions[-1]
         return self.__versions
 
@@ -682,6 +717,11 @@ class JSONSchemaConfigManager:
                     else:
                         new_prop_d[prop][merge_key] = None # Set to None indicating that it has not been configured
 
+            for merge_key in ["@meta.minLength", "@meta.maxLength"]:
+                # This is a manually added one, not specified by the CSDL spec
+                if merge_key in old_prop_d[prop]:
+                    new_prop_d[prop][merge_key] = old_prop_d[prop][merge_key]
+
             sub_properties = [x for x in new_prop_d[prop] if not x.startswith("@meta.")]
             for sub_prop in sub_properties:
                 if sub_prop not in old_prop_d[prop]:
@@ -850,10 +890,17 @@ class JSONSchemaConfigManager:
         my_prop_path = prop_path + "/" + property
         minItems = prop_d.get("@meta.minItems")
         maxItems = prop_d.get("@meta.maxItems")
+        minLength = prop_d.get("@meta.minLength")
+        maxLength = prop_d.get("@meta.maxLength")
+
         if minItems:
             schema_obj.set_min_items(my_prop_path, minItems)
         if maxItems:
             schema_obj.set_max_items(my_prop_path, maxItems)
+        if maxLength:
+            schema_obj.set_max_length(my_prop_path, maxLength)
+        if minLength:
+            schema_obj.set_min_length(my_prop_path, minLength)
         if "@meta.AllowWrite" in prop_d and not prop_d["@meta.AllowWrite"]:
             print("{}: Marking property {} as ReadOnly".format(schema_obj.get_name(), my_prop_path)) #TODO: what if it is a complex prop with mismatching capabilities
             schema_obj.mark_property_readonly(my_prop_path)
@@ -999,8 +1046,18 @@ class DMTFOemIntegrator:
         cfgmgr.merge_configs()
         cfgmgr.write_config()
         cfgmgr.process_configs()
-        with open(config["OemBindingsFilePath"]) as fd:
-            self.bindings = json.load(fd)
+        oem_binding_file_path = config.get("OemBindingsFilePath", None)
+        if oem_binding_file_path:
+            with open(config["OemBindingsFilePath"]) as fd:
+                self.__oem_bindings = json.load(fd)
+        else:
+            self.__oem_bindings = None
+        annotations_file_path = config.get("AnnotationsFilePath", None)
+        if annotations_file_path:
+            with open(config["AnnotationsFilePath"]) as fd:
+                self.__annotations = json.load(fd)
+        else:
+            self.__annotations = None
 
 
     def integrate_oems(self):
@@ -1017,7 +1074,7 @@ class DMTFOemIntegrator:
                     else:
                         paths.append(path+[p])
             return paths
-        for schema, schema_bindings in self.bindings.items():
+        for schema, schema_bindings in self.__oem_bindings.items():
             for prop, binding in schema_bindings.items():
                 if prop == "OemActions":
                     print("Found OemAction extension for the %s resource" %(schema))
@@ -1200,6 +1257,56 @@ class DMTFOemIntegrator:
                                 raise(e)
                     #raise(Exception("Not Yet Implemented!!"))
 
+    def inject_annotations(self):
+        def load_supported_annotations():
+            annotation_file = os.path.join(self.json_out_file_path, "redfish-payload-annotations-v1.json")
+            supported_annotations = {}
+            with open(annotation_file, "r") as fd:
+                data = json.load(fd)
+            supported_annotations["properties"] = data["properties"]
+            supported_annotations["patternProperties"] = data["patternProperties"]
+            supported_annotations["patternRegexes"] = {}
+            for pattern in data["patternProperties"]:
+                pat_key = "@" + pattern.split("@",1)[-1][:-1] # Example: ^([a-zA-Z_][a-zA-Z0-9_]*)?@Redfish.AllowableValues$
+                supported_annotations["patternRegexes"][pat_key] = {"re": re.compile(pattern, re.M), "pat": pattern}
+            return supported_annotations
+        def get_annotation_details(supported_annotations, annotation):
+            # HACK to allow "MultipartHttpPushUri@Redfish.OperationApplyTimeSupport" till schema is fixed
+            if "@Redfish.OperationApplyTimeSupport" in annotation:
+                annotation = "@Redfish.OperationApplyTimeSupport"
+            # End of HACK
+            if annotation in supported_annotations["properties"]:
+                return supported_annotations["properties"][annotation]
+            for pat_key in supported_annotations["patternRegexes"]:
+                if pat_key not in annotation:
+                    continue
+                if supported_annotations["patternRegexes"][pat_key]["re"].match(annotation):
+                    return supported_annotations["patternProperties"][supported_annotations["patternRegexes"][pat_key]["pat"]]
+            print(f"Unable to find annotation {annotation} in supported annotations")
+            return None
+        if not self.__annotations:
+            return
+        supported_annotations = load_supported_annotations()
+        json_schema_files_map = {} # Prefix  based map for faster lookup: ServiceRoot.v -> [ServiceRoot.v1_1_0.json, ServiceRoot.v1_2_0.json]
+        for f in sorted(os.listdir(self.json_out_file_path)):
+            if not f.endswith(".json") or ".v" not in f:
+                continue
+            schema_name = f.split(".v")[0]
+            k = schema_name+".v"
+            if schema_name not in json_schema_files_map:
+                json_schema_files_map[k] = []
+            json_schema_files_map[k].append(os.path.join(self.json_out_file_path, f))
+        for schema_name, annotation_details in self.__annotations.items():
+            schema_key = schema_name + ".v"
+            if schema_key not in json_schema_files_map:
+                continue
+            for f in json_schema_files_map[schema_key]:
+                json_schema = JsonSchemaConfigHelper(f, f)
+                for target, annotation in annotation_details.items():
+                    for annotation_prop in annotation:
+                        annotation_details = get_annotation_details(supported_annotations, annotation_prop)
+                        assert(annotation_details != None), "Unsupported Annotation: %s" %(annotation_prop)
+                        json_schema.add_annotation(target, annotation_prop, annotation_details)
 
 def main():
     """
@@ -1238,6 +1345,7 @@ def main():
     # Step through each file in the input directory
     integrator = DMTFOemIntegrator(args.input, args.output, config_data)
     integrator.integrate_oems()
+    integrator.inject_annotations()
     return 0
 
 if __name__ == '__main__':
