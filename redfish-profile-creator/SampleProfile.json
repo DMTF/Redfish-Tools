@@ -1,0 +1,247 @@
+{
+    "SchemaDefinition": "RedfishInteroperabilityProfile.v1_7_0",
+    "ProfileName": "Anchovy",
+    "ProfileVersion": "1.0.3",
+    "Purpose": "This is a sample Redfish Interoperability profile.",
+    "OwningEntity": "Contoso",
+    "ContactInfo": "pizza@contoso.com",
+    "RequiredProfiles": {
+        "PizzaBox": {
+            "MinVersion": "1.0.0"
+        },
+        "ContosoPizza": {
+            "Repository": "http://contoso.com/profiles",
+            "MinVersion": "1.0.0"
+        }
+    },
+    "Protocol": {
+        "MinVersion": "1.6",
+        "Discovery": "Recommended",
+        "HostInterface": "Mandatory",
+        "ExpandQuery": "Recommended",
+        "SelectQuery": "None",
+        "FilterQuery": "Recommended"
+    },
+    "Resources": {
+        "ChassisCollection": {
+            "PropertyRequirements": {
+                "Members": {
+                    "MinCount": 1
+                }
+            }
+        },
+        "ComputerSystemCollection": {
+            "PropertyRequirements": {
+                "Members": {
+                    "MinCount": 1
+                }
+            }
+        },
+        "ComputerSystem": {
+            "MinVersion": "1.1.0",
+            "Purpose": "Every implementation must have the logical view of the System.",
+            "PropertyRequirements": {
+                "SerialNumber": {
+                    "ReadRequirement": "Mandatory"
+                },
+                "Manufacturer": {},
+                "Model": {
+                    "ReadRequirement": "Recommended"
+                },
+                "SKU": {
+                    "ReadRequirement": "Recommended",
+                    "ConditionalRequirements": [{
+                        "Purpose": "Either PartNumber or SKU must be supported.",
+                        "CompareProperty": "PartNumber",
+                        "CompareType": "Absent",
+                        "ReadRequirement": "Mandatory"
+                    }]
+                },
+                "PartNumber": {
+                    "ReadRequirement": "Recommended",
+                    "ConditionalRequirements": [{
+                        "Purpose": "Either PartNumber or SKU must be supported.",
+                        "CompareProperty": "SKU",
+                        "CompareType": "Absent",
+                        "ReadRequirement": "Mandatory"
+                    }]
+                },
+                "LocationIndicatorActive": {
+                    "ReadRequirement": "Recommended",
+                    "ReplacesProperty": "IndicatorLED",
+                    "ConditionalRequirements": [{
+                        "Purpose": "Physical systems must have a writable location indicator, but it is acceptable to support the deprecated IndicatorLED property.",
+                        "CompareProperty": "SystemType",
+                        "CompareType": "AnyOf",
+                        "CompareValues": ["Physical"],
+                        "ReadRequirement": "Mandatory",
+                        "WriteRequirement": "Mandatory"
+                    }]
+                },
+                "IndicatorLED": {
+                    "ReadRequirement": "Recommended",
+                    "ReplacedByProperty": "LocationIndicatorActive",
+                    "ConditionalRequirements": [{
+                        "Purpose": "Physical systems must have a writable IndicatorLED, but prefer LocationIndicatorActive.",
+                        "CompareProperty": "SystemType",
+                        "CompareType": "AnyOf",
+                        "CompareValues": ["Physical"],
+                        "ReadRequirement": "Mandatory",
+                        "WriteRequirement": "Mandatory"
+                    }]
+                }
+            },
+            "ActionRequirements": {
+                "Reset": {
+                    "ReadRequirement": "Mandatory",
+                    "Purpose": "Ability to reset the system is a core requirement of most users.",
+                    "ActionInfo": "Mandatory",
+                    "Parameters": {
+                        "ResetType": {
+                            "ParameterValues": ["ForceOff", "PowerCycle", "On"],
+                            "RecommendedValues": ["GracefulShutdown", "GracefulRestart", "ForceRestart", "PushPowerButton"],
+                            "ReadRequirement": "Mandatory"
+                        }
+                    }
+                }
+            }
+        },
+        "EthernetInterface": {
+            "UseCases": [{
+                    "UseCaseTitle": "Ethernet Interface on Manager (BMC)",
+                    "URIs": ["/redfish/v1/Managers/{ManagerId}/EthernetInterfaces/{EthernetInterfaceId}"],
+                    "MinVersion": "1.9.0",
+                    "ReadRequirement": "Mandatory",
+                    "PropertyRequirements": {
+                        "MACAddress": {},
+                        "DHCPv4": {},
+                        "FQDN": {},
+                        "HostName": {},
+                        "IPv4Addresses": {},
+                        "IPv4StaticAddresses": {},
+                        "LinkStatus": {},
+                        "SpeedMbps": {}
+                    }
+                },
+                {
+                    "UseCaseTitle": "Host System (OS) Ethernet Interfaces",
+                    "URIs": ["/redfish/v1/Systems/{ComputerSystemId}/EthernetInterfaces/{EthernetInterfaceId}", "/redfish/v1/Chassis/{ChassisId}/NetworkAdapters/{NetworkAdapterId}/NetworkDeviceFunctions//{NetworkDeviceFunctionId}/EthernetInterfaces/{EthernetInterfaceId}"],
+                    "MinVersion": "1.4.0",
+                    "ReadRequirement": "Mandatory",
+                    "PropertyRequirements": {
+                        "MACAddress": {
+                            "Purpose": "Host MAC address is frequently used to identify systems via DHCP tables or other network sources."
+                        },
+
+                        "Status": {
+                            "PropertyRequirements": {
+                                "Health": {},
+                                "State": {}
+                            }
+                        },
+                        "HostName": {},
+                        "IPv4Addresses": {},
+                        "IPv4StaticAddresses": {},
+                        "IPv6Addresses": {},
+                        "IPv6AddressPolicyTable": {
+                            "ReadRequirement": "Recommended"
+                        },
+                        "IPv6StaticAddresses": {},
+                        "IPv6StaticDefaultGateways": {
+                            "ReadRequirement": "Recommended"
+                        },
+                        "LinkStatus": {},
+                        "SpeedMbps": {},
+                        "PermanentMACAddress": {}
+                    }
+                }
+            ]
+        },
+        "ManagerAccountCollection": {
+            "CreateResource": true,
+            "DeleteResource": true,
+            "UpdateResource": true
+        },
+        "Thermal": {
+            "MinVersion": "1.1.0",
+            "PropertyRequirements": {
+                "Fans": {
+                    "ReadRequirement": "IfImplemented",
+                    "PropertyRequirements": {
+                        "Reading": {
+                            "ReadRequirement": "IfPopulated"
+                        },
+                        "Manufacturer": {
+                            "ReadRequirement": "IfPopulated"
+                        },
+                        "Model": {
+                            "ReadRequirement": "IfPopulated"
+                        },
+                        "PartNumber": {
+                            "ReadRequirement": "Recommended"
+                        },
+                        "ReadingUnits": {},
+                        "Status": {},
+                        "RelatedItem": {
+                            "Comparison": "LinkToResource",
+                            "Values": ["Processor", "ComputerSystem", "Chassis", "Memory"]
+                        }
+                    }
+                },
+                "Temperatures": {
+                    "ReadRequirement": "Mandatory",
+                    "MinCount": 2,
+                    "PropertyRequirements": {
+                        "ReadingCelsius": {},
+                        "PhysicalContext": {
+                            "Comparison": "AllOf",
+                            "Values": ["CPU", "Ambient"]
+                        },
+                        "UpperThresholdFatal": {
+                            "ReadRequirement": "Recommended"
+                        },
+                        "UpperThresholdCritical": {},
+                        "UpperThresholdNonCritical": {}
+                    }
+                }
+            }
+        },
+        "ContosoTimeMachine": {
+            "Repository": "www.contoso.com/schemas",
+            "PropertyRequirements": {
+                "CurrentTime": {},
+                "DestinationTime": {},
+                "IsGrandfatherAlive": {
+                    "ReadRequirement": "Recommended"
+                },
+                "ParadoxDetected": {
+                    "ReadRequirement": "IfImplemented",
+                    "ConditionalRequirements": [{
+                        "CompareProperty": "TimeMachineModel",
+                        "CompareType": "Equal",
+                        "CompareValue": "Delorean",
+                        "ReadRequirement": "Mandatory",
+                        "Comparison": "AnyOf",
+                        "Values": ["None", "Recoverable", "Improbable"]
+                    }]
+                }
+            }
+        }
+    },
+    "Registries": {
+        "Base": {
+            "MinVersion": "1.0.0",
+            "Repository": "redfish.dmtf.org/registries",
+            "Messages": {
+                "Success": {},
+                "GeneralError": {},
+                "Created": {},
+                "PropertyDuplicate": {}
+            }
+        },
+        "ContosoPizzaMessages": {
+            "Repository": "contoso.com/registries",
+            "ReadRequirement": "Mandatory"
+        }
+    }
+}

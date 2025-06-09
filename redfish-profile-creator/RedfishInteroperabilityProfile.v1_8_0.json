@@ -1,0 +1,585 @@
+{
+    "$id": "http://redfish.dmtf.org/profiles/v1/RedfishInteroperabilityProfile.v1_8_0.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "#RedfishInteroperabilityProfile.v1_8_0.RedfishInteroperabilityProfile",
+    "copyright": "Copyright 2017-2024 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "SchemaDefinition": {
+            "type": "string",
+            "description": "The JSON schema that defines this Redfish interoperability profile document and can be used to validate its contents."
+        },
+        "ProfileName": {
+            "type": "string",
+            "description": "The name of this Redfish profile."
+        },
+        "ProfileVersion": {
+            "type": "string",
+            "description": "The version of this Redfish profile.  The version shall be represented using a `<major>.<minor>.<errata>` format.",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "OwningEntity": {
+            "type": "string",
+            "description": "The name of the owning entity that defined this Redfish interoperability profile."
+        },
+        "ContributedBy": {
+            "type": "string",
+            "description": "The name of the original author or entity that contributed the content of this profile to the owning entity."
+        },
+        "License": {
+            "type": "string",
+            "description": "The license statement for this profile."
+        },
+        "Purpose": {
+            "$ref": "#/definitions/Purpose"
+        },
+        "ContactInfo": {
+            "type": "string",
+            "description": "An email address that can be used to provide feedback about this Redfish profile."
+        },
+        "RequiredProfiles": {
+            "type": "object",
+            "description": "A set of Redfish profiles that serve as a basis for this profile.  The requirements set forth in these profiles are included in this profile.",
+            "additionalProperties": false,
+            "patternProperties": {
+                "^.*$": {
+                    "type": "object",
+                    "properties": {
+                        "Repository": {
+                            "$ref": "#/definitions/Repository"
+                        },
+                        "MinVersion": {
+                            "$ref": "#/definitions/MinVersion"
+                        }
+                    }
+                }
+            }
+        },
+        "Protocol": {
+            "type": "object",
+            "description": "Requirements related to the Redfish protocol outside of the JSON resources.",
+            "additionalProperties": false,
+            "properties": {
+                "MinVersion": {
+                    "$ref": "#/definitions/MinVersion",
+                    "description": "Indicates the minimum version of the Redfish Specification protocol support required by this profile.  This version shall be reported by the Redfish service in the `ServiceRoot` resource property `RedfishVersion`.  The version shall be represented using a `<major>.<minor>.<errata>` format, including an optional errata version.  If this property is absent, the minimum value shall be `1.0.0`."
+                },
+                "Discovery": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for the Redfish SSDP discovery protocol.  If this property is absent, there is no requirement for SSDP."
+                },
+                "HostInterface": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for the Redfish host interface.  If this property is absent, there is no requirement for a host interface."
+                },
+                "ExpandQuery": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for the `$expand` query parameter.  Additional `$expand` support requirements may be specified in the resource entry for the `ProtocolFeaturesSupported` object within `ServiceRoot`.  If this property is absent, there is no requirement for support of the `$expand` query parameter."
+                },
+                "FilterQuery": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for the `$filter` query parameter.  If this property is absent, there is no requirement for support of the `$filter` query parameter."
+                },
+                "SelectQuery": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for the `$select` query parameter.  If this property is absent, there is no requirement for support of the `$select` query parameter."
+                },
+                "OnlyQuery": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for the `only` query parameter.  If this property is absent, there is no requirement for support of the `only` query parameter."
+                },
+                "ExcerptQuery": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for the `excerpt` query parameter.  If this property is absent, there is no requirement for support of the `excerpt` query parameter."
+                },
+                "DeepPATCH": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for deep PATCH operations.  If this property is absent there is no requirement for support of deep PATCH operations."
+                },
+                "DeepPOST": {
+                    "$ref": "#/definitions/ProtocolRequirement",
+                    "description": "Indicates support requirements for deep POST operations.  If this property is absent there is no requirement for support of deep POST operations."
+                }
+            }
+        },
+        "Resources": {
+            "type": "object",
+            "description": "The JSON resource requirements.",
+            "patternProperties": {
+                "^.*$": {
+                    "oneOf": [{
+                            "$ref": "#/definitions/ResourceProfile"
+                        },
+                        {
+                            "$ref": "#/definitions/ResourceUseCases"
+                        }
+                    ]
+                }
+            }
+        },
+        "Registries": {
+            "type": "object",
+            "description": "The registry requirements.",
+            "patternProperties": {
+                "^.*$": {
+                    "$ref": "#/definitions/RegistryProfile"
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ResourceProfile": {
+            "type": "object",
+            "properties": {
+                "MinVersion": {
+                    "$ref": "#/definitions/MinVersion"
+                },
+                "Repository": {
+                    "$ref": "#/definitions/Repository"
+                },
+                "ReadRequirement": {
+                    "$ref": "#/definitions/ReadRequirement"
+                },
+                "URIs": {
+                    "$ref": "#/definitions/URIs"
+                },
+                "CreateResource": {
+                    "type": "boolean",
+                    "description": "Specifies a requirement that a user may create a member of this resource.  This normally applies to Redfish resource collections.  If this property is absent, there is no requirement to support creation of members of this resource."
+                },
+                "DeleteResource": {
+                    "type": "boolean",
+                    "description": "Specifies a requirement that a user may delete a member of this resource.  This normally applies to Redfish resource collections.  If this property is absent, there is no requirement to support deletion of members of this resource."
+                },
+                "UpdateResource": {
+                    "type": "boolean",
+                    "description": "Specifies a requirement that a user may update a member of this resource.  This normally applies to Redfish resource collections.  If this property is absent, there is no requirement to support updating of members of this resource, but individual property-level read-write requirements apply."
+                },
+                "Purpose": {
+                    "$ref": "#/definitions/Purpose"
+                },
+                "UseCaseType": {
+                    "type": "string",
+                    "description": "Specifies the type of use case.  If not present in the profile, the value can be assumed to be `Normal`.",
+                    "enum": [
+                        "Normal",
+                        "AbsentResource",
+                        "ChassisType",
+                        "DriveProtocol",
+                        "MemoryType",
+                        "PortProtocol",
+                        "ProcessorType"
+                    ],
+                    "enumDescriptions": {
+                        "Normal": "A normal resource use case.",
+                        "AbsentResource": "A use case specific to the absent resource special situation as defined by the Redfish Specification.  This use case will apply to resource instances where the `State` property in the `Status` object contains the value of `Absent`.",
+                        "ChassisType": "The use case applies to resources subordinate to a `Chassis` resource where the `ChassisType` property of that resource is used as the `UseCaseKeyProperty` to evaluate the `UseCaseComparison` and `UseCaseKeyValues`.",
+                        "DriveProtocol": "The use case applies to resources subordinate to a `Drive` resource where the `Protocol` property of that resource is used as the `UseCaseKeyProperty` to evaluate the `UseCaseComparison` and `UseCaseKeyValues`.",
+                        "MemoryType": "The use case applies to resources subordinate to a `Memory` resource where the `MemoryType` property of that resource is used as the `UseCaseKeyProperty` to evaluate the `UseCaseComparison` and `UseCaseKeyValues`.",
+                        "PortProtocol": "The use case applies to resources subordinate to a `Port` resource where the `Protocol` property of that resource is used as the `UseCaseKeyProperty` to evaluate the `UseCaseComparison` and `UseCaseKeyValues`.",
+                        "ProcessorType": "The use case applies to resources subordinate to a `Processor` resource where the `ProcessorType` property of that resource is used as the `UseCaseKeyProperty` to evaluate the `UseCaseComparison` and `UseCaseKeyValues`."
+                    }
+                },
+                "UseCaseTitle": {
+                    "type": "string",
+                    "description": "Specifies a title or short name used to identify the resource use case.  This property is only present in resource use cases."
+                },
+                "UseCaseKeyProperty": {
+                    "type": "string",
+                    "description": "Specifies a property within the resource used by the UseCaseComparison to define the use case.  This property is only present in resource use cases."
+                },
+                "UseCaseKeyValues": {
+                    "description": "Specifies the values of `UseCaseKeyProperty` used to evaluate the `UseCaseComparison`.  This property is only present in resource use cases.",
+                    "$ref": "#/definitions/Values"
+                },
+                "UseCaseComparison": {
+                    "description": "Specifies the type of comparison to perform using the `UseCaseKeyProperty` and the values contained in `UseCaseKeyValues`.  If the comparison is successful, this resource instance is covered by this resource use case.  This property is only present in resource use cases.",
+                    "$ref": "#/definitions/Comparison"
+                },
+                "RequiredResourceProfile": {
+                    "type": "object",
+                    "description": "Specifies a Redfish Interoperability Profile file which contains requirements for this resource or resource use case.  The `ResourceRequirements` for this resource type, contained within the specified profile, will be applied.  All other requirements included in the specified profile, which do not apply to this resource type, are ignored.",
+                    "properties": {
+                        "Name": {
+                            "type": "string",
+                            "description": "The name of the profile."
+                        },
+                        "Repository": {
+                            "$ref": "#/definitions/Repository"
+                        },
+                        "MinVersion": {
+                            "$ref": "#/definitions/MinVersion"
+                        }
+                    }
+                },
+                "ConditionalRequirements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Condition"
+                    }
+                },
+                "PropertyRequirements": {
+                    "type": "object",
+                    "description": "The property-level requirements for this Redfish interoperability profile.  These requirements apply to every instance of this resource.  If a property defined in the associated schema is not present, there is no requirement for that property to be supported.",
+                    "patternProperties": {
+                        "^.*$": {
+                            "$ref": "#/definitions/PropertyProfile"
+                        }
+                    }
+                },
+                "ActionRequirements": {
+                    "type": "object",
+                    "description": "The action requirements for this Redfish interoperability profile.",
+                    "patternProperties": {
+                        "^.*$": {
+                            "$ref": "#/definitions/ActionProfile"
+                        }
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "ResourceUseCases": {
+            "type": "object",
+            "properties": {
+                "UseCases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ResourceProfile"
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "PropertyProfile": {
+            "type": "object",
+            "description": "Properties defined for a resource that have requirements defined by this profile.  A property listed with no further details should be assumed to be a required property.  Properties not listed have no support requirements associated with this profile.",
+            "properties": {
+                "ReadRequirement": {
+                    "$ref": "#/definitions/ReadRequirement"
+                },
+                "WriteRequirement": {
+                    "$ref": "#/definitions/WriteRequirement"
+                },
+                "ReplacedByProperty": {
+                    "type": "string",
+                    "description": "A property that fulfills the requirements of the current property, if present in the resource.  The value is the name of the property, evaluated at the same object level, or a JSON Pointer to the property within the resource.  If the specified property is present in the resource, all requirements for the current property are ignored."
+                },
+                "ReplacesProperty": {
+                    "type": "string",
+                    "description": "A deprecated or obsolete property that this property replaces.  The value is the name of the property, evaluated at the same object level, or a JSON Pointer to the property within the resource.  If the current property is not present, its requirements can be met by the presence of the named property it replaces. If the current property is present, it must meet the requirements regardless of the presence of the property it replaces."
+                },
+                "Purpose": {
+                    "$ref": "#/definitions/Purpose"
+                },
+                "MinCount": {
+                    "$ref": "#/definitions/MinCount"
+                },
+                "MinSupportValues": {
+                    "$ref": "#/definitions/MinSupportValues"
+                },
+                "Comparison": {
+                    "$ref": "#/definitions/Comparison"
+                },
+                "Values": {
+                    "$ref": "#/definitions/Values"
+                },
+                "ConditionalRequirements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Condition"
+                    }
+                },
+                "PropertyRequirements": {
+                    "type": "object",
+                    "description": "The property-level requirements for this Redfish interoperability profile for properties defined within an embedded JSON object.  These requirements apply to every instance of this resource.  If a property defined in the associated schema is not present, there is no requirement for that property to be supported.",
+                    "patternProperties": {
+                        "^.*$": {
+                            "$ref": "#/definitions/PropertyProfile"
+                        }
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "ActionProfile": {
+            "type": "object",
+            "description": "Actions defined for a resource that have requirements defined by this Redfish interoperability profile.",
+            "properties": {
+                "ReadRequirement": {
+                    "$ref": "#/definitions/ReadRequirement"
+                },
+                "Purpose": {
+                    "$ref": "#/definitions/Purpose"
+                },
+                "ActionInfo": {
+                    "type": "string",
+                    "description": "The requirement for the service to include an `ActionInfo` resource associated with this action.  If not present, the default value is `None` to indicate there is no requirement.",
+                    "enum": [
+                        "Mandatory",
+                        "Recommended",
+                        "None"
+                    ],
+                    "enumDescriptions": {
+                        "Mandatory": "An associated `ActionInfo` resource is required to be populated for this action.  The `Parameters` array will include elements for each supported parameter.",
+                        "Recommended": "An associated `ActoinInfo` resource is recommended to be populated for this action.",
+                        "None": "There is no requirement for an associated `ActionInfo` resource for this action."
+                    }
+                },
+                "Parameters": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^.*$": {
+                            "type": "object",
+                            "description": "The requirements for any parameter available for this action.",
+                            "properties": {
+                                "ReadRequirement": {
+                                    "$ref": "#/definitions/ReadRequirement"
+                                },
+                                "ParameterValues": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "The minimum set of enumerations that must be supported for this parameter to meet the requirement."
+                                },
+                                "RecommendedValues": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "For mandatory parameters, the set of enumerations, in addition to those listed in `ParameterValues`, that are recommended to be supported."
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "RegistryProfile": {
+            "type": "object",
+            "description": "Requirements for support of a message registry by this Redfish interoperability profile.",
+            "properties": {
+                "ReadRequirement": {
+                    "$ref": "#/definitions/ReadRequirement"
+                },
+                "Purpose": {
+                    "$ref": "#/definitions/Purpose"
+                },
+                "MinVersion": {
+                    "$ref": "#/definitions/MinVersion"
+                },
+                "Repository": {
+                    "$ref": "#/definitions/Repository"
+                },
+                "Messages": {
+                    "type": "object",
+                    "description": "The messages in this registry that have support requirements for this Redfish interoperability profile.  If this property is absent, all messages in this registry follow the registry-level `ReadRequirement`.",
+                    "patternProperties": {
+                        "^.*$": {
+                            "type": "object",
+                            "properties": {
+                                "ReadRequirement": {
+                                    "$ref": "#/definitions/ReadRequirement"
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    }
+                },
+                "SupportedFeatures": {
+                    "type": "object",
+                    "description": "The features in this registry which have support requirements for this Redfish interoperability profile.  If this property is absent, all supported features in this registry follow the registry-level `ReadRequirement`.",
+                    "patternProperties": {
+                        "^.*$": {
+                            "type": "object",
+                            "properties": {
+                                "ReadRequirement": {
+                                    "$ref": "#/definitions/ReadRequirement"
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "MinVersion": {
+            "type": "string",
+            "description": "The minimum version required by this Redfish interoperability profile.  The version shall be represented using a `<major>.<minor>.<errata>` format, including an optional errata version.  If this property is absent, the minimum value shall be `1.0.0`.",
+            "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+        },
+        "MinCount": {
+            "type": "integer",
+            "description": "For array type properties, the minimum number of non-null instances within the array.  If this property is absent, the minimum count shall be 1."
+        },
+        "Purpose": {
+            "type": "string",
+            "description": "A description of the purpose of this requirement, to provide justification or explanation in the profile documentation."
+        },
+        "URIs": {
+            "type": "array",
+            "description": "An array of URI references to which the `ReadRequirement` and `WriteRequirement` are applied.  The URI values shall follow the resource URI pattern definition specified in the Redfish Specification.",
+            "items": {
+                "type": "string",
+                "format": "uri-reference"
+            }
+        },
+        "ReadRequirement": {
+            "type": "string",
+            "description": "The read (HTTP GET) requirements for this property.  The default value, or if `ReadRequirement` is not present, is `Mandatory`.  For object properties, requirements of the embedded properties will apply only if the object is present.",
+            "enum": [
+                "Mandatory",
+                "Supported",
+                "Recommended",
+                "IfImplemented",
+                "IfPopulated",
+                "Conditional",
+                "None"
+            ],
+            "enumDescriptions": {
+                "Mandatory": "This property is required in all instances of this resource.  For array properties, the property is required in all non-null array items.  If `Values` is defined, at least one instance of each enumeration value is required among instances of this property.",
+                "Supported": "This property is required to be supported by the service, but may not appear in all instances of this resource.  The requirement is met if the property appears in at least one instance of this resource.",
+                "Recommended": "It is recommended, but not required, that this property be supported.",
+                "IfImplemented": "This property is required if the underlying functionality is implemented.  For object properties, requirements on embedded properties within the object will only apply if the object is present.",
+                "IfPopulated": "For property-level requirements, this property is required if the `State` property within the `Status` object for the object or resource does not contain `Absent`.  This value is useful for properties within absent resources where empty slots, sockets, or bays are rendered with minimal properties until they are populated by a device.  For resource-level requirements, this value indicates that the resource is required, but may not be present (populated) in the service at all times.",
+                "Conditional": "This property is only required if `ConditionalRequirements` items apply to this instance of the resource.",
+                "None": "This property is not required by this profile.  It is listed here for clarity."
+            }
+        },
+        "WriteRequirement": {
+            "type": "string",
+            "description": "Property-level write (HTTP `PATCH` or `PUT`) requirement for this property.  The default value, or if `WriteRequirement` is not present, is `None`, meaning the propery may be read-only.",
+            "enum": [
+                "Mandatory",
+                "Supported",
+                "Recommended",
+                "None"
+            ],
+            "enumDescriptions": {
+                "Mandatory": "This property is required to be writable in all instances of this resource.",
+                "Supported": "This property is required to be writable in some instances of this resource.  A service meets the requirement if the property is writable in at least one resource instance.",
+                "Recommended": "It is recommended, but not required, that this property be writable.",
+                "None": "This property is not required to be writable by this profile.  It is listed here for clarity, and is the default value used if `WriteRequirement` is not present."
+            }
+        },
+        "Condition": {
+            "type": "object",
+            "description": "Conditions that if met, apply additional profile requirements for this resource.",
+            "properties": {
+                "ReadRequirement": {
+                    "$ref": "#/definitions/ReadRequirement"
+                },
+                "WriteRequirement": {
+                    "$ref": "#/definitions/WriteRequirement"
+                },
+                "Purpose": {
+                    "$ref": "#/definitions/Purpose"
+                },
+                "URIs": {
+                    "$ref": "#/definitions/URIs"
+                },
+                "SubordinateToResource": {
+                    "type": "array",
+                    "description": "An ordered list, from top of hierarchy to bottom, of resources where this resource is linked as a subordinate resource.  The conditional requirements listed for the resource apply only to instances which are subordinate to the listed parent resource list."
+                },
+                "Comparison": {
+                    "$ref": "#/definitions/Comparison"
+                },
+                "Values": {
+                    "$ref": "#/definitions/Values"
+                },
+                "CompareProperty": {
+                    "type": "string",
+                    "description": "The name or path to the property in this resource whose value is used to test this condition.  If the value begins with a `/` character, the value shall represent an RFC6901-defined JSON Pointer, specifying an explicit path from the root level of the resource to a property within the resource.  Otherwise, the property name will be evaluated at the current object level within the resource, and if it is not found, upper levels will be searched until the root level is reached."
+                },
+                "CompareType": {
+                    "$ref": "#/definitions/Comparison",
+                    "description": "The condition used to compare the value of the property named by `CompareProperty` to the value of `CompareValues`.  If the comparison is true, this conditional requirement applies."
+                },
+                "CompareValues": {
+                    "description": "Values of the `CompareProperty` used to test this condition.",
+                    "type": "array",
+                    "items": {
+                        "type": [
+                            "boolean",
+                            "number",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "MinSupportValues": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "The minimum set of enumerations that must be supported for this writable property."
+        },
+        "Comparison": {
+            "type": "string",
+            "description": "The condition used to compare the value of the property to `Values`.",
+            "enum": [
+                "Absent",
+                "AnyOf",
+                "AllOf",
+                "Equal",
+                "NotEqual",
+                "GreaterThan",
+                "GreaterThanOrEqual",
+                "LessThan",
+                "LessThanOrEqual",
+                "Present",
+                "LinkToResource"
+            ],
+            "enumDescriptions": {
+                "Absent": "The property is not present in this resource.",
+                "AnyOf": "At least one instance of the property in applicable resources must be equal to one of the values listed.",
+                "AllOf": "At least one instance of the property in applicable resources must be equal to each of the values listed.",
+                "Equal": "The value of the property must be equal to the value in the profile.",
+                "NotEqual": "The value of the property must not be equal to the values listed in the profile.",
+                "GreaterThan": "The value of the property must be greater than the values listed in the profile.  This comparison is only valid for numeric properties.",
+                "GreaterThanOrEqual": "The value of the property must be greater than or equal to the values listed in the profile.  This comparison is only valid for numeric properties.",
+                "LessThan": "The value of the property must be less than the values listed in the profile.  This comparison is only valid for numeric properties.",
+                "LessThanOrEqual": "The value of the property must be less than or equal to the values listed in the profile.  This comparison is only valid for numeric properties.",
+                "Present": "The property is present in this resource.",
+                "LinkToResource": "The object contains a link to a resource with a type equal to one of the schema names listed in the values of the profile.  The type is the unversioned schema name, such as `Thermal` or `Memory`."
+            }
+        },
+        "ProtocolRequirement": {
+            "type": "string",
+            "enum": [
+                "Mandatory",
+                "Recommended",
+                "None"
+            ],
+            "enumDescriptions": {
+                "Mandatory": "This protocol feature is required for this profile.",
+                "Recommended": "It is recommended, but not required, that this protocol feature be supported.",
+                "None": "This feature is not required by this profile.  It is listed here for clarity."
+            }
+        },
+        "Values": {
+            "type": "array",
+            "items": {
+                "type": [
+                    "boolean",
+                    "number",
+                    "string"
+                ]
+            },
+            "description": "The values used to perform a `Comparison`.  Multiple values are only allowed for `AnyOf` or `AllOf` comparisons.  If no `Comparison` property is present, the comparison is assumed to be an `AnyOf` comparison."
+        },
+        "Repository": {
+            "type": "string",
+            "format": "uri-reference",
+            "description": "A URI providing the location of the repository which contains the JSON files to be included.  The filenames of the JSON files contained in the repository are expected to follow the Redfish message registry filename conventions.  If absent, the repository location shall be the Redfish registry repository (http://redfish.dmtf.org/registries)."
+        }
+    }
+}

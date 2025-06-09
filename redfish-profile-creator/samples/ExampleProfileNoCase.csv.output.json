@@ -1,0 +1,54 @@
+{
+  "SchemaDefinition": "RedfishInteroperabilityProfile.v1_8_0",
+  "ProfileName": "Default Profile",
+  "ProfileVersion": "1.0.0",
+  "Purpose": "This is a default Redfish Interoperability profile.",
+  "OwningEntity": "Default",
+  "ContactInfo": "default@nothing(dot)com",
+  "Protocol": {
+    "MinVersion": "1.6",
+    "Discovery": "Recommended",
+    "HostInterface": "Mandatory",
+    "ExpandQuery": "Recommended",
+    "SelectQuery": "None",
+    "FilterQuery": "Recommended"
+  },
+  "Resources": {
+    "Chassis": {
+      "PropertyRequirements": {
+        "Id": {
+          "ReadRequirement": "Mandatory",
+          "WriteRequirement": "None",
+          "Purpose": "Identifies this Object"
+        },
+        "Power": {
+          "PropertyRequirements": {
+            "Id": {
+              "Purpose": "None"
+            }
+          }
+        }
+      },
+      "ActionRequirements": {
+        "Reset": {
+          "ActionInfo": "Recommended",
+          "Parameters": {
+            "ResetType": {
+              "ParameterValues": [
+                "Value1",
+                "Value2",
+                "Value3"
+              ],
+              "RecommendedValues": [
+                "Value4",
+                "Value5",
+                "Value6"
+              ],
+              "ReadRequirement": "Mandatory"
+            }
+          }
+        }
+      }
+    }
+  }
+}

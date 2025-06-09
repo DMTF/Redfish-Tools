@@ -1,0 +1,4 @@
+Chassis,n/a,Id,mandatory,None,False,Identifies this Object
+Chassis,n/a,Power.Id
+Chassis,n/a,Actions.Reset
+Chassis,n/a,Actions.Reset.ResetType

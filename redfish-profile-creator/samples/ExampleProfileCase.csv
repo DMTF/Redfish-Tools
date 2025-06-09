@@ -1,0 +1,4 @@
+Chassis,SampleCase,Id,mandatory,None,False,Identifies this Object
+Chassis,SampleCaseTwo,Power.Id
+Chassis,SampleCaseTwo,Actions.Reset
+Chassis,SampleCaseTwo,Actions.Reset.ResetType

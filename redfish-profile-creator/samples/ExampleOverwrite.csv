@@ -1,0 +1,5 @@
+ComputerSystem,,SerialNumber,Recommended,,False,Identifies this Object
+ComputerSystem,,Model,Mandatory,,False,Identifies this Object
+ComputerSystem,,SKU,Mandatory,,True,Identifies this Object
+ComputerSystem,,Id,Mandatory,,False,Identifies this Object
+ComputerSystem,,Actions.Reset,Mandatory,,False,Identifies this Object

@@ -1,0 +1,44 @@
+{
+    "SchemaDefinition": "RedfishInteroperabilityProfile.v1_7_0",
+    "ProfileName": "Anchovy",
+    "ProfileVersion": "1.0.3",
+    "Purpose": "This is a sample Redfish Interoperability profile.",
+    "OwningEntity": "Contoso",
+    "ContactInfo": "pizza@contoso.com",
+    "RequiredProfiles": {
+        "PizzaBox": {
+            "MinVersion": "1.0.0"
+        },
+        "ContosoPizza": {
+            "Repository": "http://contoso.com/profiles",
+            "MinVersion": "1.0.0"
+        }
+    },
+    "Protocol": {
+        "MinVersion": "1.6",
+        "Discovery": "Recommended",
+        "HostInterface": "Mandatory",
+        "ExpandQuery": "Recommended",
+        "SelectQuery": "None",
+        "FilterQuery": "Recommended"
+    },
+    "Resources": {
+        "Chassis": {}
+    },
+    "Registries": {
+        "Base": {
+            "MinVersion": "1.0.0",
+            "Repository": "redfish.dmtf.org/registries",
+            "Messages": {
+                "Success": {},
+                "GeneralError": {},
+                "Created": {},
+                "PropertyDuplicate": {}
+            }
+        },
+        "ContosoPizzaMessages": {
+            "Repository": "contoso.com/registries",
+            "ReadRequirement": "Mandatory"
+        }
+    }
+}
