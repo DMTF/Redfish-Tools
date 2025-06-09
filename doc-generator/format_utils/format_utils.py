@@ -107,7 +107,7 @@ class FormatUtils():
         #wrap table contents in div tag
         if css_class:
             header_rows.insert(0, "<div class=" + css_class + ">")
-            rows.append("</divbar>")
+            rows.append("</div>")
 
         return '\n'.join(['\n'.join(header_rows), '\n'.join(rows)])
 
