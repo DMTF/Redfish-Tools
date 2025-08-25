@@ -1,6 +1,6 @@
 {
   "name": "redfishrepotest",
-  "version": "0.7.2",
+  "version": "0.7.4",
   "description": "A set of tests for Redfish Mockups, CSDL, OpenAPI, and JSON Schemas.",
   "main": "index.js",
   "scripts": {

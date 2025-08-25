@@ -585,7 +585,7 @@ class DocFormatter:
                     if section.get('MinVersion'):
                         description_text += '\n\nThe resource must be at least version:  {}'.format(section.get('MinVersion'))
 
-                    if section.get('UseCaseKeyProperty') and section.get('UsesectionComparison') and section.get('UsesectionKeyValues'):
+                    if section.get('UseCaseKeyProperty') and section.get('UseCaseComparison') and section.get('UseCaseKeyValues'):
                         description_text += '\n\nThese requirements apply to resources where {} is "{}" to one of the following: {}'.format(
                             section.get('UseCaseKeyProperty'),
                             section.get('UseCaseComparison'),
@@ -705,7 +705,7 @@ class DocFormatter:
                             prop_info['_profile'] = section.get('PropertyRequirements', {}).get(prop_name)
                         if subset:
                             prop_info['_subset'] = subset.get('Properties', {}).get(prop_name)
-
+                        
                         prop_infos = self.extend_property_info(schema_ref, prop_info)
                         formatted = self.format_property_row(schema_ref, prop_name, prop_infos, [])
                         if formatted:
@@ -993,6 +993,7 @@ class DocFormatter:
                 is_ref_to_same_schema = ((not is_other_schema) and prop_name == schema_name)
                 reference_disposition = self.config.get('reference_disposition') and self.config['reference_disposition'].get(prop_ref)
                 include_per_profile = profile is not None
+                profile_include_is_link = is_documented_schema and not is_ref_to_same_schema
 
                 if is_collection_of and ref_info.get('anyOf'):
                     anyof_ref = None
@@ -1010,7 +1011,7 @@ class DocFormatter:
                     combine_multiple_count_met = self.config.get('combine_multiple_refs') and self.ref_counts.get(schema_ref, {}).get(requested_ref_uri, 0) >= self.config['combine_multiple_refs']
                     # If this is an excerpt, it will also be an object, and we want to expand-in-place.
                     # The same applies (or should) if config explicitly says to include:
-                    if (excerpt_copy_name and not combine_multiple_count_met) or (reference_disposition == 'include') or include_per_profile:
+                    if (excerpt_copy_name and not combine_multiple_count_met) or (reference_disposition == 'include') or (include_per_profile and not profile_include_is_link):
                         if is_documented_schema:
                             excerpt_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
                         else: # This is not expected.
