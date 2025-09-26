@@ -441,7 +441,6 @@ class JsonSchemaConfigHelper:
             if ref.endswith("/idRef"):
                 continue
             versions.append(ref.split("#",1)[0].rsplit("/",1)[-1])
-#        self.__versions = sorted(versions, key = lambda x: tuple(x.split(".")[1][1:].split("_")))
         self.__versions = sorted(versions, key = lambda x: tuple(map(lambda y: int(y), tuple(x.split(".")[1][1:].split("_")))))
         self.__max_version = self.__versions[-1]
         return self.__versions
