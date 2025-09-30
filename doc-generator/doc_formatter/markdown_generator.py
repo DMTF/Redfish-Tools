@@ -64,7 +64,11 @@ class MarkdownGenerator(DocFormatter):
 
         This may include embedded objects with their own properties.
         """
+        if not in_schema_ref:
+            in_schema_ref = schema_ref
 
+        schema_anchor = self.traverser.get_schema_name(in_schema_ref)
+        
         formatted = []     # The row itself
 
         within_action = prop_path == ['Actions']
@@ -211,7 +215,9 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 # If there are prop_details (enum details), add a note to the description:
                 if has_enum:
-                    text_descr = _('For the possible property values, see %(link)s in Property details.') % {'link': prop_name}
+                    anchor = schema_anchor.lower() + '-' + prop_name.lower()
+                    text_descr = (_('For the possible property values, see %(link)s in Property details.') %
+                                      {'link': '<a href="#' + anchor + '">' + prop_name + '</a>'})
                 else:
                     text_descr = _('For more information about this property, see Property details.')
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
@@ -648,9 +654,16 @@ class MarkdownGenerator(DocFormatter):
         return "\n".join(contents)
 
 
-    def link_to_own_schema(self, schema_ref, schema_full_uri):
-        """Format a reference to a schema."""
-        result = super().link_to_own_schema(schema_ref, schema_full_uri)
+    def link_to_own_schema(self, schema_ref, schema_uri):
+        schema_name = self.traverser.get_schema_name(schema_ref)
+        if not schema_name:
+            schema_name = schema_ref
+
+        if self.is_documented_schema(schema_ref):
+            result = '[' + schema_name + '](#' + schema_name.lower() + ')'
+        else:
+            result = '[' + schema_name + '](' + schema_uri + ')'
+
         return self.formatter.italic(result)
 
 
@@ -666,6 +679,10 @@ class MarkdownGenerator(DocFormatter):
 
         for section in self.sections:
             contents.append(section.get('heading'))
+            # if there are version numbers in the headings, add an anchor tag for the section using only the section name
+            if not self.config.get('omit_version_in_headers'):
+                contents.append('<a name="' + section.get('schema_name').lower() + '"></a>')
+
             if section.get('release_history'):
                 contents.append(section['release_history'])
             if section.get('conditional_requirements'):
@@ -726,6 +743,10 @@ class MarkdownGenerator(DocFormatter):
                 detail_names.sort(key=str.lower)
                 for detail_name in detail_names:
                     contents.append(self.format_head_four(detail_name, 0))
+                    
+                    # add section/schema-specific anchor tag 
+                    contents.append('<a name="' + section.get('schema_name').lower() + '-' + detail_name.lower() + '"></a>')
+                    
                     det_info = section['property_details'][detail_name]
 
                     if len(det_info) == 1:

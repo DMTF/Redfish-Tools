@@ -1053,7 +1053,7 @@ class DocFormatter:
                                 if 'redfish.dmtf.org/schemas/v1/odata' in from_schema_uri:
                                     from_schema_uri = 'http://' + is_collection_of
 
-                                link_detail = (_('Link to Collection of %(schema_links)s. See the %(schema_name)s schema for details.')
+                                link_detail = (_('Link to Collection of %(schema_name)s. See the %(schema_links)s schema for details.')
                                                    % {'schema_links': self.link_to_own_schema(is_collection_of, from_schema_uri),
                                                           'schema_name': ref_schema_name})
 
