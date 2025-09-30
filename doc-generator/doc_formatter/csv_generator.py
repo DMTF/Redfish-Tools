@@ -287,6 +287,9 @@ class CsvGenerator(DocFormatter):
         """  CSV omits schema description """
         pass
 
+    def add_deprecation_text(self, deprecation_text):
+        """ CSV omits deprecation text """
+        pass
 
     def add_uris(self, uris, urisDeprecated):
         """ CSV omits URIs """
