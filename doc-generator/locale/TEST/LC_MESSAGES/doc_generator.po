@@ -193,8 +193,8 @@ msgid "Contains a link to a resource."
 msgstr "CONTAINS A LINK TO A RESOURCE."
 
 #: doc_formatter/doc_formatter.py:920
-msgid "Link to Collection of %(schema_links)s. See the %(schema_name)s schema for details."
-msgstr "LINK TO COLLECTION OF %(schema_links)s. SEE THE %(schema_name)s SCHEMA FOR DETAILS."
+msgid "Link to Collection of %(schema_name)s. See the %(schema_links)s schema for details."
+msgstr "LINK TO COLLECTION OF %(schema_name)s. SEE THE %(schema_links)s SCHEMA FOR DETAILS."
 
 #: doc_formatter/doc_formatter.py:927
 msgid "Link to another %(name)s resource."
