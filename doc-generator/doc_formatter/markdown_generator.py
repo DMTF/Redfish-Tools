@@ -215,7 +215,7 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 # If there are prop_details (enum details), add a note to the description:
                 if has_enum:
-                    if self.markdown_mode == 'slate':
+                    if self.markdown_mode == 'slate' or not schema_anchor:
                         text_descr = (_('For the possible property values, see %(link)s in Property details.') %
                                       {'link': prop_name})
                     else:
@@ -683,10 +683,12 @@ class MarkdownGenerator(DocFormatter):
         contents = []
 
         for section in self.sections:
+            schema_name = section.get('schema_name')
+
             contents.append(section.get('heading'))
             # if there are version numbers in the headings, add an anchor tag for the section using only the section name
-            if not self.config.get('omit_version_in_headers'):
-                contents.append('<a name="' + section.get('schema_name').lower() + '"></a>')
+            if schema_name and not self.config.get('omit_version_in_headers'):
+                contents.append('<a name="' + schema_name.lower() + '"></a>')
 
             if section.get('release_history'):
                 contents.append(section['release_history'])
@@ -749,8 +751,9 @@ class MarkdownGenerator(DocFormatter):
                 for detail_name in detail_names:
                     contents.append(self.format_head_four(detail_name, 0))
                     
-                    # add section/schema-specific anchor tag 
-                    contents.append('<a name="' + section.get('schema_name').lower() + '-' + detail_name.lower() + '"></a>')
+                    # add section/schema-specific anchor tag
+                    if schema_name:
+                        contents.append('<a name="' + schema_name.lower() + '-' + detail_name.lower() + '"></a>')
                     
                     det_info = section['property_details'][detail_name]
 
