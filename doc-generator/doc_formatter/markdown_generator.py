@@ -215,9 +215,14 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['has_direct_prop_details'] and not formatted_details['has_action_details']:
                 # If there are prop_details (enum details), add a note to the description:
                 if has_enum:
-                    anchor = schema_anchor.lower() + '-' + prop_name.lower()
-                    text_descr = (_('For the possible property values, see %(link)s in Property details.') %
+                    if self.markdown_mode == 'slate':
+                        text_descr = (_('For the possible property values, see %(link)s in Property details.') %
+                                      {'link': prop_name})
+                    else:
+                        anchor = schema_anchor.lower() + '-' + prop_name.lower()
+                        text_descr = (_('For the possible property values, see %(link)s in Property details.') %
                                       {'link': '<a href="#' + anchor + '">' + prop_name + '</a>'})
+                    
                 else:
                     text_descr = _('For more information about this property, see Property details.')
                 formatted_details['descr'] += ' ' + self.formatter.italic(text_descr)
