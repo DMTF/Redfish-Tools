@@ -221,7 +221,7 @@ class MarkdownGenerator(DocFormatter):
                     else:
                         anchor = schema_anchor.lower() + '-' + prop_name.lower()
                         text_descr = (_('For the possible property values, see %(link)s in Property details.') %
-                                      {'link': '<a href="#' + anchor + '">' + prop_name + '</a>'})
+                                      {'link': '[' + prop_name + '](#' + anchor + ')'})
                     
                 else:
                     text_descr = _('For more information about this property, see Property details.')
@@ -664,6 +664,9 @@ class MarkdownGenerator(DocFormatter):
         if not schema_name:
             schema_name = schema_ref
 
+        if self.markdown_mode == 'slate':
+            return self.formatter.italic(schema_name)
+            
         if self.is_documented_schema(schema_ref):
             result = '[' + schema_name + '](#' + schema_name.lower() + ')'
         else:
