@@ -31,13 +31,15 @@ A Network Device Function represents a logical interface exposed by the network 
 | **AssignablePhysicalPorts** [ { | array |  | The array of physical port references that this network device function may be assigned to. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id** | string<br>(URI) | *read-only* | The unique identifier for a resource. |
 | } ] |   |   |
-| **BootMode** | string<br>(enum) | *read-write<br>(null)* | The boot mode configured for this network device function. *For the possible property values, see BootMode in Property details.* |
+| **BootMode** | string<br>(enum) | *read-write<br>(null)* | The boot mode configured for this network device function. *For the possible property values, see [BootMode](#networkdevicefunction-bootmode) in Property details.* |
 | **Description** | string | *read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schema definitions. |
 | **DeviceEnabled** | boolean | *read-write<br>(null)* | Whether the network device function is enabled. |
 
 ### Property details
 
 #### AuthenticationMethod
+
+<a name="networkdevicefunction-authenticationmethod"></a>
 
 The iSCSI boot authentication method for this network device function.
 
@@ -48,6 +50,8 @@ The iSCSI boot authentication method for this network device function.
 | None | No iSCSI authentication is used. |
 
 #### BootMode
+
+<a name="networkdevicefunction-bootmode"></a>
 
 The boot mode configured for this network device function.
 
@@ -87,6 +91,6 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 |Property     |Type     |Attributes   |Notes     |
 | --- | --- | --- | --- |
 | **Actions** {} | object |  | The available actions for this resource. |
-| **ActiveLinkTechnology** | string<br>(enum) | *read-write<br>(null)* | Network Port Active Link Technology. *For the possible property values, see ActiveLinkTechnology in Property details.* |
+| **ActiveLinkTechnology** | string<br>(enum) | *read-write<br>(null)* | Network Port Active Link Technology. *For the possible property values, see [ActiveLinkTechnology](#networkport-activelinktechnology) in Property details.* |
 | **AssociatedNetworkAddresses** [ ] | array (string, null) | *read-only* | The array of configured network addresses (MAC or WWN) that are associated with this Network Port, including the programmed address of the lowest numbered Network Device Function, the configured but not active address if applicable, the address for hardware port teaming, or other network addresses. |
 | **Description** | string | *read-only<br>(null)* | Provides a description of this resource and is used for commonality  in the schem
