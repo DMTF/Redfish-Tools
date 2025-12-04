@@ -59,7 +59,7 @@ if(config.has('Redfish.PrivilegeRegistryGlob')) {
 //Units that don't exist in UCUM or are complicated to the point where validUnitsTest needs additional work
 const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s', 'kV.A', 'V.A' ];
 //Enumeration Member names that are non-Pascal Cased
-let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'string', 'number', 'NVDIMM_N',
+let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'EIA_310_Telco', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
                                     'LPDDR3_SDRAM', 'DDR2_SDRAM', 'DDR2_SDRAM_FB_DIMM', 'DDR2_SDRAM_FB_DIMM_PROBE',
                                     'DDR_SGRAM', 'DDR_SDRAM', 'SO_DIMM', 'Mini_RDIMM', 'Mini_UDIMM', 'SO_RDIMM_72b',
@@ -81,10 +81,11 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'SMBv3_0_2', 'Bits_0', 'Bits_128', 'Bits_192', 'Bits_256', 'Bits_112',
                                     'ISO8859_1', 'UTF_8', 'UTF_16', 'UCS_2', 'RPCSEC_GSS', 'HMAC128_SHA224',
                                     'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512', 'TLS_PSK', 'TLS_AES_128_GCM_SHA256',
-                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad', 'CFB128_AES192', 'CFB128_AES256',
+                                    'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad', 'CFB128_AES192', 'CFB128_AES256', 'HMAC_SHA384',
                                     'LPDDR5_SDRAM', 'PLDMv1_0', 'PLDMv1_1', 'PLDMv1_2', 'PLDMv1_3', 'eMMC',
                                     'CXL1_1', 'CXL2_0', 'CXL3_0', 'CXL3_1', 'CXL3_2',
-                                    'FIPS_140_2', 'FIPS_140_3', 'CNSA_1_0', 'CNSA_2_0'];
+                                    'FIPS_140_2', 'FIPS_140_3', 'CNSA_1_0', 'CNSA_2_0',
+                                    'DDR5_MRDIMM'];
 //Properties names that are non-Pascal Cased
 const NonPascalCasePropertyWhiteList = ['iSCSIBoot', 'mDNS'];
 //Properties that have units but don't have the unit names in them
@@ -156,7 +157,7 @@ const PluralEntitiesBadAllow = {
   'Triggers_v1.xml': ['Triggers'],
   'Volume_v1.xml': ['NamespaceFeatures']
 };
-const CommonWritableObjects = ['IPAddresses.IPv4Address', 'IPAddresses.IPv6StaticAddress', 'IPAddresses.IPv6GatewayStaticAddress', 'Redundancy.RedundantGroup', 'Schedule.Schedule', 'VLanNetworkInterface.VLAN']
+const CommonWritableObjects = ['IPAddresses.IPv4Address', 'IPAddresses.IPv6StaticAddress', 'IPAddresses.IPv6GatewayStaticAddress', 'Redundancy.RedundantGroup', 'Schedule.Schedule', 'VLanNetworkInterface.VLAN', 'Control.Control']
 const SkipPropertyTypeCheck = {
   'AttributeRegistry_v1.xml': ['CurrentValue', 'DefaultValue', 'MapToValue', 'MapFromValue']
 };
@@ -2015,6 +2016,16 @@ function updatableReadWrite(csdl) {
   let props = CSDL.search(csdl, 'Property');
   for(let i = 0; i < props.length; i++) {
     let propType = props[i].Type
+    if(propType.startsWith('Collection(')) {
+      propType = propType.substring(11, propType.length-1);
+    }
+    if(CommonWritableObjects.includes(propType) && updatable) {
+      found = true;
+    }
+  }
+  let navprops = CSDL.search(csdl, 'NavigationProperty');
+  for(let i = 0; i < navprops.length; i++) {
+    let propType = navprops[i].Type
     if(propType.startsWith('Collection(')) {
       propType = propType.substring(11, propType.length-1);
     }
