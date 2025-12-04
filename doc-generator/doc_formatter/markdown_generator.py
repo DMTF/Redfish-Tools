@@ -691,7 +691,7 @@ class MarkdownGenerator(DocFormatter):
             contents.append(section.get('heading'))
             # if there are version numbers in the headings, add an anchor tag for the section using only the section name
             if schema_name and not self.markdown_mode == 'slate' and not self.config.get('omit_version_in_headers'):
-                contents.append('<a name="' + schema_name.lower() + '"></a>')
+                contents.append('<a name="' + schema_name.lower() + '"></a>\n')
 
             if section.get('release_history'):
                 contents.append(section['release_history'])
@@ -756,7 +756,7 @@ class MarkdownGenerator(DocFormatter):
                     
                     # add section/schema-specific anchor tag
                     if schema_name and not self.markdown_mode == 'slate':
-                        contents.append('<a name="' + schema_name.lower() + '-' + detail_name.lower() + '"></a>')
+                        contents.append('<a name="' + schema_name.lower() + '-' + detail_name.lower() + '"></a>\n')
                     
                     det_info = section['property_details'][detail_name]
 
