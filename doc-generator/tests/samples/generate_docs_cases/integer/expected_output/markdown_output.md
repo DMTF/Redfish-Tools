@@ -3,6 +3,7 @@
 ## IntegerTest 1.0.0
 
 <a name="integertest"></a>
+
 ### Description
 
 This schema contains one or more properties of type integer.

@@ -3,6 +3,7 @@
 ## RequiredTest 1.0.0
 
 <a name="requiredtest"></a>
+
 ### Description
 
 This schema contains required and requiredOnCreate properties.
@@ -27,6 +28,7 @@ This schema contains required and requiredOnCreate properties.
 #### EntryType
 
 <a name="requiredtest-entrytype"></a>
+
 This is the type of log entry.
 
 | string | Description |
