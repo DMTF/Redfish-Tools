@@ -18,6 +18,28 @@ import sys
 import copy
 import shutil
 import re
+import traceback
+import logging
+
+g_logger = None
+
+def get_logger():
+    global g_logger
+    if g_logger == None:
+        this_path = os.path.abspath(__file__).rsplit(os.sep, 1)[0]
+        g_logger = logging.getLogger(__name__)
+        filehandler = logging.FileHandler(os.path.join(this_path, "_redfish_oem_integrator.log"), mode="w")
+        formatter = logging.Formatter("%(asctime)s [%(lineno)5s - %(levelname)8s] %(funcName)20s %(message)s", "%H:%M:%S")
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        g_logger.addHandler(console_handler)
+        filehandler.setFormatter(formatter)
+        logging.getLogger(__name__).addHandler(filehandler)
+        g_logger.addHandler(filehandler)
+        g_logger.setLevel(logging.DEBUG)
+        console_handler.setLevel(logging.WARN)
+        filehandler.setLevel(logging.DEBUG)
+    return g_logger
 
 class UnsupportedFeatureException(Exception):
     "Raised when it hits some feature which is not developed yet"
@@ -28,7 +50,11 @@ class IllegalSchemaModificationRequestException(Exception):
     pass
 
 class JsonSchemaConfigHelper:
-    def __init__(self, schema_file, on_change_write_to=None, enabled_by_default=True):
+    def __init__(self, schema_file, on_change_write_to=None, enabled_by_default=True, logger: logging.Logger=None):
+        if logger:
+            self.__logger = logger
+        else:
+            self.__logger = get_logger()
         self.__schema_filepath = schema_file
         if on_change_write_to:
             self.__schema_out_file_path = os.path.abspath(on_change_write_to)
@@ -52,6 +78,26 @@ class JsonSchemaConfigHelper:
         self.__enabled = enabled_by_default
         self.__array_items_support = {}
         self.__strlen_support = {}
+
+    def __get_ext_references(self, d):
+        ext_refs = []
+        if isinstance(d, dict):
+            for k, v in d.items():
+                if k == "$ref":
+                    if v.startswith("#"):
+                        continue
+                    ref_schema_name = v.split("#",1)[0].split("/")[-1].rsplit(".",1)[0]
+                    if ref_schema_name != self.__schema_name:
+                        ext_refs.append(ref_schema_name)
+                elif isinstance(v, (dict, list)):
+                    ext_refs.extend(self.__get_ext_references(v))
+        elif isinstance(d, list):
+            for v in d:
+                ext_refs.extend(self.__get_ext_references(v))
+        return ext_refs
+
+    def get_external_references(self):
+        return set(self.__get_ext_references(self.__schema))
 
     def __del__(self):
         # Process the minItems/maxItems if any
@@ -90,16 +136,16 @@ class JsonSchemaConfigHelper:
                     break
 
             if do_delete_property:
-                print("Removing Property: {}".format(prop_to_del))
+                self.__logger.debug("Removing Property: {}".format(prop_to_del))
                 self.__remove_property(prop_to_del)
                 deleted_prop_base_paths.add(prop_to_del)
 
         if (self.__is_changed or
             (self.__schema_out_file_path != self.__schema_in_file_path)) and self.__schema_out_file_path != None:
             if self.__is_changed:
-                print("Info: {}: Schema modified, writing to {}".format(self.__schema_name, self.__schema_out_file_path))
+                self.__logger.debug("Info: {}: Schema modified, writing to {}".format(self.__schema_name, self.__schema_out_file_path))
             else:
-                print("Info: {}: Copying schema from source to {}".format(self.__schema_name, self.__schema_out_file_path))
+                self.__logger.debug("Info: {}: Copying schema from source to {}".format(self.__schema_name, self.__schema_out_file_path))
             with open(self.__schema_out_file_path, "w") as fd:
                 json.dump(self.__schema, fd, sort_keys=True, indent=4, separators = ( ",", ": " ))
 
@@ -179,7 +225,6 @@ class JsonSchemaConfigHelper:
                 return True
         except Exception as _:
             #raise(e)
-            #print(self.__schema_name)
             # TODO: Fix Oem and report others
             return True # Very unlikely for a standard schema to not have this property
 
@@ -267,12 +312,17 @@ class JsonSchemaConfigHelper:
 
     def remove_uri(self, uri):
         assert(self.is_base_entity()), "Uris can be removed only from a base schema"
+        is_empty = False
+        err = False
         try:
             self.__definition["uris"].remove(uri)
             self.__is_changed= True
+            if len(self.__definition["uris"]) == 0:
+                is_empty = True
         except Exception as _:
-            pass
-            #print("ERROR: {} does not have uri {}".format(self.__schema_name, uri))
+            err = True
+            self.__logger.error("{} does not have uri {}".format(self.__schema_name, uri))
+        return err, is_empty
 
     def add_uri(self, uri):
         assert(self.is_base_entity()), "Uris can only be added to a base schema"
@@ -335,29 +385,28 @@ class JsonSchemaConfigHelper:
         try:
             prop_path = property_path.split("/")[1:] # skip the '#'
             prop_d = {}
-            print("prop paths: {}".format(prop_path))
+            # self.__logger.debug("prop paths: {}".format(prop_path))
             prop_d = self.__definition["properties"][prop_path[0]]
-            # print("prop paths: {}".format(prop_path))
-            # print("range: {}".format(list(range(len(prop_path)))))
+            # self.__logger.debug("range: {}".format(list(range(len(prop_path)))))
             for i in range(len(prop_path)):
             # prop in prop_path[1:]:
-                # print("i={}".format(i))
+                # self.__logger.debug("i={}".format(i))
                 # prop = prop_path[i]
                 if i+1 == len(prop_path):
-                    # print("Setting ../{} as ReadOnly".format(prop))
+                    # self.__logger.debug("Setting ../{} as ReadOnly".format(prop))
                     prop_d[key]=value
                     self.__is_changed= True
                 else:
                     ref = self.__get_ref(prop_d)
-                    # print("Resolving ref {}".format(ref))
+                    # self.__logger.debug("Resolving ref {}".format(ref))
                     assert(ref.startswith("#/definitions/"))
                     ref = ref.rsplit("/",1)[-1]
-                    # print("Traversing from ../{}/.. to ../{}/{}/..".format(prop, prop, prop_path[i+1]))
+                    # self.__logger.debug("Traversing from ../{}/.. to ../{}/{}/..".format(prop, prop, prop_path[i+1]))
                     prop_d = self.__schema["definitions"][ref]["properties"][prop_path[i+1]]
         except Exception as e:
-            #print(self.__schema_name)
-            #print(property_path)
-            #print(prop_d)
+            #self.__logger.debug(self.__schema_name)
+            #self.__logger.debug(property_path)
+            #self.__logger.debug(prop_d)
             #raise(e)
             pass
 
@@ -393,7 +442,7 @@ class JsonSchemaConfigHelper:
             # Action/parameter might not be supported in this version of the schema; ignore it
             pass
         except Exception as e:
-            print(f"Got Exception: {e}")
+            self.__logger.critical(f"Got Exception: {e}")
             raise(e)
 
     def remove_property(self, property_path):
@@ -405,30 +454,30 @@ class JsonSchemaConfigHelper:
         try:
             prop_path = property_path.split("/")[1:] # skip the '#'
             parent_prop_d = self.__definition["properties"]
-            #print("prop paths: {}".format(prop_path))
-            #print("range: {}".format(list(range(len(prop_path)))))
+            # self.__logger.debug("prop paths: {}".format(prop_path))
+            # self.__logger.debug("range: {}".format(list(range(len(prop_path)))))
             for i in range(len(prop_path)):
             #prop in prop_path[1:]:
-                #print("i={}".format(i))
+                # self.__logger.debug("i={}".format(i))
                 prop = prop_path[i]
                 if i+1 == len(prop_path):
-                    print("Removing ../{}".format(prop))
+                    self.__logger.info("Removing ../{}".format(prop))
                     #prop_d["readonly"]=True
                     parent_prop_d.pop(prop)
                     self.__is_changed= True
                 else:
                     ref = self.__get_ref(parent_prop_d[prop])
-                    #print("Resolving ref {}".format(ref))
+                    #self.__logger.debug("Resolving ref {}".format(ref))
                     assert(ref.startswith("#/definitions/"))
                     ref = ref.rsplit("/",1)[-1]
-                    #print("Traversing from ../{}/.. to ../{}/{}/..".format(prop, prop, prop_path[i+1]))
+                    #self.__logger.debug("Traversing from ../{}/.. to ../{}/{}/..".format(prop, prop, prop_path[i+1]))
                     parent_prop_d = self.__schema["definitions"][ref]["properties"]
         except Exception as _:
-            #print(self.__schema_name)
-            #print(property_path)
-            #print(parent_prop_d[prop])
+            #self.__logger.debug(self.__schema_name)
+            #self.__logger.debug(property_path)
+            #self.__logger.debug(parent_prop_d[prop])
             #raise(e)
-            print("Warning: {} could not be removed/was already removed".format(property_path))
+            self.__logger.warning("{} could not be removed/was already removed".format(property_path))
 
     def versions(self):
         if not self.is_base_entity():
@@ -454,7 +503,7 @@ class JsonSchemaConfigHelper:
                 properties = {"@meta.Enums": {x:True for x in definition["enum"]}}
                 return properties
             else:
-                print("ZZ{} --> {}".format(self.__schema["title"], definition))
+                self.__logger.debug("ZZ{} --> {}".format(self.__schema["title"], definition))
         for prop in definition[prop_key]:
             if not is_action_params:
                 if prop.startswith("@odata") or prop in ("Id", "Name", "Description"):
@@ -464,7 +513,7 @@ class JsonSchemaConfigHelper:
                     if prop not in ["target"]:
                         properties[prop] = {"@meta.Enabled": self.__enabled}
                     else:
-                        print("Not setting for {}".format(prop))
+                        self.__logger.debug("Not setting for {}".format(prop))
                         properties[prop] = {}
                     continue
             prop_d = definition[prop_key][prop]
@@ -510,16 +559,16 @@ class JsonSchemaConfigHelper:
                         try:
                             ref = prop_d["items"]["$ref"]
                         except:
-                            print(prop_d)
+                            self.__logger.critical(prop_d)
                             raise
                         if ref.startswith("#/definitions/") and (ref != self.__schema["$ref"]):
                             #It is defined locally in the same file, expand it
                             properties[prop].update(self.__properties(self.__schema["definitions"][ref.rsplit("/",1)[-1]], is_action_params=False))
-                        #print("XX{} --> {}".format(self.__schema["title"], prop))
+                        # self.__logger.debug("XX{} --> {}".format(self.__schema["title"], prop))
 
                 elif "anyOf" in prop_d:
                     # It is a complextype
-                    #print("YY{} --> {}".format(self.__schema["title"], prop))
+                    # self.__logger.debug("YY{} --> {}".format(self.__schema["title"], prop))
                     for item in prop_d["anyOf"]:
                         if "$ref" in item:
                             ref = item["$ref"]
@@ -533,7 +582,8 @@ class JsonSchemaConfigHelper:
                         #It is defined locally in the same file, expand it
                         properties[prop].update(self.__properties(self.__schema["definitions"][ref.rsplit("/",1)[-1]], is_action_params=False))
                 else:
-                    pass#print("AAAAA-> {}".format(prop))
+                    # self.__logger.debug("AAAAA-> {}".format(prop))
+                    pass
         return properties
 
     def actions(self):
@@ -578,11 +628,15 @@ class JsonSchemaConfigHelper:
         return self.__max_version
 
 class JSONSchemaConfigManager:
-    def __init__(self, schema_source_path, schema_dest_path, cfg):
+    def __init__(self, schema_source_path, schema_dest_path, cfg, logger: logging.Logger=None):
+        if logger:
+            self.__logger = logger
+        else:
+            self.__logger = get_logger()
         self.__schema_source_path = schema_source_path
         self.__schema_dest_path = schema_dest_path
         self.__config_file_path = cfg["OemConfigurationFilePath"]
-        self.__separate_configs = cfg["StoreConfigInSeparateFiles"]
+        self.__separate_configs = cfg.get("StoreConfigInSeparateFiles", True)
         self.__config_dir = self.__config_file_path.rsplit('/', 1)[0]
         self.__config_d = {}
         self.__diff = {
@@ -590,6 +644,7 @@ class JSONSchemaConfigManager:
                 "old_schemas": {}
             }
         self.__enabled_default_value = cfg["EnableNewAdditionsByDefault"]
+        self.__unimplemented_schemas = [] # Will contain schemas for which no uris have been implemented yet. If chosen, these files may be removed
 
     def generate_config(self):
         """"""
@@ -605,7 +660,7 @@ class JSONSchemaConfigManager:
             '''if json_schema.isOem():
                 # Skip schema
                 continue'''
-            #print(json_schema.get_name())
+            # self.__logger.debug(json_schema.get_name())
             self.__config_d[schema_name] = {}
             if json_schema.is_collection():
                 self.__config_d[schema_name]["uris"] = {x:{"@meta.Enabled":self.__enabled_default_value} for x in json_schema.uris()}
@@ -640,7 +695,7 @@ class JSONSchemaConfigManager:
                     self.__config_d[schema_name]["properties"] = inst_schema.properties()
             else:
                 # These are only referenced from elsewhere, no customizations allowed
-                print("Reference Only Schema: {}".format(schema_name))
+                self.__logger.info("Reference Only Schema: {}".format(schema_name))
 
     def __found_new_schema(self, schema):
         self.__diff["new_schemas"].append(schema)
@@ -689,13 +744,13 @@ class JSONSchemaConfigManager:
         #Skip merging any @OEM stuff in properties, they will be processed separately
         if prop.startswith("@OEM."):
             return
-        #print("Merging {}/{} in {}".format(prop_path, prop, schema))
+        # self.__logger.debug("Merging {}/{} in {}".format(prop_path, prop, schema))
         if prop not in old_prop_d:
             # New Property, merge the complete block
             self.__found_new_property(schema, prop_path + "/" + prop)
             #old_prop_d[prop] = new_prop_d[prop]
             # Nothing to do, the generated config is the one to write back
-            #print("Adding new property: {}/{}".format(prop_path, prop))
+            # self.__logger.debug("Adding new property: {}/{}".format(prop_path, prop))
         else:
             # Property is not new
             for merge_key in ["@meta.AllowWrite", "@meta.Enabled"]:
@@ -705,7 +760,7 @@ class JSONSchemaConfigManager:
                     # Copy the meta info from new to old
                     #old_prop_d[prop]["@meta.AllowWrite"] = new_prop_d[prop]["@meta.AllowWrite"]
                     # Nothing to do, the generated config is the one to write back
-                    #print("Adding @meta.AllowWrite: {}/{}".format(prop_path, prop))
+                    # self.__logger.debug("Adding @meta.AllowWrite: {}/{}".format(prop_path, prop))
                 elif merge_key in new_prop_d[prop] and merge_key in old_prop_d[prop]:
                     # Preserve value from Old
                     new_prop_d[prop][merge_key] = old_prop_d[prop][merge_key]
@@ -727,7 +782,7 @@ class JSONSchemaConfigManager:
                 if sub_prop not in old_prop_d[prop]:
                     # New subproperty, merge entire block
                     #old_prop_d[prop][sub_prop]=new_prop_d[prop][sub_prop]
-                    #print("Adding new property: {}/{}/{}".format(prop_path, prop, sub_prop))
+                    # self.__logger.debug("Adding new property: {}/{}/{}".format(prop_path, prop, sub_prop))
                     # Nothing to do, the generated config is the one to write back
                     pass
                 else:
@@ -762,10 +817,10 @@ class JSONSchemaConfigManager:
                             with open(expansion_file, "r") as fd2:
                                 current_config[schema] = json.load(fd2)
                         except Exception as _:
-                            print("XX")
+                            self.__logger.error("XX")
                             current_config[schema] = {}
         except Exception as _:
-            print("X")
+            self.__logger.error("X")
             current_config = {}
 
         # First merge all the @OEM.* directives from current config to the generated config
@@ -804,7 +859,7 @@ class JSONSchemaConfigManager:
                             if action.startswith("@"):
                                 continue
                             if action not in self.__config_d[schema]["actions"]:
-                                print("Action {} found in previous config but not in the newly generated DMTF config. Removing {} from config!".format(action, action))
+                                self.__logger.info("Action {} found in previous config but not in the newly generated DMTF config. Removing {} from config!".format(action, action))
                                 continue
                             #self.__config_d[schema]["actions"][action]["@meta.Enabled"] = curr_actions_d[action]["@meta.Enabled"] # Copy this user config
                             for param_typ in ["input_parameters", "output_parameters"]:
@@ -852,19 +907,20 @@ class JSONSchemaConfigManager:
                         # New properties coming up
                         #current_config[schema]["properties"]={}
                         # Nothing to do, the generated config is the one to write back
-                        #print("Adding ALL NEW properties: {}".format(schema))
+                        # self.__logger.debug("Adding ALL NEW properties: {}".format(schema))
                         pass
                     for prop in self.__config_d[schema]["properties"]:
                         # Iterate through all the properties in the generated config
                         self.__merge_properties_recursively(schema, self.__config_d[schema]["properties"], current_config[schema]["properties"], prop)
                 else:
                     if not schema.endswith("Collection"):
-                        print("XXXXXXXXXXXXXXXXXXXXX %s" %(schema))
+                        self.__logger.debug("XXXXXXXXXXXXXXXXXXXXX %s" %(schema))
             #self.__config_d = current_config
-            #print("="*10)
-            #print(self.__config_d)
+            # self.__logger.debug("="*10)
+            # self.__logger.debug(self.__config_d)
         except Exception as e:
-            print(schema)
+            self.__logger.critical(schema)
+            self.__logger.critical(traceback.format_exc())
             raise(e)
 
     def write_config(self):
@@ -902,10 +958,10 @@ class JSONSchemaConfigManager:
         if minLength:
             schema_obj.set_min_length(my_prop_path, minLength)
         if "@meta.AllowWrite" in prop_d and not prop_d["@meta.AllowWrite"]:
-            print("{}: Marking property {} as ReadOnly".format(schema_obj.get_name(), my_prop_path)) #TODO: what if it is a complex prop with mismatching capabilities
+            self.__logger.info("{}: Marking property {} as ReadOnly".format(schema_obj.get_name(), my_prop_path)) #TODO: what if it is a complex prop with mismatching capabilities
             schema_obj.mark_property_readonly(my_prop_path)
         if "@meta.Enabled" in prop_d and not prop_d["@meta.Enabled"]:
-            print("{}: Marking property for removal {}".format(schema_obj.get_name(), my_prop_path)) #TODO: what if it is a complex prop with mismatching capabilities
+            self.__logger.info("{}: Marking property for removal {}".format(schema_obj.get_name(), my_prop_path)) #TODO: what if it is a complex prop with mismatching capabilities
             schema_obj.remove_property(my_prop_path)
         else:
             # Property in use, make a note of it
@@ -943,7 +999,7 @@ class JSONSchemaConfigManager:
                     schema_file = in_schema_path,
                     on_change_write_to = out_schema_path,
                     enabled_by_default = self.__enabled_default_value)
-                #print ("Processing: {}".format(schema_file))
+                # self.__logger.debug ("Processing: {}".format(schema_file))
 
                 if schema_obj.is_collection() or schema_obj.is_base_entity():
                     if schema_name in self.__config_d:
@@ -953,10 +1009,13 @@ class JSONSchemaConfigManager:
                         for uri, uri_info in schema_conf_d["uris"].items():
                             is_enabled = uri_info["@meta.Enabled"]
                             if not is_enabled:
-                                print("{}: Removing URI {}".format(schema_name, uri))
-                                schema_obj.remove_uri(uri)
+                                self.__logger.info("{}: Removing URI {}".format(schema_name, uri))
+                                _, is_empty = schema_obj.remove_uri(uri)
+                                if is_empty:
+                                    self.__logger.info("{}: Schema is Empty now!".format(schema_name))
+                                    self.__unimplemented_schemas.append(schema_name)
                             elif uri not in schema_obj.uris() and is_enabled:
-                                print("{}: Adding URI {}".format(schema_name, uri))
+                                self.__logger.info("{}: Adding URI {}".format(schema_name, uri))
                                 schema_obj.add_uri(uri)
 
                         # Change Schema capability
@@ -987,6 +1046,10 @@ class JSONSchemaConfigManager:
                                 if action.startswith("@"):
                                     continue
                                 # Process only if action is supported
+                                if ("Actions" not in schema_conf_d["properties"] or
+                                    action not in schema_conf_d["properties"]["Actions"] or
+                                    "@meta.Enabled" not in schema_conf_d["properties"]["Actions"][action]):
+                                    continue
                                 if schema_conf_d["properties"]["Actions"][action].get("@meta.Enabled") != True:
                                     continue
                                 self.__process_action_params(schema_obj, action, action_d)
@@ -1004,7 +1067,7 @@ class JSONSchemaConfigManager:
                         #Remove unsupported URIs
                         for uri, is_enabled in schema_conf_d["uris"].items():
                             if not is_enabled:
-                                print("{}: Removing URI {}".format(schema_name, uri))
+                                self.__logger.info("{}: Removing URI {}".format(schema_name, uri))
                                 schema_obj.removeUri(uri)
                 elif schema_obj.isVersionedEntity():
                     #pass#print("\tVersioned Schema.... Remove unsupported properties, parameters and enums, update capabilities, etc")
@@ -1013,9 +1076,72 @@ class JSONSchemaConfigManager:
                 else:
                     pass#print("Skipped!!!")'''
         except Exception as e:
-            print("SchemaName: {}".format(schema_name))
-            print(schema_conf_d)
+            self.__logger.critical("SchemaName: {}".format(schema_name))
+            self.__logger.critical(schema_conf_d)
             raise(e)
+
+    def delete_unimplemented(self):
+        # Build a dependency between all the schemas so the we know we are not
+        # deleting a referenced schema just becase the schema itself is not
+        # implemented directly. Also build a map to ease deletion of corresponding
+        # versioned schemas as well.
+        versioned_schema_map = {}
+        schema_dependency_map = {} # {<schema>: {<set of schemas that are dependent on the key>}}
+        rev_schema_dependency_map = {} # {<schema>: {<set of schemas that the key depend on>}}, reverse of the above for faster lookup
+        for f in os.listdir(self.__schema_dest_path):
+            if f.endswith(".json"):
+                schema_name = f.split(".",1)[0]
+                if schema_name not in versioned_schema_map:
+                    versioned_schema_map[schema_name] = []
+                versioned_schema_map[schema_name].append(f)
+                # Now load it and fetch the dependencies
+                schema_obj = JsonSchemaConfigHelper(
+                    schema_file=os.path.join(self.__schema_dest_path, f),
+                    logger=self.__logger
+                    )
+                ext_refs = schema_obj.get_external_references()
+                rev_schema_dependency_map[schema_name] = ext_refs
+                if schema_name not in rev_schema_dependency_map:
+                    rev_schema_dependency_map[schema_name] = set()
+                for ext_ref in ext_refs:
+                    if ext_ref not in schema_dependency_map:
+                        schema_dependency_map[ext_ref] = set()
+                    schema_dependency_map[ext_ref].add(schema_name)
+
+
+        # The Deletion needs to happen in multiple passes, as the dependencies also need to be processed
+        n_pass = 0
+        deleted_schemas = set()
+        schemas_to_keep = [
+            "Event"
+        ]
+
+        while True:
+            n_pass += 1
+            self.__logger.warning("Pass: {}".format(n_pass))
+            deleted_in_pass = False
+            for schema_name in self.__unimplemented_schemas:
+                if schema_name in schemas_to_keep:
+                    continue
+                for schema_file in versioned_schema_map.get(schema_name, []):
+                    if schema_file in deleted_schemas:
+                        continue
+                    # If some other shcema depends on this, we cannot delete this, atleast in this pass
+                    if len(schema_dependency_map.get(schema_name, [])) > 0:
+                        self.__logger.info("Skipping {} as it is in use by {}".format(schema_name, schema_dependency_map[schema_name]))
+                        continue
+                    schema_path = os.path.join(self.__schema_dest_path, schema_file)
+                    self.__logger.info("Deleting {}".format(schema_path))
+                    os.remove(schema_path)
+                    deleted_schemas.add(schema_file)
+                    deleted_in_pass = True
+                    # Update the dependencies by using rev_schema_dependency_map
+                    for ext_ref in rev_schema_dependency_map[schema_name]:
+                        if ext_ref in schema_dependency_map:
+                            if schema_name in schema_dependency_map[ext_ref]:
+                                schema_dependency_map[ext_ref].remove(schema_name)
+            if not deleted_in_pass:
+                break
 
 '''if __name__ == "__main__":
     with open("dmtf-config.json", "r") as fd:
@@ -1037,15 +1163,19 @@ class DMTFOemIntegrator:
         dmtf_oem_bindings: Config file with all dmtf-to-oem bindings
     """
 
-    def __init__( self, json_in_file_path, json_out_file_path, config ):
+    def __init__( self, json_in_file_path, json_out_file_path, config, logger: logging.Logger=None):
+        if logger:
+            self.__logger = logger
+        else:
+            self.__logger = get_logger
         self.config = config
         self.json_in_file_path = json_in_file_path
         self.json_out_file_path = json_out_file_path
-        cfgmgr = JSONSchemaConfigManager(json_in_file_path, json_out_file_path, config)
-        cfgmgr.generate_config()
-        cfgmgr.merge_configs()
-        cfgmgr.write_config()
-        cfgmgr.process_configs()
+        self.cfgmgr = JSONSchemaConfigManager(json_in_file_path, json_out_file_path, config)
+        self.cfgmgr.generate_config()
+        self.cfgmgr.merge_configs()
+        self.cfgmgr.write_config()
+        self.cfgmgr.process_configs()
         oem_binding_file_path = config.get("OemBindingsFilePath", None)
         if oem_binding_file_path:
             with open(config["OemBindingsFilePath"]) as fd:
@@ -1059,6 +1189,8 @@ class DMTFOemIntegrator:
         else:
             self.__annotations = None
 
+    def delete_unimplemented_schemas(self):
+        self.cfgmgr.delete_unimplemented()
 
     def integrate_oems(self):
         """
@@ -1077,13 +1209,13 @@ class DMTFOemIntegrator:
         for schema, schema_bindings in self.__oem_bindings.items():
             for prop, binding in schema_bindings.items():
                 if prop == "OemActions":
-                    print("Found OemAction extension for the %s resource" %(schema))
+                    self.__logger.info("Found OemAction extension for the %s resource" %(schema))
                     # Now Open the Json file and write it
                     file_pat = "%s.v" %schema
                     for fname in sorted(os.listdir(self.json_out_file_path)):
                         try:
                             if fname.startswith(file_pat):
-                                print("Extending %s with OemActions %s" %(fname, ", ".join(sorted(binding.keys()))))
+                                self.__logger.info("Extending %s with OemActions %s" %(fname, ", ".join(sorted(binding.keys()))))
                                 in_schema_path = os.path.join(self.json_out_file_path, fname)
                                 out_schema_path = os.path.join(self.json_out_file_path, fname)
                                 with open(in_schema_path, "r") as fd:
@@ -1104,9 +1236,9 @@ class DMTFOemIntegrator:
                                 with open(out_schema_path, "w") as fd:
                                     json.dump(jsonschema, fd, indent = 4, sort_keys=True, separators=(',', ': '))
                         except Exception as e:
-                            print("Unable to extend %s with OemActions %s: Exception (%s)" %(fname, ", ".join(sorted(binding.keys())), e))
+                            self.__logger.info("Unable to extend %s with OemActions %s: Exception (%s)" %(fname, ", ".join(sorted(binding.keys())), e))
                 elif prop == "Oem":
-                    print("Found Oem extension for the %s resource" %(schema))
+                    self.__logger.info("Found Oem extension for the %s resource" %(schema))
                     key_name = "%s_%s" %(schema, prop)
                     new_json_data = {
                                         "additionalProperties": False,
@@ -1140,7 +1272,7 @@ class DMTFOemIntegrator:
                     for fname in sorted(os.listdir(self.json_out_file_path)):
                         try:
                             if fname.startswith(file_pat):
-                                print("Extending %s with Oem %s" %(fname, key_name))
+                                self.__logger.info("Extending %s with Oem %s" %(fname, key_name))
                                 in_schema_path = os.path.join(self.json_out_file_path, fname)
                                 out_schema_path = os.path.join(self.json_out_file_path, fname)
                                 with open(in_schema_path, "r") as fd:
@@ -1151,9 +1283,9 @@ class DMTFOemIntegrator:
                                 with open(out_schema_path, "w") as fd:
                                     json.dump(jsonschema, fd, indent = 4, sort_keys=True, separators=(',', ': '))
                         except Exception as e:
-                            print("Unable to extend %s with Oem %s: Exception (%s)" %(fname, key_name, e))
+                            self.__logger.info("Unable to extend %s with Oem %s: Exception (%s)" %(fname, key_name, e))
                 elif prop == "Links":
-                    print("Found Oem Links extension for the %s resource" %(schema))
+                    self.__logger.info("Found Oem Links extension for the %s resource" %(schema))
                     key_name = "%s_%s_Oem" %(schema, prop)
                     new_json_data = {
                                         "additionalProperties": False,
@@ -1188,7 +1320,7 @@ class DMTFOemIntegrator:
                     for fname in sorted(os.listdir(self.json_out_file_path)):
                         try:
                             if fname.startswith(file_pat):
-                                print("Extending %s with Oem %s" %(fname, key_name))
+                                self.__logger.info("Extending %s with Oem %s" %(fname, key_name))
                                 in_schema_path = os.path.join(self.json_out_file_path, fname)
                                 out_schema_path = os.path.join(self.json_out_file_path, fname)
                                 with open(in_schema_path, "r") as fd:
@@ -1199,11 +1331,11 @@ class DMTFOemIntegrator:
                                 with open(out_schema_path, "w") as fd:
                                     json.dump(jsonschema, fd, indent = 4, sort_keys=True, separators=(',', ': '))
                         except Exception as e:
-                            print("Unable to extend %s with Oem %s: Exception (%s)" %(fname, key_name, e))
+                            self.__logger.info("Unable to extend %s with Oem %s: Exception (%s)" %(fname, key_name, e))
                 else:
                     # Generic, traverse down the properties in the schema
                     # TODO: This logic below should be able to take care of all the if-elif cases above
-                    print("Found generic Oem extension(s) for the %s resource" %(schema))
+                    self.__logger.info("Found generic Oem extension(s) for the %s resource" %(schema))
                     schema_cache = {} # Use a cache to batch all the schema changes in one shot
                     file_pat = "%s.v" %schema
                     key_name = "%s_%s_Oem" %(schema, prop)
@@ -1234,7 +1366,7 @@ class DMTFOemIntegrator:
                         for fname in sorted(os.listdir(self.json_out_file_path)):
                             try:
                                 if fname.startswith(file_pat):
-                                    print("Extending %s with Oem %s" %(fname, key_name))
+                                    self.__logger.info("Extending %s with Oem %s" %(fname, key_name))
                                     in_schema_path = os.path.join(self.json_out_file_path, fname)
                                     out_schema_path = os.path.join(self.json_out_file_path, fname)
                                     json_schema = schema_cache.get(in_schema_path)
@@ -1245,7 +1377,7 @@ class DMTFOemIntegrator:
                                     referenced_type_to_modify = None
                                     parent_prop_d = None # Initial None will indicate it is a property in the root
                                     for p in keys_to_oem:
-                                        # print("Processing: {} of #/{}".format(p, "/".join(keys_to_oem)))
+                                        # self.__logger.debug("Processing: {} of #/{}".format(p, "/".join(keys_to_oem)))
                                         ref = json_schema.get_type_ref_of_property(p, parent_prop_d)
                                         assert(ref.startswith("#/")), "{} property must be a local reference".format(p)
                                         ref_type = ref.rsplit("/",1)[-1]
@@ -1253,7 +1385,7 @@ class DMTFOemIntegrator:
                                         parent_prop_d = json_schema.get_definition(ref_type)
                                     json_schema.add_oem_schema_link(referenced_type_to_modify, oem_name, oem_ref)
                             except Exception as e:
-                                print("Unable to extend %s with Oem %s: Exception (%s)" %(fname, key_name, e))
+                                self.__logger.critical("Unable to extend %s with Oem %s: Exception (%s)" %(fname, key_name, e))
                                 raise(e)
                     #raise(Exception("Not Yet Implemented!!"))
 
@@ -1282,7 +1414,7 @@ class DMTFOemIntegrator:
                     continue
                 if supported_annotations["patternRegexes"][pat_key]["re"].match(annotation):
                     return supported_annotations["patternProperties"][supported_annotations["patternRegexes"][pat_key]["pat"]]
-            print(f"Unable to find annotation {annotation} in supported annotations")
+            self.__logger.error(f"Unable to find annotation {annotation} in supported annotations")
             return None
         if not self.__annotations:
             return
@@ -1293,7 +1425,7 @@ class DMTFOemIntegrator:
                 continue
             schema_name = f.split(".v")[0]
             k = schema_name+".v"
-            if schema_name not in json_schema_files_map:
+            if k not in json_schema_files_map:
                 json_schema_files_map[k] = []
             json_schema_files_map[k].append(os.path.join(self.json_out_file_path, f))
         for schema_name, annotation_details in self.__annotations.items():
@@ -1304,11 +1436,11 @@ class DMTFOemIntegrator:
                 json_schema = JsonSchemaConfigHelper(f, f)
                 for target, annotation in annotation_details.items():
                     for annotation_prop in annotation:
-                        annotation_details = get_annotation_details(supported_annotations, annotation_prop)
-                        assert(annotation_details != None), "Unsupported Annotation: %s" %(annotation_prop)
-                        json_schema.add_annotation(target, annotation_prop, annotation_details)
+                        annotation_detail = get_annotation_details(supported_annotations, annotation_prop)
+                        assert(annotation_detail != None), "Unsupported Annotation: %s" %(annotation_prop)
+                        json_schema.add_annotation(target, annotation_prop, annotation_detail)
 
-def main():
+def main(logger):
     """
     Main entry point for the script
     """
@@ -1336,17 +1468,20 @@ def main():
             with open( args.config ) as config_file:
                 config_data = json.load( config_file )
         except json.JSONDecodeError:
-            print( "ERROR: {} contains a malformed JSON object".format( args.config ) )
+            logger.critical( "ERROR: {} contains a malformed JSON object".format( args.config ) )
             sys.exit( 1 )
         except:
-            print( "ERROR: Could not open {}".format( args.config ) )
+            logger.critical( "ERROR: Could not open {}".format( args.config ) )
             sys.exit( 1 )
 
     # Step through each file in the input directory
-    integrator = DMTFOemIntegrator(args.input, args.output, config_data)
+    integrator = DMTFOemIntegrator(args.input, args.output, config_data, logger)
     integrator.integrate_oems()
     integrator.inject_annotations()
+    if config_data.get("DeleteUnimplementedSchemas", False):
+        integrator.delete_unimplemented_schemas()
     return 0
 
 if __name__ == '__main__':
-    sys.exit( main() )
+    logger = get_logger()
+    sys.exit( main(logger) )
