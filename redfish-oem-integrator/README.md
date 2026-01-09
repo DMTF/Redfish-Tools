@@ -50,6 +50,9 @@ The config file contains the following terms to control how the tool processes J
     * See [Annotation Bindings Config](#annotation-bindings-config) for more information about the contents.
 * `StoreConfigInSeparateFiles`: `true` indicates if each resource has its own configuration file and `false` indicates if all resouce configurations are contained in a single, monolithic file.
 * `EnableNewAdditionsByDefault`: When parsing the contents of the *input* directory and adding new properties not currently in the resource configuration, `true` will enable the new property in the configuration and `false` will disable the new property in the configuration.
+* `DeleteUnimplementedSchemas`: This option determines whether to remove schemas that are not implemented by the OEM implementation after applying all OEM configurations.
+    * If set to `true`, all unimplemented schemas will be deleted, unless they are referenced from some implemented schema.
+    * If set to `false` or if the option is not present in the config file, unimplemented schemas will be retained.
 
 ### Resource Config
 

@@ -3,5 +3,6 @@
     "OemBindingsFilePath": "contoso-oem-extensions.json",
     "AnnotationsFilePath": "contoso-oem-annotation-bindings.json",
     "StoreConfigInSeparateFiles": true,
-    "EnableNewAdditionsByDefault": false
+    "EnableNewAdditionsByDefault": false,
+    "DeleteUnimplementedSchemas": false
 }
