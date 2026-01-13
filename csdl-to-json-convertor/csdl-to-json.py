@@ -1549,6 +1549,7 @@ def main():
                 return 1
 
     # Step through each file in the input directory
+    has_errors = False
     for in_filename in os.listdir( args.input ):
         if in_filename.endswith( ".xml" ):
             print( "Generating JSON for: {}".format( in_filename ) )
@@ -1569,12 +1570,15 @@ def main():
                     out_filename_short = namespace + ".json"
                     if translator.errors[namespace]:
                         print( "-- Errors detected while generating {}; not creating file".format( out_filename ) )
+                        has_errors = True
                     else:
                         if len( [ i for i in config_data["DoNotWrite"] if out_filename_short.startswith( i ) ] ) == 0:
                             if overwrite or is_namespace_unversioned( namespace ) or ( not os.path.isfile( out_filename ) ):
                                 out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
                                 with open( out_filename, "w" ) as file:
                                     file.write( out_string )
+    if has_errors:
+        return 1
 
 def is_namespace_unversioned( namespace ):
     """
