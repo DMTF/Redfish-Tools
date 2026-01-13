@@ -1495,10 +1495,10 @@ def main():
                 config_data = json.load( config_file )
         except json.JSONDecodeError:
             print( "ERROR: {} contains a malformed JSON object".format( args.config ) )
-            sys.exit( 1 )
+            return 1
         except:
             print( "ERROR: Could not open {}".format( args.config ) )
-            sys.exit( 1 )
+            return 1
 
     # Set up defaults for missing configuration fields
     if "Copyright" not in config_data:
@@ -1522,10 +1522,10 @@ def main():
             resource_root = resource_tree.getroot()
         except ET.ParseError:
             print( "ERROR: {} contains a malformed XML document".format( resource_file ) )
-            sys.exit( 1 )
+            return 1
         except:
             print( "ERROR: Could not open {}".format( resource_file ) )
-            sys.exit( 1 )
+            return 1
     else:
         # Fall back on using the remote copy of Resource
         retry_count = 0
@@ -1541,12 +1541,12 @@ def main():
                 if e.errno != errno.ECONNRESET:
                     print( "Could not open " + resource_uri )
                     print( e )
-                    sys.exit( 1 )
+                    return 1
                 retry_count += 1
             if retry_count >= retry_count_max:
                 print( "Could not open " + resource_uri )
                 print( "Too many connection resets" )
-                sys.exit( 1 )
+                return 1
 
     # Step through each file in the input directory
     for in_filename in os.listdir( args.input ):
