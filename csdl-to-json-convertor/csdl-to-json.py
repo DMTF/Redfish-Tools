@@ -30,9 +30,9 @@ CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 
 # Regex strings
-VERSION_REGEX = "v([0-9]+)_([0-9]+)_([0-9]+)$"
-PATTERN_PROP_REGEX = "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$"
-PATTERN_PROP_ACTION_REGEX = "^#([a-zA-Z_][a-zA-Z0-9_]*\\.)+[a-zA-Z_][a-zA-Z0-9_]*$"
+VERSION_REGEX = r"v([0-9]+)_([0-9]+)_([0-9]+)$"
+PATTERN_PROP_REGEX = r"^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_]*$"
+PATTERN_PROP_ACTION_REGEX = r"^#([a-zA-Z_][a-zA-Z0-9_]*\.)+[a-zA-Z_][a-zA-Z0-9_]*$"
 DEFAULT_VER = "v1_0_0"
 DEFAULT_ATTRIB = "UNKNOWN_ATTRIB"
 
@@ -1241,19 +1241,19 @@ class CSDLToJSON:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "^P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?$"
+            pattern = r"^P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?$"
         elif type == "Edm.TimeOfDay":
             if is_nullable:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?$"
+            pattern = r"^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?$"
         elif type == "Edm.Guid":
             if is_nullable:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            pattern = r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
         elif type == "Edm.Boolean":
             if is_nullable:
                 json_type = [ "boolean", "null" ]
