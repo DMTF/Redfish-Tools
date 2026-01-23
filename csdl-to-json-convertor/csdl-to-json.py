@@ -30,9 +30,9 @@ CONFIG_DEF_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 CONFIG_DEF_RESOURCE_LOCATION = "http://redfish.dmtf.org/schemas/v1/"
 
 # Regex strings
-VERSION_REGEX = "v([0-9]+)_([0-9]+)_([0-9]+)$"
-PATTERN_PROP_REGEX = "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$"
-PATTERN_PROP_ACTION_REGEX = "^#([a-zA-Z_][a-zA-Z0-9_]*\\.)+[a-zA-Z_][a-zA-Z0-9_]*$"
+VERSION_REGEX = r"v([0-9]+)_([0-9]+)_([0-9]+)$"
+PATTERN_PROP_REGEX = r"^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\.[a-zA-Z_][a-zA-Z0-9_]*$"
+PATTERN_PROP_ACTION_REGEX = r"^#([a-zA-Z_][a-zA-Z0-9_]*\.)+[a-zA-Z_][a-zA-Z0-9_]*$"
 DEFAULT_VER = "v1_0_0"
 DEFAULT_ATTRIB = "UNKNOWN_ATTRIB"
 
@@ -1241,19 +1241,19 @@ class CSDLToJSON:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "^P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?$"
+            pattern = r"^P(\d+D)?(T(\d+H)?(\d+M)?(\d+(.\d+)?S)?)?$"
         elif type == "Edm.TimeOfDay":
             if is_nullable:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?$"
+            pattern = r"^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.[0-9]{1,12})?$"
         elif type == "Edm.Guid":
             if is_nullable:
                 json_type = [ "string", "null" ]
             else:
                 json_type = "string"
-            pattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+            pattern = r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
         elif type == "Edm.Boolean":
             if is_nullable:
                 json_type = [ "boolean", "null" ]
@@ -1495,10 +1495,10 @@ def main():
                 config_data = json.load( config_file )
         except json.JSONDecodeError:
             print( "ERROR: {} contains a malformed JSON object".format( args.config ) )
-            sys.exit( 1 )
+            return 1
         except:
             print( "ERROR: Could not open {}".format( args.config ) )
-            sys.exit( 1 )
+            return 1
 
     # Set up defaults for missing configuration fields
     if "Copyright" not in config_data:
@@ -1522,10 +1522,10 @@ def main():
             resource_root = resource_tree.getroot()
         except ET.ParseError:
             print( "ERROR: {} contains a malformed XML document".format( resource_file ) )
-            sys.exit( 1 )
+            return 1
         except:
             print( "ERROR: Could not open {}".format( resource_file ) )
-            sys.exit( 1 )
+            return 1
     else:
         # Fall back on using the remote copy of Resource
         retry_count = 0
@@ -1541,14 +1541,15 @@ def main():
                 if e.errno != errno.ECONNRESET:
                     print( "Could not open " + resource_uri )
                     print( e )
-                    sys.exit( 1 )
+                    return 1
                 retry_count += 1
             if retry_count >= retry_count_max:
                 print( "Could not open " + resource_uri )
                 print( "Too many connection resets" )
-                sys.exit( 1 )
+                return 1
 
     # Step through each file in the input directory
+    has_errors = False
     for in_filename in os.listdir( args.input ):
         if in_filename.endswith( ".xml" ):
             print( "Generating JSON for: {}".format( in_filename ) )
@@ -1569,12 +1570,15 @@ def main():
                     out_filename_short = namespace + ".json"
                     if translator.errors[namespace]:
                         print( "-- Errors detected while generating {}; not creating file".format( out_filename ) )
+                        has_errors = True
                     else:
                         if len( [ i for i in config_data["DoNotWrite"] if out_filename_short.startswith( i ) ] ) == 0:
                             if overwrite or is_namespace_unversioned( namespace ) or ( not os.path.isfile( out_filename ) ):
                                 out_string = json.dumps( translator.json_out[namespace], sort_keys = True, indent = 4, separators = ( ",", ": " ) )
                                 with open( out_filename, "w" ) as file:
                                     file.write( out_string )
+    if has_errors:
+        return 1
 
 def is_namespace_unversioned( namespace ):
     """
