@@ -2,7 +2,7 @@
 
 ## NetworkDeviceFunction 1.3.2
 
-<a name="networkdevicefunction"></a>
+<a name="networkdevicefunction">&nbsp;</a>
 
 |     |     |
 | :--- | :--- |
@@ -97,7 +97,7 @@ A Network Device Function represents a logical interface exposed by the network 
 
 #### AuthenticationMethod
 
-<a name="networkdevicefunction-authenticationmethod"></a>
+<a name="networkdevicefunction-authenticationmethod">&nbsp;</a>
 
 The iSCSI boot authentication method for this network device function.
 
@@ -109,7 +109,7 @@ The iSCSI boot authentication method for this network device function.
 
 #### BootMode
 
-<a name="networkdevicefunction-bootmode"></a>
+<a name="networkdevicefunction-bootmode">&nbsp;</a>
 
 The boot mode configured for this network device function.
 
@@ -123,7 +123,7 @@ The boot mode configured for this network device function.
 
 #### IPAddressType
 
-<a name="networkdevicefunction-ipaddresstype"></a>
+<a name="networkdevicefunction-ipaddresstype">&nbsp;</a>
 
 The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP address fields.
 
@@ -134,7 +134,7 @@ The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP addres
 
 #### NetDevFuncCapabilities
 
-<a name="networkdevicefunction-netdevfunccapabilities"></a>
+<a name="networkdevicefunction-netdevfunccapabilities">&nbsp;</a>
 
 Capabilities of this network device function.
 
@@ -148,7 +148,7 @@ Capabilities of this network device function.
 
 #### NetDevFuncType
 
-<a name="networkdevicefunction-netdevfunctype"></a>
+<a name="networkdevicefunction-netdevfunctype">&nbsp;</a>
 
 The configured capability of this network device function.
 
@@ -162,7 +162,7 @@ The configured capability of this network device function.
 
 #### WWNSource
 
-<a name="networkdevicefunction-wwnsource"></a>
+<a name="networkdevicefunction-wwnsource">&nbsp;</a>
 
 The configuration source of the WWNs for this connection (WWPN and WWNN).
 
@@ -174,7 +174,7 @@ The configuration source of the WWNs for this connection (WWPN and WWNN).
 
 ## NetworkDeviceFunctionCollection
 
-<a name="networkdevicefunctioncollection"></a>
+<a name="networkdevicefunctioncollection">&nbsp;</a>
 
 
 ### Properties
@@ -191,7 +191,7 @@ The configuration source of the WWNs for this connection (WWPN and WWNN).
 
 ## NetworkPort 1.1.0
 
-<a name="networkport"></a>
+<a name="networkport">&nbsp;</a>
 
 ### Description
 
@@ -240,7 +240,7 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 
 #### ActiveLinkTechnology
 
-<a name="networkport-activelinktechnology"></a>
+<a name="networkport-activelinktechnology">&nbsp;</a>
 
 Network Port Active Link Technology.
 
@@ -252,7 +252,7 @@ Network Port Active Link Technology.
 
 #### FlowControlConfiguration
 
-<a name="networkport-flowcontrolconfiguration"></a>
+<a name="networkport-flowcontrolconfiguration">&nbsp;</a>
 
 The locally configured 802.3x flow control setting for this network port.
 
@@ -265,7 +265,7 @@ The locally configured 802.3x flow control setting for this network port.
 
 #### FlowControlStatus
 
-<a name="networkport-flowcontrolstatus"></a>
+<a name="networkport-flowcontrolstatus">&nbsp;</a>
 
 The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).
 
@@ -278,7 +278,7 @@ The 802.3x flow control behavior negotiated with the link partner for this netwo
 
 #### LinkNetworkTechnology
 
-<a name="networkport-linknetworktechnology"></a>
+<a name="networkport-linknetworktechnology">&nbsp;</a>
 
 The self-described link network technology capabilities of this port.
 
@@ -290,7 +290,7 @@ The self-described link network technology capabilities of this port.
 
 #### LinkStatus
 
-<a name="networkport-linkstatus"></a>
+<a name="networkport-linkstatus">&nbsp;</a>
 
 The status of the link between this port and its link partner.
 
@@ -301,7 +301,7 @@ The status of the link between this port and its link partner.
 
 #### SupportedEthernetCapabilities
 
-<a name="networkport-supportedethernetcapabilities"></a>
+<a name="networkport-supportedethernetcapabilities">&nbsp;</a>
 
 The set of Ethernet capabilities that this port supports.
 
