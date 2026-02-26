@@ -58,6 +58,8 @@ argget.add_argument( "--postscript", "-postscript", type = str, help = "File con
 argget.add_argument( "--format", "-format", type = str, help = "The format of the output file; default is 'Markdown'", default = "Markdown", choices = [ "Markdown", "CSV" ] )
 args = argget.parse_args()
 
+version_history = {}
+
 output = {}
 output_str = ""
 
@@ -79,6 +81,12 @@ for registry_file in registry_files:
                 output[registry_data["RegistryPrefix"]] = registry_data
         else:
             output[registry_data["RegistryPrefix"]] = registry_data
+
+        # Extract the version information
+        if registry_data["RegistryPrefix"] not in version_history:
+            version_history[registry_data["RegistryPrefix"]] = {}
+        if "Release" in registry_data:
+            version_history[registry_data["RegistryPrefix"]][registry_data["RegistryVersion"].rsplit(".", 1)[0]] = registry_data["Release"]
 
 if args.format == "CSV":
     # Build the output CSV
@@ -106,6 +114,35 @@ else:
     for registry in sorted( output.keys() ):
         # Registry heading
         output_str += "## {} {}\n\n".format( registry, output[registry]["RegistryVersion"] )
+
+        # Add the version table (if available)
+        if len(version_history[registry]) != 0:
+            add_trailer = False
+            if len(version_history[registry]) > 10:
+                add_trailer = True
+            version_list = list(version_history[registry])
+            version_list.sort(key=version.Version)
+            version_list = version_list[-10:]
+            heading_row_str = "|      |"
+            divider_row_str = "| :--- |"
+            version_row_str = "| **Version** |"
+            release_row_str = "| **Release** |"
+            for i, val in reversed(list(enumerate(version_list))):
+                heading_row_str += "      |"
+                divider_row_str += " :--- |"
+                version_row_str += " *{}* |".format(val)
+                release_row_str += " {} |".format(version_history[registry][val])
+            if add_trailer:
+                heading_row_str += "      |"
+                divider_row_str += " :--- |"
+                version_row_str += " *...* |"
+                release_row_str += " ... |"
+            output_str += heading_row_str + "\n"
+            output_str += divider_row_str + "\n"
+            output_str += version_row_str + "\n"
+            output_str += release_row_str + "\n\n"
+
+        # Add the description
         output_str += "{}\n\n".format( output[registry]["Description"] )
         messages = sorted( output[registry]["Messages"].keys() )
 
@@ -130,7 +167,7 @@ else:
                 details_str += "Resolution: {}\n\n".format( message_obj["Resolution"] )
                 argument_str = ""
                 for i in range( message_obj["NumberOfArgs"] ):
-                    message_obj["Message"] = message_obj["Message"].replace( "%{}".format( i + 1 ), "\<Arg{}\>".format( i + 1 ) )
+                    message_obj["Message"] = message_obj["Message"].replace( "%{}".format( i + 1 ), "\\<Arg{}\\>".format( i + 1 ) )
                     argument_str += "{}. *{}*: {}\n".format( i + 1, message_obj["ParamTypes"][i], message_obj["ArgDescriptions"][i] )
                     argument_str += "    * {}\n".format( message_obj["ArgLongDescriptions"][i] )
                 details_str += "Message and Arguments: \"{}\"\n\n".format( message_obj["Message"] )
