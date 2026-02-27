@@ -130,7 +130,7 @@ else:
             for i, val in reversed(list(enumerate(version_list))):
                 heading_row_str += "      |"
                 divider_row_str += " :--- |"
-                version_row_str += " *{}* |".format(val)
+                version_row_str += " *v{}* |".format(val)
                 release_row_str += " {} |".format(version_history[registry][val])
             if add_trailer:
                 heading_row_str += "      |"
