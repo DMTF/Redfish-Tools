@@ -307,72 +307,92 @@ class CSDLToJSON:
         Adds the excerpt definitions to the JSON output
         """
 
-        base_name = self.namespace_under_process.split( "." )[0]
-        if base_name not in self.json_out[self.namespace_under_process]["definitions"]:
+        resource_name = self.namespace_under_process.split( "." )[0]
+        if resource_name not in self.json_out[self.namespace_under_process]["definitions"]:
             # Nothing to process; this file likely does not contain a resource definition
             return
-        base_def = self.json_out[self.namespace_under_process]["definitions"][base_name]
-        excerpt_list = [ base_name ]
 
-        # Check to see if we need to make an excerpt definition
-        count = 0
-        for prop_name, prop in base_def["properties"].items():
-            if "excerpt" in prop:
-                count = count + 1
-                for e in prop["excerpt"].split( "," ):
-                    if e not in excerpt_list:
-                         excerpt_list.append(e)
-            if "excerptCopyOnly" in prop:
-                count = count + 1
-        if count == 0:
-            # No excerpts at all
-            return
+        # Go through each definition; if it's an object, attempt to construct an excerpt definition for it
+        definitions = list( self.json_out[self.namespace_under_process]["definitions"].keys() )
+        for base_name in definitions:
+            if "properties" not in self.json_out[self.namespace_under_process]["definitions"][base_name]:
+                # Skip definitions that are not for objects
+                continue
+            base_def = self.json_out[self.namespace_under_process]["definitions"][base_name]
+            excerpt_list = [ resource_name ]
 
-        # Create an excerpt definition for each type of excerpt found
-        for excerpt in excerpt_list:
-            excerpt_name = excerpt + "Excerpt"
-            self.json_out[self.namespace_under_process]["definitions"][excerpt_name] = copy.deepcopy( base_def )
-            excerpt_def = self.json_out[self.namespace_under_process]["definitions"][excerpt_name]
-            excerpt_def["excerpt"] = excerpt
-
-            # Strip out properties that do not apply
-            remove_list = []
-            for prop_name, prop in excerpt_def["properties"].items():
+            # Check to see if we need to make an excerpt definition
+            count = 0
+            for prop_name, prop in base_def["properties"].items():
                 if "excerpt" in prop:
-                    if ( excerpt not in prop["excerpt"].split( "," ) ) and ( prop["excerpt"] != base_name ):
+                    count = count + 1
+                    for e in prop["excerpt"].split( "," ):
+                        if e not in excerpt_list:
+                            excerpt_list.append(e)
+                if "excerptCopyOnly" in prop:
+                    count = count + 1
+            if count == 0:
+                # No excerpts at all
+                continue
+
+            # Create an excerpt definition for each type of excerpt found
+            for excerpt in excerpt_list:
+                excerpt_name = excerpt + "Excerpt"
+                if base_name != resource_name:
+                    excerpt_name = base_name + excerpt + "Excerpt"
+                self.json_out[self.namespace_under_process]["definitions"][excerpt_name] = copy.deepcopy( base_def )
+                excerpt_def = self.json_out[self.namespace_under_process]["definitions"][excerpt_name]
+                excerpt_def["excerpt"] = excerpt
+
+                # Strip out properties that do not apply
+                remove_list = []
+                for prop_name, prop in excerpt_def["properties"].items():
+                    if "excerpt" in prop:
+                        if ( excerpt not in prop["excerpt"].split( "," ) ) and ( prop["excerpt"] != base_name ):
+                            remove_list.append( prop_name )
+                    elif "excerptCopyOnly" not in prop:
                         remove_list.append( prop_name )
-                elif "excerptCopyOnly" not in prop:
+                for prop_name in remove_list:
+                    excerpt_def["properties"].pop( prop_name )
+                    if "required" in excerpt_def:
+                        if prop_name in excerpt_def["required"]:
+                            excerpt_def["required"].remove( prop_name )
+                    if "requiredOnCreate" in excerpt_def:
+                        if prop_name in excerpt_def["requiredOnCreate"]:
+                            excerpt_def["requiredOnCreate"].remove( prop_name )
+
+                # Strip out the required and requiredOnCreate terms if needed
+                if "required" in excerpt_def:
+                    if len( excerpt_def["required"] ) == 0:
+                        excerpt_def.pop( "required" )
+                if "requiredOnCreate" in excerpt_def:
+                    if len( excerpt_def["requiredOnCreate"] ) == 0:
+                        excerpt_def.pop( "requiredOnCreate" )
+
+                # For the remaining properties, if they reference local objects, change the $ref to reference the excerpt definition of the object
+                for prop_name, prop in excerpt_def["properties"].items():
+                    if "$ref" not in prop:
+                        continue
+                    if not prop["$ref"].startswith("#/definitions/"):
+                        continue
+                    local_def_name = prop["$ref"].split("/")[-1]
+                    if "properties" not in self.json_out[self.namespace_under_process]["definitions"][local_def_name]:
+                        continue
+                    prop["$ref"] = prop["$ref"] + excerpt + "Excerpt"
+
+                # Add the definition to the unversioned namespace if it's the latest errata and is for the resource itself
+                if self.is_latest_errata( self.namespace_under_process ) and base_name == resource_name:
+                    if excerpt_name not in self.json_out[base_name]["definitions"]:
+                        self.json_out[base_name]["definitions"][excerpt_name] = { "anyOf": [] }
+                    self.json_out[base_name]["definitions"][excerpt_name]["anyOf"].append( { "$ref": self.location + self.namespace_under_process + ".json#/definitions/" + excerpt_name } )
+
+            # Remove any excerpt copy only properties from the base definition
+            remove_list = []
+            for prop_name, prop in base_def["properties"].items():
+                if "excerptCopyOnly" in prop:
                     remove_list.append( prop_name )
             for prop_name in remove_list:
-                excerpt_def["properties"].pop( prop_name )
-                if "required" in excerpt_def:
-                    if prop_name in excerpt_def["required"]:
-                        excerpt_def["required"].remove( prop_name )
-                if "requiredOnCreate" in excerpt_def:
-                    if prop_name in excerpt_def["requiredOnCreate"]:
-                        excerpt_def["requiredOnCreate"].remove( prop_name )
-
-            # Strip out the required and requiredOnCreate terms if needed
-            if "required" in excerpt_def:
-                if len( excerpt_def["required"] ) == 0:
-                    excerpt_def.pop( "required" )
-            if "requiredOnCreate" in excerpt_def:
-                if len( excerpt_def["requiredOnCreate"] ) == 0:
-                    excerpt_def.pop( "requiredOnCreate" )
-
-            # Add the definition to the unversioned namespace if it's the latest errata
-            if self.is_latest_errata( self.namespace_under_process ):
-                if excerpt_name not in self.json_out[base_name]["definitions"]:
-                    self.json_out[base_name]["definitions"][excerpt_name] = { "anyOf": [] }
-                self.json_out[base_name]["definitions"][excerpt_name]["anyOf"].append( { "$ref": self.location + self.namespace_under_process + ".json#/definitions/" + excerpt_name } )
-
-        # Remove any excerpt copy only properties from the base definition
-        remove_list = []
-        for prop_name, prop in base_def["properties"].items():
-            if "excerptCopyOnly" in prop:
-                remove_list.append( prop_name )
-        for prop_name in remove_list:
-            base_def["properties"].pop( prop_name )
+                base_def["properties"].pop( prop_name )
 
     def generate_capabilities( self, object, json_def ):
         """
