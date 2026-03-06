@@ -156,13 +156,24 @@ else:
             message_obj["MessageLink"] = "{}-{}".format( registry, message )
             if verify_message( message_obj, registry, message ):
                 # Insert the message into the front table
-                table_str += "| [{}](#{}) | {} | {} |\n".format( message, message_obj["MessageLink"], message_obj["MessageSeverity"], message_obj["Description"] )
+                message_ver = []
+                if "VersionAdded" in message_obj:
+                    message_ver.append("v{}+".format(message_obj["VersionAdded"].rsplit(".", 1)[0]))
+                if "VersionDeprecated" in message_obj:
+                    message_ver.append("deprecated v{}".format(message_obj["VersionDeprecated"].rsplit(".", 1)[0]))
+                message_ver_str = ""
+                if len(message_ver) > 0:
+                    message_ver_str = ", ".join(message_ver)
+                    message_ver_str = "*(" + message_ver_str + ")*"
+                table_str += "| [{}](#{}) {} | {} | {} |\n".format( message, message_obj["MessageLink"], message_ver_str, message_obj["MessageSeverity"], message_obj["Description"] )
 
                 # Add the details for the message to the rest of the details body
                 details_str += "### {}<a id=\"{}\"/>\n\n".format( message, message_obj["MessageLink"] )
                 details_str += "{}\n\n".format( message_obj["Description"] )
                 details_str += "* {}\n\n".format( message_obj["LongDescription"] )
-                details_str += "Version Added: {}\n\n".format( message_obj.get( "VersionAdded", "1.0.0" ) )
+                if "VersionDeprecated" in message_obj:
+                    details_str += "*Deprecated in v{} and later.  {}*\n\n".format( message_obj["VersionDeprecated"].rsplit(".", 1)[0], message_obj.get("Deprecated", "") )
+                details_str += "Version Added: v{}\n\n".format( message_obj.get( "VersionAdded", "1.0.0" ).rsplit(".", 1)[0] )
                 details_str += "Severity: {}\n\n".format( message_obj["MessageSeverity"] )
                 details_str += "Resolution: {}\n\n".format( message_obj["Resolution"] )
                 argument_str = ""
