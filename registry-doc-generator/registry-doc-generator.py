@@ -169,6 +169,8 @@ else:
 
                 # Add the details for the message to the rest of the details body
                 details_str += "### {}<a id=\"{}\"/>\n\n".format( message, message_obj["MessageLink"] )
+                if "Example" in message_obj:
+                    details_str += "**Example:** {}\n\n".format( message_obj["Example"] )
                 details_str += "{}\n\n".format( message_obj["Description"] )
                 details_str += "* {}\n\n".format( message_obj["LongDescription"] )
                 if "VersionDeprecated" in message_obj:
@@ -178,11 +180,16 @@ else:
                 details_str += "Resolution: {}\n\n".format( message_obj["Resolution"] )
                 argument_str = ""
                 for i in range( message_obj["NumberOfArgs"] ):
-                    message_obj["Message"] = message_obj["Message"].replace( "%{}".format( i + 1 ), "\\<Arg{}\\>".format( i + 1 ) )
+                    message_obj["Message"] = message_obj["Message"].replace( "%{}".format( i + 1 ), "`<{}>`".format( i + 1 ) )
                     argument_str += "{}. *{}*: {}\n".format( i + 1, message_obj["ParamTypes"][i], message_obj["ArgDescriptions"][i] )
                     argument_str += "    * {}\n".format( message_obj["ArgLongDescriptions"][i] )
                 details_str += "Message and Arguments: \"{}\"\n\n".format( message_obj["Message"] )
                 details_str += argument_str + "\n"
+                if "MapsToGeneralMessages" in message_obj:
+                    linked_gen_message = []
+                    for gen_message in message_obj["MapsToGeneralMessages"]:
+                        linked_gen_message.append( "[{}](#{})".format( gen_message, gen_message.replace( ".", "-" ) ) )
+                    details_str += "> **Note:** This message is a more specific version of the following messages: {}\n\n".format( ", ".join( linked_gen_message ) )
         output_str += table_str + "\n" + details_str
 
     # Collect wrapper text
