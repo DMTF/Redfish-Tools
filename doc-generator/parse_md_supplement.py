@@ -19,7 +19,7 @@ def parse_markdown_supplement(data, filename):
     """Parse a supplemental markdown file. Returns a dict. """
 
     # Possible top-level headings:
-    possible_h1s = ['description', 'jsonpayload', 'property_details', 'action_details']
+    possible_h1s = ['description', 'intro', 'jsonpayload', 'property_details', 'action_details']
     parsed = _parse_blob(data, marker='#--', filename=filename, limit_headings=possible_h1s)
 
     if parsed.get('property_details'):

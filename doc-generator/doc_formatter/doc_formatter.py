@@ -618,17 +618,14 @@ class DocFormatter:
                     else:
                         description = definitions[schema_name].get('description')
 
-                    # Override with supplemental schema description, if provided
-                    # If there is a supplemental "description" or "intro", it replaces
+                    # Override or supplement with supplemental schema description, if provided
+                    # If there is a supplemental "description", it replaces
                     # the description in the schema. If both are present, the "description"
                     # should be output, followed by the "intro".
-                    if supplemental.get('description') and supplemental.get('intro'):
-                        description = (supplemental.get('description') + '\n\n' +
-                                    supplemental.get('intro'))
-                    elif supplemental.get('description'):
-                        description = supplemental.get('description')
-                    else:
-                        description = supplemental.get('intro', description)
+                    if supplemental.get('description'):
+                        description = supplemental.get('description')  
+                    if supplemental.get('intro'):
+                        description += '\n\n' + supplemental.get('intro')
 
                     # Profile purpose overrides all
                     # NOTE: Does this apply even if the Profile has no purpose listed, or just for Schema?
@@ -2473,7 +2470,7 @@ class DocFormatter:
                                                         schema_supplement.get(schema_name, {}))
 
             if md_supp:
-                for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
+                for key in ['description', 'intro', 'jsonpayload', 'property_details', 'action_details']:
                     if md_supp.get(key) and key not in supplemental:
                         supplemental[key] = md_supp[key]
         elif schema_supplement:
@@ -2482,7 +2479,7 @@ class DocFormatter:
             supplemental = schema_supplement.get(schema_ref, {})
             md_supp = schema_md_supplement.get(schema_ref)
             if md_supp:
-                for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
+                for key in ['description', 'intro', 'jsonpayload', 'property_details', 'action_details']:
                     if md_supp.get(key) and key not in supplemental:
                         supplemental[key] = md_supp[key]
 
