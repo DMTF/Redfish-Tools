@@ -47,6 +47,7 @@ class DocFormatter:
         self.current_uris = []
         self.ref_deduplicator = {} # Tracks use of refs within a schema to assist in combining them for output.
         self.ref_counts = {}       # Summarized data from self.ref_deduplicator
+        self._expanding_refs = set() # Tracks refs currently being expanded, to detect circular schema references.
         self.format_annotation_strings = { # map format annotations to desired output
                                            'uri': 'URI',
                                            'uri-reference': 'URI'
@@ -2030,6 +2031,13 @@ class DocFormatter:
         schema_ref = prop_info.get('_from_schema_ref', schema_ref)
         in_schema_name = self.traverser.get_schema_name(in_schema_ref)
 
+        # Detect circular schema references to prevent infinite recursion.
+        ref_uri = prop_info.get('_ref_uri')
+        if ref_uri and ref_uri in self._expanding_refs:
+            return {'rows': [], 'details': {}, 'action_details': {} }
+        if ref_uri:
+            self._expanding_refs.add(ref_uri)
+
         required = prop_info.get('required', [])
         required_on_create = prop_info.get('requiredOnCreate', [])
 
@@ -2146,6 +2154,9 @@ class DocFormatter:
             cond_names.sort(key=str.lower)
             for cond_name in cond_names:
                 self.add_profile_conditional_details(conditional_details[cond_name])
+
+        if ref_uri:
+            self._expanding_refs.discard(ref_uri)
 
         return {'rows': output, 'details': details, 'action_details': action_details }
 
