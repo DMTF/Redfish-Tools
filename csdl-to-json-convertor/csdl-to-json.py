@@ -172,7 +172,7 @@ class CSDLToJSON:
                 self.process_versioned_namespace()
 
         # Find all of the excerpts and make additional definitions
-        for namespace in sorted( self.json_out ):
+        for namespace in sorted( self.json_out, key=namespace_sort_key ):
             self.namespace_under_process = namespace
             if not is_namespace_unversioned( namespace ):
                 self.process_excerpts()
@@ -1615,6 +1615,24 @@ def is_namespace_unversioned( namespace ):
     if re.search( VERSION_REGEX, namespace ) is None:
         return True
     return False
+
+def namespace_sort_key( namespace ):
+    """
+    Returns a sort key for a namespace that orders versioned namespaces numerically
+
+    Args:
+        namespace: The string name of the namespace
+
+    Returns:
+        A tuple of (base_name, major, minor, patch) for versioned namespaces, or
+        (namespace, 0, 0, 0) for unversioned namespaces
+    """
+
+    match = re.search( VERSION_REGEX, namespace )
+    if match:
+        base = namespace[:namespace.rfind( "." )]
+        return ( base, int( match.group( 1 ) ), int( match.group( 2 ) ), int( match.group( 3 ) ) )
+    return ( namespace, 0, 0, 0 )
 
 def does_version_apply( version1, version2 ):
     """
