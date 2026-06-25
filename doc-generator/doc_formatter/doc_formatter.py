@@ -2087,6 +2087,10 @@ class DocFormatter:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
 
+            # Filter out "Oem" property for excerpts
+            if (prop_info.get('_is_excerpt') or prop_info.get('_excerpt_link_text') or prop_info.get('excerptCopy')) and 'Oem' in prop_names:
+                prop_names.remove('Oem')
+
 
             if is_action:
                 prop_names = [x for x in prop_names if x.startswith('#')]
