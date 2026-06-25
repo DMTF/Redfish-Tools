@@ -40,10 +40,31 @@ var privilegeRegistry = null;
 if(config.has('Redfish.PrivilegeRegistryGlob')) {
   const files = glob.sync(config.get('Redfish.PrivilegeRegistryGlob'));
   //Find the latest version...
+  // Helper function to extract version from filename
+  const extractVersion = (filename) => {
+    const match = filename.match(/Redfish_(\d+)\.(\d+)\.(\d+)_PrivilegeRegistry\.json/);
+    if (!match) return { major: 0, minor: 0, patch: 0 };
+    return {
+      major: parseInt(match[1], 10),
+      minor: parseInt(match[2], 10),
+      patch: parseInt(match[3], 10)
+    };
+  };
+  
+  // Helper function to compare versions
+  const compareVersions = (v1, v2) => {
+    if (v1.major !== v2.major) return v1.major - v2.major;
+    if (v1.minor !== v2.minor) return v1.minor - v2.minor;
+    return v1.patch - v2.patch;
+  };
+  
   let fileName = files[0];
+  let latestVersion = extractVersion(fileName);
   for(let i = 1; i < files.length; i++) {
-    if(files[i].localeCompare(fileName) > 0) {
+    const currentVersion = extractVersion(files[i]);
+    if(compareVersions(currentVersion, latestVersion) > 0) {
       fileName = files[i];
+      latestVersion = currentVersion;
     }
   }
   data = fs.readFileSync(fileName);
@@ -2130,3 +2151,5 @@ function enityTypeInPrivilegeRegistry(csdl) {
   }
 }
 /* vim: set tabstop=2 shiftwidth=2 expandtab: */
+
+
