@@ -347,6 +347,9 @@ class CSDLToJSON:
                 # Strip out properties that do not apply
                 remove_list = []
                 for prop_name, prop in excerpt_def["properties"].items():
+                    if prop_name == "Oem":
+                        # Oem is not tagged since it's a common property we don't want to annotate, but it's assumed to be allowed in excerpts
+                        continue
                     if "excerpt" in prop:
                         if ( excerpt not in prop["excerpt"].split( "," ) ) and ( prop["excerpt"] != base_name ):
                             remove_list.append( prop_name )
