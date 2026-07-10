@@ -40,10 +40,31 @@ var privilegeRegistry = null;
 if(config.has('Redfish.PrivilegeRegistryGlob')) {
   const files = glob.sync(config.get('Redfish.PrivilegeRegistryGlob'));
   //Find the latest version...
+  // Helper function to extract version from filename
+  const extractVersion = (filename) => {
+    const match = filename.match(/Redfish_(\d+)\.(\d+)\.(\d+)_PrivilegeRegistry\.json/);
+    if (!match) return { major: 0, minor: 0, patch: 0 };
+    return {
+      major: parseInt(match[1], 10),
+      minor: parseInt(match[2], 10),
+      patch: parseInt(match[3], 10)
+    };
+  };
+  
+  // Helper function to compare versions
+  const compareVersions = (v1, v2) => {
+    if (v1.major !== v2.major) return v1.major - v2.major;
+    if (v1.minor !== v2.minor) return v1.minor - v2.minor;
+    return v1.patch - v2.patch;
+  };
+  
   let fileName = files[0];
+  let latestVersion = extractVersion(fileName);
   for(let i = 1; i < files.length; i++) {
-    if(files[i].localeCompare(fileName) > 0) {
+    const currentVersion = extractVersion(files[i]);
+    if(compareVersions(currentVersion, latestVersion) > 0) {
       fileName = files[i];
+      latestVersion = currentVersion;
     }
   }
   data = fs.readFileSync(fileName);
@@ -83,11 +104,11 @@ let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', '
                                     'HMAC192_SHA256', 'HMAC256_SHA384', 'HMAC384_SHA512', 'TLS_PSK', 'TLS_AES_128_GCM_SHA256',
                                     'TLS_AES_256_GCM_SHA384', 'DC3_3V', 'DC1_8V', 'IEEE802_3ad', 'CFB128_AES192', 'CFB128_AES256', 'HMAC_SHA384',
                                     'LPDDR5_SDRAM', 'PLDMv1_0', 'PLDMv1_1', 'PLDMv1_2', 'PLDMv1_3', 'eMMC',
-                                    'CXL1_1', 'CXL2_0', 'CXL3_0', 'CXL3_1', 'CXL3_2',
+                                    'CXL1_1', 'CXL2_0', 'CXL3_0', 'CXL3_1', 'CXL3_2', 'MH_SLD', 'MH_MLD',
                                     'FIPS_140_2', 'FIPS_140_3', 'CNSA_1_0', 'CNSA_2_0',
-                                    'DDR5_MRDIMM'];
+                                    'DDR5_MRDIMM', 'pH'];
 //Properties names that are non-Pascal Cased
-const NonPascalCasePropertyWhiteList = ['iSCSIBoot', 'mDNS'];
+const NonPascalCasePropertyWhiteList = ['iSCSIBoot', 'mDNS', 'pH'];
 //Properties that have units but don't have the unit names in them
 const PropertyNamesWithoutCorrectUnits = ['AbsoluteSessionTimeout', 'AccountLockoutCounterResetAfter', 'AccountLockoutDuration', 'Accuracy', 'AdjustedMaxAllowableOperatingValue', 'AdjustedMinAllowableOperatingValue', 'AllocatedBandwidth',
                                           'CapableSpeedGbs', 'Duration', 'Latitude', 'Longitude', 'LowerThresholdCritical', 'LowerThresholdFatal', 'LowerThresholdNonCritical', 'LowerThresholdUser',
@@ -318,6 +339,9 @@ describe('Mockup Syntax Tests', () => {
     //setup cache's
     let arr = [];
     mockupFiles.forEach((file) => {
+      if(fs.lstatSync(file).isDirectory()) {
+        return;
+      }
       addFileToLinkCache(file, linkCache);
       arr.push(fileToCachePromise(file));
     });
@@ -348,6 +372,9 @@ describe('Mockup Syntax Tests', () => {
   });
 
   mockupFiles.forEach((file) => {
+    if(fs.lstatSync(file).isDirectory()) {
+      return;
+    }
     let fileName = file.substring(file.lastIndexOf('/')+1);
     //Just completely skip old files and the explorer config files...
     if(OldRegistries.includes(fileName) || file.includes('explorer_config.json')) {
@@ -866,7 +893,7 @@ function checkPropertiesPascalCased(csdl) {
   }
   let navproperties = CSDL.search(csdl, 'NavigationProperty');
   for(let i = 0; i < navproperties.length; i++) {
-    if(navproperties[i].Name.match(PascalRegex) === null) {
+    if(navproperties[i].Name.match(PascalRegex) === null && NonPascalCasePropertyWhiteList.indexOf(navproperties[i].Name) === -1) {
       throw new Error('Property Name "'+navproperties[i].Name+'" is not Pascal-cased');
     }
   }
@@ -2124,3 +2151,5 @@ function enityTypeInPrivilegeRegistry(csdl) {
   }
 }
 /* vim: set tabstop=2 shiftwidth=2 expandtab: */
+
+
