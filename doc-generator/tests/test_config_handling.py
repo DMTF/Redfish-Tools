@@ -72,6 +72,7 @@ def test_config_keys():
         "excluded_properties",
         "excluded_schemas",
         "excluded_schemas_by_match",
+        "external_version_annotations",
         "import_from",
         "local_to_uri",
         "normative",

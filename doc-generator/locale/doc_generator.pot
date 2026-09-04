@@ -136,8 +136,34 @@ msgstr ""
 msgid "(v%(version_number)s)"
 msgstr ""
 
-#: doc_formatter/doc_formatter.py:156
+#: doc_formatter/doc_formatter.py:149
 msgid "(deprecated v%(deprecated_version)s)"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:128
+msgid "(deprecated)"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:132
+msgid "(%(schema_name)s v%(version_number)s, deprecated v%(deprecated_version)s)"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:136
+msgid "(%(schema_name)s v%(version_number)s)"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:139
+msgid "(deprecated %(schema_name)s v%(deprecated_version)s)"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:159
+msgid "Deprecated. %(explanation)s"
+msgstr ""
+
+#: doc_formatter/doc_formatter.py:161
+msgid ""
+"Deprecated in %(schema_name)s v%(deprecated_version)s and later. "
+"%(explanation)s"
 msgstr ""
 
 #: doc_formatter/doc_formatter.py:196

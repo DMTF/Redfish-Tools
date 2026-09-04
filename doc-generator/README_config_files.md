@@ -27,6 +27,7 @@ Note that the names of some config keys differ from their command-line counterpa
 - excluded_properties: A list of property names (strings) to omit. Wildcard match is supported for strings that begin with "*" ("*odata.count" matches "Members\@odata.count" and others).
 - excluded_schemas: Schemas (by name) to omit from output.
 - excluded_schema_uris: Array of strings that if found in each schema URI list, are excluded from the displayed list, with a note added to the list to indicate that some URIs have been omitted.
+- external_version_annotations: One of `suppress` (default), `qualify`, or `as_is`. Controls how version annotations are shown for properties and enumeration values that are defined in a schema other than the one being documented. See below for more detail.
 - format (command line: `format`): Output format. One of `markdown`, `slate`, `html`, `csv`
 - html_title: A string to use as the `title` element in HTML output.
 - import_from: Name of a file or directory containing JSON schemas to process. Wild cards are acceptable. Default: json-schema.
@@ -57,6 +58,26 @@ The combine_multiple_refs attribute specifies a threshold at which multiple refe
 
 ```
       "combine_multiple_refs": 3,
+```
+
+#### external_version_annotations
+
+When an object from another schema is expanded in place -- as an excerpt, via `object_reference_disposition`'s `include` list, or because it fell below the `combine_multiple_refs` threshold -- its properties and enumeration values carry the `versionAdded` and `versionDeprecated` values of the schema that defines them. Those versions do not correspond to the versions of the schema being documented, so printing them bare is misleading. For example, `SpeedRPM` in the `PowerSupplyMetrics` schema comes from a `Sensor` excerpt, and its `versionAdded` refers to `Sensor` v1.2.
+
+This attribute selects how such annotations are rendered:
+
+| Value | Result for the example above |
+| ----- | ---------------------------- |
+| `suppress` (default) | `SpeedRPM` |
+| `qualify` | `SpeedRPM (Sensor v1.2+)` |
+| `as_is` | `SpeedRPM (v1.2+)` |
+
+In `suppress` mode, deprecation notices are still shown, but without a version number: "Deprecated. \<explanation\>". In `qualify` mode, the source schema name is stated once: "(Sensor v1.2+, deprecated v1.4)". Use `as_is` to retain the behavior of doc generator versions prior to this setting.
+
+Properties whose version annotation comes from the schema being documented are unaffected, even when the property itself is a link to another resource.
+
+```
+      "external_version_annotations": "qualify",
 ```
 
 #### supplement_md_dir
