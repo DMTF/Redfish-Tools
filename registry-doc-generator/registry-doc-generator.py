@@ -58,6 +58,8 @@ argget.add_argument( "--postscript", "-postscript", type = str, help = "File con
 argget.add_argument( "--format", "-format", type = str, help = "The format of the output file; default is 'Markdown'", default = "Markdown", choices = [ "Markdown", "CSV" ] )
 args = argget.parse_args()
 
+version_history = {}
+
 output = {}
 output_str = ""
 
@@ -79,6 +81,12 @@ for registry_file in registry_files:
                 output[registry_data["RegistryPrefix"]] = registry_data
         else:
             output[registry_data["RegistryPrefix"]] = registry_data
+
+        # Extract the version information
+        if registry_data["RegistryPrefix"] not in version_history:
+            version_history[registry_data["RegistryPrefix"]] = {}
+        if "Release" in registry_data:
+            version_history[registry_data["RegistryPrefix"]][registry_data["RegistryVersion"].rsplit(".", 1)[0]] = registry_data["Release"]
 
 if args.format == "CSV":
     # Build the output CSV
@@ -106,6 +114,35 @@ else:
     for registry in sorted( output.keys() ):
         # Registry heading
         output_str += "## {} {}\n\n".format( registry, output[registry]["RegistryVersion"] )
+
+        # Add the version table (if available)
+        if len(version_history[registry]) != 0:
+            add_trailer = False
+            if len(version_history[registry]) > 10:
+                add_trailer = True
+            version_list = list(version_history[registry])
+            version_list.sort(key=version.Version)
+            version_list = version_list[-10:]
+            heading_row_str = "|      |"
+            divider_row_str = "| :--- |"
+            version_row_str = "| **Version** |"
+            release_row_str = "| **Release** |"
+            for i, val in reversed(list(enumerate(version_list))):
+                heading_row_str += "      |"
+                divider_row_str += " :--- |"
+                version_row_str += " *v{}* |".format(val)
+                release_row_str += " {} |".format(version_history[registry][val])
+            if add_trailer:
+                heading_row_str += "      |"
+                divider_row_str += " :--- |"
+                version_row_str += " *...* |"
+                release_row_str += " ... |"
+            output_str += heading_row_str + "\n"
+            output_str += divider_row_str + "\n"
+            output_str += version_row_str + "\n"
+            output_str += release_row_str + "\n\n"
+
+        # Add the description
         output_str += "{}\n\n".format( output[registry]["Description"] )
         messages = sorted( output[registry]["Messages"].keys() )
 
@@ -119,22 +156,40 @@ else:
             message_obj["MessageLink"] = "{}-{}".format( registry, message )
             if verify_message( message_obj, registry, message ):
                 # Insert the message into the front table
-                table_str += "| [{}](#{}) | {} | {} |\n".format( message, message_obj["MessageLink"], message_obj["MessageSeverity"], message_obj["Description"] )
+                message_ver = []
+                if "VersionAdded" in message_obj:
+                    message_ver.append("v{}+".format(message_obj["VersionAdded"].rsplit(".", 1)[0]))
+                if "VersionDeprecated" in message_obj:
+                    message_ver.append("deprecated v{}".format(message_obj["VersionDeprecated"].rsplit(".", 1)[0]))
+                message_ver_str = ""
+                if len(message_ver) > 0:
+                    message_ver_str = ", ".join(message_ver)
+                    message_ver_str = "*(" + message_ver_str + ")*"
+                table_str += "| [{}](#{}) {} | {} | {} |\n".format( message, message_obj["MessageLink"], message_ver_str, message_obj["MessageSeverity"], message_obj["Description"] )
 
                 # Add the details for the message to the rest of the details body
                 details_str += "### {}<a id=\"{}\"/>\n\n".format( message, message_obj["MessageLink"] )
+                if "Example" in message_obj:
+                    details_str += "**Example:** {}\n\n".format( message_obj["Example"] )
                 details_str += "{}\n\n".format( message_obj["Description"] )
                 details_str += "* {}\n\n".format( message_obj["LongDescription"] )
-                details_str += "Version Added: {}\n\n".format( message_obj.get( "VersionAdded", "1.0.0" ) )
+                if "VersionDeprecated" in message_obj:
+                    details_str += "*Deprecated in v{} and later.  {}*\n\n".format( message_obj["VersionDeprecated"].rsplit(".", 1)[0], message_obj.get("Deprecated", "") )
+                details_str += "Version Added: v{}\n\n".format( message_obj.get( "VersionAdded", "1.0.0" ).rsplit(".", 1)[0] )
                 details_str += "Severity: {}\n\n".format( message_obj["MessageSeverity"] )
                 details_str += "Resolution: {}\n\n".format( message_obj["Resolution"] )
                 argument_str = ""
                 for i in range( message_obj["NumberOfArgs"] ):
-                    message_obj["Message"] = message_obj["Message"].replace( "%{}".format( i + 1 ), "\<Arg{}\>".format( i + 1 ) )
+                    message_obj["Message"] = message_obj["Message"].replace( "%{}".format( i + 1 ), "`<{}>`".format( i + 1 ) )
                     argument_str += "{}. *{}*: {}\n".format( i + 1, message_obj["ParamTypes"][i], message_obj["ArgDescriptions"][i] )
                     argument_str += "    * {}\n".format( message_obj["ArgLongDescriptions"][i] )
                 details_str += "Message and Arguments: \"{}\"\n\n".format( message_obj["Message"] )
                 details_str += argument_str + "\n"
+                if "MapsToGeneralMessages" in message_obj:
+                    linked_gen_message = []
+                    for gen_message in message_obj["MapsToGeneralMessages"]:
+                        linked_gen_message.append( "[{}](#{})".format( gen_message, gen_message.replace( ".", "-" ) ) )
+                    details_str += "> **Note:** This message is a more specific version of the following messages: {}\n\n".format( ", ".join( linked_gen_message ) )
         output_str += table_str + "\n" + details_str
 
     # Collect wrapper text

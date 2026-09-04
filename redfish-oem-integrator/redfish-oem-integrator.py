@@ -182,7 +182,7 @@ class JsonSchemaConfigHelper:
             "description": "An OEM extension to the {} resource.".format(self.get_name()),
             "longDescription": "This object represents the OEM properties of the {} resource. The resource values shall comply with the Redfish Specification-described requirements.".format(self.get_name()),
             "patternProperties": {
-                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
                     "description": "This property shall specify a valid odata or Redfish property.",
                     "type": [
                         "array",
@@ -1245,7 +1245,7 @@ class DMTFOemIntegrator:
                                         "description": "The OEM extension to the %s resource." %(schema),
                                         "longDescription": "This object represents the OEM properties. The resource values shall comply with the Redfish Specification-described requirements.",
                                         "patternProperties": {
-                                            "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                                            "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
                                                 "description": "This property shall specify a valid odata or Redfish property.",
                                                 "type": [
                                                     "array",
@@ -1292,7 +1292,7 @@ class DMTFOemIntegrator:
                                         "description": "The OEM Links extension to the %s resource." %(schema),
                                         "longDescription": "This object represents the OEM properties. The resource values shall comply with the Redfish Specification-described requirements.",
                                         "patternProperties": {
-                                            "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
+                                            "^([a-zA-Z_][a-zA-Z0-9_]*)?@(odata|Redfish|Message)\\.[a-zA-Z_][a-zA-Z0-9_]*$": {
                                                 "description": "This property shall specify a valid odata or Redfish property.",
                                                 "type": [
                                                     "array",

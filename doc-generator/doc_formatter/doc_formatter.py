@@ -47,6 +47,7 @@ class DocFormatter:
         self.current_uris = []
         self.ref_deduplicator = {} # Tracks use of refs within a schema to assist in combining them for output.
         self.ref_counts = {}       # Summarized data from self.ref_deduplicator
+        self._expanding_refs = set() # Tracks refs currently being expanded, to detect circular schema references.
         self.format_annotation_strings = { # map format annotations to desired output
                                            'uri': 'URI',
                                            'uri-reference': 'URI'
@@ -675,17 +676,14 @@ class DocFormatter:
                     else:
                         description = definitions[schema_name].get('description')
 
-                    # Override with supplemental schema description, if provided
-                    # If there is a supplemental "description" or "intro", it replaces
+                    # Override or supplement with supplemental schema description, if provided
+                    # If there is a supplemental "description", it replaces
                     # the description in the schema. If both are present, the "description"
                     # should be output, followed by the "intro".
-                    if supplemental.get('description') and supplemental.get('intro'):
-                        description = (supplemental.get('description') + '\n\n' +
-                                    supplemental.get('intro'))
-                    elif supplemental.get('description'):
-                        description = supplemental.get('description')
-                    else:
-                        description = supplemental.get('intro', description)
+                    if supplemental.get('description'):
+                        description = supplemental.get('description')  
+                    if supplemental.get('intro'):
+                        description += '\n\n' + supplemental.get('intro')
 
                     # Profile purpose overrides all
                     # NOTE: Does this apply even if the Profile has no purpose listed, or just for Schema?
@@ -2099,6 +2097,13 @@ class DocFormatter:
         schema_ref = prop_info.get('_from_schema_ref', schema_ref)
         in_schema_name = self.traverser.get_schema_name(in_schema_ref)
 
+        # Detect circular schema references to prevent infinite recursion.
+        ref_uri = prop_info.get('_ref_uri')
+        if ref_uri and ref_uri in self._expanding_refs:
+            return {'rows': [], 'details': {}, 'action_details': {} }
+        if ref_uri:
+            self._expanding_refs.add(ref_uri)
+
         # This object may have been expanded in place from another schema (as an excerpt, an
         # "include" reference disposition, or a combined multiple reference). If so, the properties
         # below are defined there and carry that schema's version numbers, which do not correspond
@@ -2157,6 +2162,10 @@ class DocFormatter:
                 for k in prop_names:
                     filtered_properties[k] = properties[k]
                 prop_info['properties'] = properties = filtered_properties
+
+            # Filter out "Oem" property for excerpts
+            if (prop_info.get('_is_excerpt') or prop_info.get('_excerpt_link_text') or prop_info.get('excerptCopy')) and 'Oem' in prop_names:
+                prop_names.remove('Oem')
 
 
             if is_action:
@@ -2232,6 +2241,9 @@ class DocFormatter:
             cond_names.sort(key=str.lower)
             for cond_name in cond_names:
                 self.add_profile_conditional_details(conditional_details[cond_name])
+
+        if ref_uri:
+            self._expanding_refs.discard(ref_uri)
 
         return {'rows': output, 'details': details, 'action_details': action_details }
 
@@ -2580,7 +2592,7 @@ class DocFormatter:
                                                         schema_supplement.get(schema_name, {}))
 
             if md_supp:
-                for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
+                for key in ['description', 'intro', 'jsonpayload', 'property_details', 'action_details']:
                     if md_supp.get(key) and key not in supplemental:
                         supplemental[key] = md_supp[key]
         elif schema_supplement:
@@ -2589,7 +2601,7 @@ class DocFormatter:
             supplemental = schema_supplement.get(schema_ref, {})
             md_supp = schema_md_supplement.get(schema_ref)
             if md_supp:
-                for key in ['description', 'jsonpayload', 'property_details', 'action_details']:
+                for key in ['description', 'intro', 'jsonpayload', 'property_details', 'action_details']:
                     if md_supp.get(key) and key not in supplemental:
                         supplemental[key] = md_supp[key]
 

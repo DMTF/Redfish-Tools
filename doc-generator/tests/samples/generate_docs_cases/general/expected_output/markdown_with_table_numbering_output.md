@@ -2,7 +2,7 @@
 
 ## NetworkDeviceFunction 1.3.2
 
-<a name="networkdevicefunction"></a>
+<a name="networkdevicefunction">&nbsp;</a>
 
 The revision history is summarized in Table \ref{Table_TBL_nn++}.
 
@@ -109,7 +109,7 @@ Table: NetworkDeviceFunction 1.3.2 properties \label{Table_TBL_nn}
 
 #### AuthenticationMethod
 
-<a name="networkdevicefunction-authenticationmethod"></a>
+<a name="networkdevicefunction-authenticationmethod">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The iSCSI boot authentication method for this network device function.
@@ -124,7 +124,7 @@ Table: AuthenticationMethod property values \label{Table_TBL_nn}
 
 #### BootMode
 
-<a name="networkdevicefunction-bootmode"></a>
+<a name="networkdevicefunction-bootmode">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The boot mode configured for this network device function.
@@ -141,7 +141,7 @@ Table: BootMode property values \label{Table_TBL_nn}
 
 #### IPAddressType
 
-<a name="networkdevicefunction-ipaddresstype"></a>
+<a name="networkdevicefunction-ipaddresstype">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP address fields.
@@ -155,7 +155,7 @@ Table: IPAddressType property values \label{Table_TBL_nn}
 
 #### NetDevFuncCapabilities
 
-<a name="networkdevicefunction-netdevfunccapabilities"></a>
+<a name="networkdevicefunction-netdevfunccapabilities">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 Capabilities of this network device function.
@@ -172,7 +172,7 @@ Table: NetDevFuncCapabilities property values \label{Table_TBL_nn}
 
 #### NetDevFuncType
 
-<a name="networkdevicefunction-netdevfunctype"></a>
+<a name="networkdevicefunction-netdevfunctype">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The configured capability of this network device function.
@@ -189,7 +189,7 @@ Table: NetDevFuncType property values \label{Table_TBL_nn}
 
 #### WWNSource
 
-<a name="networkdevicefunction-wwnsource"></a>
+<a name="networkdevicefunction-wwnsource">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The configuration source of the WWNs for this connection (WWPN and WWNN).
@@ -204,7 +204,7 @@ Table: WWNSource property values \label{Table_TBL_nn}
 
 ## NetworkDeviceFunctionCollection
 
-<a name="networkdevicefunctioncollection"></a>
+<a name="networkdevicefunctioncollection">&nbsp;</a>
 
 
 ### Properties
@@ -227,7 +227,7 @@ Table: NetworkDeviceFunctionCollection properties \label{Table_TBL_nn}
 
 ## NetworkPort 1.1.0
 
-<a name="networkport"></a>
+<a name="networkport">&nbsp;</a>
 
 ### Description
 
@@ -282,7 +282,7 @@ Table: NetworkPort 1.1.0 properties \label{Table_TBL_nn}
 
 #### ActiveLinkTechnology
 
-<a name="networkport-activelinktechnology"></a>
+<a name="networkport-activelinktechnology">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 Network Port Active Link Technology.
@@ -297,7 +297,7 @@ Table: ActiveLinkTechnology property values \label{Table_TBL_nn}
 
 #### FlowControlConfiguration
 
-<a name="networkport-flowcontrolconfiguration"></a>
+<a name="networkport-flowcontrolconfiguration">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The locally configured 802.3x flow control setting for this network port.
@@ -313,7 +313,7 @@ Table: FlowControlConfiguration property values \label{Table_TBL_nn}
 
 #### FlowControlStatus
 
-<a name="networkport-flowcontrolstatus"></a>
+<a name="networkport-flowcontrolstatus">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).
@@ -329,7 +329,7 @@ Table: FlowControlStatus property values \label{Table_TBL_nn}
 
 #### LinkNetworkTechnology
 
-<a name="networkport-linknetworktechnology"></a>
+<a name="networkport-linknetworktechnology">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The self-described link network technology capabilities of this port.
@@ -344,7 +344,7 @@ Table: LinkNetworkTechnology property values \label{Table_TBL_nn}
 
 #### LinkStatus
 
-<a name="networkport-linkstatus"></a>
+<a name="networkport-linkstatus">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The status of the link between this port and its link partner.
@@ -358,7 +358,7 @@ Table: LinkStatus property values \label{Table_TBL_nn}
 
 #### SupportedEthernetCapabilities
 
-<a name="networkport-supportedethernetcapabilities"></a>
+<a name="networkport-supportedethernetcapabilities">&nbsp;</a>
 
 The defined property values are listed in Table \ref{Table_TBL_nn++}.
 The set of Ethernet capabilities that this port supports.
