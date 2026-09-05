@@ -58,8 +58,7 @@ def test_excerpt_circuit(mockRequest):
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalSubContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the usage or location within a device to which this sensor measurement applies. *See PhysicalSubContext in Property details, below, for the possible values of this property.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Reading** | number<br><br>*read-only<br>(null)* | The present value for this Sensor. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**ReadingUnits** | string<br><br>*read-only<br>(null)* | Units in which the reading and thresholds are measured. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |
-| } |   |   |"""
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {}<br>} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |"""
 
     expected_excerpt = """| **Current** *(v0.9+)* { | object<br>(excerpt) | The current sensor for this circuit. This object is an excerpt of the *Sensor* resource located at the URI shown in DataSourceUri. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**DataSourceUri** | string<br>(URI)<br><br>*read-only<br>(null)* | A link to the resource that provides the data for this object. |
@@ -69,8 +68,7 @@ def test_excerpt_circuit(mockRequest):
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**PhysicalSubContext** | string<br>(enum)<br><br>*read-only<br>(null)* | Describes the usage or location within a device to which this sensor measurement applies. *For the possible property values, see PhysicalSubContext in Property details.* |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Reading** | number<br><br>*read-only<br>(null)* | The present value for this Sensor. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**ReadingUnits** | string<br><br>*read-only<br>(null)* | Units in which the reading and thresholds are measured. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |
-| } |   |   |"""
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {}<br>} | object | This property describes the status and health of the resource and its children. See the *Resource* schema for details on this property. |"""
 
     assert output.count(description1) == 56
     assert expected_excerpt in output

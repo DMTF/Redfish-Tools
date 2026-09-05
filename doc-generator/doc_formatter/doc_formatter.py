@@ -227,9 +227,21 @@ class DocFormatter:
         return uri_highlighted
 
 
-    def format_uris_for_table(self, uris):
+    def order_uris(self, uris, deprecated_uris=None):
+        """Sort URIs, with deprecated URIs grouped after active URIs."""
+        deprecated = set(deprecated_uris or [])
+        ordered = sorted(uris, key=str.lower)
+        return [(uri, uri in deprecated) for uri in ordered if uri not in deprecated] + \
+               [(uri, True) for uri in ordered if uri in deprecated]
+
+
+    def format_uris_for_table(self, uris, deprecated_uris=None):
         """ Format a bunch of uris to go into a table cell """
-        return '<br>'.join([self.format_uri(x) for x in sorted(uris, key=str.lower)])
+        formatted = []
+        for uri, is_deprecated in self.order_uris(uris, deprecated_uris):
+            prefix = _("(deprecated)") + ' ' if is_deprecated else ''
+            formatted.append(prefix + self.format_uri(uri))
+        return '<br>'.join(formatted)
 
 
     def format_json_payload(self, json_payload):
@@ -309,6 +321,27 @@ class DocFormatter:
             return ({'rows': rows, 'details': details})
 
         return None
+
+
+    @staticmethod
+    def is_link_object(prop_info):
+        """Return True for an object whose only property is @odata.id."""
+        properties = prop_info.get('properties')
+        return isinstance(properties, dict) and list(properties.keys()) == ['@odata.id']
+
+    def format_collapsed_link_name(self, name_and_version, indentation_string, is_array):
+        """Format a Link or Link Array name with the previous indent style, in one cell."""
+        child_indent = indentation_string + '&nbsp;' * 6
+        odata = self.formatter.bold('@odata.id')
+        if is_array:
+            opener, closer = ' [ {', '} ]'
+        else:
+            opener, closer = ' {', '}'
+        return (
+            name_and_version + opener + '<br>' +
+            child_indent + odata + '<br>' +
+            indentation_string + closer
+        )
 
     def format_action_parameters(self, schema_ref, prop_name, prop_descr, action_parameters, profile,
                                      version_strings=None, supplemental_details=None, subset=None):
@@ -887,8 +920,8 @@ class DocFormatter:
         doc = ""
         header = self.formatter.make_header_row([_('Collection Type'), _('URIs')])
         rows = []
-        for collection_name, uris in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
-            item_text = self.format_uris_for_table(uris)
+        for collection_name, uri_data in sorted(collections_uris.items(), key=lambda x: x[0].lower()):
+            item_text = self.format_uris_for_table(uri_data['uris'], uri_data['deprecated'])
             rows.append(self.formatter.make_row([collection_name, item_text]))
         doc = self.formatter.make_table(rows, [header], 'uris', last_column_wide=True)
 
@@ -904,15 +937,10 @@ class DocFormatter:
         for x in collection_keys:
             [preamble, collection_file_name] = x.rsplit('/', 1)
             [collection_name, rest] = collection_file_name.split('.', 1)
-            uris = sorted(self.property_data[x].get('uris', []), key=str.lower)
-
-            # append Deprecated text for any deprecated URIs
-            urisDeprecated = self.property_data[x].get('urisDeprecated', [])
-            for i in range(len(uris)):
-                if uris[i] in urisDeprecated:
-                    uris[i] += _(" (deprecated)")
-
-            data[collection_name] = uris
+            data[collection_name] = {
+                'uris': self.property_data[x].get('uris', []),
+                'deprecated': self.property_data[x].get('urisDeprecated', [])
+            }
         return data
 
 
@@ -1118,6 +1146,12 @@ class DocFormatter:
                                 new_ref_info['add_link_text'] = append_ref
 
                             if link_detail:
+                                if not ref_fulldescription_override:
+                                    if is_collection_of:
+                                        schema_link = self.link_to_own_schema(is_collection_of, from_schema_uri)
+                                    else:
+                                        schema_link = self.link_to_own_schema(from_schema_ref, from_schema_uri)
+                                    new_ref_info['_link_schema_link'] = schema_link
                                 link_props = {'type': 'string',
                                               'readonly': prop_info.get('readonly', True),
                                               'description': '',
@@ -1389,8 +1423,11 @@ class DocFormatter:
                   'read_only': False,
                   'descr': [],
                   'add_link_text': '',
+                  'link_schema_link': '',
                   'prop_is_object': False,
                   'prop_is_array': False,
+                  'is_link': False,
+                  'is_link_array': False,
                   'nullable': False,
                   'object_description': [],
                   'item_description': [],
@@ -1473,6 +1510,13 @@ class DocFormatter:
         parsed['prop_required'] = details[0]['prop_required']
         parsed['prop_required_on_create'] = details[0]['prop_required_on_create']
         parsed['required_parameter'] = details[0].get('requiredParameter') == True
+        parsed['is_link'] = bool(details) and all(det.get('is_link', False) for det in details)
+        parsed['is_link_array'] = bool(details) and all(det.get('is_link_array', False) for det in details)
+        if parsed['is_link'] or parsed['is_link_array']:
+            parsed['add_link_text'] = next((det.get('add_link_text', '') for det in details
+                                            if det.get('add_link_text')), '')
+            parsed['link_schema_link'] = next((det.get('link_schema_link', '') for det in details
+                                               if det.get('link_schema_link')), '')
 
         if '_profile' in parsed:
             profile = parsed['_profile']
@@ -1622,6 +1666,7 @@ class DocFormatter:
 
 
         add_link_text = prop_info.get('add_link_text', '')
+        link_schema_link = prop_info.get('_link_schema_link', '')
 
         if within_action:
 
@@ -1738,6 +1783,9 @@ class DocFormatter:
         list_of_simple_type = False # For references to simple types
         collapse_description = False
         promote_me = False # Special case to replace enclosing array with combined array/simple-type
+        compact_links = self.config.get('output_format') in ('markdown', 'slate', 'html')
+        is_link = compact_links and prop_is_object and self.is_link_object(prop_info)
+        is_link_array = False
 
         if isinstance(prop_item, dict):
 
@@ -1775,6 +1823,10 @@ class DocFormatter:
                     x['_in_items'] = True
 
                 if len(prop_items) == 1:
+                    is_link_array = compact_links and self.is_link_object(prop_items[0])
+                    if is_link_array:
+                        add_link_text = prop_items[0].get('add_link_text', add_link_text)
+                        link_schema_link = prop_items[0].get('_link_schema_link', link_schema_link)
                     if 'type' in prop_items[0] and 'properties' not in prop_items[0]:
                         list_of_simple_type = True
 
@@ -1819,7 +1871,7 @@ class DocFormatter:
                 }
 
         # embedded object:
-        if prop_is_object:
+        if prop_is_object and not is_link:
             new_path = prop_path.copy()
             new_path.append(prop_name)
 
@@ -1851,7 +1903,7 @@ class DocFormatter:
                 self.merge_prop_details(prop_details, object_formatted['details'])
 
         # embedded items:
-        if prop_is_array and (list_of_objects or list_of_simple_type or prop_item):
+        if prop_is_array and not is_link_array and (list_of_objects or list_of_simple_type or prop_item):
             new_path = prop_path.copy()
             new_path.append(prop_name)
             if list_of_objects:
@@ -1922,8 +1974,11 @@ class DocFormatter:
                        'nullable': has_null,
                        'descr': descr,
                        'add_link_text': add_link_text,
+                       'link_schema_link': link_schema_link,
                        'prop_is_object': prop_is_object,
                        'prop_is_array': prop_is_array,
+                       'is_link': is_link,
+                       'is_link_array': is_link_array,
                        'array_of_objects': array_of_objects,
                        'object_description': object_description,
                        'item_description': item_description,

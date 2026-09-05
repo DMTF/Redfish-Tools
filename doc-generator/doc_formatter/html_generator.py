@@ -272,13 +272,19 @@ pre.code{
                 self.append_unique_values(formatted_details[property_name], property_values)
                 formatted_details[property_name] = delim.join(property_values)
 
-        if formatted_details['prop_is_object'] and not in_array:
+        if formatted_details['is_link']:
+            name_and_version = self.format_collapsed_link_name(
+                name_and_version, indentation_string, False)
+        elif formatted_details['is_link_array']:
+            name_and_version = self.format_collapsed_link_name(
+                name_and_version, indentation_string, True)
+        elif formatted_details['prop_is_object'] and not in_array:
             if formatted_details['object_description'] == '':
                 name_and_version += ' { }'
             else:
                 name_and_version += ' {'
 
-        if formatted_details['prop_is_array']:
+        if formatted_details['prop_is_array'] and not formatted_details['is_link_array']:
             if formatted_details['item_description'] == '':
                 if formatted_details['array_of_objects']:
                     name_and_version += ' [ { } ]'
@@ -296,13 +302,27 @@ pre.code{
             else:
                 name_and_version += ' [ ] '
 
-        name_and_version = '<nobr>' + name_and_version  + '</nobr>'
+        if formatted_details['is_link'] or formatted_details['is_link_array']:
+            first_break = name_and_version.find('<br>')
+            if first_break != -1:
+                name_and_version = ('<nobr>' + name_and_version[:first_break] +
+                                    '</nobr>' + name_and_version[first_break:])
+            else:
+                name_and_version = '<nobr>' + name_and_version + '</nobr>'
+        else:
+            name_and_version = '<nobr>' + name_and_version + '</nobr>'
 
         if formatted_details['descr'] is None:
             formatted_details['descr'] = ''
 
         if not formatted_details.get('verbatim_description', False):
             formatted_details['descr'] = self.formatter.markdown_to_html(html.escape(formatted_details['descr'], False), no_para=True)
+
+        if ((formatted_details['is_link'] or formatted_details['is_link_array'])
+                and formatted_details['link_schema_link']):
+            formatted_details['add_link_text'] = (
+                _('See the %(schema_link)s schema for details.') %
+                {'schema_link': formatted_details['link_schema_link']})
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
@@ -334,7 +354,12 @@ pre.code{
         if deprecated_descr:
             formatted_details['descr'] += ' ' + self.formatter.italic(deprecated_descr)
 
-        prop_type = html.escape(formatted_details['prop_type'], False)
+        if formatted_details['is_link']:
+            prop_type = _('Link')
+        elif formatted_details['is_link_array']:
+            prop_type = _('Link Array')
+        else:
+            prop_type = html.escape(formatted_details['prop_type'], False)
         if has_enum:
             prop_type += '<br>(enum)'
         if format_annotation:
@@ -355,8 +380,9 @@ pre.code{
                 prop_type += '<br>(' + item_list + ')'
 
         prop_access = ''
-        if (not formatted_details['prop_is_object']
-                and not formatted_details.get('array_of_objects')
+        if ((formatted_details['is_link'] or formatted_details['is_link_array']
+                or (not formatted_details['prop_is_object']
+                    and not formatted_details.get('array_of_objects')))
                 and not as_action_parameters):
             if formatted_details['read_only']:
                 prop_access = '<nobr>' + _('read-only') + '</nobr>'
@@ -975,22 +1001,19 @@ pre.code{
     def add_uris(self, uris, urisDeprecated):
         """ Add the URIs (which should be a list) """
         uri_strings = []
-        
-        for i in range(len(uris)):
-            if uris[i] in urisDeprecated:
-                uris[i] += _(" (deprecated)")
-        
+
         # exclude URIs from the list for brevity
         has_excluded_uris = False
         excluded_uris = self.config.get('excluded_schema_uris', [])
-        for uri in sorted(uris, key=str.lower):
+        for uri, is_deprecated in self.order_uris(uris, urisDeprecated):
             exclude_this_uri = False
             for xuri in excluded_uris:
                 if xuri in uri:
                     exclude_this_uri = True
                     has_excluded_uris = True
             if not exclude_this_uri:
-                uri_strings.append('<li class="hanging-indent">' + self.format_uri(uri) + '</li>')
+                prefix = _("(deprecated)") + ' ' if is_deprecated else ''
+                uri_strings.append('<li class="hanging-indent">' + prefix + self.format_uri(uri) + '</li>')
 
         # if excluded URIs have been trimmed, add a note 
         if has_excluded_uris:
@@ -1027,10 +1050,12 @@ pre.code{
         return uri_highlighted
 
 
-    def format_uris_for_table(self, uris):
+    def format_uris_for_table(self, uris, deprecated_uris=None):
         """ Format a bunch of uris to go into a table cell """
-        return ''.join(['<div class="hanging-indent">' + self.format_uri(x) + '</div>'
-                            for x in sorted(uris, key=str.lower)])
+        return ''.join(['<div class="hanging-indent">' +
+                        (_("(deprecated)") + ' ' if is_deprecated else '') +
+                        self.format_uri(uri) + '</div>'
+                        for uri, is_deprecated in self.order_uris(uris, deprecated_uris)])
 
 
     def format_json_payload(self, json_payload):

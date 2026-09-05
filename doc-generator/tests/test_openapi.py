@@ -54,6 +54,9 @@ def test_uri_capture(mockRequest):
         "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries/{LogEntryId}",
         "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/Entries/{LogEntryId}"
         ])
+    assert logentry_properties['urisDeprecated'] == [
+        "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/Entries/{LogEntryId}"
+        ]
     assert sorted(logentrycollection_properties['uris']) == sorted([
         "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/STUBCollection",
         "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/STUBCollection",
@@ -109,6 +112,12 @@ def test_uris_in_regular_schema_slate_output (mockRequest):
     for x in expected_strings:
         assert x in output
 
+    active_uri = expected_strings[1]
+    deprecated_uri = "(deprecated) " + expected_strings[0]
+    assert deprecated_uri in output
+    assert output.index(active_uri) < output.index(deprecated_uri)
+    assert expected_strings[0] + " (deprecated)" not in output
+
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
 def test_uris_in_collection_schema_slate_output (mockRequest):
@@ -134,6 +143,11 @@ def test_uris_in_collection_schema_slate_output (mockRequest):
 
     for x in expected_strings:
         assert x in output
+
+    active_uri = expected_strings[1]
+    deprecated_uri = "(deprecated) " + expected_strings[0]
+    assert deprecated_uri in output
+    assert output.index(active_uri) < output.index(deprecated_uri)
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.
@@ -164,6 +178,12 @@ def test_uris_in_regular_schema_html_output (mockRequest):
 
     for x in expected_strings:
         assert x in output
+
+    active_uri = expected_strings[1]
+    deprecated_uri = "(deprecated) " + expected_strings[0]
+    assert deprecated_uri in output
+    assert output.index(active_uri) < output.index(deprecated_uri)
+    assert expected_strings[0] + " (deprecated)" not in output
 
 
 @patch('urllib.request') # so we don't make HTTP requests. NB: samples should not call for outside resources.

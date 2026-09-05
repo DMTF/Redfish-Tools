@@ -5,8 +5,7 @@
 |     |     |     |     |
 | :--- | :--- | :--- | :---------------------------------------- |
 | { |  |  |  |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CSRString** | string | *read-only required* | The string for the certificate signing request. |
-| } |  |  |  |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**CSRString**<br>} | string | *read-only required* | The string for the certificate signing request. |
 
 **Request Example**
 

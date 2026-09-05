@@ -240,6 +240,18 @@ msgstr ""
 msgid "See the %(schema_link)s schema for details on this property."
 msgstr ""
 
+#: doc_formatter/doc_formatter.py
+msgid "See the %(schema_link)s schema for details."
+msgstr ""
+
+#: doc_formatter/html_generator.py doc_formatter/markdown_generator.py
+msgid "Link"
+msgstr ""
+
+#: doc_formatter/html_generator.py doc_formatter/markdown_generator.py
+msgid "Link Array"
+msgstr ""
+
 #: doc_formatter/doc_formatter.py:1015
 msgid "For property details, see %(schema_link)s v%(version_number)s)."
 msgstr ""

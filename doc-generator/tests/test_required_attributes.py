@@ -75,7 +75,7 @@ def test_required_attribute_output_markdown(mockRequest):
 
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
-    lines = output.split(os.linesep)
+    lines = output.splitlines()
 
     # Check a couple of properties that are directly included in property_data.
     context_lines = [ x for x in lines if '**Context**' in x ]

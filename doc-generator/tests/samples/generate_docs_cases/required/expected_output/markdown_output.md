@@ -1,5 +1,3 @@
-
-
 ## RequiredTest 1.0.0
 
 <a name="requiredtest">&nbsp;</a>
@@ -18,8 +16,7 @@ This schema contains required and requiredOnCreate properties.
 | **HostWatchdogTimer** { | object |  | This object describes the Host Watchdog Timer functionality for this system. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**FunctionEnabled** | boolean | *read-write required<br>(null)* | This indicates if the Host Watchdog Timer functionality has been enabled. Additional host-based software is necessary to activate the timer function. |
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Oem** {} | object |  | Oem extension object. See the *[Resource](http://redfish.dmtf.org/schemas/v1/Resource.json)* schema for details on this property. |
-| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {} | object |  | This type describes the status and health of a resource and its children. See the *[Resource](http://redfish.dmtf.org/schemas/v1/Resource.json)* schema for details on this property. |
-| } |   |   |
+| &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**Status** {}<br>} | object |  | This type describes the status and health of a resource and its children. See the *[Resource](http://redfish.dmtf.org/schemas/v1/Resource.json)* schema for details on this property. |
 | **Id** | string | *read-only required* | Uniquely identifies the resource within the collection of like resources. |
 | **Name** | string | *read-only required* | The name of the resource or array element. |
 
@@ -28,7 +25,6 @@ This schema contains required and requiredOnCreate properties.
 #### EntryType
 
 <a name="requiredtest-entrytype">&nbsp;</a>
-
 This is the type of log entry.
 
 | string | Description |

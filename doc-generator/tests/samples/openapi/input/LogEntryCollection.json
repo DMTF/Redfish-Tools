@@ -92,6 +92,9 @@
                 "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/STUBCollection",
                 "/redfish/v1/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/STUBCollection",
                 "/redfish/v1/CompositionService/ResourceBlocks/{ResourceBlockId}/Systems/{ComputerSystemId}/LogServices/{LogServiceId}/STUBCollection"
+            ],
+            "urisDeprecated": [
+                "/redfish/v1/Managers/{ManagerId}/LogServices/{LogServiceId}/STUBCollection"
             ]
         }
     },

@@ -173,13 +173,19 @@ class MarkdownGenerator(DocFormatter):
                 self.append_unique_values(formatted_details[property_name], property_values)
                 formatted_details[property_name] = delim.join(property_values)
 
-        if formatted_details['prop_is_object'] and not in_array:
+        if formatted_details['is_link']:
+            name_and_version = self.format_collapsed_link_name(
+                name_and_version, indentation_string, False)
+        elif formatted_details['is_link_array']:
+            name_and_version = self.format_collapsed_link_name(
+                name_and_version, indentation_string, True)
+        elif formatted_details['prop_is_object'] and not in_array:
             if formatted_details['object_description'] == '':
                 name_and_version += ' {}'
             else:
                 name_and_version += ' {'
 
-        if formatted_details['prop_is_array']:
+        if formatted_details['prop_is_array'] and not formatted_details['is_link_array']:
             if formatted_details['item_description'] == '':
                 if formatted_details['array_of_objects']:
                     name_and_version += ' [ {} ]'
@@ -204,6 +210,12 @@ class MarkdownGenerator(DocFormatter):
             if formatted_details['descr']:
                 formatted_details['descr'] += ' '
             formatted_details['descr'] += self.formatter.bold(formatted_details['profile_purpose'])
+
+        if ((formatted_details['is_link'] or formatted_details['is_link_array'])
+                and formatted_details['link_schema_link']):
+            formatted_details['add_link_text'] = (
+                _('See the %(schema_link)s schema for details.') %
+                {'schema_link': formatted_details['link_schema_link']})
 
         if formatted_details['add_link_text']:
             if formatted_details['descr']:
@@ -234,7 +246,12 @@ class MarkdownGenerator(DocFormatter):
         if deprecated_descr:
             formatted_details['descr'] += ' ' + self.formatter.italic(deprecated_descr)
 
-        prop_type = formatted_details['prop_type']
+        if formatted_details['is_link']:
+            prop_type = _('Link')
+        elif formatted_details['is_link_array']:
+            prop_type = _('Link Array')
+        else:
+            prop_type = formatted_details['prop_type']
         if has_enum:
             prop_type += '<br>(' + _('enum') + ')'
 
@@ -258,8 +275,9 @@ class MarkdownGenerator(DocFormatter):
                 prop_type += ' (' + item_list + ')'
 
         prop_access = ''
-        if (not formatted_details['prop_is_object']
-                and not formatted_details.get('array_of_objects')
+        if ((formatted_details['is_link'] or formatted_details['is_link_array']
+                or (not formatted_details['prop_is_object']
+                    and not formatted_details.get('array_of_objects')))
                 and not as_action_parameters):
             if formatted_details['read_only']:
                 prop_access = _('read-only')
@@ -279,7 +297,10 @@ class MarkdownGenerator(DocFormatter):
                 prop_access += ' ' + _('required on create')
 
         if formatted_details['nullable']:
-            prop_access += '<br>' + _('(null)')
+            if prop_access:
+                prop_access += '<br>' + _('(null)')
+            else:
+                prop_access += _('(null)')
 
         # If profile reqs are present, massage them:
         profile_access = self.format_base_profile_access(formatted_details)
@@ -312,19 +333,39 @@ class MarkdownGenerator(DocFormatter):
         formatted.append('| ' + ' | '.join(row) + ' |')
 
         if len(formatted_details['object_description']) > 0:
-            formatted.append(formatted_details['object_description'])
-            formatted.append('| ' + indentation_string + '} |   |   |')
+            formatted_object = self._add_closing_brace(
+                formatted_details['object_description'], indentation_string, '}')
+            formatted.append(formatted_object)
 
         if not collapse_array and len(formatted_details['item_description']) > 0:
-            formatted.append(formatted_details['item_description'])
             if formatted_details['array_of_objects']:
-                formatted.append('| ' + indentation_string + '} ] |   |   |')
+                brace_string = '} ]'
             else:
-                formatted.append('| ' + indentation_string + '] |   |   |')
+                brace_string = ']'
+            formatted_array = self._add_closing_brace(
+                formatted_details['item_description'], indentation_string, brace_string)
+            formatted.append(formatted_array)
 
         return({'row': '\n'.join(formatted), 'details':formatted_details['prop_details'],
                 'action_details':formatted_details.get('action_details'),
                 'profile_conditional_details': formatted_details.get('profile_conditional_details')})
+
+
+    def add_object_close(self, rows, indentation_string, brace_string, num_cols):
+        """Add an object close to the final content row."""
+        rows[-1] = self._add_closing_brace(rows[-1], indentation_string, brace_string)
+        return rows
+
+
+    @staticmethod
+    def _add_closing_brace(markdown_blob, indentation_string, brace_string):
+        """Add a closing bracket to the name cell of the last Markdown row."""
+        rows = markdown_blob.rsplit('\n', 1)
+        delimiter = rows[-1].find(' |', 2)
+        if delimiter != -1:
+            rows[-1] = (rows[-1][:delimiter] + '<br>' + indentation_string +
+                        brace_string + rows[-1][delimiter:])
+        return '\n'.join(rows)
 
 
     def format_property_details(self, prop_name, prop_type, prop_description, enum, enum_details,
@@ -756,7 +797,7 @@ class MarkdownGenerator(DocFormatter):
                     
                     # add section/schema-specific anchor tag
                     if schema_name and not self.markdown_mode == 'slate':
-                        contents.append('<a name="' + schema_name.lower() + '-' + detail_name.lower() + '">&nbsp;</a>\n')
+                        contents.append('<a name="' + schema_name.lower() + '-' + detail_name.lower() + '">&nbsp;</a>')
                     
                     det_info = section['property_details'][detail_name]
 
@@ -980,7 +1021,7 @@ class MarkdownGenerator(DocFormatter):
         """ Add the URIs (which should be a list) """
         has_excluded_uris = False    
         uri_block = self.format_head_three(_('URIs'), self.level)
-        for uri in sorted(uris, key=str.lower):
+        for uri, is_deprecated in self.order_uris(uris, urisDeprecated):
             exclude_this_uri = False
             for xuri in self.config.get('excluded_schema_uris', []):
                 if xuri in uri:
@@ -989,10 +1030,8 @@ class MarkdownGenerator(DocFormatter):
             if exclude_this_uri:
                 continue
             
-            if uri in urisDeprecated:
-                uri_block += "\n" + self.format_uri(uri) + _(" (deprecated)") +"<br>"
-            else:
-                uri_block += "\n" + self.format_uri(uri) + "<br>"
+            prefix = _("(deprecated)") + ' ' if is_deprecated else ''
+            uri_block += "\n" + prefix + self.format_uri(uri) + "<br>"
 
         if has_excluded_uris:  # if URIs were trimmed, add a note
             uri_block += "\n\* " + _("Note: Some URIs omitted for brevity, refer to schema for the complete list.") + "<br>"

@@ -46,5 +46,7 @@ def test_readwrite_links(mockRequest):
     docGen = DocGenerator([ input_dir ], '/dev/null', config)
     output = docGen.generate_docs()
 
-    assert '*read-write* | Link to another Facility resource' in output
-    assert '*read-only* | Link to another Facility resource' not in output
+    assert '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**ContainedByFacility** {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id**<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} | Link<br><br>*read-write*' in output
+    assert '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**ContainsFacilities** [ {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**@odata.id**<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} ] | Link Array<br><br>*read-write*' in output
+    assert 'See the *Facility* schema for details.' in output
+    assert 'Link to another Facility resource' not in output
