@@ -27,7 +27,7 @@ This schema contains required and requiredOnCreate properties.
 <a name="requiredtest-entrytype">&nbsp;</a>
 This is the type of log entry.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Event | Contains a Redfish-defined message (event). |
 | Oem | Contains an entry in an OEM-defined format. |

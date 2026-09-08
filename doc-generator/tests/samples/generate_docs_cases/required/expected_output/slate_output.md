@@ -24,7 +24,7 @@ This schema contains required and requiredOnCreate properties.
 
 This is the type of log entry.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Event | Contains a Redfish-defined message (event). |
 | Oem | Contains an entry in an OEM-defined format. |

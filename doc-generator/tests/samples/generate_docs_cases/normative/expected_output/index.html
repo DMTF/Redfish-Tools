@@ -90,7 +90,7 @@
 <p>The value of this property shall be the iSCSI boot authentication method for this network device function.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>CHAP</td><td>iSCSI Challenge Handshake Authentication Protocol (CHAP) authentication is used.</td></tr>
@@ -102,7 +102,7 @@
 <p>The value of this property shall be the boot mode configured for this network device function.  If the value is not quot;Disabled", this network device function shall be configured for boot using the specified technology.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>Disabled</td><td>Do not indicate to UEFI/BIOS that this device is bootable.</td></tr>
@@ -116,7 +116,7 @@
 <p>The value of this property shall behe type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP address fields.  Mixing of IPv6 and IPv4 addresses on the same network device function shall not be permissible.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>IPv4</td><td>IPv4 addressing is used for all IP-fields in this object.</td></tr>
@@ -127,7 +127,7 @@
 <p>This object shall contain an array of capabilities of this network device function.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>Disabled</td><td>Neither enumerated nor visible to the operating system.</td></tr>
@@ -141,7 +141,7 @@
 <p>The value of this property shall be the configured capability of this network device function.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>Disabled</td><td>Neither enumerated nor visible to the operating system.</td></tr>
@@ -155,7 +155,7 @@
 <p>The value of this property shall be the configuration source of the World-Wide Names (WWNs) for this connection (WWPN and WWNN).</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>ConfiguredLocally</td><td>The set of FC/FCoE boot targets was applied locally through API or UI.</td></tr>
@@ -211,7 +211,7 @@
 <p>The value of this property shall be the configured link technology of this port.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>Ethernet</td><td>The port is capable of connecting to an Ethernet network.</td></tr>
@@ -223,7 +223,7 @@
 <p>The value of this property shall be the locally configured 802.3x flow control setting for this network port.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>None</td><td>No IEEE 802.3x flow control is enabled on this port.</td></tr>
@@ -236,7 +236,7 @@
 <p>The value of this property shall be the 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>None</td><td>No IEEE 802.3x flow control is enabled on this port.</td></tr>
@@ -249,7 +249,7 @@
 <p>The value of this property shall be a network technology capability of this port.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>Ethernet</td><td>The port is capable of connecting to an Ethernet network.</td></tr>
@@ -261,7 +261,7 @@
 <p>The value of this property shall be the link status between this port and its link partner.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>Down</td><td>The port is enabled but link is down.</td></tr>
@@ -272,7 +272,7 @@
 <p>The value of this property shall be an array of zero or more Ethernet capabilities supported by this port.</p>
 <table class="enum enum-details">
 <thead>
-<tr><th>string</th><th>Description</th></tr>
+<tr><th>String</th><th>Description</th></tr>
 </thead>
 <tbody>
 <tr><td>EEE</td><td>IEEE 802.3az Energy Efficient Ethernet (EEE) is supported on this port.</td></tr>

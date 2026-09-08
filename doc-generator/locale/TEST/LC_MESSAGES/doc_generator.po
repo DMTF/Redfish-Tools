@@ -470,3 +470,40 @@ msgstr "VARIOUS"
 #: doc_formatter/property_index_generator.py:520
 msgid "Schema"
 msgstr "SCHEMA"
+
+#: doc_formatter/html_generator.py doc_formatter/markdown_generator.py
+msgid "Link"
+msgstr "LINK"
+
+#: doc_formatter/html_generator.py doc_formatter/markdown_generator.py
+msgid "Link Array"
+msgstr "LINK ARRAY"
+
+#: doc_formatter/doc_formatter.py
+msgid "Array"
+msgstr "ARRAY"
+
+#: doc_formatter/doc_formatter.py
+msgid "Boolean"
+msgstr "BOOLEAN"
+
+#: doc_formatter/doc_formatter.py
+msgid "Integer"
+msgstr "INTEGER"
+
+#: doc_formatter/doc_formatter.py
+msgid "Null"
+msgstr "NULL"
+
+#: doc_formatter/doc_formatter.py
+msgid "Number"
+msgstr "NUMBER"
+
+#: doc_formatter/doc_formatter.py
+msgid "Object"
+msgstr "OBJECT"
+
+#: doc_formatter/doc_formatter.py
+msgid "String"
+msgstr "STRING"
+

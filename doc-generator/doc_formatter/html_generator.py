@@ -495,6 +495,7 @@ pre.code{
             prop_type = ', '.join([html.escape(x, False) for x in prop_type])
         else:
             prop_type = html.escape(prop_type, False)
+        prop_type = self.format_type_column_header(prop_type)
 
         if supplemental_details:
             contents.append(self.formatter.markdown_to_html(supplemental_details))

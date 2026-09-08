@@ -2601,6 +2601,33 @@ class DocFormatter:
 
 
     @staticmethod
+    def format_type_column_header(prop_type):
+        """Capitalize and translate JSON Schema type names used as table column headers."""
+        if isinstance(prop_type, list):
+            types = prop_type
+        else:
+            types = [part.strip() for part in str(prop_type).split(',')]
+        labels = {
+            'array': _('Array'),
+            'boolean': _('Boolean'),
+            'integer': _('Integer'),
+            'null': _('Null'),
+            'number': _('Number'),
+            'object': _('Object'),
+            'string': _('String'),
+        }
+        formatted = []
+        for type_name in types:
+            if not type_name:
+                continue
+            mapped = labels.get(type_name.lower())
+            if mapped:
+                formatted.append(mapped)
+            else:
+                formatted.append(type_name[:1].upper() + type_name[1:])
+        return ', '.join(formatted)
+
+    @staticmethod
     def text_map(text):
         """Replace string for output -- used to replace strings with natural language text"""
 

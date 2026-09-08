@@ -37,7 +37,7 @@ This type describes the status and health of a resource and its children.
 
 This represents the health state of this resource in the absence of its dependent resources.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Critical | A critical condition exists that requires immediate attention. |
 | OK | Normal. |
@@ -47,7 +47,7 @@ This represents the health state of this resource in the absence of its dependen
 
 This represents the overall health state from the view of this resource.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Critical | A critical condition exists that requires immediate attention. |
 | OK | Normal. |
@@ -57,7 +57,7 @@ This represents the overall health state from the view of this resource.
 
 This indicates the known state of the resource, such as if it is enabled.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Absent | This function or resource is not present or not detected. |
 | Deferring | The element will not process any commands but will queue new requests. |
@@ -151,7 +151,7 @@ A Network Device Function represents a logical interface exposed by the network 
 
 The iSCSI boot authentication method for this network device function.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | CHAP | iSCSI Challenge Handshake Authentication Protocol (CHAP) authentication is used. |
 | MutualCHAP | iSCSI Mutual Challenge Handshake Authentication Protocol (CHAP) authentication is used. |
@@ -161,7 +161,7 @@ The iSCSI boot authentication method for this network device function.
 
 The boot mode configured for this network device function.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Disabled | Do not indicate to UEFI/BIOS that this device is bootable. |
 | FibreChannel | Boot this device using the embedded Fibre Channel support and configuration.  Only applicable if the NetworkDeviceFunctionType is set to FibreChannel. |
@@ -173,7 +173,7 @@ The boot mode configured for this network device function.
 
 The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP address fields.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | IPv4 | IPv4 addressing is used for all IP-fields in this object. |
 | IPv6 | IPv6 addressing is used for all IP-fields in this object. |
@@ -182,7 +182,7 @@ The type of IP address (IPv6 or IPv4) being populated in the iSCSIBoot IP addres
 
 Capabilities of this network device function.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Disabled | Neither enumerated nor visible to the operating system. |
 | Ethernet | Appears to the operating system as an Ethernet device. |
@@ -194,7 +194,7 @@ Capabilities of this network device function.
 
 The configured capability of this network device function.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Disabled | Neither enumerated nor visible to the operating system. |
 | Ethernet | Appears to the operating system as an Ethernet device. |
@@ -206,7 +206,7 @@ The configured capability of this network device function.
 
 The configuration source of the WWNs for this connection (WWPN and WWNN).
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | ConfiguredLocally | The set of FC/FCoE boot targets was applied locally through API or UI. |
 | ProvidedByFabric | The set of FC/FCoE boot targets was applied by the Fibre Channel fabric. |
@@ -269,7 +269,7 @@ A Network Port represents a discrete physical port capable of connecting to a ne
 
 Network Port Active Link Technology.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Ethernet | The port is capable of connecting to an Ethernet network. |
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
@@ -279,7 +279,7 @@ Network Port Active Link Technology.
 
 The locally configured 802.3x flow control setting for this network port.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | None | No IEEE 802.3x flow control is enabled on this port. |
 | RX | IEEE 802.3x flow control may be initiated by the link partner. |
@@ -290,7 +290,7 @@ The locally configured 802.3x flow control setting for this network port.
 
 The 802.3x flow control behavior negotiated with the link partner for this network port (Ethernet-only).
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | None | No IEEE 802.3x flow control is enabled on this port. |
 | RX | IEEE 802.3x flow control may be initiated by the link partner. |
@@ -301,7 +301,7 @@ The 802.3x flow control behavior negotiated with the link partner for this netwo
 
 The self-described link network technology capabilities of this port.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Ethernet | The port is capable of connecting to an Ethernet network. |
 | FibreChannel | The port is capable of connecting to a Fibre Channel network. |
@@ -311,7 +311,7 @@ The self-described link network technology capabilities of this port.
 
 The status of the link between this port and its link partner.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | Down | The port is enabled but link is down. |
 | Up | The port is enabled and link is good (up). |
@@ -320,7 +320,7 @@ The status of the link between this port and its link partner.
 
 The set of Ethernet capabilities that this port supports.
 
-| string | Description |
+| String | Description |
 | :--- | :------------ |
 | EEE | IEEE 802.3az Energy Efficient Ethernet (EEE) is supported on this port. |
 | WakeOnLAN | Wake on LAN (WoL) is supported on this port. |

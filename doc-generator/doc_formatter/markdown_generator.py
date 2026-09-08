@@ -407,6 +407,7 @@ class MarkdownGenerator(DocFormatter):
 
         if isinstance(prop_type, list):
             prop_type = ', '.join(prop_type)
+        prop_type = self.format_type_column_header(prop_type)
 
         if supplemental_details:
             contents.append('\n' + supplemental_details + '\n')
