@@ -440,6 +440,9 @@ pre.code{
         if parent_version:
             parent_version = self.format_version(parent_version)
 
+        # If these values were defined in another schema, their versions are that schema's.
+        enum_version_source = parent_prop_info.get('_external_enum_version_source')
+
         # Are we in profile mode? If so, consult the profile passed in for this property.
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
         # Property enums, look for MinSupportValues/RecommendedValues.
@@ -507,27 +510,16 @@ pre.code{
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
-                if version_display:
-                    if version_depr:
-                        version_depr_text = html.escape(version_depr, False)
-                        deprecated_display = self.truncate_version(version_depr_text, 2)
-                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s, deprecated v%(deprecated_version)s)') %
-                                                                     {'version_number': version_display,
-                                                                          'deprecated_version': deprecated_display})
-                        if deprecated_descr:
-                            deprecated_descr_text = html.escape(_('Deprecated in v%(version_number)s and later. %(explanation)s') %
-                                                                    {'version_number': deprecated_display,
-                                                                         'explanation': deprecated_descr})
-                    else:
-                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s)') % {'version_number': version_display})
-                elif version_depr:
-                    version_depr_text = html.escape(version_depr, False)
-                    deprecated_display = self.truncate_version(version_depr_text, 2)
-                    enum_name += ' ' + self.formatter.italic(_('(deprecated v%(version_number)s)') % {'version_number': deprecated_display})
-                    if deprecated_descr:
-                        deprecated_descr_text = html.escape(_('Deprecated in v%(version_number)s and later. %(explanation)s') %
-                                                                {'version_number': deprecated_display,
-                                                                     'explanation': deprecated_descr})
+                deprecated_display = None
+                if version_depr:
+                    deprecated_display = self.truncate_version(html.escape(version_depr, False), 2)
+
+                annotation = self.format_version_annotation(version_display, deprecated_display, enum_version_source)
+                if annotation:
+                    enum_name += ' ' + self.formatter.italic(annotation)
+                if deprecated_display and deprecated_descr:
+                    deprecated_descr = html.escape(self.format_deprecation_text(deprecated_display,
+                                                       deprecated_descr, enum_version_source))
 
                 descr = html.escape(enum_details.get(enum_item, ''), False)
                 if deprecated_descr:
@@ -569,7 +561,7 @@ pre.code{
                     if version_added:
                         version = self.format_version(version_added)
 
-                if parent_prop_info('enumVersionDeprecated'):
+                if parent_prop_info.get('enumVersionDeprecated'):
                     version_deprecated = parent_prop_info.get('enumVersionDeprecated').get(enum_name)
                     if version_deprecated:
                         version_depr = self.format_version(version_deprecated)
@@ -582,31 +574,16 @@ pre.code{
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
-                if version_display:
-                    if version_depr:
-                        version_depr_text = html.escape(version_depr, False)
-                        deprecated_display = self.truncate_version(version_depr_text, 2)
-                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s, deprecated v%(deprecated_version)s)') %
-                                                                     {'version_number': version_display,
-                                                                          'explanation': deprecated_display})
-                        if deprecated_descr:
-                            enum_name += '<br>' + self.formatter.italic(html.escape(
-                                _('Deprecated in v%(version_number)s and later. %(explanation)s') %
-                                {'version_number': deprecated_display,
-                                     'explanation': deprecated_descr}))
-                    else:
-                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s)') % {'version_number': version_display})
+                deprecated_display = None
+                if version_depr:
+                    deprecated_display = self.truncate_version(html.escape(version_depr, False), 2)
 
-                elif version_depr:
-                    version_depr_text = html.escape(version_depr, False)
-                    deprecated_display = self.truncate_version(version_depr_text, 2)
-                    enum_name += ' ' + self.formatter.italic(_('(deprecated v%(version_number)s)') % {'version_number': deprecated_display})
-                    if deprecated_descr:
-                        enum_name += '<br>' + self.formatter.italic(html.escape(
-                            _('Deprecated in v%(version_number)s and later. %(explanation)s') %
-                            {'version_number': deprecated_display,
-                                 'explanation': deprecated_descr}))
-
+                annotation = self.format_version_annotation(version_display, deprecated_display, enum_version_source)
+                if annotation:
+                    enum_name += ' ' + self.formatter.italic(annotation)
+                if deprecated_display and deprecated_descr:
+                    enum_name += '<br>' + self.formatter.italic(html.escape(
+                        self.format_deprecation_text(deprecated_display, deprecated_descr, enum_version_source)))
 
                 cells = [enum_name]
                 if profile_mode:

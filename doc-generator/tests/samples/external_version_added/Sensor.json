@@ -1,0 +1,35 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/Sensor.json",
+    "$ref": "#/definitions/Sensor",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2020 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "Sensor": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.v1_0_0.json#/definitions/Sensor"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.v1_2_0.json#/definitions/Sensor"
+                }
+            ],
+            "description": "The Sensor schema describes a sensor and its properties.",
+            "longDescription": "This resource shall represent a sensor for a Redfish implementation.",
+            "uris": [
+                "/redfish/v1/Chassis/{ChassisId}/Sensors/{SensorId}"
+            ]
+        },
+        "SensorFanArrayExcerpt": {
+            "anyOf": [
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.v1_0_0.json#/definitions/SensorFanArrayExcerpt"
+                },
+                {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.v1_2_0.json#/definitions/SensorFanArrayExcerpt"
+                }
+            ]
+        }
+    },
+    "owningEntity": "DMTF",
+    "title": "#Sensor.Sensor"
+}

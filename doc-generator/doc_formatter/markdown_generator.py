@@ -337,6 +337,9 @@ class MarkdownGenerator(DocFormatter):
         if parent_version:
             parent_version = self.format_version(parent_version)
 
+        # If these values were defined in another schema, their versions are that schema's.
+        enum_version_source = parent_prop_info.get('_external_enum_version_source')
+
         # Are we in profile mode? If so, consult the profile passed in for this property.
         # For Action Parameters, look for ParameterValues/RecommendedValues; for
         # Property enums, look for MinSupportValues/RecommendedValues.
@@ -409,22 +412,14 @@ class MarkdownGenerator(DocFormatter):
                     if not parent_version or DocGenUtilities.compare_versions(version, parent_version) > 0:
                         version_display = self.truncate_version(version, 2) + '+'
 
-                if version_display:
-                    if version_depr:
-                        deprecated_display = self.truncate_version(version_depr, 2)
-                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s, deprecated v%(deprecated_version)s)') %
-                                                                     {'version_number': version_display, 'deprecated_version': deprecated_display})
-                        if deprecated_descr:
-                            deprecated_descr = (_('Deprecated in v%(version_number)s and later. %(explanation)s') %
-                                                    {'version_number': deprecated_display, 'explanation': deprecated_descr})
-                    else:
-                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s)') % {'version_number': version_display})
-                elif version_depr:
-                    deprecated_display = self.truncate_version(version_depr, 2)
-                    enum_name += ' ' + self.formatter.italic(_('(deprecated v%(version_number)s)') % {'version_number': deprecated_display})
-                    if deprecated_descr:
-                        deprecated_descr = (_('Deprecated in v%(version_number)s and later. %(explanation)s') %
-                                                {'version_number': deprecated_display, 'explanation': deprecated_descr})
+                deprecated_display = self.truncate_version(version_depr, 2) if version_depr else None
+
+                annotation = self.format_version_annotation(version_display, deprecated_display, enum_version_source)
+                if annotation:
+                    enum_name += ' ' + self.formatter.italic(annotation)
+                if deprecated_display and deprecated_descr:
+                    deprecated_descr = self.format_deprecation_text(deprecated_display, deprecated_descr,
+                                                                        enum_version_source)
 
                 descr = enum_details.get(enum_item, '')
                 if deprecated_descr:
@@ -471,7 +466,7 @@ class MarkdownGenerator(DocFormatter):
                     if version_added:
                         version = self.format_version(version_added)
 
-                if parent_prop_info('enumVersionDeprecated'):
+                if parent_prop_info.get('enumVersionDeprecated'):
                     version_deprecated = parent_prop_info.get('enumVersionDeprecated').get(enum_name)
                     if version_deprecated:
                         version_depr = self.format_version(version_deprecated)
@@ -485,27 +480,14 @@ class MarkdownGenerator(DocFormatter):
                         version_text = html.escape(version, False)
                         version_display = self.truncate_version(version_text, 2) + '+'
 
-                if version_display:
-                    if version_depr:
-                        deprecated_display = self.truncate_version(version_depr, 2)
-                        if deprecated_descr:
-                            enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s, deprecated v%(deprecated_version)s. %(explanation)s') %
-                                                                         { 'version_number': version_display, 'deprecated_version': deprecated_display,
-                                                                               'explanation': deprecated_descr})
-                        else:
-                            enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s, deprecated v%(deprecated_version)s)') %
-                                                                         {'version_number': version_display, 'deprecated_version': deprecated_display})
+                deprecated_display = self.truncate_version(version_depr, 2) if version_depr else None
 
-                    else:
-                        enum_name += ' ' + self.formatter.italic(_('(v%(version_number)s)') % {'version_number': version_display})
-                else:
-                    if version_depr:
-                        deprecated_display = self.truncate_version(version_depr, 2)
-                        if deprecated_descr:
-                            enum_name += ' ' + self.formatter.italic(_('Deprecated in v%(deprecated_version)s and later. %(explanation)s') %
-                                                                         {'deprecated_version': deprecated_display, 'explanation': deprecated_descr})
-                        else:
-                            enum_name += ' ' + self.formatter.italic(_('(deprecated in v%(deprecated_version)s and later.)') % {'deprecated_version': deprecated_display})
+                annotation = self.format_version_annotation(version_display, deprecated_display, enum_version_source)
+                if annotation:
+                    enum_name += ' ' + self.formatter.italic(annotation)
+                if deprecated_display and deprecated_descr:
+                    enum_name += ' ' + self.formatter.italic(self.format_deprecation_text(deprecated_display,
+                                                                 deprecated_descr, enum_version_source))
 
                 if profile_mode:
                     profile_spec = ''

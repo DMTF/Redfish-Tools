@@ -97,31 +97,94 @@ class DocFormatter:
             'description', 'longDescription', 'verbatim_description', 'fulldescription_override', 'pattern',
             'readonly', 'prop_required', 'prop_required_on_create', 'requiredParameter', 'required_parameter',
             'versionAdded', 'versionDeprecated', 'deprecated', 'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated',
+            '_external_version_source', '_external_enum_version_source',
             'translation', '_profile', '_subset'
             ]
 
 
 
 
+    def external_version_mode(self, external_source):
+        """ Determine how to report a version number that was defined in another schema.
+
+        external_source is the name of the schema a version came from, when that is not the schema
+        being documented, and None when the version information is local. Returns 'local', or the
+        'external_version_annotations' config setting: 'suppress', 'qualify', or 'as_is'.
+        """
+        if not external_source:
+            return 'local'
+        return self.config.get('external_version_annotations', 'suppress')
+
+
+    def format_version_annotation(self, version_display=None, deprecated_display=None, external_source=None):
+        """ Build the parenthesized annotation that follows a property or enum value name.
+
+        version_display is a version number with a trailing '+', deprecated_display a bare version
+        number; either may be absent. Returns None if there is nothing to report.
+        """
+        mode = self.external_version_mode(external_source)
+
+        if mode == 'suppress':
+            # These version numbers belong to another schema, but deprecation still applies here.
+            return _('(deprecated)') if deprecated_display else None
+
+        if mode == 'qualify':
+            if version_display and deprecated_display:
+                return (_('(%(schema_name)s v%(version_number)s, deprecated v%(deprecated_version)s)')
+                            % {'schema_name': external_source, 'version_number': version_display,
+                                   'deprecated_version': deprecated_display})
+            if version_display:
+                return (_('(%(schema_name)s v%(version_number)s)')
+                            % {'schema_name': external_source, 'version_number': version_display})
+            if deprecated_display:
+                return (_('(deprecated %(schema_name)s v%(deprecated_version)s)')
+                            % {'schema_name': external_source, 'deprecated_version': deprecated_display})
+            return None
+
+        if version_display and deprecated_display:
+            return (_('(v%(version_number)s, deprecated v%(deprecated_version)s)')
+                        % {'version_number': version_display, 'deprecated_version': deprecated_display})
+        if version_display:
+            return _('(v%(version_number)s)') % {'version_number': version_display}
+        if deprecated_display:
+            return _('(deprecated v%(deprecated_version)s)') % {'deprecated_version': deprecated_display}
+        return None
+
+
+    def format_deprecation_text(self, deprecated_display, explanation, external_source=None):
+        """ Build the sentence appended to the description of a deprecated property or enum value. """
+
+        mode = self.external_version_mode(external_source)
+
+        if mode == 'suppress':
+            return _('Deprecated. %(explanation)s') % {'explanation': explanation}
+        if mode == 'qualify':
+            return (_('Deprecated in %(schema_name)s v%(deprecated_version)s and later. %(explanation)s')
+                        % {'schema_name': external_source, 'deprecated_version': deprecated_display,
+                               'explanation': explanation})
+        return (_('Deprecated in v%(deprecated_version)s and later. %(explanation)s')
+                    % {'deprecated_version': deprecated_display, 'explanation': explanation})
+
+
     def format_version_strings(self, prop_info):
         """ Generate version added, version deprecated strings """
 
-        version_string = deprecated_descr = None
-        version = version_depr = deprecated_descr = None
+        version = version_depr = None
 
         version_added = None
         version_deprecated = None
         version_deprecated_explanation = ''
+        external_source = None
         if isinstance(prop_info, list):
             version_added = prop_info[0].get('versionAdded')
             version_deprecated = prop_info[0].get('versionDeprecated')
             version_deprecated_explanation = prop_info[0].get('deprecated')
+            external_source = prop_info[0].get('_external_version_source')
         elif isinstance(prop_info, dict):
             version_added = prop_info.get('versionAdded')
             version_deprecated = prop_info.get('versionDeprecated')
             version_deprecated_explanation = prop_info.get('deprecated')
-
-        deprecated_descr = None
+            external_source = prop_info.get('_external_version_source')
 
         if version_added:
             version = self.format_version(version_added)
@@ -139,24 +202,18 @@ class DocFormatter:
         if version_deprecated:
             version_depr = self.format_version(version_deprecated)
 
+        version_display = deprecated_display = None
         if version and version != '1.0.0':
-            version_text = self.escape_text(version)
-            version_display = self.truncate_version(version_text, 2) + '+'
-            if version_deprecated:
-                version_depr_text = self.escape_text(version_depr)
-                deprecated_display = self.truncate_version(version_depr_text, 2)
-                version_string = _('(v%(version_number)s, deprecated v%(deprecated_version)s)') % {'version_number': version_display, 'deprecated_version':  deprecated_display}
-                deprecated_descr = self.escape_text(_('Deprecated in v%(deprecated_version)s and later. %(explanation)s') % {'deprecated_version': deprecated_display,
-                                                                                                                                'explanation': version_deprecated_explanation})
-            else:
-                version_string = _('(v%(version_number)s)') % {'version_number': version_display}
-        elif version_deprecated:
-            version_depr_text = self.escape_text(version_depr)
-            deprecated_display = self.truncate_version(version_depr_text, 2)
-            version_string = _('(deprecated v%(deprecated_version)s)') % {'deprecated_version': deprecated_display}
-            deprecated_descr = self.escape_text(_('Deprecated in v%(deprecated_version)s and later. %(explanation)s') %
-                                                    {'deprecated_version': deprecated_display,
-                                                        'explanation': version_deprecated_explanation})
+            version_display = self.truncate_version(self.escape_text(version), 2) + '+'
+        if version_depr:
+            deprecated_display = self.truncate_version(self.escape_text(version_depr), 2)
+
+        version_string = self.format_version_annotation(version_display, deprecated_display, external_source)
+        deprecated_descr = None
+        if deprecated_display:
+            deprecated_descr = self.escape_text(self.format_deprecation_text(deprecated_display,
+                                                    version_deprecated_explanation, external_source))
+
         return {"version_string": version_string, "deprecated_descr": deprecated_descr}
 
 
@@ -976,10 +1033,8 @@ class DocFormatter:
                 # Make the comparison by unversioned ref, in respect of the way common_properties are keyed
                 from_schema_ref = ref_info.get('_from_schema_ref')
                 from_schema_uri, _discard, _discard = ref_info.get('_ref_uri', '').partition('#')
-                unversioned_schema_ref = DocGenUtilities.make_unversioned_ref(from_schema_ref)
                 requested_ref_uri = ref_info['_ref_uri']
-                is_other_schema = from_schema_ref and not ((schema_ref == from_schema_ref)
-                                                               or (schema_ref == unversioned_schema_ref))
+                is_other_schema = self.is_other_schema_ref(schema_ref, from_schema_ref)
 
                 node_name = traverser.get_node_from_ref(prop_ref)
 
@@ -1133,13 +1188,16 @@ class DocFormatter:
                     if x in self.parent_props and prop_info[x]:
                         ref_info[x] = prop_info[x]
 
-                # If we're getting prop-level version information from the $ref, use it only if the $ref
-                # is in the same schema:
+                # If we're getting prop-level version information from the $ref, the version numbers
+                # are those of the other schema. Note where they came from so that output can be
+                # suppressed or qualified; version info supplied by prop_info is local and wins.
                 if is_other_schema:
-                    for x in ['versionAdded', 'versionDeprecated', 'deprecated',
-                                  'enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated']:
-                        if ref_info.get(x) and not prop_info.get(x):
-                            del ref_info[x]
+                    source_name = self.get_source_schema_name(from_schema_ref)
+                    for source_key, version_keys in (
+                            ('_external_version_source', ['versionAdded', 'versionDeprecated', 'deprecated']),
+                            ('_external_enum_version_source', ['enumVersionAdded', 'enumVersionDeprecated', 'enumDeprecated'])):
+                        if [x for x in version_keys if ref_info.get(x) and not prop_info.get(x)]:
+                            ref_info[source_key] = source_name
 
                 # Pull in any "require" from parent:
                 parent_requires = prop_info.get('parent_requires', [])
@@ -1744,6 +1802,11 @@ class DocFormatter:
             if '_profile' in prop_info:
                 prop_item['_profile'] = prop_info['_profile'] # carry through the profile, if present.
 
+            # Items of an array defined in another schema are defined there too:
+            for x in ['_external_version_source', '_external_enum_version_source']:
+                if prop_info.get(x):
+                    prop_item.setdefault(x, prop_info[x])
+
             if 'type' in prop_item and 'properties' not in prop_item:
                 prop_items = [prop_item]
                 collapse_description = True
@@ -1873,6 +1936,9 @@ class DocFormatter:
                     combined_prop_item['enumVersionAdded'] = prop_info.get('enumVersionAdded')
                     combined_prop_item['enumVersionDeprecated'] = prop_info.get('enumVersionDeprecated')
                     combined_prop_item['enumDeprecated'] = prop_info.get('enumDeprecated')
+                    # The version data above came from prop_info, so its provenance must too:
+                    combined_prop_item['_external_version_source'] = prop_info.get('_external_version_source')
+                    combined_prop_item['_external_enum_version_source'] = prop_info.get('_external_enum_version_source')
                     combined_prop_item['prop_required'] = prop_info.get('prop_required')
                     combined_prop_item['prop_required_on_create'] = prop_info.get('prop_required_on_create')
                     if self.config.get('normative'):
@@ -2038,6 +2104,16 @@ class DocFormatter:
         if ref_uri:
             self._expanding_refs.add(ref_uri)
 
+        # This object may have been expanded in place from another schema (as an excerpt, an
+        # "include" reference disposition, or a combined multiple reference). If so, the properties
+        # below are defined there and carry that schema's version numbers, which do not correspond
+        # to versions of the schema being documented. Note the source so that each property can
+        # suppress or qualify its version annotation, and pass it down to nested objects.
+        external_version_source = (prop_info.get('_external_version_source')
+                                       or prop_info.get('_external_enum_version_source'))
+        if not external_version_source and self.is_other_schema_ref(in_schema_ref, schema_ref):
+            external_version_source = self.get_source_schema_name(schema_ref)
+
         required = prop_info.get('required', [])
         required_on_create = prop_info.get('requiredOnCreate', [])
 
@@ -2101,6 +2177,9 @@ class DocFormatter:
                 base_detail_info['prop_required_on_create'] = (base_detail_info.get('prop_required_on_create') or
                                                                    prop_name in parent_requires_on_create)
                 base_detail_info = self.apply_overrides(base_detail_info, in_schema_name, prop_name)
+                if external_version_source:
+                    base_detail_info.setdefault('_external_version_source', external_version_source)
+                    base_detail_info.setdefault('_external_enum_version_source', external_version_source)
                 if profile:
                     base_detail_info['_profile'] = profile.get(profile_section, {}).get(prop_name)
                 detail_info = self.extend_property_info(schema_ref, base_detail_info)
@@ -2134,6 +2213,10 @@ class DocFormatter:
                     base_pattern_info['prop_required_on_create'] = False
 
                     base_pattern_info = self.apply_overrides(base_pattern_info, in_schema_name, None)
+
+                    if external_version_source:
+                        base_pattern_info.setdefault('_external_version_source', external_version_source)
+                        base_pattern_info.setdefault('_external_enum_version_source', external_version_source)
 
                     # Override the description, if any, with a line describing the pattern.
                     description = _('Property names follow regular expression pattern "%(pattern)s"') % {'pattern': self.escape_regexp(pattern)}
@@ -2332,6 +2415,30 @@ class DocFormatter:
     def is_documented_schema(self, schema_ref):
         """ True if the schema will appear as a section in the output documentation """
         return schema_ref in self.documented_schemas
+
+
+    @staticmethod
+    def is_other_schema_ref(schema_ref, from_schema_ref):
+        """ True if from_schema_ref names a schema other than schema_ref.
+
+        The comparison is made by unversioned ref, in respect of the way common_properties are keyed.
+        """
+        if not from_schema_ref:
+            return False
+        return not ((schema_ref == from_schema_ref)
+                        or (schema_ref == DocGenUtilities.make_unversioned_ref(from_schema_ref)))
+
+
+    def get_source_schema_name(self, schema_ref):
+        """ Get the name of a schema for output, without a version suffix.
+
+        A $ref often points into a specific versioned file, but the name to report for it is the
+        name of the schema as a whole: "Sensor", not "Sensor.v1_14_0".
+        """
+        schema_name = self.traverser.get_schema_name(DocGenUtilities.make_unversioned_ref(schema_ref) or schema_ref)
+        if schema_name:
+            schema_name = schema_name.partition('.')[0]
+        return schema_name
 
 
     def get_ref_for_documented_schema_name(self, schema_name):

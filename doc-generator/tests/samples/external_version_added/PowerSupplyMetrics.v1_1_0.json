@@ -1,0 +1,46 @@
+{
+    "$id": "http://redfish.dmtf.org/schemas/v1/PowerSupplyMetrics.v1_1_0.json",
+    "$ref": "#/definitions/PowerSupplyMetrics",
+    "$schema": "http://redfish.dmtf.org/schemas/v1/redfish-schema-v1.json",
+    "copyright": "Copyright 2014-2020 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright",
+    "definitions": {
+        "PowerSupplyMetrics": {
+            "additionalProperties": false,
+            "description": "The PowerSupplyMetrics schema contains definitions for the metrics of a power supply.",
+            "longDescription": "This resource shall represent the metrics of a power supply for a Redfish implementation.",
+            "properties": {
+                "FanSpeedsPercent": {
+                    "description": "Fan speeds (percent).",
+                    "excerptCopy": "SensorFanArrayExcerpt",
+                    "items": {
+                        "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.json#/definitions/SensorFanArrayExcerpt"
+                    },
+                    "longDescription": "This property shall contain the fan speeds, in percent units, for this power supply.",
+                    "type": "array",
+                    "versionAdded": "v1_1_0"
+                },
+                "InputPowerWatts": {
+                    "description": "The input power (W) for this power supply.",
+                    "longDescription": "This property shall contain the input power, in watt units, for this power supply.",
+                    "readonly": true,
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "units": "W"
+                },
+                "PrimarySensor": {
+                    "$ref": "http://redfish.dmtf.org/schemas/v1/Sensor.json#/definitions/Sensor",
+                    "description": "The primary sensor for this power supply.",
+                    "longDescription": "This property shall contain a link to a resource of type Sensor that reports for this power supply.",
+                    "readonly": true,
+                    "versionAdded": "v1_1_0"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "owningEntity": "DMTF",
+    "release": "2023.1",
+    "title": "#PowerSupplyMetrics.v1_1_0.PowerSupplyMetrics"
+}

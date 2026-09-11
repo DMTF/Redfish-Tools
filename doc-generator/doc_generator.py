@@ -1248,6 +1248,7 @@ class DocGenerator:
             'registry_uri_to_local': {},
             'units_translation': {},
             'combine_multiple_refs': 0,
+            'external_version_annotations': 'suppress',
             'with_table_numbering': False,
             'warn_missing_payloads': False,
             'table_formats': {},
@@ -1302,6 +1303,7 @@ class DocGenerator:
                 'actions_in_property_table', 'html_title',
                 'uri_to_local', 'local_to_uri', 'profile_uri_to_local', 'registry_uri_to_local',
                 'combine_multiple_refs', 'omit_version_in_headers',
+                'external_version_annotations',
                 'supplement_md_dir', 'excluded_schema_uris',
                 'table_formats',
                 'remove_blanks',
@@ -1508,6 +1510,13 @@ class DocGenerator:
                                         'It should be 2 or more, or 0 to prevent combining. Assuming 0 was intended.',
                                         "\n\n"]))
             config['combine_multiple_refs'] == 0
+
+        if config['external_version_annotations'] not in ('suppress', 'qualify', 'as_is'):
+            warnings.warn(' '.join(['The external_version_annotations setting of "%(setting)s" is not recognized.'
+                                        % {'setting': config['external_version_annotations']},
+                                        'It should be "suppress", "qualify", or "as_is". Assuming "suppress".',
+                                        "\n\n"]))
+            config['external_version_annotations'] = 'suppress'
 
         # Apply defaults for parameters that were not explicitly set:
         if 'actions_in_property_table' not in config:
