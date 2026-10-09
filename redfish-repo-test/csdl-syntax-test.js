@@ -78,7 +78,7 @@ if(config.has('Redfish.PrivilegeRegistryGlob')) {
 
 /***************** Allow lists ******************************/
 //Units that don't exist in UCUM or are complicated to the point where validUnitsTest needs additional work
-const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', `kW.h`, 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s', 'kV.A', 'V.A' ];
+const unitsAllowList = ['RPM', 'V.A', '{tot}', '1/s/TBy', 'W.h', `kW.h`, 'A.h', 'kV.A.h', '{rev}/min', 'kJ/kg/K', 'kg/m3', '[IO]/s', 'kV.A', 'V.A', '[ft_i]3', 'm3/min', 'g/m3', '[NTU]', 'mS/cm' ];
 //Enumeration Member names that are non-Pascal Cased
 let NonPascalCaseEnumAllowList   = ['iSCSI', 'iQN', 'cSFP', 'FC_WWN', 'TX_RX', 'EIA_310', 'EIA_310_Telco', 'string', 'number', 'NVDIMM_N',
                                     'NVDIMM_F', 'NVDIMM_P', 'DDR4_SDRAM', 'DDR4E_SDRAM', 'LPDDR4_SDRAM', 'DDR3_SDRAM',
