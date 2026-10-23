@@ -1,0 +1,17 @@
+{
+    "@odata.type": "Test.Test",
+    "Status": {
+        "Health": "OK",
+        "@odata.type": "Resource.Status"
+    },
+    "ComplexCollection": [
+        {
+            "Type": "Foo",
+            "Good": true
+        },
+        {
+            "Type": "Bar",
+            "Good": false
+        }
+    ]
+}

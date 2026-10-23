@@ -1,0 +1,42 @@
+name: Release Build
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./redfish-repo-test-go
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ./redfish-repo-test-go/go.mod
+          cache-dependency-path: ./redfish-repo-test-go/go.sum
+
+      - name: Build Linux x86_64 binaries
+        run: |
+          mkdir -p dist
+          GOOS=linux GOARCH=amd64 go build -o dist/repotest-linux-x86_64 ./cmd/repotest
+          GOOS=linux GOARCH=amd64 go build -o dist/ucumParse-linux-x86_64 ./cmd/ucumParse
+
+      - name: Build Windows x86_64 binaries
+        run: |
+          GOOS=windows GOARCH=amd64 go build -o dist/repotest-windows-x86_64.exe ./cmd/repotest
+          GOOS=windows GOARCH=amd64 go build -o dist/ucumParse-windows-x86_64.exe ./cmd/ucumParse
+
+      - name: Upload binaries to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" dist/* --repo "${{ github.repository }}"

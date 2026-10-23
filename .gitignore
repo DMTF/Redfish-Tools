@@ -8,3 +8,5 @@ redfish-repo-test/node_modules/
 redfish-repo-test/package-lock.json
 .vs/
 doc-generator/.idea/
+redfish-repo-test-go/repotest
+redfish-repo-test-go/repotest-linux-x86_64
