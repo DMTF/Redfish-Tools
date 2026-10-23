@@ -13,10 +13,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/pboyd04/gocsdl/pkg/csdl"
 	"github.com/DMTF/redfishRepoTest/src/config"
 	"github.com/DMTF/redfishRepoTest/src/testsuite"
 	"github.com/DMTF/redfishRepoTest/src/units"
+	"github.com/pboyd04/gocsdl/pkg/csdl"
 )
 
 //nolint:gochecknoglobals
@@ -281,7 +281,7 @@ func GetEntityTypeName(entity csdl.Searchable) string {
 	case csdl.ComplexType, *csdl.ComplexType:
 		return "ComplexType"
 	default:
-		panic("unknown type: " + fmt.Sprintf("%#v", t))
+		panic("GetEntityTypeName: unknown type: " + fmt.Sprintf("%#v", t))
 	}
 }
 

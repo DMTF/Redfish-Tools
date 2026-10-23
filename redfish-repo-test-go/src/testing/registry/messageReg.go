@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"unicode/utf8"
 
+	"github.com/DMTF/redfishRepoTest/src"
 	"github.com/DMTF/redfishRepoTest/src/testsuite"
 )
 
@@ -22,17 +23,6 @@ type MessageRegistry struct {
 	Content  []byte
 	JSON     map[string]any
 }
-
-var (
-	errNotValidUTF8         = errors.New("file is not valid UTF-8")
-	errNotJSONObject        = errors.New("file is not a JSON object")
-	errNoRegistryPrefix     = errors.New("file does not have a RegistryPrefix")
-	errNoRegistryVersion    = errors.New("file does not have a RegistryVersion")
-	errFilenameNoMatch      = errors.New("filename does not match RegistryPrefix and RegistryVersion")
-	errNoMessages           = errors.New("file does not have a Messages object")
-	errInvalidMessageFormat = errors.New("file has invalid message format")
-	errMissingRequiredField = errors.New("message is missing required field")
-)
 
 //nolint:gochecknoglobals
 var RequiredMessageFields = []string{"Description", "LongDescription", "Message", "MessageSeverity"}
@@ -51,17 +41,17 @@ func (m *MessageRegistry) ValidTest(t *testsuite.Testing) {
 	}
 	m.Content = content
 	if !utf8.Valid(content) {
-		t.Error(fmt.Errorf("file %s: %w", m.Filename, errNotValidUTF8))
+		t.Error(src.NewJSONSourceError(m.Filename, "", "file is not valid UTF-8", src.SeverityError, nil))
 		return
 	}
 	var result any
 	if err := json.Unmarshal(content, &result); err != nil {
-		t.Error(fmt.Errorf("file %s is not valid JSON: %w", m.Filename, err))
+		t.Error(src.NewJSONSourceError(m.Filename, "", "file is not valid JSON", src.SeverityError, err))
 		return
 	}
 	obj, ok := result.(map[string]any)
 	if !ok {
-		t.Error(fmt.Errorf("file %s: %w", m.Filename, errNotJSONObject))
+		t.Error(src.NewJSONSourceError(m.Filename, "", "file is not a JSON object", src.SeverityError, nil))
 		return
 	}
 	m.JSON = obj
@@ -70,19 +60,20 @@ func (m *MessageRegistry) ValidTest(t *testsuite.Testing) {
 func (m *MessageRegistry) FilenameMatch(t *testsuite.Testing) {
 	prefix, ok := m.JSON["RegistryPrefix"].(string)
 	if !ok {
-		t.Error(fmt.Errorf("file %s: %w", m.Filename, errNoRegistryPrefix))
+		t.Error(src.NewJSONSourceError(m.Filename, "RegistryPrefix", "file does not have a RegistryPrefix", src.SeverityError, nil))
 		return
 	}
 	version, ok := m.JSON["RegistryVersion"].(string)
 	if !ok {
-		t.Error(fmt.Errorf("file %s: %w", m.Filename, errNoRegistryVersion))
+		t.Error(src.NewJSONSourceError(m.Filename, "RegistryVersion", "file does not have a RegistryVersion", src.SeverityError, nil))
 		return
 	}
 	expectedFileName := prefix + "." + version + ".json"
 	if filepath.Base(m.Filename) != expectedFileName {
-		t.Error(fmt.Errorf(
-			"file %s does not match expected filename %s: %w",
-			filepath.Base(m.Filename), expectedFileName, errFilenameNoMatch,
+		t.Error(src.NewJSONSourceError(
+			m.Filename, "",
+			fmt.Sprintf("filename does not match expected filename %s", expectedFileName),
+			src.SeverityError, nil,
 		))
 		return
 	}
@@ -91,23 +82,52 @@ func (m *MessageRegistry) FilenameMatch(t *testsuite.Testing) {
 func (m *MessageRegistry) CheckRequiredMessageFields(t *testsuite.Testing) {
 	messages, ok := m.JSON["Messages"].(map[string]any)
 	if !ok {
-		t.Error(fmt.Errorf("file %s: %w", m.Filename, errNoMessages))
+		t.Error(src.NewJSONSourceError(m.Filename, "Messages", "file does not have a Messages object", src.SeverityError, nil))
 		return
 	}
-	for _, message := range messages {
+	for msgID, message := range messages {
 		messageMap, ok := message.(map[string]any)
 		if !ok {
-			t.Error(fmt.Errorf("file %s: %w", m.Filename, errInvalidMessageFormat))
+			t.Error(src.NewJSONSourceError(
+				m.Filename,
+				fmt.Sprintf("Messages.%s", msgID),
+				"file has invalid message format",
+				src.SeverityError,
+				nil,
+			))
 			return
 		}
 		for _, field := range RequiredMessageFields {
 			if _, ok := messageMap[field]; !ok {
-				t.Error(fmt.Errorf(
-					"message %s missing %s: %w",
-					message, field, errMissingRequiredField,
+				t.Error(src.NewJSONSourceError(
+					m.Filename,
+					fmt.Sprintf("Messages.%s.%s", msgID, field),
+					fmt.Sprintf("message is missing required field %s", field),
+					src.SeverityError,
+					nil,
 				))
 				return
 			}
+		}
+	}
+}
+
+func (m *MessageRegistry) LookupErrorLines(errs []error) {
+	for _, err := range errs {
+		var jsonErr *src.JSONSourceError
+		if errors.As(err, &jsonErr) {
+			if jsonErr.FileName() != m.Filename {
+				continue
+			}
+			if m.Content == nil {
+				continue
+			}
+			file, err := os.Open(m.Filename)
+			if err != nil {
+				continue
+			}
+			jsonErr.LookupLineFromFile(file)
+			_ = file.Close()
 		}
 	}
 }
