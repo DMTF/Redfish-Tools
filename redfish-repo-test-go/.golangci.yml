@@ -1,0 +1,61 @@
+version: 2
+linters:
+  default: all
+  disable:
+    - depguard
+    - exhaustruct
+    - gomoddirectives
+    - gomodguard
+    # Copyright headers are enforced by goheader and are intentionally not
+    # package documentation.
+    - godoclint
+    - gosmopolitan
+    - ireturn
+    - modernize # maps.Copy not available in Go 1.24
+    - noinlineerr
+    - nlreturn
+    - recvcheck # You need to mix this for many cases
+    - tagalign
+    - tagliatelle
+    - unconvert
+    - unparam
+    - varnamelen
+    - wrapcheck
+    - wsl
+    - wsl_v5
+  settings:
+    goheader:
+      template: |-
+        Copyright Notice:
+        Copyright 2026 DMTF. All rights reserved.
+        License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Tools/blob/main/LICENSE.md
+    mnd:
+      ignored-numbers:
+        - 0
+        - 1
+        - 2
+        - 24
+    revive:
+      rules:
+        - name: var-naming
+          arguments:
+            - [] # Allow list
+            - [] # Deny list
+            - - skip-package-name-checks: true
+    testifylint:
+      disable:
+        - require-error
+  exclusions:
+    rules:
+      # Repeated literals and large table-driven cases are clearer inline in
+      # tests than behind constants or artificial helper functions.
+      - path: _test\.go
+        linters:
+          - goconst
+          - lll
+          - maintidx
+      # These are intentionally white-box tests for concurrency state and
+      # unexported DSP2046 parsing helpers.
+      - path: ^(src/testsuite/(case|list|main)_test\.go|src/testing/dsp2046/main_test\.go)$
+        linters:
+          - testpackage

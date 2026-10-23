@@ -1,0 +1,32 @@
+{
+    "@odata.type": "#ServiceConditions.v1_0_1.ServiceConditions",
+    "Name": "Redfish Service Conditions",
+    "Conditions": [
+        {
+            "LogEntry": {
+                "@odata.id": "/redfish/v1/Managers/1/LogServices/Log1/Entries/1"
+            },
+            "Message": "Temperature exceeds rated limit in power supply `A`.",
+            "MessageArgs": [
+                "A"
+            ],
+            "MessageId": "ThermalEvents.1.0.OverTemperature",
+            "OriginOfCondition": {
+                "@odata.id": "/redfish/v1/Chassis/1/Power"
+            },
+            "Severity": "Warning",
+            "Timestamp": "2020-11-08T12:25:00-05:00"
+        },
+        {
+            "Message": "One or more conditions exist in a related resource. See the OriginOfCondition property.",
+            "MessageId": "Base.1.9.ConditionInRelatedResource",
+            "OriginOfCondition": {
+                "@odata.id": "/redfish/v1/Systems/cpu-memory-example"
+            },
+            "Severity": "Warning"
+        }
+    ],
+    "HealthRollup": "Warning",
+    "@odata.id": "/redfish/v1/ServiceConditions",
+    "@Redfish.Copyright": "Copyright 2014-2025 DMTF. For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+}

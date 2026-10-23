@@ -1,0 +1,228 @@
+csdlDir:
+  ./metadata
+mockupDir:
+  ./mockups
+jsonSchemaDir:
+  ./json-schema
+markdownGlobs:
+  - ./*.md
+  - ./docs/**/*.md
+messageRegistryDir:
+  ./registries
+allow:
+  noActions:
+    - AccountService.v1_0_0.AccountService
+    - AttributeRegistry.v1_0_0.AttributeRegistry
+    - EndpointGroup.v1_0_0.EndpointGroup
+    - EthernetInterface.v1_0_0.EthernetInterface
+    - EthernetInterface.v1_1_0.EthernetInterface
+    - EventDestination.v1_0_0.EventDestination
+    - EventDestination.v1_1_0.EventDestination
+    - Event.v1_1_0.Event
+    - Event.v1_0_0.EventRecord
+    - HostInterface.v1_0_0.HostInterface
+    - JsonSchemaFile.v1_0_0.JsonSchemaFile
+    - LogEntry.v1_0_0.LogEntry
+    - LogEntry.v1_1_0.LogEntry
+    - ManagerAccount.v1_0_0.ManagerAccount
+    - ManagerNetworkProtocol.v1_0_0.ManagerNetworkProtocol
+    - ManagerNetworkProtocol.v1_1_0.ManagerNetworkProtocol
+    - MessageRegistryFile.v1_0_0.MessageRegistryFile
+    - MemoryChunks.v1_0_0.MemoryChunks
+    - MemoryDomain.v1_0_0.MemoryDomain
+    - MemoryDomain.v1_1_0.MemoryDomain
+    - MessageRegistry.v1_0_0.MessageRegistry
+    - NetworkDeviceFunction.v1_0_0.NetworkDeviceFunction
+    - NetworkInterface.v1_0_0.NetworkInterface
+    - NetworkPort.v1_0_0.NetworkPort
+    - PCIeDevice.v1_0_0.PCIeDevice
+    - PCIeFunction.v1_0_0.PCIeFunction
+    - Power.v1_0_0.PowerControl
+    - Power.v1_0_0.PowerSupply
+    - Power.v1_1_0.PowerSupply
+    - Power.v1_2_0.PowerSupply
+    - Power.v1_0_0.Voltage
+    - PrivilegeRegistry.v1_0_0.PrivilegeRegistry
+    - Processor.v1_0_0.Processor
+    - Redundancy.v1_0_0.Redundancy
+    - Redundancy.v1_1_0.Redundancy # Added in 1_1_2
+    - Resource.Item
+    - Resource.v1_0_0.ReferenceableMember
+    - Resource.v1_0_0.Resource
+    - Resource.v1_0_0.ResourceCollection
+    - Role.v1_0_0.Role
+    - SerialInterface.v1_0_0.SerialInterface
+    - Session.v1_0_0.Session
+    - SessionService.v1_0_0.SessionService
+    - SimpleStorage.v1_0_0.SimpleStorage
+    - Storage.v1_0_0.StorageController
+    - Storage.v1_1_0.StorageController
+    - Task.v1_0_0.Task
+    - TaskService.v1_0_0.TaskService
+    - Thermal.v1_0_0.Fan
+    - Thermal.v1_0_1.Fan
+    - Thermal.v1_1_0.Fan
+    - Thermal.v1_2_0.Fan
+    - Thermal.v1_0_0.Thermal
+    - Thermal.v1_0_0.Temperature
+    - VLanNetworkInterface.v1_0_0.VLanNetworkInterface # Added in 1_0_4
+    - VirtualMedia.v1_0_0.VirtualMedia # Added in 1_0_3
+    - Zone.v1_0_0.Zone # Added in v1_1_0
+  nonPascalEnums:
+    - ^BS_1363_Type_G$
+    - ^California_CS\d{4}$
+    - ^CBC_DES$
+    - ^CEE_7_Type_\w$
+    - ^CFB\d{3}_AES\d{3}$
+    - ^CNSA_\d_\d$
+    - ^containerd$
+    - ^CRAM_MD5$
+    - ^cSFP$
+    - ^CXL\d_\d$
+    - ^DC\d_\dV$
+    - ^DDR_SGRAM$
+    - ^DDR5_MRDIMM$
+    - ^Drive\d_\d$
+    - ^EDSFF_\dU_(Short|Long)$
+    - ^EDSFF_E\d_(Short|Long)$
+    - ^EIA_310(_Telco)?$
+    - ^eMMC$
+    - ^FC_WWN$
+    - ^Field_\d{3}V_\dP\dW_\d\dA$
+    - ^FIPS_140_\d$
+    - ^HMAC_MD5$
+    - ^HMAC(\d{3})?_SHA\d\d\d?$
+    - ^IEC_60309_\d{3}P\d$
+    - ^IEC_60320_C\d\d$
+    - ^IEEE802_3ad$
+    - ^iQN$
+    - ^iSCSI
+    - ^iWARP$
+    - ^(LP)?DDR\d?E?_SDRAM
+    - ^M2_\d{4,}$
+    - ^macOS$
+    - ^Mini_[RU]DIMM$
+    - ^NEMA_(\d|L\d+)_\d\d(R|P)$
+    - ^number$
+    - ^NVDIMM_\w$
+    - ^PLDMv\d_\d$
+    - ^SEV_1011_TYPE_\d\d$
+    - ^SO_DIMM$
+    - ^SO_[RU]?DIMM_\d\db$
+    - ^string$
+    - ^TCM\d_\d$
+    - ^TLS_AES_\d{3}_GCM_SHA\d{3}$
+    - ^TLS_PSK$
+    - ^TLS_SSL$
+    - ^TPM\d_\d$
+    - ^TX_RX$
+  nonPascalProperties:
+    - ^code$
+    - ^iSCSI
+    - ^error$
+    - ^mDNS$
+    - ^message$
+  noReleaseTermSchemas:
+    - ^RedfishExtensions.v1_0_0$
+    - ^Validation.v1_0_0$
+    - ^RedfishError.v1_0_0$
+    - ^Schedule.v1_\d_0$
+    - ^Volume.v1_\d_0$
+  pluralEntity:
+    - ^AdditionalVersions$
+    - ^AlarmTrips$
+    - ^ANACharacteristics$
+    - ^BootProgress$
+    - ^BootTargets$
+    - ^Controllers$
+    - ^CXLRegionBlockSizes$
+    - ^DeepOperations$
+    - ^Dependencies$
+    - ^DiagnosticDataDetails$
+    - ^Doors$
+    - ^HostedServices$
+    - ^HttpPushUriOptions$
+    - ^IPTransportDetails$
+    - ^Limits$
+    - ^Menus$
+    - ^MFABypass$
+    - ^Modbus$
+    - ^MultiplePaths$
+    - ^NamespaceFeatures$
+    - ^NVMeControllerAttributes$
+    - ^NVMeSMARTCriticalWarnings$
+    - ^Operations$
+    - ^Passwords$
+    - ^PCIeErrors$
+    - ^Rates$
+    - ^RedfishErrorContents$
+    - ^RegistryEntries$
+    - ^RequiredPrivileges$
+    - ^ResourceBlockLimits$
+    - Sensors$
+    - ^SupportedSystems$
+    - ^Thresholds$
+    - ^TrustedModules$
+    - ^UpdateParameters$
+  pluralSchema:
+    - ^Bios$
+    - ^CertificateLocations$
+    - Chassis
+    - ^CollectionCapabilities$
+    - ^IPAddresses$
+    - MemoryChunks
+    - ^PCIeSlots$
+    - ^Privileges$
+    - ^RedfishExtensions$
+    - ^ServiceConditions$
+    - ^Settings$
+    - Triggers
+    - ^UpdateServiceCapabilities$
+  propertiesWithIncorrectUnits:
+    - ^AccountLockout # purposely left off the $ to cover a couple of cases
+    - ^Accuracy$
+    - ^AllocatedBandwidth$
+    - AllowableOperatingValue$
+    - ^FreeStorageSpaceKiB$ # this test suite doesn't allow for the prefix to not be expanded and we already have a different mapping for KiBy as well...
+    - ^Latitude$
+    - ^Longitude$
+    - ^MaxFrameSize$
+    - ^MaxReadingRange$
+    - ^MaxReadingRangeTemp$
+    - ^MinReadingRange$
+    - ^MinReadingRangeTemp$
+    - ^NumberLBAFormats$
+    - ^OperatingSpeedMhz$ # miscapitalization of MHz
+    - ^ReactiveVAR$
+    - ^ReactivekVARh$
+    - SessionTimeout$
+    - SpeedGbs$
+    - Threshold(Non)?Critical$
+    - ThresholdFatal$
+    - ThresholdUser$
+  noURISchemas:
+    - ActionInfo
+    - AttributeRegistry
+    - CollectionCapabilities
+    - Event
+    - IPAddresses
+    - Manifest
+    - MessageRegistryCollection
+    - MessageRegistry
+    - Message
+    - PhysicalContext
+    - PrivilegeRegistry
+    - Privileges
+    - Protocol
+    - Redundancy
+    - ResolutionStep
+    - Resource
+    - Schedule
+    - Settings
+  allowedBareSchemas:
+    - Resource_v1.xml
+    - IPAddresses_v1.xml
+    - Manifest_v1.xml
+    - Privileges_v1.xml
+
+    

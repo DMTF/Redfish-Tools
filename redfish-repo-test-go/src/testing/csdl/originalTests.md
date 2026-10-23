@@ -1,0 +1,33 @@
+The original RedfishRepoTests had the following CSDL tests:
+ - Valid Syntax -> parse.go ParseTest()
+ - Units are valid -> units.go ValidateUnits()
+ - Has Permission Annotations -> permissions.go SchemasHavePermissions()
+ - Complex Types Should Not Have Permissions -> permissions.go SchemasHavePermissions()
+ - Descriptions have trailing periods -> descriptions.go DescriptionChecks()
+ - Long Descriptions do not contain must -> descriptions.go DescriptionChecks()
+ - No Empty Schema Tags -> schemas.go SchemaTest()
+ - No plural Schemas -> schemas.go SchemaTest()
+ - No plural Entities -> entity.go EntityChecks()
+ - BaseTypes are valid -> Various
+ - All Annotation Terms are valid -> annotations.go AnnotationChecks()
+ - Enum Members are valid names -> enums.go EnumChecks()
+ - Properties are Pascal-cased -> properties.go PropertyChecks()
+ - All namespaces have OwningEntity -> schemas.go SchemaTest()
+ - All EntityType defintions have Actions -> entity.go EntityChecks()
+ - NavigationProperties for Collections cannot be Nullable -> properties.go PropertyChecks()
+ - All new schemas are one version off published -> schemas.go SchemaTest()
+ - All definitions shall include Description and LongDescription annotations -> Various
+ - All versioned, non-errata namespaces have Release -> schemas.go SchemaTest()
+ - Resources specify capabilities -> entity.go EntityChecks()
+ - All EntityTypes are in Privilege Registry -> entity.go EntityChecks()
+ - Property Names have correct units -> properties.go PropertyChecks()
+ - Property Types are valid -> properties.go PropertyChecks()
+ - Updatable restrictions for read/write props -> entity.go EntityChecks()
+ - Binding parameters for actions -> actions.go ActionChecks()
+ - Descriptions have double space after periods -> descriptions.go DescriptionPendantic()
+ - Reference URIs are valid -> references.go ReferenceCheck()
+ - All References Used -> references.go ReferenceCheck()
+ - URI Checks -> uri.go UriChecks()
+ - Insert restrictions only on collections -> entity.go EntityChecks()
+
+ - Types are not repeated -> TBD

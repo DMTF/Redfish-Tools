@@ -1,0 +1,20 @@
+externalSchemas:
+  - Volume_v1
+privilegeRegistryGlob: registries/Redfish_*_PrivilegeRegistry.json
+copyright: Copyright \d{4}-\d{4} DMTF. (For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright.|All rights reserved.)
+allow:
+  unknownTypeReferences:
+    - ^Capacity. # This is defined by sailfish...
+    - ^DataStorageLoSCapabilities. # This is defined by sailfish...
+    - ^IOStatistics. # This is defined by sailfish...
+    - ^StorageReplicaInfo. # This is defined by sailfish... 
+  noCopyrightPaths:
+    - mockups/DSP2046-examples/*
+    - mockups/non-resource-examples/*
+    - mockups/public-oem-examples/Contoso.com/*
+    - mockups/development/JsonSchemas/*
+  allowedNoExplorerMockups:
+    - public-iiot
+    - public-oem-examples
+    - public-pmem-configuration
+    - wip-public-immersion-cooling
