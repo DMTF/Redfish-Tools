@@ -7,10 +7,12 @@ License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/R
 package registry_test
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/DMTF/redfishRepoTest/src"
 	"github.com/DMTF/redfishRepoTest/src/testing/registry"
 	"github.com/DMTF/redfishRepoTest/src/testsuite"
 	"github.com/stretchr/testify/assert"
@@ -354,6 +356,74 @@ func TestMessageRegistry_CheckRequiredMessageFields(t *testing.T) {
 
 		assert.Equal(t, testsuite.Warning, status)
 		require.NotEmpty(t, testCase.Errors)
-		assert.Contains(t, testCase.Errors[0].Error(), "missing MessageSeverity")
+		assert.Contains(t, testCase.Errors[0].Error(), "MessageSeverity")
+		assert.Contains(t, testCase.Errors[0].Error(), "missing required field")
+	})
+}
+
+func TestMessageRegistry_LookupErrorLines(t *testing.T) {
+	t.Parallel()
+
+	t.Run("LookupLineFromFile", func(t *testing.T) {
+		t.Parallel()
+
+		jsonFile := filepath.Join(t.TempDir(), "Base.1.0.0.json")
+		content := []byte(`{
+			"RegistryPrefix": "Base",
+			"RegistryVersion": "1.0.0"
+		}`)
+		require.NoError(t, os.WriteFile(jsonFile, content, 0o644)) //nolint:gosec
+
+		msgReg := registry.NewMessageRegistry(jsonFile)
+		// Load the JSON first
+		testCase := testsuite.NewCase("load", msgReg.ValidTest, nil)
+		_ = testCase.Run()
+
+		// Create a JSONSourceError with a path
+		jsonErr := src.NewJSONSourceError(jsonFile, "RegistryPrefix", "test error", src.SeverityError, nil)
+		msgReg.LookupErrorLines([]error{jsonErr})
+
+		// Verify that the line number was looked up
+		assert.Greater(t, jsonErr.Line(), 0)
+	})
+
+	t.Run("SkipNonJSONSourceError", func(t *testing.T) {
+		t.Parallel()
+
+		jsonFile := filepath.Join(t.TempDir(), "Base.1.0.0.json")
+		content := []byte(`{"RegistryPrefix":"Base","RegistryVersion":"1.0.0"}`)
+		require.NoError(t, os.WriteFile(jsonFile, content, 0o644)) //nolint:gosec
+
+		msgReg := registry.NewMessageRegistry(jsonFile)
+		// Load the JSON first
+		testCase := testsuite.NewCase("load", msgReg.ValidTest, nil)
+		_ = testCase.Run()
+
+		// Create a regular error
+		regularErr := errors.New("regular error")
+		msgReg.LookupErrorLines([]error{regularErr})
+
+		// Should not panic
+		assert.Equal(t, "regular error", regularErr.Error())
+	})
+
+	t.Run("SkipWrongFilename", func(t *testing.T) {
+		t.Parallel()
+
+		jsonFile := filepath.Join(t.TempDir(), "Base.1.0.0.json")
+		content := []byte(`{"RegistryPrefix":"Base","RegistryVersion":"1.0.0"}`)
+		require.NoError(t, os.WriteFile(jsonFile, content, 0o644)) //nolint:gosec
+
+		msgReg := registry.NewMessageRegistry(jsonFile)
+		// Load the JSON first
+		testCase := testsuite.NewCase("load", msgReg.ValidTest, nil)
+		_ = testCase.Run()
+
+		// Create a JSONSourceError with a different filename
+		jsonErr := src.NewJSONSourceError("other.json", "RegistryPrefix", "test error", src.SeverityError, nil)
+		msgReg.LookupErrorLines([]error{jsonErr})
+
+		// Line should remain 0 since it's a different file
+		assert.Equal(t, 0, jsonErr.Line())
 	})
 }

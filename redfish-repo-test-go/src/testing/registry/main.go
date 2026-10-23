@@ -43,7 +43,8 @@ func CreateTestsForDirectory(dir string, list *testsuite.List) error {
 		suite := list.AddSuite(msgReg.Filename)
 		suite.AddTest("Valid UTF8 and JSON", msgReg.ValidTest)
 		suite.AddTest("Filename and Data match", msgReg.FilenameMatch)
-		suite.Cleanup(func(_ *testsuite.Suite) {
+		suite.Cleanup(func(suite *testsuite.Suite) {
+			msgReg.LookupErrorLines(suite.Errors)
 			msgReg.Content = nil
 			msgReg.JSON = nil
 		})
