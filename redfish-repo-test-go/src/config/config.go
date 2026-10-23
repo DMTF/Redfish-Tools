@@ -58,6 +58,7 @@ type AllowLists struct {
 	AllowedBareSchemas           []string `json:"allowedBareSchemas" yaml:"allowedBareSchemas" mapstructure:"allowedbareschemas"`
 	NoCopyrightPaths             []string `json:"noCopyrightPaths" yaml:"noCopyrightPaths" mapstructure:"nocopyrightpaths"`
 	AllowedNoExplorerMockups     []string `json:"allowedNoExplorerMockups" yaml:"allowedNoExplorerMockups" mapstructure:"allowednoexplorermockups"`
+	BadRegistryFiles             []string `json:"badRegistryFiles" yaml:"badRegistryFiles" mapstructure:"badregistryfiles"`
 	pluralEntityPatterns         []*regexp.Regexp
 	pluralSchemaPatterns         []*regexp.Regexp
 	propertiesWithIncorrectUnits []*regexp.Regexp

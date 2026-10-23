@@ -9,6 +9,7 @@ package registry
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/DMTF/redfishRepoTest/src/config"
@@ -20,10 +21,10 @@ func CreateTestsFromConfig(cfg *config.Config, list *testsuite.List) error {
 	if registryDir == "" {
 		return nil
 	}
-	return CreateTestsForDirectory(registryDir, list)
+	return CreateTestsForDirectory(registryDir, list, cfg)
 }
 
-func CreateTestsForDirectory(dir string, list *testsuite.List) error {
+func CreateTestsForDirectory(dir string, list *testsuite.List, cfg *config.Config) error {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return err
@@ -37,6 +38,9 @@ func CreateTestsForDirectory(dir string, list *testsuite.List) error {
 			continue
 		}
 		if strings.Contains(entry.Name(), "PrivilegeRegistry") {
+			continue
+		}
+		if cfg.AllowLists.BadRegistryFiles != nil && slices.Contains(cfg.AllowLists.BadRegistryFiles, entry.Name()) {
 			continue
 		}
 		msgReg := NewMessageRegistry(filepath.Join(dir, entry.Name()))

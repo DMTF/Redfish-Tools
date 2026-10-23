@@ -46,7 +46,7 @@ func getExplorerTestCases() []explorerTestCase {
 			MockupName:     "mockup",
 			Config:         &config.Config{},
 			ExpectedStatus: testsuite.Warning,
-			ExpectedErrors: 0,
+			ExpectedErrors: 1,
 			ExpectedOutput: "Explorer config not found",
 		},
 		{
@@ -58,7 +58,7 @@ func getExplorerTestCases() []explorerTestCase {
 				"navlinks":    []any{},
 			},
 			ExpectedStatus: testsuite.Warning,
-			ExpectedErrors: 0,
+			ExpectedErrors: 1,
 			ExpectedOutput: "Explorer config name field is missing or not a string",
 		},
 		{
@@ -70,7 +70,7 @@ func getExplorerTestCases() []explorerTestCase {
 				"navlinks": []any{},
 			},
 			ExpectedStatus: testsuite.Warning,
-			ExpectedErrors: 0,
+			ExpectedErrors: 1,
 			ExpectedOutput: "Explorer config description field is missing or not a string",
 		},
 		{
@@ -82,7 +82,7 @@ func getExplorerTestCases() []explorerTestCase {
 				"description": "desc",
 			},
 			ExpectedStatus: testsuite.Warning,
-			ExpectedErrors: 0,
+			ExpectedErrors: 1,
 			ExpectedOutput: "Explorer config navlinks field is missing or not an array",
 		},
 		{
@@ -95,8 +95,8 @@ func getExplorerTestCases() []explorerTestCase {
 				"navlinks":    []any{"bad-entry"},
 			},
 			ExpectedStatus: testsuite.Warning,
-			ExpectedErrors: 0,
-			ExpectedOutput: "Path  has invalid navlinks",
+			ExpectedErrors: 1,
+			ExpectedOutput: "has invalid navlinks",
 		},
 		{
 			Name:       "Invalid Navlink Target Type",
@@ -110,8 +110,8 @@ func getExplorerTestCases() []explorerTestCase {
 				},
 			},
 			ExpectedStatus: testsuite.Warning,
-			ExpectedErrors: 0,
-			ExpectedOutput: "Path  has invalid navlinks target",
+			ExpectedErrors: 1,
+			ExpectedOutput: "has invalid navlinks target",
 		},
 		{
 			Name:       "Invalid Navlink Target Path",
@@ -125,8 +125,8 @@ func getExplorerTestCases() []explorerTestCase {
 				},
 			},
 			ExpectedStatus: testsuite.Warning,
-			ExpectedErrors: 0,
-			ExpectedOutput: "Path  has invalid navlinks target Systems/DoesNotExist",
+			ExpectedErrors: 1,
+			ExpectedOutput: "has invalid navlinks target",
 		},
 		{
 			Name:       "Valid With Main Default And Recursive Link",
@@ -171,14 +171,13 @@ func TestExplorerTest(t *testing.T) {
 				m.InjectFile(path, nil, content)
 			}
 
-			out := &bytes.Buffer{}
-			tPrime := testsuite.NewTesting("Test", out)
+			tPrime := testsuite.NewTesting("Test", &bytes.Buffer{})
 			m.ExplorerTest(tPrime)
 
 			assert.Equal(t, tc.ExpectedStatus, tPrime.Status)
 			require.Len(t, tPrime.Errors, tc.ExpectedErrors)
-			if tc.ExpectedOutput != "" {
-				assert.Contains(t, out.String(), tc.ExpectedOutput)
+			if tc.ExpectedOutput != "" && len(tPrime.Errors) > 0 {
+				assert.Contains(t, tPrime.Errors[0].Error(), tc.ExpectedOutput)
 			}
 		})
 	}

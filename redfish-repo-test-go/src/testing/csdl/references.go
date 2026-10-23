@@ -12,11 +12,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/pboyd04/gocsdl/pkg/csdl"
 	"github.com/DMTF/redfishRepoTest/src"
 	"github.com/DMTF/redfishRepoTest/src/config"
 	"github.com/DMTF/redfishRepoTest/src/testsuite"
 	"github.com/DMTF/redfishRepoTest/src/units"
+	"github.com/pboyd04/gocsdl/pkg/csdl"
 )
 
 //nolint:gochecknoglobals
@@ -113,7 +113,7 @@ func searchChildrenForReferences(children []csdl.Searchable, referenceMap map[st
 func GetNamespaceOfChild(child csdl.Searchable) string {
 	var fullName string
 	switch t := child.(type) {
-	case *csdl.Action:
+	case *csdl.Action, *csdl.ReturnType:
 		return ""
 	case *csdl.Annotation:
 		fullName = t.Term

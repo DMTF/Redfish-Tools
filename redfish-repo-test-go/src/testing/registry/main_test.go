@@ -115,7 +115,8 @@ func TestCreateTestsForDirectory(t *testing.T) {
 		require.NoError(t, os.WriteFile(filepath.Join(registryDir, "Test.1.0.0.json"), []byte(`{"RegistryPrefix":"Test","RegistryVersion":"1.0.0"}`), 0o644)) //nolint:gosec
 
 		list := &testsuite.List{}
-		err := registry.CreateTestsForDirectory(registryDir, list)
+		cfg := &config.Config{}
+		err := registry.CreateTestsForDirectory(registryDir, list, cfg)
 
 		require.NoError(t, err)
 		require.Len(t, list.Suites, 1)
@@ -126,7 +127,8 @@ func TestCreateTestsForDirectory(t *testing.T) {
 
 		registryDir := t.TempDir()
 		list := &testsuite.List{}
-		err := registry.CreateTestsForDirectory(registryDir, list)
+		cfg := &config.Config{}
+		err := registry.CreateTestsForDirectory(registryDir, list, cfg)
 
 		require.NoError(t, err)
 		assert.Empty(t, list.Suites)
@@ -140,7 +142,8 @@ func TestCreateTestsForDirectory(t *testing.T) {
 		require.NoError(t, os.WriteFile(file, []byte("not a directory"), 0o644)) //nolint:gosec
 
 		list := &testsuite.List{}
-		err := registry.CreateTestsForDirectory(file, list)
+		cfg := &config.Config{}
+		err := registry.CreateTestsForDirectory(file, list, cfg)
 
 		assert.Error(t, err)
 	})
