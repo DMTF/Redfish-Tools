@@ -1,6 +1,6 @@
 module github.com/DMTF/redfishRepoTest
 
-go 1.24.5
+go 1.25.0
 
 require (
 	github.com/antchfx/xmlquery v1.5.0
@@ -10,7 +10,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/yuin/goldmark v1.8.2
-	golang.org/x/net v0.46.0
+	golang.org/x/net v0.55.0
 )
 
 require (
@@ -29,7 +29,7 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/sys v0.37.0 // indirect
-	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
